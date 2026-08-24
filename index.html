@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRBL // ระบบสนับสนุนงานวิศวกร Firmer — v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#f7f5ef; --panel:#ffffff; --panel-alt:#f1ede4; --border:#ddd6c8;
+    --text:#2c2620; --text-dim:#5c5548; --text-faint:#78715f;
+    --amber:#b8721c; --green:#2f8f5b; --red:#c8402f; --blue:#2f74a8; --purple:#7c5bab;
+  }
+  body.dark-theme{
+    --bg:#12161d; --panel:#1b212a; --panel-alt:#232a34; --border:#2d3542;
+    --text:#e9e6df; --text-dim:#8b93a1; --text-faint:#5b6472;
+    --amber:#e8a33d; --green:#47b881; --red:#e5534b; --blue:#5b9fd9; --purple:#a78bda;
+  }
+  html{ zoom: 1.1; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Sarabun',sans-serif;min-height:100vh;transition:background .15s,color .15s;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:var(--amber);color:#1a1206;}
+
+  .demo-banner{background:repeating-linear-gradient(45deg,#fbe8c8,#fbe8c8 10px,#f6dcae 10px,#f6dcae 20px);color:#8a5713;text-align:center;font-family:'IBM Plex Mono';font-size:11.5px;padding:7px 10px;letter-spacing:0.02em;border-bottom:1px solid var(--amber);line-height:1.5;}
+  body.dark-theme .demo-banner{background:repeating-linear-gradient(45deg,#3a2a10,#3a2a10 10px,#2a1e0a 10px,#2a1e0a 20px);color:var(--amber);}
+  .theme-toggle-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.12s;}
+  .theme-toggle-btn:hover{border-color:var(--amber);}
+
+  header{border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--panel),var(--bg));padding:14px 16px;position:sticky;top:0;z-index:20;}
+  .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:9px;}
+  .brand-mark{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,var(--amber),#b97324);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#1a1206;font-size:12px;flex-shrink:0;}
+  .brand-text h1{font-size:14px;font-weight:600;}
+  .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
+  .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap;}
+  .mode-toggle button{font-family:'Sarabun';font-size:12px;font-weight:600;padding:7px 11px;border-radius:6px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:.15s;white-space:nowrap;}
+  .mode-toggle button.active{background:var(--amber);color:#1a1206;}
+  .mode-toggle button:hover:not(.active){color:var(--text);}
+
+  .subtab-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:18px;-webkit-overflow-scrolling:touch;}
+  .subtab-bar button{font-family:'Sarabun';font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:.12s;}
+  .subtab-bar button.active{background:var(--amber);border-color:var(--amber);color:#1a1206;}
+  .subtab-bar button:hover:not(.active){color:var(--text);border-color:var(--text-faint);}
+
+  main{max-width:1200px;margin:0 auto;padding:20px 16px 60px;}
+  .narrow{max-width:640px;}
+
+  .status-line{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:11px;color:var(--text-faint);margin-bottom:16px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+  .dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .filter-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  select{background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;padding:10px 11px;color:var(--text);font-family:'Sarabun';font-size:13px;width:100%;}
+  select:focus{border-color:var(--amber);outline:none;}
+
+  .console{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:14px;}
+  .console-row{display:flex;align-items:center;gap:10px;padding:11px 12px;}
+  .prompt-chevron{font-family:'IBM Plex Mono';color:var(--amber);font-size:16px;flex-shrink:0;}
+  .console input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'IBM Plex Mono';font-size:15px;min-width:0;}
+  .console input::placeholder{color:var(--text-faint);}
+  .clear-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:16px;padding:2px 4px;}
+
+  .result-count{font-size:12px;color:var(--text-faint);margin-bottom:10px;font-family:'IBM Plex Mono';}
+  .card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;}
+  .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 15px;cursor:pointer;}
+  .card-head:hover{background:var(--panel-alt);}
+  .card-badges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px;}
+  .badge-code{font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:4px;background:var(--panel-alt);border:1px solid var(--border);}
+  .badge-cat{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';}
+  .badge-equip{font-size:12px;color:var(--blue);font-weight:600;}
+  .card-symptom{font-size:13px;color:var(--text-dim);line-height:1.4;}
+  .card-views{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;}
+  .card-views .pending-warn{color:var(--amber);}
+  .chev{color:var(--text-faint);font-size:13px;flex-shrink:0;margin-top:2px;transition:transform .15s;}
+  .card.open .chev{transform:rotate(90deg);}
+  .card-body{display:none;padding:0 15px 15px;border-top:1px solid var(--border);}
+  .card.open .card-body{display:block;}
+  .card-admin-actions{display:flex;gap:6px;padding:10px 15px 14px;border-top:1px solid var(--border);}
+
+  .error-fb-block{background:rgba(229,83,75,.06);border:1px solid rgba(229,83,75,.35);border-radius:8px;padding:12px 13px;margin-top:12px;}
+  .error-fb-block .t{font-size:12.5px;color:var(--text-dim);margin-bottom:8px;line-height:1.5;}
+  .error-fb-block .names{font-size:10.5px;color:var(--text-faint);margin-top:6px;line-height:1.5;}
+  .fb-down-btn{font-family:'Sarabun';font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:7px;border:1px solid var(--red);background:transparent;color:var(--red);cursor:pointer;transition:.12s;}
+  .fb-down-btn:hover{background:rgba(229,83,75,.15);}
+  .fb-down-btn.locked{border-color:var(--text-faint);color:var(--text-faint);cursor:default;background:none;}
+
+  .solution-block{background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:13px;margin-top:12px;}
+  .solution-num{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--amber);font-weight:700;letter-spacing:0.05em;margin-bottom:8px;}
+  .solution-desc{font-size:13.5px;line-height:1.55;white-space:pre-wrap;margin-bottom:10px;}
+  .solution-imgs{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px;}
+  .solution-imgs img{height:96px;border-radius:6px;border:1px solid var(--border);flex-shrink:0;cursor:pointer;transition:transform .12s;}
+  .solution-imgs img:hover{transform:scale(1.03);}
+  .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;margin-bottom:10px;}
+  .meta-item .k{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;}
+  .meta-item .v{color:var(--text-dim);line-height:1.4;}
+  .fb-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;}
+  .fb-btn{font-family:'Sarabun';font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:7px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);cursor:pointer;transition:.12s;}
+  .fb-btn.up:hover, .fb-btn.up.sel{background:rgba(71,184,129,.18);border-color:var(--green);color:var(--green);}
+  .fb-btn.up.sel{cursor:default;}
+  .fb-names{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);line-height:1.6;max-width:280px;text-align:right;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--text-faint);}
+  .empty-icon{font-family:'IBM Plex Mono';font-size:26px;color:var(--border);margin-bottom:12px;letter-spacing:4px;}
+  .empty h3{font-size:14.5px;color:var(--text-dim);font-weight:600;margin-bottom:5px;}
+  .empty p{font-size:12.5px;line-height:1.6;max-width:340px;margin:0 auto;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:16px;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+  .modal-close-x{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;padding:2px 6px;}
+  .modal-close-x:hover{color:var(--text);}
+  .modal h3{font-size:15px;margin-bottom:6px;padding-right:20px;}
+  .modal p{font-size:12.5px;color:var(--text-dim);margin-bottom:14px;line-height:1.5;}
+  .modal textarea{width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:'Sarabun';font-size:13.5px;min-height:80px;margin-bottom:10px;}
+  .modal-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .desktop-hint{background:rgba(91,159,217,.1);border:1px solid var(--blue);color:var(--blue);font-family:'IBM Plex Mono';font-size:11px;padding:8px 12px;border-radius:7px;margin-bottom:16px;}
+  .panel-block{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px;}
+  .panel-block h2{font-size:15px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+  .panel-block h2 .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:4px;}
+  .panel-sub{font-size:12px;color:var(--text-faint);margin-bottom:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .form-grid.two{grid-template-columns:1fr 1fr;}
+  .form-grid .full{grid-column:1/-1;}
+  @media (max-width:760px){.form-grid, .form-grid.two{grid-template-columns:1fr;}}
+  label{font-size:12px;color:var(--text-dim);font-weight:600;display:block;margin-bottom:5px;}
+  input[type=text]{width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-family:'Sarabun';font-size:13.5px;outline:none;}
+  input:focus, textarea:focus{border-color:var(--amber);}
+  textarea{resize:vertical;min-height:60px;line-height:1.5;width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-family:'Sarabun';font-size:13.5px;}
+  .field-wrap{margin-bottom:4px;}
+  .btn{font-family:'Sarabun';font-weight:600;font-size:13px;padding:9px 16px;border-radius:7px;border:none;cursor:pointer;transition:.12s;}
+  .btn-primary{background:var(--amber);color:#1a1206;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--text-faint);}
+  .btn-sm{padding:6px 11px;font-size:12px;}
+  .name-select-wrap{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .name-select-wrap label{font-size:12px;color:var(--text-dim);font-weight:600;flex-shrink:0;}
+  .privacy-note{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);width:100%;margin-top:2px;}
+
+  .solution-editor{background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;position:relative;}
+  .solution-editor .num-badge{position:absolute;top:-9px;left:12px;background:var(--amber);color:#1a1206;font-family:'IBM Plex Mono';font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;}
+  .remove-solution{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;}
+  .remove-solution:hover{color:var(--red);}
+  .img-upload-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;}
+  .img-thumb{position:relative;width:56px;height:56px;border-radius:6px;overflow:hidden;border:1px solid var(--border);}
+  .img-thumb img{width:100%;height:100%;object-fit:cover;}
+  .img-thumb button{position:absolute;top:1px;right:1px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:3px;font-size:9px;width:14px;height:14px;cursor:pointer;line-height:1;}
+  .upload-btn{width:56px;height:56px;border:1px dashed var(--border);border-radius:6px;background:var(--panel);color:var(--text-faint);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .upload-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;padding:9px 10px;border-bottom:1px solid var(--border);}
+  td{padding:11px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tr:hover td{background:var(--panel-alt);}
+  td.chk{text-align:center;font-size:15px;}
+  td.frac{font-family:'IBM Plex Mono';}
+
+  .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  @media (max-width:760px){.stat-cards{grid-template-columns:1fr 1fr;}}
+  .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:15px;}
+  .stat-card .label{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;margin-bottom:6px;}
+  .stat-card .value{font-size:24px;font-weight:700;}
+  .stat-card .value.green{color:var(--green);}
+  .stat-card .value.amber{color:var(--amber);}
+
+  .admin-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:11px 14px;margin-bottom:7px;flex-wrap:wrap;}
+  .admin-row-main{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap;}
+  .icon-btn{background:var(--panel-alt);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;border-radius:6px;padding:6px 10px;font-size:11.5px;font-weight:600;}
+  .icon-btn:hover{color:var(--text);border-color:var(--text-faint);}
+  .icon-btn.danger:hover{color:var(--red);border-color:var(--red);}
+
+  .proposal-card{background:var(--panel-alt);border:1px solid var(--amber);border-radius:8px;padding:13px;margin-bottom:10px;}
+  .proposal-meta{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);margin-bottom:6px;}
+  .proposal-text{font-size:13px;margin-bottom:10px;line-height:1.5;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel-alt);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:8px;font-size:13px;font-family:'IBM Plex Mono';opacity:0;pointer-events:none;transition:.2s;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .badge-count{background:var(--red);color:#fff;font-family:'IBM Plex Mono';font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:6px;}
+  .status-badge{font-family:'IBM Plex Mono';font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;}
+
+  .pin-modal .modal{max-width:320px;text-align:center;}
+  .pin-modal input{text-align:center;font-family:'IBM Plex Mono';font-size:24px;letter-spacing:0.3em;padding:12px;width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;color:var(--text);}
+  .pin-error{color:var(--red);font-size:12px;font-family:'IBM Plex Mono';margin-top:8px;display:none;}
+  .pin-error.show{display:block;}
+  .lock-icon{font-size:28px;margin-bottom:8px;}
+
+  .gsi-overlay{position:fixed;inset:0;background:var(--bg);z-index:150;display:none;align-items:center;justify-content:center;padding:24px;}
+  .gsi-overlay.show{display:flex;}
+  .gsi-card{max-width:360px;width:100%;text-align:center;}
+  .gsi-logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--amber),#b97324);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#1a1206;font-size:20px;margin:0 auto 18px;}
+  .gsi-card h2{font-size:18px;margin-bottom:8px;}
+  .gsi-card p{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:22px;}
+  .gsi-btn{width:100%;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:8px;padding:12px 16px;font-family:'Sarabun';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.12s;}
+  .gsi-btn:hover{box-shadow:0 1px 6px rgba(0,0,0,.3);}
+  .gsi-note{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);margin-top:16px;}
+  .gsi-picker{display:none;margin-top:14px;text-align:left;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--panel);}
+  .gsi-picker.show{display:block;}
+  .gsi-account{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;border-bottom:1px solid var(--border);}
+  .gsi-account:last-child{border-bottom:none;}
+  .gsi-account:hover{background:var(--panel-alt);}
+  .gsi-avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;}
+  .gsi-account .info .name{font-size:13.5px;font-weight:600;}
+  .gsi-account .info .email{font-size:11.5px;color:var(--text-faint);}
+  .signed-in-pill{position:fixed;top:66px;right:12px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 12px 5px 5px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-dim);z-index:15;}
+  .signed-in-pill .gsi-avatar{width:22px;height:22px;font-size:10px;}
+
+  .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:300;align-items:center;justify-content:center;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;}
+  .lightbox-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:301;}
+  .lightbox-close:hover{background:rgba(255,255,255,.22);}
+  .lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:301;}
+  .lightbox-nav:hover{background:rgba(255,255,255,.22);}
+  .lightbox-nav.prev{left:14px;} .lightbox-nav.next{right:14px;}
+  .lightbox-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono';font-size:12px;color:rgba(255,255,255,.7);z-index:301;}
+
+  .fullscreen-panel{display:none;position:fixed;inset:0;background:var(--bg);z-index:250;overflow-y:auto;}
+  .fullscreen-panel.show{display:block;}
+  .fullscreen-panel-inner{max-width:640px;margin:0 auto;padding:64px 16px 50px;}
+  .fullscreen-close{position:fixed;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:var(--panel-alt);border:1px solid var(--border);color:var(--text);font-size:17px;cursor:pointer;z-index:251;display:flex;align-items:center;justify-content:center;transition:.12s;}
+  .fullscreen-close:hover{background:var(--panel);border-color:var(--text-faint);}
+  .detail-symptom{font-size:16px;font-weight:600;line-height:1.4;margin:8px 0 6px;}
+
+  .doc-type-bar{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;}
+  .doc-type-bar button{font-family:'Sarabun';font-size:12.5px;font-weight:600;padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .doc-type-bar button.active{background:var(--purple);border-color:var(--purple);color:#1a1030;}
+  .doc-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .doc-card .doc-main{display:flex;align-items:center;gap:10px;min-width:0;}
+  .doc-icon{width:36px;height:36px;border-radius:8px;background:var(--panel-alt);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+  .doc-title{font-size:13.5px;font-weight:600;}
+  .doc-meta{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+  .method-radio{display:flex;gap:14px;margin-bottom:10px;}
+  .method-radio label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-dim);font-weight:500;cursor:pointer;}
+  .upload-file-row{display:flex;align-items:center;gap:10px;background:var(--panel-alt);border:1px dashed var(--border);border-radius:7px;padding:10px 12px;}
+
+  /* owner page */
+  .owner-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:14px;}
+  .owner-card h3{font-size:14.5px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .owner-cat-row{border-top:1px solid var(--border);padding:10px 0;}
+  .owner-cat-row:first-of-type{border-top:none;padding-top:4px;}
+  .owner-cat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .owner-cat-name{font-weight:600;font-size:13px;}
+  .owner-models{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.5;}
+  .owner-exception{font-size:11px;color:var(--amber);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .owner-cross{font-size:12px;color:var(--purple);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .inline-edit{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .inline-edit select{width:auto;min-width:150px;}
+</style>
+</head>
+<body>
+
+<div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า 3 ค่าใน CONFIG ที่ต้นไฟล์ index.html: API_URL, SECRET_KEY, GOOGLE_CLIENT_ID — ดูขั้นตอนในคู่มือ DEPLOY-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่ลิงก์ Drive) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">TS</div>
+      <div class="brand-text"><h1>ระบบสนับสนุนงานวิศวกร</h1><p>FIRMER // ENGINEER SUPPORT HUB — v1.0</p></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div class="mode-toggle">
+        <button id="mode-eng" class="active">Engineer 📱</button>
+        <button id="mode-sup">Sup Product 🖥️</button>
+        <button id="mode-owner">ผู้รับผิดชอบ Product 🗂️</button>
+        <button id="mode-mgr">Manager 🖥️</button>
+      </div>
+      <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="signed-in-pill" id="signed-in-pill" style="display:none;">
+  <div class="gsi-avatar" id="signed-in-avatar">?</div>
+  <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
+  <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
+  <button id="change-name-btn" title="สลับบัญชี Google" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:12px;padding:2px 4px;">✎</button>
+</div>
+
+<div class="modal-overlay" id="notif-modal">
+  <div class="modal" style="max-width:420px;">
+    <button class="modal-close-x" id="notif-modal-close">✕</button>
+    <h3>การแจ้งเตือนของคุณ</h3>
+    <p>สถานะ Error ที่คุณเคยส่งเข้าไป</p>
+    <div id="notif-list"></div>
+  </div>
+</div>
+
+<main>
+  <div class="status-line"><span class="dot loading" id="status-dot"></span><span id="status-text">กำลังโหลดข้อมูลตัวอย่าง...</span></div>
+
+  <!-- ============ ENGINEER VIEW ============ -->
+  <div id="view-eng" class="narrow">
+    <div class="subtab-bar" id="eng-subtabs">
+      <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
+      <button data-tab="service_manual">📘 Service Manual</button>
+      <button data-tab="spare_part">🔧 Spare Part</button>
+      <button data-tab="install_checklist">📋 Install Checklist</button>
+      <button data-tab="pm_checklist">🗓️ PM Checklist</button>
+    </div>
+
+    <div id="eng-tab-trbl">
+      <div class="panel-block" style="padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><h2 style="margin-bottom:2px;font-size:14px;">เจอปัญหาที่ยังไม่มีในระบบ?</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ส่งเข้าคิวให้ Sup Product ตรวจสอบก่อนเผยแพร่</p></div>
+          <button class="btn btn-primary btn-sm" id="eng-toggle-add-error-btn">+ เพิ่ม Error ใหม่</button>
+        </div>
+        <div id="eng-add-error-form" style="display:none;margin-top:14px;">
+          <div class="form-grid two">
+            <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="eng-f-category"></select></div>
+            <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="eng-f-model"></select></div>
+            <div class="field-wrap"><label>Error Code</label><input type="text" id="eng-f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
+            <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+          </div>
+          <div id="eng-solutions-editor" style="margin-top:14px;"></div>
+          <button class="btn btn-ghost btn-sm" id="eng-add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
+          <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+            <button class="btn btn-primary" id="eng-save-error-btn">ส่งให้ Sup Product ตรวจสอบ</button>
+            <button class="btn btn-ghost" id="eng-cancel-error-btn">ยกเลิก</button>
+            <span class="mono" id="eng-save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;">✓ ส่งแล้ว</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, รุ่นเครื่อง, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
+      <div class="filter-row">
+        <select id="filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
+        <select id="filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+      </div>
+      <div class="result-count" id="result-count"></div>
+      <div id="results-list"></div>
+    </div>
+
+    <div id="eng-tab-docs" style="display:none;">
+      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ รุ่นเครื่อง..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
+      <div class="filter-row">
+        <select id="doc-filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
+        <select id="doc-filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+      </div>
+      <div class="result-count" id="doc-result-count"></div>
+      <div id="doc-results-list"></div>
+    </div>
+  </div>
+
+  <!-- ============ SUP PRODUCT VIEW ============ -->
+  <div id="view-sup" style="display:none;">
+    <div class="desktop-hint">🖥️ หน้านี้ออกแบบมาสำหรับใช้งานบนคอมพิวเตอร์</div>
+    <div class="name-select-wrap">
+      <label>คุณคือ:</label>
+      <select id="sup-identity"></select>
+      <span class="privacy-note">เลือกชื่อเพื่อกรองข้อมูลและ Dashboard ที่เกี่ยวข้องกับคุณ</span>
+    </div>
+
+    <div class="subtab-bar" id="sup-subtabs">
+      <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
+      <button data-tab="docs">📁 จัดการเอกสาร</button>
+    </div>
+
+    <div id="sup-tab-trbl">
+      <div class="stat-cards" id="sup-stats"></div>
+      <div class="panel-block">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><h2 id="sup-form-heading" style="margin-bottom:2px;">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h2><p class="panel-sub" id="sup-form-sub" style="margin-bottom:0;">กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข</p></div>
+          <button class="btn btn-primary btn-sm" id="toggle-add-error-btn">+ เพิ่ม Error ใหม่</button>
+        </div>
+        <div id="add-error-form" style="display:none;margin-top:16px;">
+          <div class="form-grid two">
+            <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="f-category"></select></div>
+            <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="f-model"></select></div>
+            <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
+            <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+          </div>
+          <div id="solutions-editor" style="margin-top:16px;"></div>
+          <button class="btn btn-ghost btn-sm" id="add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
+          <div class="form-actions" style="display:flex;gap:10px;margin-top:18px;align-items:center;">
+            <button class="btn btn-primary" id="save-error-btn">บันทึก Error</button>
+            <button class="btn btn-ghost" id="cancel-error-btn">ยกเลิก</button>
+            <span class="mono" id="save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;">✓ บันทึกแล้ว</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h2>Error ใหม่จาก Engineer รอตรวจสอบ <span class="badge-count" id="pending-error-count">0</span></h2>
+        <p class="panel-sub">Engineer ส่งเข้ามาโดยตรง — ยังไม่เผยแพร่จนกว่าคุณจะอนุมัติ (แก้ไขก่อนอนุมัติได้)</p>
+        <div id="pending-errors-list"></div>
+      </div>
+      <div class="panel-block">
+        <h2>ข้อเสนอวิธีแก้ใหม่รอตรวจสอบ <span class="badge-count" id="proposal-count">0</span></h2>
+        <p class="panel-sub">มาจาก Engineer ที่กด "ลองทุกวิธีแล้วไม่ได้ผล" แล้วบอกวิธีที่ใช้แก้จริง</p>
+        <div id="proposals-list"></div>
+      </div>
+      <div class="panel-block">
+        <h2>ค้นหา / จัดการ Error ของฉัน</h2>
+        <p class="panel-sub">ค้นหาและกรองเหมือนหน้า Engineer เพื่อหา Error ที่ต้องการแก้ไข</p>
+        <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, รุ่นเครื่อง, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
+        <div class="filter-row">
+          <select id="sup-filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
+          <select id="sup-filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+        </div>
+        <div class="result-count" id="sup-result-count"></div>
+        <div id="sup-results-list"></div>
+      </div>
+    </div>
+
+    <div id="sup-tab-docs" style="display:none;">
+      <div class="panel-block">
+        <h2>ความครบถ้วนของเอกสารที่ฉันดูแล</h2>
+        <p class="panel-sub">เช็คได้เลยว่ารุ่นไหนยังขาดเอกสารประเภทไหน</p>
+        <div style="overflow-x:auto;"><table id="sup-doc-coverage"></table></div>
+      </div>
+      <div class="panel-block">
+        <h2>อัปโหลดเอกสาร <span class="tag">SUP PRODUCT</span></h2>
+        <p class="panel-sub">เลือกประเภทเอกสาร แล้วกรอกข้อมูล — แนบได้ทั้งลิงก์ Google Drive หรืออัปโหลดไฟล์ตรง</p>
+        <div class="doc-type-bar" id="sup-doc-type-bar"></div>
+        <div class="form-grid two">
+          <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="doc-f-category"></select></div>
+          <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="doc-f-model"></select></div>
+          <div class="field-wrap full"><label>ชื่อเอกสาร *</label><input type="text" id="doc-f-title" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
+        </div>
+        <div class="method-radio" style="margin-top:12px;">
+          <label><input type="radio" name="doc-method" value="link" checked> แปะลิงก์ Google Drive</label>
+          <label><input type="radio" name="doc-method" value="direct"> อัปโหลดไฟล์ตรง</label>
+        </div>
+        <div id="doc-method-link"><input type="text" id="doc-f-url" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
+        <div id="doc-method-direct" style="display:none;">
+          <div class="upload-file-row"><label class="btn btn-ghost btn-sm" style="cursor:pointer;">เลือกไฟล์<input type="file" id="doc-f-file" style="display:none;" accept=".xlsx,.xls,.docx,.doc,.pptx,.ppt,.pdf"></label><span class="mono" id="doc-f-filename" style="font-size:12px;color:var(--text-faint);">ยังไม่ได้เลือกไฟล์</span></div>
+        </div>
+        <button class="btn btn-primary" id="doc-save-btn" style="margin-top:14px;">บันทึกเอกสาร</button>
+        <span class="mono" id="doc-save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;margin-left:10px;">✓ บันทึกแล้ว</span>
+      </div>
+      <div class="panel-block"><h2>เอกสารทั้งหมดของฉัน (<span id="sup-doc-count">0</span>)</h2><div id="sup-doc-list"></div></div>
+    </div>
+  </div>
+
+  <!-- ============ OWNER VIEW (ผู้รับผิดชอบ Product) ============ -->
+  <div id="view-owner" style="display:none;">
+    <div class="desktop-hint">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — ใช้ PIN แยกต่างหากจาก Sup Product/Manager</div>
+
+    <div class="panel-block">
+      <h2>สรุปผู้รับผิดชอบ Product</h2>
+      <p class="panel-sub">แต่ละคนดูแลประเภท/รุ่นอะไรบ้าง กดปุ่ม "แก้ไข" เพื่อโยกความรับผิดชอบ</p>
+      <div id="owner-summary"></div>
+    </div>
+
+    <div class="panel-block">
+      <h2>เพิ่มประเภท/รุ่นเครื่อง</h2>
+      <p class="panel-sub">เลือกประเภทที่มีอยู่แล้ว หรือพิมพ์ชื่อประเภทใหม่ได้ในช่องเดียวกัน — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
+      <div class="form-grid">
+        <div class="field-wrap">
+          <label>ประเภทเครื่องจักร *</label>
+          <select id="new-model-cat"><option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option></select>
+          <input type="text" id="new-cat-input" placeholder="พิมพ์ชื่อประเภทใหม่" style="margin-top:6px;display:none;">
+        </div>
+        <div class="field-wrap">
+          <label>รุ่นเครื่อง (เว้นว่างได้ถ้าจะเพิ่มแค่ประเภท)</label>
+          <input type="text" id="new-model-input" placeholder="ชื่อรุ่น">
+        </div>
+        <div class="field-wrap">
+          <label>ผู้ดูแล *</label>
+          <select id="new-model-owner"></select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="add-model-btn" style="margin-top:12px;">เพิ่ม</button>
+      <div id="cat-model-manage" style="margin-top:18px;"></div>
+    </div>
+  </div>
+
+  <!-- ============ MANAGER VIEW ============ -->
+  <div id="view-mgr" style="display:none;">
+    <div class="desktop-hint">🖥️ Dashboard ภาพรวม — สำหรับ Engineer Manager</div>
+    <div class="panel-block">
+      <h2>ข้อมูล Troubleshoot</h2>
+      <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — Manager ดูแล้วตีความเอง</p>
+      <table id="mgr-table"></table>
+    </div>
+    <div class="panel-block">
+      <h2>ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
+      <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
+      <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
+    </div>
+  </div>
+</main>
+
+<!-- Google Sign-in mock overlay -->
+<div class="gsi-overlay" id="gsi-overlay">
+  <div class="gsi-card">
+    <div class="gsi-logo">TS</div>
+    <h2>เข้าสู่ระบบเพื่อให้ Feedback</h2>
+    <p>ใช้บัญชี Google ของคุณเพื่อกันการกดให้คะแนนซ้ำ<br>ชื่อบัญชีของคุณจะ<b>แสดงให้ Sup Product และ Manager เห็น</b>คู่กับ feedback ที่คุณให้</p>
+    <div id="g_id_signin_container" style="display:flex;justify-content:center;"></div>
+    <div class="gsi-note" id="gsi-config-warning" style="display:none;color:var(--red);">⚠ ยังไม่ได้ตั้งค่า CONFIG.GOOGLE_CLIENT_ID ในไฟล์นี้ — ดูคู่มือ deploy ขั้นตอน "ตั้งค่า Google Sign-In"</div>
+  </div>
+</div>
+
+
+<!-- "แก้ไม่ได้" modal -->
+<div class="modal-overlay" id="down-modal">
+  <div class="modal" style="max-width:460px;">
+    <button class="modal-close-x" id="down-modal-close-x">✕</button>
+    <h3>ลองทุกวิธีแล้วไม่ได้ผล 😕</h3>
+    <p>ช่วยกรอกวิธีที่ใช้แก้ปัญหานี้ได้จริง (จำเป็นต้องกรอกอย่างน้อยคำอธิบาย)</p>
+    <div class="field-wrap"><label>คำอธิบายขั้นตอนที่แก้ได้จริง *</label><textarea id="down-modal-desc" placeholder="อธิบายวิธีที่ใช้แก้จริง..."></textarea></div>
+    <div class="form-grid two" style="margin-top:8px;">
+      <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" id="down-modal-tools" placeholder="เช่น ไขควงแฉก"></div>
+      <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" id="down-modal-parts" placeholder="เช่น sensor SP-220"></div>
+      <div class="field-wrap full"><label>เวลาโดยประมาณ</label><input type="text" id="down-modal-time" placeholder="เช่น 30 นาที"></div>
+    </div>
+    <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label><div class="img-upload-row" id="down-modal-imgrow"><label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label></div></div>
+    <div class="modal-actions" style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="down-modal-submit">ส่งข้อเสนอ</button><button class="btn btn-ghost btn-sm" id="down-modal-cancel">ปิด (กดผิด/ยกเลิก)</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay pin-modal" id="pin-modal">
+  <div class="modal">
+    <div class="lock-icon">🔒</div>
+    <h3 id="pin-modal-title">ต้องใส่ PIN เพื่อเข้าหน้านี้</h3>
+    <p id="pin-modal-desc">หน้า Sup Product / Manager มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง</p>
+    <input type="text" id="pin-input" inputmode="numeric" maxlength="6" placeholder="••••">
+    <div class="pin-error" id="pin-error">PIN ไม่ถูกต้อง ลองใหม่อีกครั้ง</div>
+    <div class="modal-actions" style="justify-content:center;margin-top:14px;"><button class="btn btn-primary btn-sm" id="pin-submit">ยืนยัน</button><button class="btn btn-ghost btn-sm" id="pin-cancel">ยกเลิก</button></div>
+  </div>
+</div>
+
+<div class="fullscreen-panel" id="error-detail-panel">
+  <button class="fullscreen-close" id="error-detail-close">✕</button>
+  <div class="fullscreen-panel-inner" id="error-detail-content"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <button class="lightbox-nav prev" id="lightbox-prev">‹</button>
+  <img id="lightbox-img" src="">
+  <button class="lightbox-nav next" id="lightbox-next">›</button>
+  <div class="lightbox-counter" id="lightbox-counter"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== SAMPLE IMAGES ===================== */
+const IMG1 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAFAAeADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDk6KKK6jAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAqaC0ubkMbe3llCYDGNC2M9M4+h/Koa1dInto7S5juLhYmd4yoZWOcBsngHkZBHvj3oYFc6RqgZlOm3mVGSPIbgflR/ZOp4U/2dd/Nwv7hufpxXTyappbahdzDVFCywFFcRyZJwOMbe2Dj6n2qFNQ0wQ6cv9oxr5EhZlEcmIxuz8vy88cfQnvU3ZVkc9/ZOp4Y/2dd/Lw37huPrxQNI1QsqjTbzLDIHkNyPyron1HTDHqI/tCNvPcFVMcmJOSfm+Xjjj6Ad6kj1PS1vrKU6opWGEIzmOTIOCMfd75GfoPei7CyOY/srUtm/+z7vbnGfJbGfypTpGqBmU6beZUZI8huB+Vbv23Tv7LMH9ox7zPv27JMYxjd93rn5vr7Vak1TS21C7mGqKFlgKK4jkyTgcY29sHH1PtRdhZHJ/YbsXCW7W0qSyDKq6lSRzzz24PPsaa9tPHeNaNExuFkMZjX5juzjAx159Kt6xNBLJbfZplkVIdp2hgEO9jtGQDgAippbuF/Ef2oXP+jG/aUcN8qlwd2Mdx+PH0p3EVP7K1LZv/s+725xnyWxn8qU6RqgZlOm3mVGSPIbgflW79t07+yzB/aMe8z79uyTGMY3fd65+b6+1WpNU0ttQu5hqihZYCiuI5Mk4HGNvbBx9T7Ursdkcx/ZOp4U/wBnXfzcL+4bn6cUf2TqeGP9nXfy8N+4bj68V0Kahpgh05f7RjXyJCzKI5MRjdn5fl544+hPelfUdMMeoj+0I289wVUxyYk5J+b5eOOPoB3ouwsjmFsboztA0LRyIu5xL8m0cYJLYx1HX1FRzwyW8zRTLtdeozmtaS7h/tWd4r1CjQIgeSIskmFXIYYzjg846gfWrVxqWnizeK0MSJ5LI8ZEp3uR95RnbjkY3cjaPandisc3RXQJq8ZmKSXP7iO2tliVkLKJEMW47fUAP9RxnmrD6pZ74GF8TsfddLh2E6/88wSuSMA/e/vdTii7Cxy9FXtVu/tU0OyQvHFbwxqOcKRGoYfmDVGmIKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiivS/F3im/wBD1SK1tIrZ0eASEyqxOSzDsR6Um7aIaR5pRXXf8LC1j/n2sf8Avh//AIqj/hYWsf8APtY/98P/APFUrvsFkcjRXXf8LC1j/n2sf++H/wDiqP8AhYWsf8+1j/3w/wD8VRd9gsjkaK67/hYWsf8APtY/98P/APFUf8LC1j/n2sf++H/+Kou+wWRyNFdd/wALC1j/AJ9rH/vh/wD4qj/hYWsf8+1j/wB8P/8AFUXfYLI5Giuu/wCFhax/z7WP/fD/APxVH/CwtY/59rH/AL4f/wCKou+wWRyNFdd/wsLWP+fax/74f/4qj/hYWsf8+1j/AN8P/wDFUXfYLI5Giuu/4WFrH/PtY/8AfD//ABVH/CwtY/59rH/vh/8A4qi77BZHI0V13/CwtY/59rH/AL4f/wCKo/4WFrH/AD7WP/fD/wDxVF32CyORorrv+Fhax/z7WP8A3w//AMVR/wALC1j/AJ9rH/vh/wD4qi77BZHI0V13/CwtY/59rH/vh/8A4qj/AIWFrH/PtY/98P8A/FUXfYLI5Giuu/4WFrH/AD7WP/fD/wDxVH/CwtY/59rH/vh//iqLvsFkcjRXXf8ACwtY/wCfax/74f8A+Ko/4WFrH/PtY/8AfD//ABVF32CyORorrv8AhYWsf8+1j/3w/wD8VR/wsLWP+fax/wC+H/8AiqLvsFkcjRXXf8LC1j/n2sf++H/+Ko/4WFrH/PtY/wDfD/8AxVF32CyORorrv+Fhax/z7WP/AHw//wAVR/wsLWP+fax/74f/AOKou+wWRyNFdd/wsLWP+fax/wC+H/8AiqP+Fhax/wA+1j/3w/8A8VRd9gsjkaK67/hYWsf8+1j/AN8P/wDFUf8ACwtY/wCfax/74f8A+Kou+wWRyNFdd/wsLWP+fax/74f/AOKo/wCFhax/z7WP/fD/APxVF32CyORorrv+Fhax/wA+1j/3w/8A8VR/wsLWP+fax/74f/4qi77BZHI0V13/AAsLWP8An2sf++H/APiqP+Fhax/z7WP/AHw//wAVRd9gsjkaK67/AIWFrH/PtY/98P8A/FUf8LC1j/n2sf8Avh//AIqi77BZHI0V13/CwtY/59rH/vh//iqP+Fhax/z7WP8A3w//AMVRd9gsjkaK67/hYWsf8+1j/wB8P/8AFUf8LC1j/n2sf++H/wDiqLvsFkcjRXXf8LC1j/n2sf8Avh//AIqj/hYWsf8APtY/98P/APFUXfYLI5GivQfDnjLUtV122sbiC0WKXduMaMG4Unux9K47X/8AkYNS/wCvqX/0M003ezBoz6KKKYgooooAKKKKACiiigArrviV/wAjBB/16r/6G9cjXXfEr/kYIP8Ar1X/ANDepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAb/gf/kbrH/tp/wCi2qhr/wDyMGpf9fUv/oZq/wCB/wDkbrH/ALaf+i2qhr//ACMGpf8AX1L/AOhmp+0PoZ9FFFUIKKKKACiiigAooooAK674lf8AIwQf9eq/+hvXI113xK/5GCD/AK9V/wDQ3qX8SGtjkaKKKoQUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAG/4H/5G6x/7af8Aotqoa/8A8jBqX/X1L/6Gav8Agf8A5G6x/wC2n/otqoa//wAjBqX/AF9S/wDoZqftD6GfRRRVCCiiigAooooAKKKKACuu+JX/ACMEH/Xqv/ob1yNdd8Sv+Rgg/wCvVf8A0N6l/EhrY5GiiiqEFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBv+B/+Rusf+2n/AKLaqGv/APIwal/19S/+hmr/AIH/AORusf8Atp/6LaqGv/8AIwal/wBfUv8A6Gan7Q+hn0UUVQgooooAKKKKACiiigArrviV/wAjBB/16r/6G9cjXXfEr/kYIP8Ar1X/ANDepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUVYt7G8uUL21pPMgOC0cZYA+nFaCeGNadFdbEgMMjdIgP4gnIqJVYR+JpFKMnsjHorZ/4RXW/+fL/AMip/jVCbTr6CIyz2VzHGvVniYAfiRRGrTltJP5g4SW6KtFFFWSFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAG/4H/wCRusf+2n/otqoa/wD8jBqX/X1L/wChmr/gf/kbrH/tp/6LaqGv/wDIwal/19S/+hmp+0PoZ9FFFUIKKKKACiiigAooooAK674lf8jBB/16r/6G9cjXXfEr/kYIP+vVf/Q3qX8SGtjkaKKKoQUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRUttbzXdwlvbxmSWQ4VR3rsrfTtM8LW63mqOLm6cjy1VAdpGCdoPof4jjt0zzjVrxp6bt7IuEHLXoZmj+Ebu9CzXpNrDn7hX942D6Hp35P5Vox3PhbQ8CEfbJ1YHeFEjDuCGOFGP9n29KwNZ8QXurNtdvKt+0KE4PORu9T0/LoKyay9hUq61ZW8kXzxj8C+Z1lx44um2/ZbKGPru8xi+fpjGKzn8V60zsy3YQE5CrEmB7DIzWJRWkcLRjtFEurN9TZ/4SrW/wDn9/8AISf4Vo2/ji8VybmzgkTHAjJQ5+pzXK0USw1GW8UCqzXU7VtU8N62pW/g+zXD7cyMuDuIx98dh/tYHTiqeqeEHjgN1pU/2mHbuCHliMD7pHDdz2/GuWrQ0rWL3Spd1rJlDnMT5KHPfHrwOfas/q86etKXyexXtIy+NFF0aN2SRSrqcMrDBB9DTa7gppXi+BjEPsl/HhmO0FiMAHP95e2eo46ZweR1CwuNNu2trpNrryCOjDsQe4rSlXU3ytWkuhM6fLqtUVaKKK3MwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAN/wAD/wDI3WP/AG0/9FtVDX/+Rg1L/r6l/wDQzV/wP/yN1j/20/8ARbVQ1/8A5GDUv+vqX/0M1P2h9DPoooqhBRRRQAUUUUAFFFFABXXfEr/kYIP+vVf/AEN65Guu+JX/ACMEH/Xqv/ob1L+JDWxyNFFFUIKKKKACiiigAooooAKKKKACiiigAooooAKKKKACnIjSOqRqWdjhVUZJPoKbXVeENLjVJNZvgPIgDGMMpPI5L++OQOvOe4rOtVVKHMy4RcnYvWsVv4U0Q3Nyqf2lOpCrncc9lH+yOM/zPFcdd3dxezma6meWQ92Occ5wPQc9BVnW9TfVdSkuW4QfLEuMEICcZ9+efrWfWdCk4+/P4n/Vh1J30WyCiiiugzCiiigAooooAKKKKAHwzSwSiWCR45F6MjEEfiK7W1lt/FeiG2uWT+0oFJVsbTnsw/2Txn+Q4rh6sWF5Np97Fd25AkjORuGQexB/A1hXo+0V46SWxpTnyuz2GXNvNaXD29xGY5YzhlPaoq7LxLZQavpUeu6evIXMo2EM65xz7rg59u+AK42qoVfaxv16+opw5XYKKKK1ICiiigAooooAKKKKACiiigAooooAKKKKACiiigDf8D/8jdY/9tP/AEW1UNf/AORg1L/r6l/9DNX/AAP/AMjdY/8AbT/0W1UNf/5GDUv+vqX/ANDNT9ofQz6KKKoQUUUUAFFFFABRRRQAV13xK/5GCD/r1X/0N65Guu+JX/IwQf8AXqv/AKG9S/iQ1scjRRRVCCiiigAooooAKKKKACiiigAooooAKKKKACiiigB8MTzzxwxLukkYKozjJJwK6/xXKNM0Sz0aBkO5R5hUAEhcc7e25uc+x681k+DrX7T4giYhCsCtKwb8hj3BIP4UzxZdfavEFxh96Q4iXjGMdR/31urkn+8xEY9I6/PobR92m330MaiiiusxCiiigAooooAKKKKACiiigAooooA6zwNegy3GlzhGimUuqtjBPRhjvkf+g1zupWT6fqE1pIctE2Af7w6g/iMGn6PdfYtXtbkvsVJBvbGcKeG4+hNbnjy18vUre5AQLNHtOOpZTyT+BUfhXIv3eIt0kvxRt8VP0OWooorrMQooooAKKKKACiiigAooooAKKKKACiiigAooooA3/A//ACN1j/20/wDRbVQ1/wD5GDUv+vqX/wBDNX/A/wDyN1j/ANtP/RbVQ1//AJGDUv8Ar6l/9DNT9ofQz6KKKoQUUUUAFFFFABRRRQAV13xK/wCRgg/69V/9DeuRrrviV/yMEH/Xqv8A6G9S/iQ1scjRRRVCCiiigAooooAKKKKACiiigAooooAKKKKACiiigDrfAECtdXlwSd8aKgHbDEk/+giuXuZ2ubqa4kADyuXYL0BJzxXW/D7/AJiH/bP/ANmrja5aWtep8vyNp/w4/MKKKK6jEKKKKACiiigAooooAKKKKACiiigArsvF/wDpfh7TNQk4lbbkL93503H9VFcbXZeI/wDkStK/7Y/+izXLiP4lN+ZtT+GRxtFFFdRiFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAG/4H/5G6x/7af8Aotqoa/8A8jBqX/X1L/6Gav8Agf8A5G6x/wC2n/otqoa//wAjBqX/AF9S/wDoZqftD6GfRRRVCCiiigAooooAKKKKACuu+JX/ACMEH/Xqv/ob1yNdd8Sv+Rgg/wCvVf8A0N6l/EhrY5GiiiqEFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAHU+AZXGqXMIb928O5hjqQwA/wDQj+dYOq24tNVu7dYzGkcrBFOeFzx19sVN4fulstdtJ5MbA+1izbQoYFck+2c/hWn44szBrC3QB2XKA5JH3l4IH4bfzrkXuYn/ABL8Ubb0vQ5uiiiusxCiiigAooooAKKKKACiiigAooooAciNI6pGpZ2OFVRkk+grsPHX+jWWnWcPy243YTr90ALyeeATWL4Vszea/bjB2QnzmIIGNvT/AMewPxqbxndLc6+6pgiBBFkNnJ5J+mCcY9q5J+9iIx7Js2jpTb7mDRRRXWYhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBv8Agf8A5G6x/wC2n/otqoa//wAjBqX/AF9S/wDoZq/4H/5G6x/7af8Aotqoa/8A8jBqX/X1L/6Gan7Q+hn0UUVQgooooAKKKKACiiigArrviV/yMEH/AF6r/wChvXI113xK/wCRgg/69V/9DepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAV28sY8R+D45EBe8tBjnLMzKORnGTuGDgd8c8VxFa3hzVjpOpK7H/R5cJKCTgDP3sDuP8R3rnxFNyipR3WqNKcknZ7MyaK6bxbo/kz/2pZLvtLj53ZW3BWJ6/wC6cj8fTiuZrSlUVSKkiZxcXZhRRRWhIUUUUAFFFFABRRRQAUUVt+GdEbVb0PNGfscR/eNnG49lH6Z9vTioqTjTi5S2KjFydkbXhuBNF8P3Gs3SfvJFygIwdvRR0yNx+oxtNcY7tI7PIxZ2OWZjkk+prf8AF2sjUb0W1u4a1tzwysSJG7n046D8eea56scNCWtSe8vy6F1GtIrZBRRRXSZBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBv8Agf8A5G6x/wC2n/otqoa//wAjBqX/AF9S/wDoZq/4H/5G6x/7af8Aotqoa/8A8jBqX/X1L/6Gan7Q+hn0UUVQgooooAKKKKACiiigArrviV/yMEH/AF6r/wChvXI113xK/wCRgg/69V/9DepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAdP4a12GO3Okanj7JKGRX6bd3UMfQ5PPb6dK3iDw3NpI+0QuZrUnBbHMfPAb9OfX04zg1v6F4nuNM/c3O+4tjgAFvmj7fLntjt/LmuWdKdOTqUuu67m0ZKS5Z/eYFFdpd+HNP1mH7boM8ceSQyEHYWz+a9emMdOB1rlr3TL7TyReWskQBA3EZUkjOAw4NaUsRCpotH2e5Mqco+hUooorYzCiiigAoqxaWN3evstLeSYggHYuQuemT0H4109h4Ugs4GvdemQRIuWiUnA4HVh3zxgd8cnpWVWvCn8T17dS405S2MbQtCuNZlYq3lW6cNKVyM+gHc/y/LOzrurW+l6f/YWlHcFUxzSE7tufvD/AHjk59OnXpX1vxS0yfY9JBtrdDgSodrMo6AAfdH64x05FcxWMac60lOrolsv8y3JQVo/eFFFFdZiFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBv+B/+Rusf+2n/AKLaqGv/APIwal/19S/+hmr/AIH/AORusf8Atp/6LaqGv/8AIwal/wBfUv8A6Gan7Q+hn0UUVQgooooAKKKKACiiigArrviV/wAjBB/16r/6G9cjXXfEr/kYIP8Ar1X/ANDepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAE9pd3FlOJrWZ4pB3U4zznB9Rx0NdHp3jW5iATUIRcDI/eJhWAzzx0Pt06VytFZVKFOp8SLjOUdmdob7whfIGuLUW5QkBfKZCenP7vg/jTf7D8LzfvU1XYr/ADBftCDaD2wRkfjzXG0Vl9Va+GbRftb7pHZf8I/4Z/6DH/kzH/hTluvB1mGmhgEz4xsMbvnnsH4ri6KPqrfxTbD2qW0Udbe+NCIjBpVoIUACo8mPlGOyjgY7ckcdK5y+1C81CUSXlw8rDoDwF6dAOB0HSqtFa06FOn8KIlUlLdhRRRWpAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQBv8Agf8A5G6x/wC2n/otqoa//wAjBqX/AF9S/wDoZq/4H/5G6x/7af8Aotqoa/8A8jBqX/X1L/6Gan7Q+hn0UUVQgooooAKKKKACiiigArrviV/yMEH/AF6r/wChvXI113xK/wCRgg/69V/9DepfxIa2ORoooqhBRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAb/AIH/AORusf8Atp/6LaqGv/8AIwal/wBfUv8A6Gav+B/+Rusf+2n/AKLaqGv/APIwal/19S/+hmp+0PoZ9FFFUIKKKKACiiigAooooAK674lf8jBB/wBeq/8Aob1yNdd8Sv8AkYIP+vVf/Q3qX8SGtjkaKKKoQUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFAG/wCB/wDkbrH/ALaf+i2qhr//ACMGpf8AX1L/AOhmr/gf/kbrH/tp/wCi2qhr/wDyMGpf9fUv/oZqftD6GfRRRVCCiiigAooooAKKKKACvQfG/h/VdV1iG4sLXzYlt1Qt5irzuY45I9RXn1aH9t6x/wBBW+/8CH/xpNO90NMv/wDCGeIf+gf/AORo/wD4qj/hDPEP/QP/API0f/xVUP7b1j/oK33/AIEP/jR/besf9BW+/wDAh/8AGl7waF//AIQzxD/0D/8AyNH/APFUf8IZ4h/6B/8A5Gj/APiqof23rH/QVvv/AAIf/Gj+29Y/6Ct9/wCBD/40e8Ghf/4QzxD/ANA//wAjR/8AxVH/AAhniH/oH/8AkaP/AOKqh/besf8AQVvv/Ah/8aP7b1j/AKCt9/4EP/jR7waF/wD4QzxD/wBA/wD8jR//ABVH/CGeIf8AoH/+Ro//AIqqH9t6x/0Fb7/wIf8Axo/tvWP+grff+BD/AONHvBoX/wDhDPEP/QP/API0f/xVH/CGeIf+gf8A+Ro//iqof23rH/QVvv8AwIf/ABo/tvWP+grff+BD/wCNHvBoX/8AhDPEP/QP/wDI0f8A8VR/whniH/oH/wDkaP8A+Kqh/besf9BW+/8AAh/8aP7b1j/oK33/AIEP/jR7waF//hDPEP8A0D//ACNH/wDFUf8ACGeIf+gf/wCRo/8A4qqH9t6x/wBBW+/8CH/xo/tvWP8AoK33/gQ/+NHvBoX/APhDPEP/AED/APyNH/8AFUf8IZ4h/wCgf/5Gj/8Aiqof23rH/QVvv/Ah/wDGj+29Y/6Ct9/4EP8A40e8Ghf/AOEM8Q/9A/8A8jR//FUf8IZ4h/6B/wD5Gj/+Kqh/besf9BW+/wDAh/8AGj+29Y/6Ct9/4EP/AI0e8Ghf/wCEM8Q/9A//AMjR/wDxVH/CGeIf+gf/AORo/wD4qqH9t6x/0Fb7/wACH/xo/tvWP+grff8AgQ/+NHvBoX/+EM8Q/wDQP/8AI0f/AMVR/wAIZ4h/6B//AJGj/wDiqof23rH/AEFb7/wIf/Gj+29Y/wCgrff+BD/40e8Ghf8A+EM8Q/8AQP8A/I0f/wAVR/whniH/AKB//kaP/wCKqh/besf9BW+/8CH/AMaP7b1j/oK33/gQ/wDjR7waF/8A4QzxD/0D/wDyNH/8VR/whniH/oH/APkaP/4qqH9t6x/0Fb7/AMCH/wAaP7b1j/oK33/gQ/8AjR7waF//AIQzxD/0D/8AyNH/APFUf8IZ4h/6B/8A5Gj/APiqof23rH/QVvv/AAIf/Gj+29Y/6Ct9/wCBD/40e8Ghf/4QzxD/ANA//wAjR/8AxVH/AAhniH/oH/8AkaP/AOKqh/besf8AQVvv/Ah/8aP7b1j/AKCt9/4EP/jR7waF/wD4QzxD/wBA/wD8jR//ABVH/CGeIf8AoH/+Ro//AIqqH9t6x/0Fb7/wIf8Axo/tvWP+grff+BD/AONHvBoX/wDhDPEP/QP/API0f/xVH/CGeIf+gf8A+Ro//iqof23rH/QVvv8AwIf/ABo/tvWP+grff+BD/wCNHvBoX/8AhDPEP/QP/wDI0f8A8VR/whniH/oH/wDkaP8A+Kqh/besf9BW+/8AAh/8aP7b1j/oK33/AIEP/jR7waF//hDPEP8A0D//ACNH/wDFUf8ACGeIf+gf/wCRo/8A4qqH9t6x/wBBW+/8CH/xo/tvWP8AoK33/gQ/+NHvBoX/APhDPEP/AED/APyNH/8AFUf8IZ4h/wCgf/5Gj/8Aiqof23rH/QVvv/Ah/wDGj+29Y/6Ct9/4EP8A40e8Ghf/AOEM8Q/9A/8A8jR//FUf8IZ4h/6B/wD5Gj/+Kqh/besf9BW+/wDAh/8AGj+29Y/6Ct9/4EP/AI0e8Ghf/wCEM8Q/9A//AMjR/wDxVH/CGeIf+gf/AORo/wD4qqH9t6x/0Fb7/wACH/xo/tvWP+grff8AgQ/+NHvBoX/+EM8Q/wDQP/8AI0f/AMVR/wAIZ4h/6B//AJGj/wDiqof23rH/AEFb7/wIf/Gj+29Y/wCgrff+BD/40e8Ghf8A+EM8Q/8AQP8A/I0f/wAVR/whniH/AKB//kaP/wCKqh/besf9BW+/8CH/AMaP7b1j/oK33/gQ/wDjR7waHTeFfDOs6f4itbu8s/Lgj37m81DjKMBwDnqRXM6//wAjBqX/AF9S/wDoZo/tvWP+grff+BD/AONUZHeWRpJHZ3clmZjkknqSaEne7BtWG0UUVQgooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooA/9k=";
+const IMG2 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAFAAeADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDkKKKKzNwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACpoLS5uQxtreaUJgMY0LYz0zj6H8qhrW0ie2jtLqO4uViZ3jKhlY5wGyeAeRkEe+PegGVjo+qBmU6beZUZI8huB+VH9kanhT/Z158/C/uG5+nFdRJqmltqF5MNUULLAUVxHJknA4xt7YOPqfaoU1HTBDpy/2jGvkSFmURyYjG7Py/Lzxx9Ce9Owrs53+yNT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I0f/AMVR/wAIX4i/6B3/AJGj/wDiqof25rH/AEFr/wD8CH/xo/tzWP8AoLX/AP4EP/jRoGpf/wCEL8Rf9A7/AMjR/wDxVH/CF+Iv+gd/5Gj/APiqof25rH/QWv8A/wACH/xo/tzWP+gtf/8AgQ/+NGgal/8A4QvxF/0Dv/I0f/xVH/CF+Iv+gd/5Gj/+Kqh/bmsf9Ba//wDAh/8AGj+3NY/6C1//AOBD/wCNGgal/wD4QvxF/wBA7/yNH/8AFUf8IX4i/wCgd/5Gj/8Aiqof25rH/QWv/wDwIf8Axo/tzWP+gtf/APgQ/wDjRoGpf/4QvxF/0Dv/ACNH/wDFUf8ACF+Iv+gd/wCRo/8A4qqH9uax/wBBa/8A/Ah/8aP7c1j/AKC1/wD+BD/40aBqX/8AhC/EX/QO/wDI0f8A8VR/whfiL/oHf+Ro/wD4qqH9uax/0Fr/AP8AAh/8aP7c1j/oLX//AIEP/jRoGpf/AOEL8Rf9A7/yNH/8VR/whfiL/oHf+Ro//iqof25rH/QWv/8AwIf/ABo/tzWP+gtf/wDgQ/8AjRoGpf8A+EL8Rf8AQO/8jR//ABVH/CF+Iv8AoHf+Ro//AIqqH9uax/0Fr/8A8CH/AMaP7c1j/oLX/wD4EP8A40aBqX/+EL8Rf9A7/wAjR/8AxVH/AAhfiL/oHf8AkaP/AOKqh/bmsf8AQWv/APwIf/Gj+3NY/wCgtf8A/gQ/+NGgal//AIQvxF/0Dv8AyNH/APFUf8IX4i/6B3/kaP8A+Kqh/bmsf9Ba/wD/AAIf/Gj+3NY/6C1//wCBD/40aBqX/wDhC/EX/QO/8jR//FUf8IX4i/6B3/kaP/4qqH9uax/0Fr//AMCH/wAaP7c1j/oLX/8A4EP/AI0aBqX/APhC/EX/AEDv/I0f/wAVR/whfiL/AKB3/kaP/wCKqh/bmsf9Ba//APAh/wDGj+3NY/6C1/8A+BD/AONGgal//hC/EX/QO/8AI0f/AMVR/wAIX4i/6B3/AJGj/wDiqof25rH/AEFr/wD8CH/xo/tzWP8AoLX/AP4EP/jRoGp0/hTwxrWneI7S7vLPy4I9+5vNQ4yjAcA56kVzGv8A/Iw6l/19y/8AoZo/tzWP+gtf/wDgQ/8AjVGSR5ZGkldndyWZmOSxPUk0Ak73Y2iiikMKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP//Z";
+const IMG3 = "data:image/jpeg;base64,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";
+
+/* ===================== CONFIG — แก้ 3 ค่านี้หลัง deploy backend เสร็จ ===================== */
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbwh-rMJSQ-mgJ3GUaPYKhoT0UyRH4Z4phbhNayuJ4nZEchL7KcD651Qz1ue1MZ02TLd/exec',
+  SECRET_KEY: 'Firmer@1234!', // ต้องตรงกับ SECRET_KEY ใน Apps Script
+  GOOGLE_CLIENT_ID: '150634893334-e70hlvfu69vdu771pim0s6j7me2sg3a0.apps.googleusercontent.com',
+};
+
+/* ===================== CONSTANTS ===================== */
+const STORAGE_KEY = 'trbl-demo-v4';
+const SUP_PRODUCTS = ['ฐานวัฒน์ (ฐา)','เชาวฤทธิ์ (ตั้ม)','วิษณุ (แจ๊ค)','พิสิทธิ์ (อ๊อฟ)','ประพัฒน์พงค์ (โก๋)'];
+const DEFAULT_CATEGORY_OWNER = {
+  'Blood Bank':'ประพัฒน์พงค์ (โก๋)', 'Blood Gas':'พิสิทธิ์ (อ๊อฟ)', 'Centrifuge (เครื่องหมุนเหวี่ยง)':'ประพัฒน์พงค์ (โก๋)',
+  'Chemistry':'วิษณุ (แจ๊ค)', 'Coagulation':'พิสิทธิ์ (อ๊อฟ)', 'Deionized Water System':'ประพัฒน์พงค์ (โก๋)',
+  'Digital Cell Morphology':'ฐานวัฒน์ (ฐา)', 'Electrolyte':'วิษณุ (แจ๊ค)', 'Feces':'เชาวฤทธิ์ (ตั้ม)',
+  'Hematology':'ฐานวัฒน์ (ฐา)', 'Hemoculture':'ประพัฒน์พงค์ (โก๋)', 'ID/AST':'ประพัฒน์พงค์ (โก๋)',
+  'Immunoassay':'วิษณุ (แจ๊ค)', 'HPLC':'ประพัฒน์พงค์ (โก๋)', 'Labelling Machine':'ประพัฒน์พงค์ (โก๋)',
+  'Molecular':'ประพัฒน์พงค์ (โก๋)', 'PCR':'ประพัฒน์พงค์ (โก๋)', 'Pneumatic tube transport':'ประพัฒน์พงค์ (โก๋)',
+  'Sorter':'ประพัฒน์พงค์ (โก๋)', 'Total Laboratory Automation':'พิสิทธิ์ (อ๊อฟ)', 'Urine':'เชาวฤทธิ์ (ตั้ม)',
+  'A1C':'ประพัฒน์พงค์ (โก๋)',
+};
+const DEFAULT_MODEL_OVERRIDE = {
+  'Immunoassay|FIA1100':'พิสิทธิ์ (อ๊อฟ)','Immunoassay|FIA8000':'พิสิทธิ์ (อ๊อฟ)','Immunoassay|ACCRE8':'พิสิทธิ์ (อ๊อฟ)','Immunoassay|ACCRE90':'พิสิทธิ์ (อ๊อฟ)',
+  'Immunoassay|Finecare FIA Meter II Plus SE':'พิสิทธิ์ (อ๊อฟ)','Immunoassay|Finecare FIA Meter III Plus':'พิสิทธิ์ (อ๊อฟ)',
+  'Immunoassay|Finecare FIA Meter X1':'พิสิทธิ์ (อ๊อฟ)','Immunoassay|Finecare FIA Meter plus':'พิสิทธิ์ (อ๊อฟ)',
+};
+const DEFAULT_CATEGORIES = {
+  'Blood Bank':['DiaCent-12','ID-Centrifuge 12SII','ID-Centrifuge L','ID-Incubator 37SI','ID-Incubator L','IH-500'],
+  'Blood Gas':['BGA101','BGA102','Ucare-6000'],
+  'Centrifuge (เครื่องหมุนเหวี่ยง)':['DM0412'],
+  'Chemistry':['BA-88','BA-88A','BS-1000M','BS-200','BS-240','BS-2800M','BS-360E','BS-400','BS-430','BS-480','BS-600','BS-600M','BS-620M','BS-820M','M1000','M980','MT8000','SAL6000','SAL9000','SPL-3000'],
+  'Coagulation':['C3100','C3510','CX-6010','OCG-102'],
+  'Deionized Water System':['เครื่องกรองน้ำ'],
+  'Digital Cell Morphology':['CAL6000','CAL7000','CAL8000','DM1200','DM9600'],
+  'Electrolyte':['AC9600','GE300'],
+  'Feces':['FA160','FA280'],
+  'Hematology':['BC-2800','BC-3000 Plus','BC-30S','BC-5180','BC-5300','BC-6200','BC-760','BC-780','BC-7800','CAL6000','CAL7000','CAL8000','CR-30','SC-120','WG-901'],
+  'Hemoculture':['DL-Bt 112','DL-Bt 240','DL-Bt 64','FA-N240','MEIHUA BC120','MEIHUA BC128','MEIHUA BC256','MEIHUA BC32','MEIHUA BC40','MEIHUA BC64','RENDER BC128','RENDER BC256','RENDER BC32','RENDER BC64'],
+  'ID/AST':['AS120','MA120'],
+  'Immunoassay':['ACCRE8','ACCRE90','CL-1200i','CL-2000i','CL-2600i','CL-6000i','CL-8000i','CL-900i','FIA1100','FIA8000','Finecare FIA Meter II Plus SE','Finecare FIA Meter III Plus','Finecare FIA Meter X1','Finecare FIA Meter plus','M1000','M980','MAGLUMI 600','MAGLUMI 800','MAGLUMI 1000','MAGLUMI 2000','MAGLUMI 4000','MAGLUMI 4000Plus','MAGLUMI X3','MAGLUMI X6','MT8000','PATHFAST','SAL6000','SAL9000'],
+  'HPLC':['D-10','D-100','Variant II'],
+  'Labelling Machine':['Labeling Module Mini T1221','P-200','P-520II','PC INTERFACE SYSTEM'],
+  'Molecular':['EXM3000'],
+  'PCR':['Digital Dry Bath','PX1 PCR Plate Sealer','QX200 Droplet Generator','QX200 Droplet Reader','T100 Thermal Cycle','T100 Thermal Cycler'],
+  'Pneumatic tube transport':['S1-200','Whistle-M3'],
+  'Sorter':['SortPro A10','Tipo 8'],
+  'Total Laboratory Automation':['Auto 80R','MT8000','ROTANTA 460 Robotic'],
+  'Urine':['DocUReader','DocUReader2 Pro','LabUMat 2','LabUMat 2 Pro','LabUReader','LabUReaderPlus','LabUReaderPlus2','UC-58','URIT-50','URIT-500B','UriSed','UriSed2','UriSed2 Pro','UriSed3 Pro','Urised mini'],
+  'A1C':['MT8000-A1C'],
+};
+const DOC_TYPES = [
+  {key:'service_manual', label:'Service Manual', icon:'📘'},
+  {key:'spare_part', label:'Spare Part', icon:'🔧'},
+  {key:'install_checklist', label:'Install Checklist', icon:'📋'},
+  {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
+];
+function docTypeLabel(key){ const d = DOC_TYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
+
+function seedData(){
+  return {
+    categories: DEFAULT_CATEGORIES,
+    owners: { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} },
+    errors: [
+      { id:'e1', category:'Chemistry', model:'BS-820M', errorCode:'E-203', symptom:'เครื่องค้างตอน Start up ไม่ผ่านการตรวจเช็คระบบ', viewCount:14,
+        solutions:[
+          {id:'s1', desc:'ปิดเครื่อง รอ 30 วินาที แล้วเปิดใหม่ ตรวจสอบว่าผ่าน self-check หรือไม่', images:[IMG1], tools:'ไขควงแฉก', parts:'-', time:'15 นาที', feedback:[{type:'up',name:'สมชาย ใจดี'},{type:'up',name:'กรวิทย์ ตู่'},{type:'up',name:'ธนพล (บอย)'}]},
+          {id:'s2', desc:'ถอดสาย communication board แล้วเสียบใหม่ให้แน่น ตรวจสอบขั้วสัมผัส', images:[IMG2], tools:'ไขควงแฉก, ไฟฉาย', parts:'-', time:'30 นาที', feedback:[{type:'up',name:'อำนวยศิลป์ (วิทย์)'},{type:'up',name:'ปรัชญา (ต่อ)'}]},
+        ] },
+      { id:'e2', category:'Immunoassay', model:'CL-2000i', errorCode:'ER-15', symptom:'เข็มดูดตัวอย่าง (sample probe) ไม่ลงตำแหน่ง', viewCount:22,
+        solutions:[ {id:'s3', desc:'ทำความสะอาด sample probe และตรวจสอบ sensor ตำแหน่ง Z-axis', images:[IMG1,IMG3], tools:'แอลกอฮอล์, สำลี', parts:'-', time:'20 นาที', feedback:[{type:'up',name:'สมชาย ใจดี'},{type:'up',name:'นนทชัย (นีฟ)'},{type:'up',name:'ฐิติวุฒิ (เจา)'},{type:'up',name:'ธีรยุทธ (เอก)'}]} ] },
+      { id:'e3', category:'Immunoassay', model:'FIA8000', errorCode:'W-08', symptom:'ผลตรวจไม่ออก ค้างที่หน้าจอ processing', viewCount:6,
+        solutions:[ {id:'s4', desc:'รีสตาร์ทซอฟต์แวร์ควบคุม แล้วลองรันตัวอย่างใหม่', images:[], tools:'-', parts:'-', time:'10 นาที', feedback:[{type:'up',name:'กรวิทย์ ตู่'}]} ] },
+    ],
+    proposals: [ {id:'p1', errorId:'e2', desc:'เปลี่ยน sample probe sensor รุ่น SP-220 แล้วเครื่องกลับมาใช้ได้ปกติ', tools:'ไขควงหกเหลี่ยม', parts:'Sensor SP-220', time:'45 นาที', images:[], status:'pending', createdAt: Date.now()-86400000, submitterName:'ธนพล (บอย)'} ],
+    pendingErrors: [
+      {id:'pe1', category:'Chemistry', model:'BS-400', errorCode:'E-77', symptom:'ปั๊มดูดน้ำยาไม่ขึ้น มีเสียงดังผิดปกติ', submitterName:'สมชาย ใจดี', status:'pending', createdAt: Date.now()-3600000,
+        solutions:[{id:uid('sol'), desc:'ตรวจสอบท่อดูดว่ามีอากาศรั่วเข้าหรือไม่ แล้วไล่อากาศออกจากปั๊ม', images:[], tools:'ประแจ', parts:'-', time:'20 นาที'}]},
+    ],
+    documents: [
+      {id:'d1', docType:'service_manual', category:'Chemistry', model:'BS-820M', title:'คู่มือซ่อม BS-820M ฉบับสมบูรณ์ (TH)', method:'link', url:'https://drive.google.com/drive/folders/example-service-manual', uploadedAt: Date.now()-5*86400000},
+      {id:'d2', docType:'spare_part', category:'Chemistry', model:'BS-820M', title:'รายการอะไหล่ BS-820M 2026', method:'link', url:'https://drive.google.com/drive/folders/example-spare-part', uploadedAt: Date.now()-3*86400000},
+      {id:'d3', docType:'pm_checklist', category:'Immunoassay', model:'CL-2000i', title:'PM Checklist CL-2000i รายไตรมาส', method:'direct', fileName:'PM_Checklist_CL2000i.xlsx', uploadedAt: Date.now()-1*86400000},
+    ]
+  };
+}
+
+let DATA = null;
+let currentMode = 'eng';
+let currentSupIdentity = SUP_PRODUCTS[0];
+let engActiveTab = 'trbl';
+let supActiveTab = 'trbl';
+let supDocTypeActive = 'service_manual';
+let engDocTypeActive = 'service_manual';
+
+let currentQuery=''; let filterCategory='all'; let filterModel='all';
+let supQuery=''; let supFilterCategory='all'; let supFilterModel='all';
+let docQuery=''; let docFilterCategory='all'; let docFilterModel='all';
+
+let editingErrorId = null;
+let editingSolutions = [];
+let downModalErrorId = null;
+let downModalImages = [];
+
+let myGoogleId = null;
+let myUserName = null;
+let myVotes = {};
+
+let editingOwnerCat = null;   // category currently showing inline owner editor
+let editingOwnerModel = null; // model currently showing inline owner editor (key = model name)
+
+let engEditingSolutions = [];
+let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไข" on a pending Engineer submission
+let readNotifIds = new Set(); // session-only: which resolved notifications the current user has seen
+
+const $ = id => document.getElementById(id);
+function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function setStatus(loading, text){ $('status-dot').className='dot'+(loading?' loading':''); $('status-text').textContent=text; }
+function ownerOf(category, model){
+  const key = category+'|'+model;
+  if(DATA.owners.modelOverrides[key]) return DATA.owners.modelOverrides[key];
+  return DATA.owners.categoryOwners[category] || 'ยังไม่มีผู้ดูแล';
+}
+function pendingDownCount(errorId){ return (DATA.proposals||[]).filter(p=>p.errorId===errorId && p.status==='pending').length; }
+
+/* ===================== LOAD / SAVE (Google Apps Script backend) ===================== */
+async function loadData(){
+  setStatus(true,'กำลังโหลดข้อมูล...');
+  if(CONFIG.API_URL.includes('PASTE_YOUR')){
+    setStatus(false,'⚠ ยังไม่ได้ตั้งค่า CONFIG.API_URL — ดูคู่มือ deploy');
+    showToast('⚠ ยังไม่ได้ตั้งค่า API_URL ในไฟล์นี้ ระบบจะใช้ข้อมูลตัวอย่างชั่วคราว');
+    DATA = seedData();
+    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
+    if(!DATA.pendingErrors) DATA.pendingErrors = [];
+    renderAll();
+    return;
+  }
+  try{
+    const res = await fetch(CONFIG.API_URL, { method:'GET' });
+    const json = await res.json();
+    DATA = (json && Object.keys(json).length>0) ? json : seedData();
+    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
+    if(!DATA.pendingErrors) DATA.pendingErrors = [];
+    if(!DATA.errors) DATA.errors = [];
+    if(!DATA.documents) DATA.documents = [];
+    if(!DATA.proposals) DATA.proposals = [];
+    if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
+    setStatus(false, `พร้อมใช้งาน · ${DATA.errors.length} Error · ${DATA.documents.length} เอกสาร`);
+  }catch(e){
+    setStatus(false, '⚠ เชื่อมต่อ backend ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
+    showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
+    DATA = seedData();
+    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
+    if(!DATA.pendingErrors) DATA.pendingErrors = [];
+  }
+  renderAll();
+}
+async function persist(){
+  if(CONFIG.API_URL.includes('PASTE_YOUR')){ showToast('⚠ ยังไม่ได้ตั้งค่า API_URL — บันทึกไม่ได้จริง'); return false; }
+  try{
+    // ใช้ Content-Type: text/plain เพื่อเลี่ยง CORS preflight ของเบราว์เซอร์ (Apps Script Web App จะ parse JSON เองฝั่ง server)
+    const res = await fetch(CONFIG.API_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ secretKey: CONFIG.SECRET_KEY, data: DATA })
+    });
+    const json = await res.json();
+    if(!json.ok) throw new Error(json.error||'unknown error');
+    return true;
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return false; }
+}
+
+/* ===================== IMAGE COMPRESSION ===================== */
+function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxW=480; const scale=Math.min(1, maxW/img.width);
+        const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas.height=img.height*scale;
+        const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',0.55));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
+
+/* ===================== REAL GOOGLE SIGN-IN (Google Identity Services) ===================== */
+function decodeJwt(token){
+  try{
+    const payload = token.split('.')[1];
+    const json = decodeURIComponent(atob(payload.replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(json);
+  }catch(e){ return null; }
+}
+function handleGoogleCredential(response){
+  const payload = decodeJwt(response.credential);
+  if(!payload){ showToast('⚠ ยืนยันตัวตนไม่สำเร็จ'); return; }
+  myGoogleId = payload.sub; myUserName = payload.name || payload.email;
+  $('gsi-overlay').classList.remove('show');
+  $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
+  showToast('✓ เข้าสู่ระบบแล้วในชื่อ '+myUserName);
+  updateNotifBadge();
+  if(window._afterSignin){ window._afterSignin(); window._afterSignin=null; }
+}
+let _gisInitialized = false;
+function initGoogleSignIn(){
+  if(CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){ $('gsi-config-warning').style.display='block'; return false; }
+  if(!window.google || !window.google.accounts){ return false; }
+  if(!_gisInitialized){
+    google.accounts.id.initialize({ client_id: CONFIG.GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select:false });
+    _gisInitialized = true;
+  }
+  $('g_id_signin_container').innerHTML = '';
+  google.accounts.id.renderButton($('g_id_signin_container'), { theme:'outline', size:'large', text:'signin_with', shape:'pill' });
+  return true;
+}
+function ensureSignedIn(callback){
+  if(myGoogleId){ callback(); return; }
+  $('gsi-overlay').classList.add('show');
+  window._afterSignin = callback;
+  const ok = initGoogleSignIn();
+  if(!ok && !CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){ setTimeout(initGoogleSignIn, 400); }
+}
+$('change-name-btn').addEventListener('click', ()=>{
+  myGoogleId = null; myUserName = null;
+  $('signed-in-pill').style.display = 'none';
+  if(window.google && window.google.accounts){ google.accounts.id.disableAutoSelect(); }
+  ensureSignedIn(()=>{});
+});
+
+/* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
+const TEAM_PIN = '1234';   // ⚠️ เปลี่ยนก่อนใช้งานจริง — Sup Product / Manager
+const OWNER_PIN = '5678';  // ⚠️ เปลี่ยนก่อนใช้งานจริง — ผู้รับผิดชอบ Product (เข้มงวดกว่า)
+let pinUnlockedTeam = false;
+let pinUnlockedOwner = false;
+let pendingModeAfterPin = null;
+function requestModeSwitch(mode){
+  if(mode==='eng'){ switchMode(mode); return; }
+  if(mode==='owner'){ if(pinUnlockedOwner){ switchMode(mode); return; } openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้า "ผู้รับผิดชอบ Product" กระทบข้อมูลทั้งระบบ — ใช้ PIN แยกต่างหาก ไม่ใช่ PIN เดียวกับ Sup Product/Manager'); return; }
+  if(pinUnlockedTeam){ switchMode(mode); return; }
+  openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้า Sup Product / Manager มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง');
+}
+function openPinModal(mode, title, desc){
+  pendingModeAfterPin = mode; $('pin-modal-title').textContent = title; $('pin-modal-desc').textContent = desc;
+  $('pin-input').value=''; $('pin-error').classList.remove('show'); $('pin-modal').classList.add('show'); setTimeout(()=>$('pin-input').focus(),50);
+}
+$('pin-submit').addEventListener('click', ()=>{
+  const val = $('pin-input').value;
+  const correct = pendingModeAfterPin==='owner' ? (val===OWNER_PIN) : (val===TEAM_PIN);
+  if(correct){
+    if(pendingModeAfterPin==='owner') pinUnlockedOwner = true; else pinUnlockedTeam = true;
+    $('pin-modal').classList.remove('show'); if(pendingModeAfterPin) switchMode(pendingModeAfterPin);
+  } else { $('pin-error').classList.add('show'); $('pin-input').value=''; $('pin-input').focus(); }
+});
+$('pin-input').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pin-submit').click(); });
+$('pin-cancel').addEventListener('click', ()=>{ $('pin-modal').classList.remove('show'); pendingModeAfterPin=null; });
+
+function switchMode(mode){
+  closeErrorDetail();
+  currentMode = mode;
+  $('view-eng').style.display = mode==='eng' ? 'block':'none';
+  $('view-sup').style.display = mode==='sup' ? 'block':'none';
+  $('view-owner').style.display = mode==='owner' ? 'block':'none';
+  $('view-mgr').style.display = mode==='mgr' ? 'block':'none';
+  $('mode-eng').classList.toggle('active', mode==='eng');
+  $('mode-sup').classList.toggle('active', mode==='sup');
+  $('mode-owner').classList.toggle('active', mode==='owner');
+  $('mode-mgr').classList.toggle('active', mode==='mgr');
+  if(mode==='sup') renderSupView();
+  if(mode==='owner') renderOwnerView();
+  if(mode==='mgr') renderMgrView();
+}
+$('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
+$('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
+$('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
+$('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
+
+function renderAll(){
+  renderCategoryFilter(); renderTechResults();
+  renderDocFilterEng(); renderEngDocResults();
+  populateSupSelectors();
+  populateEngErrorFormSelectors();
+  updateNotifBadge();
+  if(currentMode==='sup') renderSupView();
+  if(currentMode==='owner') renderOwnerView();
+  if(currentMode==='mgr') renderMgrView();
+}
+
+/* ===================== ENGINEER SUB-TABS ===================== */
+document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    engActiveTab = btn.getAttribute('data-tab');
+    if(engActiveTab==='trbl'){ $('eng-tab-trbl').style.display='block'; $('eng-tab-docs').style.display='none'; }
+    else{ $('eng-tab-trbl').style.display='none'; $('eng-tab-docs').style.display='block'; engDocTypeActive = engActiveTab; renderDocFilterEng(); renderEngDocResults(); }
+  });
+});
+
+/* ===================== TROUBLESHOOTING (Engineer) ===================== */
+function renderCategoryFilter(){
+  const cats = Object.keys(DATA.categories);
+  $('filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('filter-category').value = filterCategory; updateModelFilter();
+}
+function updateModelFilter(){
+  const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]);
+  $('filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
+}
+$('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); renderTechResults(); });
+$('filter-model').addEventListener('change', e=>{ filterModel=e.target.value; renderTechResults(); });
+$('search-input').addEventListener('input', e=>{ currentQuery=e.target.value; renderTechResults(); });
+$('clear-search').addEventListener('click', ()=>{ $('search-input').value=''; currentQuery=''; renderTechResults(); });
+
+function matchesQuery(e,q){ if(!q) return true; const hay=[e.category,e.model,e.errorCode,e.symptom].join(' ').toLowerCase(); return hay.includes(q.toLowerCase()); }
+function nameSummary(names){ if(names.length===0) return ''; if(names.length<=4) return names.join(', '); return names.slice(0,4).join(', ')+` และอีก ${names.length-4} คน`; }
+
+function renderTechResults(){
+  const list = $('results-list');
+  let filtered = DATA.errors.filter(e=>matchesQuery(e,currentQuery));
+  if(filterCategory!=='all') filtered = filtered.filter(e=>e.category===filterCategory);
+  if(filterModel!=='all') filtered = filtered.filter(e=>e.model===filterModel);
+  $('result-count').textContent = DATA.errors.length===0 ? '' : `พบ ${filtered.length} รายการ`;
+  if(DATA.errors.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีข้อมูลในระบบ</h3><p>รอ Sup Product เพิ่มรายการ Troubleshoot เข้ามาก่อน</p></div>`; return; }
+  if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  list.innerHTML = filtered.map(e=>renderErrorCard(e,false)).join('');
+  list.querySelectorAll('.card-head').forEach(h=>{
+    h.addEventListener('click', ()=>{ openErrorDetail(h.closest('.card').getAttribute('data-id')); });
+  });
+}
+
+function renderErrorCard(e, adminMode){
+  const pending = pendingDownCount(e.id);
+  const totalUps = e.solutions.reduce((a,s)=>a+(s.feedback||[]).filter(f=>f.type==='up').length,0);
+  return `
+  <div class="card" data-id="${e.id}">
+    <div class="card-head">
+      <div style="min-width:0;">
+        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span></div>
+        <div class="card-symptom">${escapeHtml(e.symptom)}</div>
+        <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
+      </div>
+      <span class="chev">⤢</span>
+    </div>
+    ${adminMode?`<div class="card-admin-actions"><button class="icon-btn" data-edit="${e.id}">แก้ไข Error นี้</button><button class="icon-btn danger" data-del="${e.id}">ลบ Error นี้</button></div>`:''}
+  </div>`;
+}
+
+/* ===================== FULLSCREEN ERROR DETAIL ===================== */
+let openErrorDetailId = null;
+function openErrorDetail(errorId){
+  const err = DATA.errors.find(e=>e.id===errorId); if(!err) return;
+  err.viewCount = (err.viewCount||0)+1; persist();
+  if(currentMode==='eng') renderTechResults();
+  if(currentMode==='sup') renderSupSearchResults();
+  openErrorDetailId = errorId;
+  renderErrorDetailPanel();
+  $('error-detail-panel').classList.add('show');
+  window.scrollTo({top:0});
+}
+function closeErrorDetail(){ $('error-detail-panel').classList.remove('show'); openErrorDetailId = null; }
+$('error-detail-close').addEventListener('click', closeErrorDetail);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('error-detail-panel').classList.contains('show') && !$('lightbox').classList.contains('show')) closeErrorDetail(); });
+
+function renderErrorDetailPanel(){
+  const e = DATA.errors.find(x=>x.id===openErrorDetailId); if(!e) return;
+  const pending = pendingDownCount(e.id);
+  const totalUps = e.solutions.reduce((a,s)=>a+(s.feedback||[]).filter(f=>f.type==='up').length,0);
+  const downLocked = myVotes['down:'+e.id];
+  const downNames = (DATA.proposals||[]).filter(p=>p.errorId===e.id && p.status==='pending').map(p=>p.submitterName).filter(Boolean);
+  const content = $('error-detail-content');
+  content.innerHTML = `
+    <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span></div>
+    <div class="detail-symptom">${escapeHtml(e.symptom)}</div>
+    <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
+    <div style="margin-top:14px;">
+      ${e.solutions.map((s,idx)=>renderSolutionCard(e,s,idx)).join('')}
+      <div class="error-fb-block">
+        <div class="t">ลองวิธีข้างบนทั้งหมดแล้ว แต่ยังแก้ปัญหานี้ไม่ได้?</div>
+        <button class="fb-down-btn ${downLocked?'locked':''}" data-errdown="${e.id}" ${downLocked?'disabled':''}>${downLocked?'✓ คุณแจ้งไปแล้ว':'👎 ลองทุกวิธีแล้วไม่ได้ผล'}</button>
+        ${downNames.length?`<div class="names">แจ้งโดย: ${escapeHtml(nameSummary(downNames))}</div>`:''}
+      </div>
+    </div>
+  `;
+  bindFeedbackButtons(content); bindLightboxTriggers(content);
+}
+
+function renderSolutionCard(err, s, idx){
+  const up = (s.feedback||[]).filter(f=>f.type==='up');
+  const upLocked = myVotes['up:'+s.id];
+  const names = up.map(f=>f.name).filter(Boolean);
+  return `
+  <div class="solution-block">
+    <div class="solution-num">วิธี ${idx+1}</div>
+    <div class="solution-desc">${escapeHtml(s.desc)}</div>
+    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${img}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
+    <div class="meta-grid">
+      <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(s.tools||'-')}</div></div>
+      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(s.parts||'-')}</div></div>
+      <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(s.time||'-')}</div></div>
+    </div>
+    <div class="fb-row">
+      <button class="fb-btn up ${upLocked?'sel':''}" data-sol="${s.id}" ${upLocked?'disabled':''}>${upLocked?'✓ คุณกดแล้ว':'👍 แก้ได้จริง'} (${up.length})</button>
+      ${names.length?`<div class="fb-names">${escapeHtml(nameSummary(names))}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function bindFeedbackButtons(root){
+  root = root || document;
+  root.querySelectorAll('.fb-btn.up').forEach(btn=>{ if(btn.disabled) return; btn.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=btn.getAttribute('data-sol'); ensureSignedIn(()=>submitUp(solId)); }); });
+  root.querySelectorAll('[data-errdown]').forEach(btn=>{
+    if(btn.disabled) return;
+    btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errdown');
+      ensureSignedIn(()=>{ downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
+  });
+}
+async function submitUp(solId){
+  if(myVotes['up:'+solId]){ showToast('คุณเคยกดแก้ได้จริงไว้แล้ว'); return; }
+  for(const e of DATA.errors){ const sol=e.solutions.find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push({type:'up', name:myUserName}); break; } }
+  myVotes['up:'+solId]=true; await persist(); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  if(openErrorDetailId) renderErrorDetailPanel();
+  showToast('✓ บันทึก feedback แล้วในชื่อ '+myUserName);
+}
+
+$('down-modal-close-x').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
+$('down-modal-cancel').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
+function renderDownModalImages(){
+  const wrap = $('down-modal-imgrow');
+  wrap.innerHTML = downModalImages.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-dm-rmimg="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label>`;
+  $('down-modal-upload').addEventListener('change', async ()=>{ for(const file of $('down-modal-upload').files){ try{ const c=await compressImage(file); downModalImages.push(c); }catch(e){} } renderDownModalImages(); });
+  wrap.querySelectorAll('[data-dm-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalImages.splice(parseInt(btn.getAttribute('data-dm-rmimg')),1); renderDownModalImages(); }));
+}
+$('down-modal-submit').addEventListener('click', async ()=>{
+  const desc = $('down-modal-desc').value.trim();
+  if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
+  if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
+  DATA.proposals = DATA.proposals || [];
+  DATA.proposals.push({ id:uid('p'), errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:[...downModalImages], status:'pending', createdAt:Date.now(), submitterName: myUserName });
+  myVotes['down:'+downModalErrorId] = true;
+  await persist(); $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
+  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
+});
+
+/* ===================== NOTIFICATIONS (Engineer's submitted-error status) ===================== */
+function myResolvedSubmissions(){
+  if(!myUserName) return [];
+  return (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
+}
+function updateNotifBadge(){
+  const unread = myResolvedSubmissions().filter(p=>!readNotifIds.has(p.id));
+  const badge = $('notif-badge');
+  if(unread.length>0){ badge.style.display='block'; badge.textContent = unread.length; }
+  else{ badge.style.display='none'; }
+}
+$('notif-bell').addEventListener('click', ()=>{
+  if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
+  renderNotifList(); $('notif-modal').classList.add('show');
+});
+$('notif-modal-close').addEventListener('click', ()=>{ $('notif-modal').classList.remove('show'); });
+function renderNotifList(){
+  const list = $('notif-list');
+  const mine = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
+  if(mine.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">คุณยังไม่เคยส่ง Error ใหม่เข้าระบบ</p>`; return; }
+  list.innerHTML = mine.map(p=>{
+    readNotifIds.add(p.id);
+    let statusBadge;
+    if(p.status==='pending') statusBadge = `<span class="status-badge" style="background:rgba(232,163,61,.15);color:var(--amber);">รอตรวจสอบ</span>`;
+    else if(p.status==='approved') statusBadge = `<span class="status-badge" style="background:rgba(71,184,129,.15);color:var(--green);">✓ อนุมัติแล้ว</span>`;
+    else statusBadge = `<span class="status-badge" style="background:rgba(229,83,75,.15);color:var(--red);">✕ ถูกปฏิเสธ</span>`;
+    return `<div class="admin-row" style="flex-direction:column;align-items:flex-start;">
+      <div class="admin-row-main" style="width:100%;justify-content:space-between;">
+        <span style="font-size:12.5px;">${escapeHtml(p.model)} — ${escapeHtml(p.errorCode||p.symptom)}</span>
+        ${statusBadge}
+      </div>
+      ${p.status==='rejected' && p.rejectionReason ? `<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">เหตุผล: ${escapeHtml(p.rejectionReason)}</div>` : ''}
+    </div>`;
+  }).join('');
+  updateNotifBadge();
+}
+
+/* ===================== LIGHTBOX ===================== */
+let lightboxImages=[]; let lightboxIndex=0;
+function openLightbox(images, idx){ lightboxImages=images; lightboxIndex=idx; renderLightbox(); $('lightbox').classList.add('show'); }
+function renderLightbox(){ $('lightbox-img').src=lightboxImages[lightboxIndex]; $('lightbox-counter').textContent=lightboxImages.length>1?`${lightboxIndex+1} / ${lightboxImages.length}`:''; const multi=lightboxImages.length>1; $('lightbox-prev').style.display=multi?'flex':'none'; $('lightbox-next').style.display=multi?'flex':'none'; }
+function closeLightbox(){ $('lightbox').classList.remove('show'); }
+$('lightbox-close').addEventListener('click', closeLightbox);
+$('lightbox').addEventListener('click', e=>{ if(e.target.id==='lightbox') closeLightbox(); });
+$('lightbox-prev').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex-1+lightboxImages.length)%lightboxImages.length; renderLightbox(); });
+$('lightbox-next').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex+1)%lightboxImages.length; renderLightbox(); });
+document.addEventListener('keydown', e=>{ if(!$('lightbox').classList.contains('show')) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') $('lightbox-prev').click(); if(e.key==='ArrowRight') $('lightbox-next').click(); });
+function bindLightboxTriggers(root){
+  root = root || document;
+  root.querySelectorAll('[data-lightbox-sol]').forEach(img=>{
+    img.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=img.getAttribute('data-lightbox-sol'); const idx=parseInt(img.getAttribute('data-lightbox-idx'));
+      let images=null; for(const e of DATA.errors){ const sol=e.solutions.find(s=>s.id===solId); if(sol){ images=sol.images; break; } } if(images) openLightbox(images, idx); });
+  });
+}
+
+/* ===================== DOCUMENTS (Engineer) ===================== */
+function renderDocFilterEng(){
+  const cats = Object.keys(DATA.categories);
+  $('doc-filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('doc-filter-category').value = docFilterCategory; updateDocModelFilterEng();
+}
+function updateDocModelFilterEng(){
+  const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]);
+  $('doc-filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
+}
+$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
+$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; renderEngDocResults(); });
+$('doc-search-input').addEventListener('input', e=>{ docQuery=e.target.value; renderEngDocResults(); });
+$('doc-clear-search').addEventListener('click', ()=>{ $('doc-search-input').value=''; docQuery=''; renderEngDocResults(); });
+
+function docCard(d){
+  const typeInfo = DOC_TYPES.find(t=>t.key===d.docType);
+  const dateStr = new Date(d.uploadedAt).toLocaleDateString('th-TH');
+  return `<div class="doc-card">
+    <div class="doc-main"><div class="doc-icon">${typeInfo?typeInfo.icon:'📄'}</div>
+      <div><div class="doc-title">${escapeHtml(d.title)}</div><div class="doc-meta">${escapeHtml(d.category)} · ${escapeHtml(d.model)} · อัปโหลด ${dateStr}${d.method==='direct'?' · ไฟล์: '+escapeHtml(d.fileName||''):''}</div></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" data-openfile="${d.id}">${d.method==='link'?'เปิดลิงก์ ↗':'ดาวน์โหลด (จำลอง)'}</button>
+  </div>`;
+}
+function bindDocOpenButtons(){
+  document.querySelectorAll('[data-openfile]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const doc=DATA.documents.find(d=>d.id===btn.getAttribute('data-openfile')); if(!doc) return;
+      if(doc.method==='link'){ window.open(doc.url, '_blank'); } else{ showToast('🖨 จำลอง: กำลังเปิดไฟล์ "'+doc.fileName+'"'); } });
+  });
+}
+function renderEngDocResults(){
+  const list = $('doc-results-list');
+  let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
+  if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
+  if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
+  if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
+  $('doc-result-count').textContent = `${docTypeLabel(engDocTypeActive)} · พบ ${filtered.length} เอกสาร`;
+  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีเอกสารในหมวดนี้</h3><p>รอ Sup Product อัปโหลดเอกสาร ${docTypeLabel(engDocTypeActive)} เข้ามา</p></div>`; return; }
+  list.innerHTML = filtered.sort((a,b)=>b.uploadedAt-a.uploadedAt).map(docCard).join('');
+  bindDocOpenButtons();
+}
+
+/* ===================== ENGINEER: ADD NEW ERROR (goes to pending queue) ===================== */
+function populateEngErrorFormSelectors(){
+  const cats = Object.keys(DATA.categories);
+  $('eng-f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  updateEngModelSelect();
+}
+function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=DATA.categories[cat]||[]; $('eng-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+$('eng-f-category').addEventListener('change', updateEngModelSelect);
+
+$('eng-toggle-add-error-btn').addEventListener('click', ()=>{
+  ensureSignedIn(()=>{
+    const form = $('eng-add-error-form'); const showing = form.style.display==='block';
+    form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
+    if(!showing) resetEngErrorForm();
+  });
+});
+$('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+
+function resetEngErrorForm(){
+  $('eng-f-code').value=''; $('eng-f-symptom').value='';
+  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  renderEngSolutionsEditor();
+}
+function renderEngSolutionsEditor(){
+  const wrap = $('eng-solutions-editor');
+  wrap.innerHTML = engEditingSolutions.map((s,idx)=>`
+    <div class="solution-editor" data-sid="${s.id}">
+      <div class="num-badge">วิธี ${idx+1}</div>
+      ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
+      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="form-grid two" style="margin-top:8px;">
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
+        <div class="img-upload-row" data-imgrow="${s.id}">
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        </div>
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
+}
+$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
+
+$('eng-save-error-btn').addEventListener('click', async ()=>{
+  const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
+  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  DATA.pendingErrors = DATA.pendingErrors || [];
+  DATA.pendingErrors.push({ id:uid('pe'), category, model, errorCode:$('eng-f-code').value.trim(), symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() });
+  await persist();
+  $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
+  resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+  renderAll();
+  showToast('✓ ส่งให้ Sup Product ตรวจสอบแล้ว — ดูสถานะได้ที่ 🔔');
+});
+
+/* ===================== SUP PRODUCT: sub-tabs ===================== */
+document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#sup-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    supActiveTab = btn.getAttribute('data-tab');
+    $('sup-tab-trbl').style.display = supActiveTab==='trbl' ? 'block':'none';
+    $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
+    if(supActiveTab==='docs') renderSupDocTab();
+  });
+});
+
+$('toggle-add-error-btn').addEventListener('click', ()=>{
+  const form = $('add-error-form'); const showing = form.style.display==='block';
+  form.style.display = showing ? 'none':'block'; $('toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
+  if(!showing) resetErrorForm();
+});
+$('cancel-error-btn').addEventListener('click', ()=>{ resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+
+function populateSupSelectors(){
+  $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  $('sup-identity').value = currentSupIdentity;
+  const cats = Object.keys(DATA.categories);
+  $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('doc-f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  updateModelSelect(); updateDocFCategoryModel();
+}
+function updateModelSelect(){ const cat=$('f-category').value; const models=DATA.categories[cat]||[]; $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+$('f-category').addEventListener('change', updateModelSelect);
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; renderSupView(); });
+
+function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
+
+function renderSupStats(){
+  const mine = myErrors();
+  const totalUps = mine.reduce((a,e)=>a+e.solutions.reduce((b,s)=>b+(s.feedback||[]).filter(f=>f.type==='up').length,0),0);
+  const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
+  const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
+  $('sup-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Error ที่กรอก (ปริมาณ)</div><div class="value">${mine.length}</div></div>
+    <div class="stat-card"><div class="label">👍 แก้ได้จริง สะสม</div><div class="value green">${totalUps}</div></div>
+    <div class="stat-card"><div class="label">ข้อเสนอที่ถูกรับ</div><div class="value amber">${acceptedCount}</div></div>
+    <div class="stat-card"><div class="label">แจ้งแก้ไม่ได้ (ค้างอยู่ตอนนี้)</div><div class="value" style="color:${pendingTotal>0?'var(--red)':'var(--text-dim)'};">${pendingTotal}</div></div>
+  `;
+}
+
+function renderSolutionsEditor(){
+  const wrap = $('solutions-editor');
+  wrap.innerHTML = editingSolutions.map((s,idx)=>`
+    <div class="solution-editor" data-sid="${s.id}">
+      <div class="num-badge">วิธี ${idx+1}</div>
+      ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
+      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="form-grid two" style="margin-top:8px;">
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
+        <div class="img-upload-row" data-imgrow="${s.id}">
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        </div>
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }));
+}
+$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
+
+function resetErrorForm(){
+  editingErrorId = null; reviewingPendingErrorId = null;
+  $('f-code').value=''; $('f-symptom').value='';
+  editingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  renderSolutionsEditor();
+  $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
+  $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
+  $('save-error-btn').textContent = 'บันทึก Error';
+}
+$('save-error-btn').addEventListener('click', async ()=>{
+  const category=$('f-category').value, model=$('f-model').value, symptom=$('f-symptom').value.trim();
+  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  const validSolutions = editingSolutions.filter(s=>s.desc.trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+
+  if(reviewingPendingErrorId){
+    const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
+    DATA.errors.push({id:uid('e'), category, model, errorCode:$('f-code').value.trim(), symptom, viewCount:0, solutions: validSolutions.map(s=>({...s, feedback:[]}))});
+    if(pe){ pe.status='approved'; pe.reviewedAt=Date.now(); }
+    await persist();
+    resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+    renderAll(); renderSupView();
+    showToast('✓ แก้ไขและอนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
+    return;
+  }
+
+  if(editingErrorId){
+    const err = DATA.errors.find(e=>e.id===editingErrorId);
+    Object.assign(err, {category, model, errorCode:$('f-code').value.trim(), symptom, solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
+  } else { DATA.errors.push({id:uid('e'), category, model, errorCode:$('f-code').value.trim(), symptom, viewCount:0, solutions: validSolutions.map(s=>({...s, feedback:[]}))}); }
+  await persist();
+  $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
+  resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+  renderAll(); renderSupView();
+});
+
+function startEditError(id){
+  const err = DATA.errors.find(e=>e.id===id); if(!err) return;
+  editingErrorId = id; reviewingPendingErrorId = null;
+  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('sup-form-heading').innerHTML = 'แก้ไข Error <span class="tag">SUP PRODUCT</span>';
+  $('sup-form-sub').textContent = 'แก้ไขข้อมูล Error ที่มีอยู่แล้ว';
+  $('save-error-btn').textContent = 'บันทึกการแก้ไข';
+  $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
+  $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
+  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function deleteError(id){ if(!confirm('ยืนยันการลบ Error นี้?')) return; DATA.errors = DATA.errors.filter(e=>e.id!==id); await persist(); renderAll(); renderSupView(); showToast('ลบแล้ว'); }
+
+/* ===================== SUP PRODUCT: REVIEW PENDING ERRORS FROM ENGINEER ===================== */
+function myPendingErrors(){
+  return (DATA.pendingErrors||[]).filter(p=>p.status==='pending' && ownerOf(p.category,p.model)===currentSupIdentity);
+}
+function renderPendingErrors(){
+  const pending = myPendingErrors();
+  $('pending-error-count').textContent = pending.length;
+  const list = $('pending-errors-list');
+  if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มี Error ใหม่รอตรวจสอบ</p>`; return; }
+  list.innerHTML = pending.map(p=>`
+    <div class="proposal-card" data-peid="${p.id}">
+      <div class="proposal-meta">${escapeHtml(p.category)} · ${escapeHtml(p.model)} ${p.errorCode?'· '+escapeHtml(p.errorCode):''} · ส่งโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      <div class="proposal-text"><strong>${escapeHtml(p.symptom)}</strong></div>
+      <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">${p.solutions.length} วิธีแก้ไขที่เสนอมา</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" data-editpending="${p.id}">✎ แก้ไขก่อนอนุมัติ</button>
+        <button class="btn btn-primary btn-sm" data-quickapprove="${p.id}">✓ อนุมัติทันที</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);" data-rejectpending="${p.id}">✕ ปฏิเสธ</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('[data-editpending]').forEach(b=>b.addEventListener('click', ()=>startReviewPendingError(b.getAttribute('data-editpending'))));
+  list.querySelectorAll('[data-quickapprove]').forEach(b=>b.addEventListener('click', ()=>quickApprovePendingError(b.getAttribute('data-quickapprove'))));
+  list.querySelectorAll('[data-rejectpending]').forEach(b=>b.addEventListener('click', ()=>rejectPendingError(b.getAttribute('data-rejectpending'))));
+}
+function startReviewPendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  editingErrorId = null; reviewingPendingErrorId = id;
+  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('sup-form-heading').innerHTML = 'แก้ไขก่อนอนุมัติ <span class="tag">จาก '+escapeHtml(pe.submitterName||'Engineer')+'</span>';
+  $('sup-form-sub').textContent = 'ปรับแก้เนื้อหาได้ก่อนกด "อนุมัติ" ด้านล่าง — Engineer จะเห็นผลใน 🔔';
+  $('save-error-btn').textContent = 'อนุมัติ Error นี้';
+  $('f-category').value = pe.category; updateModelSelect(); $('f-model').value = pe.model;
+  $('f-code').value = pe.errorCode||''; $('f-symptom').value = pe.symptom;
+  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function quickApprovePendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  DATA.errors.push({id:uid('e'), category:pe.category, model:pe.model, errorCode:pe.errorCode, symptom:pe.symptom, viewCount:0, solutions: pe.solutions.map(s=>({...s, feedback:[]}))});
+  pe.status='approved'; pe.reviewedAt=Date.now();
+  await persist(); renderAll(); renderSupView();
+  showToast('✓ อนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
+}
+async function rejectPendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  const reason = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ — Engineer จะเห็นข้อความนี้)') || '';
+  if(!confirm('ยืนยันการปฏิเสธ Error นี้?')) return;
+  pe.status='rejected'; pe.rejectionReason=reason; pe.reviewedAt=Date.now();
+  await persist(); renderAll(); renderSupView();
+  showToast('ปฏิเสธแล้ว — Engineer จะเห็นผลใน 🔔');
+}
+
+function renderSupFilters(){
+  const cats = Object.keys(DATA.categories);
+  $('sup-filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('sup-filter-category').value = supFilterCategory; updateSupModelFilter();
+}
+function updateSupModelFilter(){
+  const models = supFilterCategory==='all' ? [] : (DATA.categories[supFilterCategory]||[]);
+  $('sup-filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('sup-filter-model').disabled = supFilterCategory==='all'; $('sup-filter-model').value='all'; supFilterModel='all';
+}
+$('sup-filter-category').addEventListener('change', e=>{ supFilterCategory=e.target.value; updateSupModelFilter(); renderSupSearchResults(); });
+$('sup-filter-model').addEventListener('change', e=>{ supFilterModel=e.target.value; renderSupSearchResults(); });
+$('sup-search-input').addEventListener('input', e=>{ supQuery=e.target.value; renderSupSearchResults(); });
+$('sup-clear-search').addEventListener('click', ()=>{ $('sup-search-input').value=''; supQuery=''; renderSupSearchResults(); });
+
+function renderSupSearchResults(){
+  const list = $('sup-results-list'); const mine = myErrors();
+  let filtered = mine.filter(e=>matchesQuery(e,supQuery));
+  if(supFilterCategory!=='all') filtered = filtered.filter(e=>e.category===supFilterCategory);
+  if(supFilterModel!=='all') filtered = filtered.filter(e=>e.model===supFilterModel);
+  $('sup-result-count').textContent = `${currentSupIdentity} · พบ ${filtered.length} จากทั้งหมด ${mine.length} รายการ`;
+  if(mine.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มี Error ของคุณ</h3><p>เพิ่มรายการแรกด้วยฟอร์มด้านบน</p></div>`; return; }
+  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  list.innerHTML = filtered.map(e=>renderErrorCard(e,true)).join('');
+  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=> openErrorDetail(h.closest('.card').getAttribute('data-id'))); });
+  list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); startEditError(b.getAttribute('data-edit')); }));
+  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); deleteError(b.getAttribute('data-del')); }));
+}
+
+function renderProposals(){
+  const pending = (DATA.proposals||[]).filter(p=>p.status==='pending').filter(p=>{ const err=DATA.errors.find(e=>e.id===p.errorId); return err && ownerOf(err.category,err.model)===currentSupIdentity; });
+  $('proposal-count').textContent = pending.length;
+  const list = $('proposals-list');
+  if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มีข้อเสนอรอตรวจสอบ</p>`; return; }
+  list.innerHTML = pending.map(p=>{
+    const err = DATA.errors.find(e=>e.id===p.errorId);
+    return `<div class="proposal-card" data-pid="${p.id}">
+      <div class="proposal-meta">จาก Error: ${escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ')} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      <div class="proposal-text">${escapeHtml(p.desc)}</div>
+      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}
+      <div class="meta-grid" style="margin-bottom:4px;">
+        <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(p.tools||'-')}</div></div>
+        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
+        <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(p.time||'-')}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary btn-sm" data-accept="${p.id}">✓ รับเป็นวิธีแก้ไขทางการ</button>
+        <button class="btn btn-ghost btn-sm" data-reject="${p.id}">ไม่รับ</button>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-accept]').forEach(b=>b.addEventListener('click', ()=>acceptProposal(b.getAttribute('data-accept'))));
+  list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>rejectProposal(b.getAttribute('data-reject'))));
+}
+async function acceptProposal(pid){
+  const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
+  const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
+  err.solutions.push({id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]});
+  p.status = 'accepted'; await persist(); renderAll(); renderSupView();
+  showToast('✓ เพิ่มเป็นวิธีแก้ไขใหม่แล้ว · จำนวนที่ค้างอยู่ลดลง');
+}
+async function rejectProposal(pid){ const p=DATA.proposals.find(x=>x.id===pid); if(!p) return; p.status='rejected'; await persist(); renderAll(); renderSupView(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง'); }
+
+/* ===================== SUP PRODUCT: DOCUMENTS ===================== */
+function renderSupDocTypeBar(){
+  $('sup-doc-type-bar').innerHTML = DOC_TYPES.map(t=>`<button data-doctype="${t.key}" class="${supDocTypeActive===t.key?'active':''}">${t.icon} ${t.label}</button>`).join('');
+  $('sup-doc-type-bar').querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ supDocTypeActive=b.getAttribute('data-doctype'); renderSupDocTab(); }));
+}
+function updateDocFCategoryModel(){ const cat=$('doc-f-category').value; const models=DATA.categories[cat]||[]; $('doc-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+$('doc-f-category').addEventListener('change', updateDocFCategoryModel);
+document.querySelectorAll('input[name="doc-method"]').forEach(r=>{ r.addEventListener('change', ()=>{ $('doc-method-link').style.display = r.value==='link' ? 'block':'none'; $('doc-method-direct').style.display = r.value==='direct' ? 'block':'none'; }); });
+$('doc-f-file').addEventListener('change', ()=>{ const f=$('doc-f-file').files[0]; $('doc-f-filename').textContent = f ? `${f.name} (${Math.round(f.size/1024)} KB)` : 'ยังไม่ได้เลือกไฟล์'; });
+$('doc-save-btn').addEventListener('click', async ()=>{
+  const category=$('doc-f-category').value, model=$('doc-f-model').value, title=$('doc-f-title').value.trim();
+  const method = document.querySelector('input[name="doc-method"]:checked').value;
+  if(!category||!model||!title){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และชื่อเอกสาร'); return; }
+  const doc = { id:uid('d'), docType:supDocTypeActive, category, model, title, method, uploadedAt:Date.now() };
+  if(method==='link'){ const url=$('doc-f-url').value.trim(); if(!url){ showToast('⚠ กรุณาวางลิงก์ Google Drive'); return; } doc.url = url; }
+  else{ const f=$('doc-f-file').files[0]; if(!f){ showToast('⚠ กรุณาเลือกไฟล์'); return; } doc.fileName = f.name; }
+  DATA.documents.push(doc); await persist();
+  $('doc-f-title').value=''; $('doc-f-url').value=''; $('doc-f-file').value=''; $('doc-f-filename').textContent='ยังไม่ได้เลือกไฟล์';
+  $('doc-save-msg').style.opacity=1; setTimeout(()=>$('doc-save-msg').style.opacity=0,1600);
+  renderAll(); renderSupDocTab();
+  showToast(method==='direct' ? '✓ บันทึกแล้ว (จำลองการอัปโหลด)' : '✓ บันทึกลิงก์เอกสารแล้ว');
+});
+function renderSupDocList(){
+  const list = $('sup-doc-list'); const mine = DATA.documents.filter(d=>ownerOf(d.category,d.model)===currentSupIdentity);
+  $('sup-doc-count').textContent = mine.length;
+  if(mine.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีเอกสาร</h3><p>อัปโหลดเอกสารแรกด้วยฟอร์มด้านบน</p></div>`; return; }
+  list.innerHTML = mine.sort((a,b)=>b.uploadedAt-a.uploadedAt).map(d=>`
+    <div class="admin-row">
+      <div class="admin-row-main"><span class="badge-cat">${docTypeLabel(d.docType)}</span><span class="badge-equip">${escapeHtml(d.model)}</span><span style="font-size:12.5px;color:var(--text-dim);">${escapeHtml(d.title)}</span></div>
+      <button class="icon-btn danger" data-deldoc="${d.id}">ลบ</button>
+    </div>`).join('');
+  list.querySelectorAll('[data-deldoc]').forEach(b=>b.addEventListener('click', async ()=>{ if(!confirm('ยืนยันการลบเอกสารนี้?')) return; DATA.documents = DATA.documents.filter(d=>d.id!==b.getAttribute('data-deldoc')); await persist(); renderAll(); renderSupDocTab(); showToast('ลบเอกสารแล้ว'); }));
+}
+function renderSupDocCoverage(){
+  const models = [];
+  Object.entries(DATA.categories).forEach(([cat,ms])=>{ ms.forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) models.push({category:cat, model:m}); }); });
+  const table = $('sup-doc-coverage');
+  if(models.length===0){ table.innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">ยังไม่มีรุ่นที่คุณดูแล</td></tr></tbody>`; return; }
+  let html = `<thead><tr><th>ประเภท</th><th>รุ่นเครื่อง</th>${DOC_TYPES.map(t=>`<th>${t.icon} ${t.label}</th>`).join('')}</tr></thead><tbody>`;
+  models.forEach(({category,model})=>{
+    html += `<tr><td class="mono" style="color:var(--text-faint);">${escapeHtml(category)}</td><td><strong>${escapeHtml(model)}</strong></td>`;
+    DOC_TYPES.forEach(t=>{
+      const has = DATA.documents.some(d=>d.docType===t.key && d.category===category && d.model===model);
+      html += `<td class="chk">${has ? '✅':'<span style="color:var(--text-faint);">❌</span>'}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  table.innerHTML = html;
+}
+function renderSupDocTab(){ renderSupDocTypeBar(); updateDocFCategoryModel(); renderSupDocList(); renderSupDocCoverage(); }
+
+function renderSupView(){ populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors(); renderProposals(); renderSupFilters(); renderSupSearchResults(); if(supActiveTab==='docs') renderSupDocTab(); }
+
+/* ===================== OWNER VIEW (ผู้รับผิดชอบ Product) ===================== */
+function ownerSelectOptions(selected, includeDefault){
+  let opts = includeDefault ? `<option value="__default__">(ใช้ค่าเริ่มต้นของประเภท)</option>` : '';
+  opts += SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}" ${n===selected?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  return opts;
+}
+function renderOwnerView(){
+  populateOwnerFormSelectors();
+  renderOwnerSummary();
+  renderCatModelManage();
+}
+function populateOwnerFormSelectors(){
+  const cats = Object.keys(DATA.categories);
+  $('new-model-cat').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') + `<option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option>`;
+  $('new-model-owner').innerHTML = ownerSelectOptions(SUP_PRODUCTS[0], false);
+  toggleNewCatInput();
+}
+function toggleNewCatInput(){
+  const isNew = $('new-model-cat').value === '__new__';
+  $('new-cat-input').style.display = isNew ? 'block' : 'none';
+}
+$('new-model-cat').addEventListener('change', toggleNewCatInput);
+function renderOwnerSummary(){
+  const wrap = $('owner-summary');
+  wrap.innerHTML = SUP_PRODUCTS.map(sp=>{
+    const ownedCats = Object.keys(DATA.categories).filter(c=>DATA.owners.categoryOwners[c]===sp);
+    const crossExceptions = Object.entries(DATA.owners.modelOverrides).filter(([key,owner])=>{
+      if(owner!==sp) return false;
+      const [cat] = key.split('|');
+      return DATA.owners.categoryOwners[cat] !== sp;
+    });
+    let catRows = ownedCats.map(cat=>{
+      const models = DATA.categories[cat];
+      const exceptionsAway = models.filter(m=>DATA.owners.modelOverrides[cat+'|'+m] && DATA.owners.modelOverrides[cat+'|'+m]!==sp);
+      const normalModels = models.filter(m=>!exceptionsAway.includes(m));
+      const isEditingCat = editingOwnerCat===cat;
+      return `<div class="owner-cat-row">
+        <div class="owner-cat-head">
+          <div>
+            <span class="owner-cat-name">${escapeHtml(cat)}</span>
+            <span class="mono" style="font-size:10.5px;color:var(--text-faint);"> (${models.length} รุ่น)</span>
+          </div>
+          ${isEditingCat ? `
+            <div class="inline-edit">
+              <select class="edit-cat-owner-select">${ownerSelectOptions(sp, false)}</select>
+              <button class="btn btn-primary btn-sm" data-confirmcat="${escapeHtml(cat)}">บันทึก</button>
+              <button class="btn btn-ghost btn-sm" data-cancelcat="1">ยกเลิก</button>
+            </div>` : `<button class="icon-btn" data-editcat="${escapeHtml(cat)}">แก้ไข</button>`}
+        </div>
+        <div class="owner-models">${normalModels.map(escapeHtml).join(', ') || '(ไม่มีรุ่นในประเภทนี้)'}</div>
+        ${exceptionsAway.map(m=>{
+          const key = cat+'|'+m;
+          const isEditingModel = editingOwnerModel===key;
+          return `<div class="owner-exception">⚠ ยกเว้น: <strong>${escapeHtml(m)}</strong> → ${escapeHtml(DATA.owners.modelOverrides[key])}
+            ${isEditingModel ? `<span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(DATA.owners.modelOverrides[key], true)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">บันทึก</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">ยกเลิก</button></span>`
+            : `<button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}">แก้ไข</button>`}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+
+    let crossRows = crossExceptions.map(([key])=>{
+      const [catName, model] = key.split('|');
+      const isEditingModel = editingOwnerModel===key;
+      return `<div class="owner-cat-row">
+        <div class="owner-cross">🔧 <strong>${escapeHtml(model)}</strong> <span class="mono" style="color:var(--text-faint);">(จาก ${escapeHtml(catName)} ปกติเป็นของ ${escapeHtml(DATA.owners.categoryOwners[catName]||'-')})</span>
+        ${isEditingModel ? `<span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(DATA.owners.modelOverrides[key], true)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">บันทึก</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">ยกเลิก</button></span>`
+        : `<button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}">แก้ไข</button>`}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="owner-card">
+      <h3>👤 ${escapeHtml(sp)}</h3>
+      ${catRows || '<p style="font-size:12px;color:var(--text-faint);">ยังไม่ได้ดูแลประเภทใด</p>'}
+      ${crossRows}
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-editcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=b.getAttribute('data-editcat'); editingOwnerModel=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-cancelcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-confirmcat]').forEach(b=>b.addEventListener('click', async ()=>{
+    const cat = b.getAttribute('data-confirmcat'); const sel = b.closest('.inline-edit').querySelector('.edit-cat-owner-select'); const newOwner = sel.value;
+    DATA.owners.categoryOwners[cat] = newOwner; editingOwnerCat=null;
+    await persist(); renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwner} แล้ว`);
+  }));
+  wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-confirmmodel]').forEach(b=>b.addEventListener('click', async ()=>{
+    const key = b.getAttribute('data-confirmmodel'); const sel = b.closest('.inline-edit').querySelector('.edit-model-owner-select'); const val = sel.value;
+    if(val==='__default__'){ delete DATA.owners.modelOverrides[key]; } else { DATA.owners.modelOverrides[key] = val; }
+    editingOwnerModel=null; await persist(); renderAll();
+    const modelName = key.split('|')[1];
+    showToast(`✓ อัปเดตผู้ดูแลรุ่น ${modelName} แล้ว`);
+  }));
+}
+
+function renderCatModelManage(){
+  const wrap = $('cat-model-manage');
+  wrap.innerHTML = Object.entries(DATA.categories).map(([cat,models])=>{
+    const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat);
+    return `<div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <strong style="font-size:13px;">${escapeHtml(cat)}</strong>
+        <span class="mono" style="font-size:10px;color:var(--text-faint);">(${escapeHtml(DATA.owners.categoryOwners[cat]||'ยังไม่มีผู้ดูแล')})</span>
+        <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${models.map(m=>{ const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m);
+          return `<span class="mono" style="border:1px solid var(--border);background:var(--panel-alt);border-radius:999px;padding:4px 10px;font-size:11px;">${escapeHtml(m)} <button data-delmodel="${escapeHtml(cat)}|${escapeHtml(m)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'#555':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};margin-left:4px;">✕</button></span>`; }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
+    const cat=b.getAttribute('data-delcat'); if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
+    (DATA.categories[cat]||[]).forEach(m=>{ delete DATA.owners.modelOverrides[cat+'|'+m]; });
+    delete DATA.categories[cat]; delete DATA.owners.categoryOwners[cat]; await persist(); renderAll(); showToast('ลบประเภทแล้ว');
+  }); });
+  wrap.querySelectorAll('[data-delmodel]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
+    const [cat,model]=b.getAttribute('data-delmodel').split('|'); if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
+    DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model]; await persist(); renderAll(); showToast('ลบรุ่นแล้ว');
+  }); });
+}
+$('add-model-btn').addEventListener('click', async ()=>{
+  const catSelectVal = $('new-model-cat').value;
+  const modelName = $('new-model-input').value.trim();
+  const owner = $('new-model-owner').value;
+  let category;
+  let createdNewCategory = false;
+
+  if(catSelectVal === '__new__'){
+    const newCatName = $('new-cat-input').value.trim();
+    if(!newCatName){ showToast('⚠ กรุณาพิมพ์ชื่อประเภทใหม่'); return; }
+    if(DATA.categories[newCatName]){ showToast('⚠ มีประเภทนี้อยู่แล้ว'); return; }
+    DATA.categories[newCatName] = [];
+    DATA.owners.categoryOwners[newCatName] = owner;
+    category = newCatName;
+    createdNewCategory = true;
+  } else {
+    category = catSelectVal;
+    if(!modelName){ showToast('⚠ ประเภทนี้มีอยู่แล้ว กรุณาระบุชื่อรุ่นที่จะเพิ่ม'); return; }
+  }
+
+  if(modelName){
+    if(!DATA.categories[category].includes(modelName)) DATA.categories[category].push(modelName);
+    const key = category+'|'+modelName;
+    if(owner !== DATA.owners.categoryOwners[category]){ DATA.owners.modelOverrides[key] = owner; }
+    else { delete DATA.owners.modelOverrides[key]; }
+  }
+
+  $('new-cat-input').value=''; $('new-model-input').value='';
+  await persist(); renderAll();
+  showToast(modelName ? `✓ เพิ่มรุ่น "${modelName}" แล้ว มอบหมายให้ ${owner}` : `✓ เพิ่มประเภท "${category}" แล้ว มอบหมายให้ ${owner}`);
+});
+
+/* ===================== MANAGER VIEW ===================== */
+function renderMgrView(){
+  const rows = SUP_PRODUCTS.map(name=>{
+    const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
+    const totalUps = mine.reduce((a,e)=>a+e.solutions.reduce((b,s)=>b+(s.feedback||[]).filter(f=>f.type==='up').length,0),0);
+    const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
+    const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
+    const views = mine.reduce((a,e)=>a+(e.viewCount||0),0);
+    return {name, count:mine.length, views, totalUps, acceptedCount, pendingTotal};
+  });
+  let html = `<thead><tr><th>Sup Product</th><th>Error ที่กรอก</th><th>เปิดดูรวม</th><th>👍 สะสม</th><th>ข้อเสนอที่ถูกรับ</th><th>แจ้งแก้ไม่ได้ (ค้างอยู่)</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    html += `<tr><td><strong>${escapeHtml(r.name)}</strong></td><td class="mono">${r.count}</td><td class="mono">${r.views}</td><td class="mono" style="color:var(--green);">${r.totalUps}</td><td class="mono" style="color:var(--amber);">${r.acceptedCount}</td><td class="mono" style="color:${r.pendingTotal>0?'var(--red)':'var(--text-faint)'};">${r.pendingTotal}</td></tr>`;
+  });
+  html += `</tbody>`;
+  $('mgr-table').innerHTML = html;
+
+  /* document summary per person, broken down by doc type as fraction */
+  function allModelsOwnedBy(sp){
+    const list = [];
+    Object.entries(DATA.categories).forEach(([cat,models])=>{ models.forEach(m=>{ if(ownerOf(cat,m)===sp) list.push({category:cat, model:m}); }); });
+    return list;
+  }
+  let dhtml = `<thead><tr><th>Sup Product</th><th>จำนวนรุ่นที่ดูแล</th>${DOC_TYPES.map(t=>`<th>${t.icon} ${t.label}</th>`).join('')}</tr></thead><tbody>`;
+  SUP_PRODUCTS.forEach(sp=>{
+    const models = allModelsOwnedBy(sp);
+    dhtml += `<tr><td><strong>${escapeHtml(sp)}</strong></td><td class="mono">${models.length}</td>`;
+    DOC_TYPES.forEach(t=>{
+      const have = models.filter(({category,model})=>DATA.documents.some(d=>d.docType===t.key && d.category===category && d.model===model)).length;
+      const total = models.length;
+      const color = total===0 ? 'var(--text-faint)' : (have===total ? 'var(--green)' : (have===0 ? 'var(--red)' : 'var(--amber)'));
+      dhtml += `<td class="frac" style="color:${color};">${have}/${total}</td>`;
+    });
+    dhtml += `</tr>`;
+  });
+  dhtml += `</tbody>`;
+  $('mgr-doc-summary').innerHTML = dhtml;
+}
+
+/* ===================== THEME TOGGLE (default: light) ===================== */
+$('theme-toggle-btn').addEventListener('click', ()=>{
+  const isDark = document.body.classList.toggle('dark-theme');
+  $('theme-toggle-btn').textContent = isDark ? '☀️' : '🌙';
+});
+
+/* ===================== INIT ===================== */
+if(!CONFIG.API_URL.includes('PASTE_YOUR') && !CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){
+  const banner = document.getElementById('setup-banner');
+  if(banner) banner.style.display = 'none';
+}
+loadData();
+</script>
+</body>
+</html>
