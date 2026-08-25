@@ -7,7 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
+  window.dispatchEvent(new Event('firebase-sdk-ready'));
+</script>
 <style>
   :root{
     --bg:#f7f5ef; --panel:#ffffff; --panel-alt:#f1ede4; --border:#ddd6c8;
@@ -255,22 +262,22 @@
 </head>
 <body>
 
-<div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า 3 ค่าใน CONFIG ที่ต้นไฟล์ index.html: API_URL, SECRET_KEY, GOOGLE_CLIENT_ID — ดูขั้นตอนในคู่มือ DEPLOY-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่ลิงก์ Drive) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
+<div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า FIREBASE_CONFIG ที่ต้นไฟล์ index.html (6 ค่าจาก Firebase Console) — ดูขั้นตอนใน FIRESTORE-SETUP-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่ลิงก์ Drive) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
 
 <header>
   <div class="header-inner">
-    <div class="brand">
-      <div class="brand-mark">TS</div>
-      <div class="brand-text"><h1>ระบบสนับสนุนงานวิศวกร</h1><p>FIRMER // ENGINEER SUPPORT HUB — v1.0</p></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <div class="mode-toggle">
-        <button id="mode-eng" class="active">Engineer 📱</button>
-        <button id="mode-sup">Sup Product 🖥️</button>
-        <button id="mode-owner">ผู้รับผิดชอบ Product 🗂️</button>
-        <button id="mode-mgr">Manager 🖥️</button>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="brand">
+        <div class="brand-mark">TS</div>
+        <div class="brand-text"><h1>ระบบสนับสนุนงานวิศวกร</h1><p>FIRMER // ENGINEER SUPPORT HUB — v1.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
+    </div>
+    <div class="mode-toggle">
+      <button id="mode-eng" class="active">Engineer 📱</button>
+      <button id="mode-sup">Sup Product 🖥️</button>
+      <button id="mode-owner">ผู้รับผิดชอบ Product 🗂️</button>
+      <button id="mode-mgr">Manager 🖥️</button>
     </div>
   </div>
 </header>
@@ -490,10 +497,13 @@
 <div class="gsi-overlay" id="gsi-overlay">
   <div class="gsi-card">
     <div class="gsi-logo">TS</div>
-    <h2>เข้าสู่ระบบเพื่อให้ Feedback</h2>
-    <p>ใช้บัญชี Google ของคุณเพื่อกันการกดให้คะแนนซ้ำ<br>ชื่อบัญชีของคุณจะ<b>แสดงให้ Sup Product และ Manager เห็น</b>คู่กับ feedback ที่คุณให้</p>
-    <div id="g_id_signin_container" style="display:flex;justify-content:center;"></div>
-    <div class="gsi-note" id="gsi-config-warning" style="display:none;color:var(--red);">⚠ ยังไม่ได้ตั้งค่า CONFIG.GOOGLE_CLIENT_ID ในไฟล์นี้ — ดูคู่มือ deploy ขั้นตอน "ตั้งค่า Google Sign-In"</div>
+    <h2>เข้าสู่ระบบเพื่อใช้งานระบบ</h2>
+    <p>ต้อง Sign in ด้วยบัญชี Google ก่อนเข้าใช้งาน — ไม่ว่าจะเป็น Engineer, Sup Product หรือ Manager<br>ชื่อบัญชีของคุณจะ<b>แสดงคู่กับ feedback ที่คุณให้</b>เท่านั้น (ไม่กระทบสิทธิ์การใช้งาน)</p>
+    <button class="gsi-btn" id="gsi-signin-btn">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.3-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5c-7.6 0-14.1 4.3-17.4 10.6z"/><path fill="#4CAF50" d="M24 43.5c5 0 9.5-1.9 12.9-5l-6-4.9C29 35.6 26.6 36.5 24 36.5c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.8 39.1 16.4 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.5l6 4.9c-.4.4 6.9-5 6.9-15.4 0-1.2-.1-2.4-.4-3.5z"/></svg>
+      เข้าสู่ระบบด้วย Google
+    </button>
+    <div class="gsi-note" id="gsi-config-warning" style="display:none;color:var(--red);">⚠ ยังไม่ได้ตั้งค่า FIREBASE_CONFIG ในไฟล์นี้ — ดูคู่มือ FIRESTORE-SETUP-GUIDE.md</div>
   </div>
 </div>
 
@@ -548,11 +558,32 @@ const IMG2 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0
 const IMG3 = "data:image/jpeg;base64,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";
 
 /* ===================== CONFIG — แก้ 3 ค่านี้หลัง deploy backend เสร็จ ===================== */
-const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbwh-rMJSQ-mgJ3GUaPYKhoT0UyRH4Z4phbhNayuJ4nZEchL7KcD651Qz1ue1MZ02TLd/exec',
-  SECRET_KEY: 'Firmer@1234!', // ต้องตรงกับ SECRET_KEY ใน Apps Script
-  GOOGLE_CLIENT_ID: '150634893334-e70hlvfu69vdu771pim0s6j7me2sg3a0.apps.googleusercontent.com',
+/* ===================== CONFIG — วางค่าจาก Firebase Console หลังสร้างโปรเจกต์ ===================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCdpxuPRjPA8ygj4W-ZXhyHnGr-Yf2CsPU",
+  authDomain: "service-engineering-center.firebaseapp.com",
+  projectId: "service-engineering-center",
+  storageBucket: "service-engineering-center.firebasestorage.app",
+  messagingSenderId: "652851518589",
+  appId: "1:652851518589:web:0110d37710952ffeae6514",
 };
+let db, auth, googleProvider, _fbReady = false;
+function waitForFirebaseSdk(){
+  return new Promise(resolve=>{
+    if(window._firebaseSdk){ resolve(); return; }
+    window.addEventListener('firebase-sdk-ready', ()=>resolve(), {once:true});
+  });
+}
+async function initFirebase(){
+  if(_fbReady) return;
+  await waitForFirebaseSdk();
+  const sdk = window._firebaseSdk;
+  const app = sdk.initializeApp(FIREBASE_CONFIG);
+  auth = sdk.getAuth(app);
+  db = sdk.getFirestore(app);
+  googleProvider = new sdk.GoogleAuthProvider();
+  _fbReady = true;
+}
 
 /* ===================== CONSTANTS ===================== */
 const STORAGE_KEY = 'trbl-demo-v4';
@@ -672,52 +703,98 @@ function ownerOf(category, model){
 }
 function pendingDownCount(errorId){ return (DATA.proposals||[]).filter(p=>p.errorId===errorId && p.status==='pending').length; }
 
-/* ===================== LOAD / SAVE (Google Apps Script backend) ===================== */
+/* ===================== LOAD / SAVE (Firestore) ===================== */
 async function loadData(){
   setStatus(true,'กำลังโหลดข้อมูล...');
-  if(CONFIG.API_URL.includes('PASTE_YOUR')){
-    setStatus(false,'⚠ ยังไม่ได้ตั้งค่า CONFIG.API_URL — ดูคู่มือ deploy');
-    showToast('⚠ ยังไม่ได้ตั้งค่า API_URL ในไฟล์นี้ ระบบจะใช้ข้อมูลตัวอย่างชั่วคราว');
+  await initFirebase();
+  if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){
+    setStatus(false,'⚠ ยังไม่ได้ตั้งค่า FIREBASE_CONFIG — ดูคู่มือ deploy');
+    showToast('⚠ ยังไม่ได้ตั้งค่า FIREBASE_CONFIG ในไฟล์นี้ ระบบจะใช้ข้อมูลตัวอย่างชั่วคราว');
     DATA = seedData();
-    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
-    if(!DATA.pendingErrors) DATA.pendingErrors = [];
+    ensureDataShape();
     renderAll();
     return;
   }
   try{
-    const res = await fetch(CONFIG.API_URL, { method:'GET' });
-    const json = await res.json();
-    DATA = (json && Object.keys(json).length>0) ? json : seedData();
-    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
-    if(!DATA.pendingErrors) DATA.pendingErrors = [];
-    if(!DATA.errors) DATA.errors = [];
-    if(!DATA.documents) DATA.documents = [];
-    if(!DATA.proposals) DATA.proposals = [];
-    if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
+    const sdk = window._firebaseSdk;
+    const [errorsSnap, docsSnap, propSnap, pendSnap, catDoc] = await Promise.all([
+      sdk.getDocs(sdk.collection(db,'errors')),
+      sdk.getDocs(sdk.collection(db,'documents')),
+      sdk.getDocs(sdk.collection(db,'proposals')),
+      sdk.getDocs(sdk.collection(db,'pendingErrors')),
+      sdk.getDoc(sdk.doc(db,'meta','categories')),
+    ]);
+    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
+    errorsSnap.forEach(d=> DATA.errors.push({ id:d.id, solutions:[], _solutionsLoaded:false, ...d.data() }));
+    docsSnap.forEach(d=> DATA.documents.push({ id:d.id, ...d.data() }));
+    propSnap.forEach(d=> DATA.proposals.push({ id:d.id, ...d.data() }));
+    pendSnap.forEach(d=> DATA.pendingErrors.push({ id:d.id, ...d.data() }));
+    if(catDoc.exists()){ const cd = catDoc.data(); DATA.categories = cd.categories||{}; DATA.owners = cd.owners||{categoryOwners:{},modelOverrides:{}}; }
+    if(Object.keys(DATA.categories).length===0){
+      // ครั้งแรกที่ไม่มีข้อมูล — สร้างค่าเริ่มต้นให้ในฐานข้อมูลจริงเลย
+      DATA.categories = {...DEFAULT_CATEGORIES};
+      DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
+      await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners });
+    }
     setStatus(false, `พร้อมใช้งาน · ${DATA.errors.length} Error · ${DATA.documents.length} เอกสาร`);
   }catch(e){
-    setStatus(false, '⚠ เชื่อมต่อ backend ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
+    setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
     showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
     DATA = seedData();
-    if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
-    if(!DATA.pendingErrors) DATA.pendingErrors = [];
+    ensureDataShape();
   }
   renderAll();
 }
-async function persist(){
-  if(CONFIG.API_URL.includes('PASTE_YOUR')){ showToast('⚠ ยังไม่ได้ตั้งค่า API_URL — บันทึกไม่ได้จริง'); return false; }
-  try{
-    // ใช้ Content-Type: text/plain เพื่อเลี่ยง CORS preflight ของเบราว์เซอร์ (Apps Script Web App จะ parse JSON เองฝั่ง server)
-    const res = await fetch(CONFIG.API_URL, {
-      method:'POST',
-      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
-      body: JSON.stringify({ secretKey: CONFIG.SECRET_KEY, data: DATA })
-    });
-    const json = await res.json();
-    if(!json.ok) throw new Error(json.error||'unknown error');
-    return true;
-  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return false; }
+function ensureDataShape(){
+  if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
+  if(!DATA.pendingErrors) DATA.pendingErrors = [];
+  if(!DATA.errors) DATA.errors = [];
+  if(!DATA.documents) DATA.documents = [];
+  if(!DATA.proposals) DATA.proposals = [];
+  if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
 }
+
+// โหลดวิธีแก้ไข (subcollection) ของ Error หนึ่งรายการ แบบ lazy — โหลดเฉพาะตอนเปิดดูจริง
+// ช่วยให้หน้ารายการโหลดเร็ว แม้มี Error เป็นหมื่นรายการ เพราะไม่ต้องโหลดวิธีแก้ไขของทุก Error ล่วงหน้า
+async function loadSolutionsFor(errorId){
+  const err = DATA.errors.find(e=>e.id===errorId);
+  if(!err || err._solutionsLoaded) return err;
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.collection(db,'errors', errorId, 'solutions'));
+  err.solutions = [];
+  snap.forEach(d=> err.solutions.push({ id:d.id, ...d.data() }));
+  err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
+  err._solutionsLoaded = true;
+  return err;
+}
+
+/* ===================== TARGETED FIRESTORE WRITE HELPERS ===================== */
+// แต่ละฟังก์ชันเขียนเฉพาะส่วนที่เปลี่ยน ไม่ทับข้อมูลทั้งก้อน — จุดสำคัญที่แก้ปัญหาเขียนชนกัน
+async function fsSaveError(errorId, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'errors',errorId), fields, {merge:true}); }
+async function fsDeleteError(errorId){
+  await initFirebase(); const sdk=window._firebaseSdk;
+  const solSnap = await sdk.getDocs(sdk.collection(db,'errors',errorId,'solutions'));
+  const batch = sdk.writeBatch(db);
+  solSnap.forEach(d=> batch.delete(d.ref));
+  batch.delete(sdk.doc(db,'errors',errorId));
+  await batch.commit();
+}
+async function fsSaveSolution(errorId, solutionId, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId), fields, {merge:true}); }
+async function fsDeleteSolution(errorId, solutionId){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId)); }
+async function fsAddFeedback(errorId, solutionId, entry){
+  await initFirebase(); const sdk=window._firebaseSdk;
+  await sdk.updateDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId), { feedback: sdk.arrayUnion(entry) });
+  await sdk.updateDoc(sdk.doc(db,'errors',errorId), { totalUps: sdk.increment(1) });
+}
+async function fsIncrementView(errorId){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'errors',errorId), { viewCount: sdk.increment(1) }); }
+async function fsAddProposal(fields){ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'proposals'), fields); return ref.id; }
+async function fsUpdateProposal(id, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'proposals',id), fields); }
+async function fsAddPendingError(fields){ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'pendingErrors'), fields); return ref.id; }
+async function fsUpdatePendingError(id, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'pendingErrors',id), fields); }
+async function fsAddDocument(fields){ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'documents'), fields); return ref.id; }
+async function fsDeleteDocument(id){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); }
+async function fsSaveCategoriesDoc(){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners }); }
 
 /* ===================== IMAGE COMPRESSION ===================== */
 function compressImage(file){
@@ -737,47 +814,33 @@ function compressImage(file){
   });
 }
 
-/* ===================== REAL GOOGLE SIGN-IN (Google Identity Services) ===================== */
-function decodeJwt(token){
-  try{
-    const payload = token.split('.')[1];
-    const json = decodeURIComponent(atob(payload.replace(/-/g,'+').replace(/_/g,'/')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-    return JSON.parse(json);
-  }catch(e){ return null; }
-}
-function handleGoogleCredential(response){
-  const payload = decodeJwt(response.credential);
-  if(!payload){ showToast('⚠ ยืนยันตัวตนไม่สำเร็จ'); return; }
-  myGoogleId = payload.sub; myUserName = payload.name || payload.email;
+/* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication) ===================== */
+function applySignedInUI(){
   $('gsi-overlay').classList.remove('show');
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
-  showToast('✓ เข้าสู่ระบบแล้วในชื่อ '+myUserName);
   updateNotifBadge();
-  if(window._afterSignin){ window._afterSignin(); window._afterSignin=null; }
 }
-let _gisInitialized = false;
-function initGoogleSignIn(){
-  if(CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){ $('gsi-config-warning').style.display='block'; return false; }
-  if(!window.google || !window.google.accounts){ return false; }
-  if(!_gisInitialized){
-    google.accounts.id.initialize({ client_id: CONFIG.GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select:false });
-    _gisInitialized = true;
-  }
-  $('g_id_signin_container').innerHTML = '';
-  google.accounts.id.renderButton($('g_id_signin_container'), { theme:'outline', size:'large', text:'signin_with', shape:'pill' });
-  return true;
-}
+$('gsi-signin-btn').addEventListener('click', async ()=>{
+  if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return; }
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const result = await sdk.signInWithPopup(auth, googleProvider);
+    myGoogleId = result.user.uid; myUserName = result.user.displayName || result.user.email;
+    applySignedInUI();
+    showToast('✓ เข้าสู่ระบบแล้วในชื่อ '+myUserName);
+    if(window._afterSignin){ window._afterSignin(); window._afterSignin=null; }
+  }catch(e){ showToast('⚠ เข้าสู่ระบบไม่สำเร็จ: '+e.message); }
+});
 function ensureSignedIn(callback){
   if(myGoogleId){ callback(); return; }
   $('gsi-overlay').classList.add('show');
   window._afterSignin = callback;
-  const ok = initGoogleSignIn();
-  if(!ok && !CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){ setTimeout(initGoogleSignIn, 400); }
 }
-$('change-name-btn').addEventListener('click', ()=>{
+$('change-name-btn').addEventListener('click', async ()=>{
   myGoogleId = null; myUserName = null;
   $('signed-in-pill').style.display = 'none';
-  if(window.google && window.google.accounts){ google.accounts.id.disableAutoSelect(); }
+  try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
   ensureSignedIn(()=>{});
 });
 
@@ -884,7 +947,7 @@ function renderTechResults(){
 
 function renderErrorCard(e, adminMode){
   const pending = pendingDownCount(e.id);
-  const totalUps = e.solutions.reduce((a,s)=>a+(s.feedback||[]).filter(f=>f.type==='up').length,0);
+  const totalUps = e.totalUps||0;
   return `
   <div class="card" data-id="${e.id}">
     <div class="card-head">
@@ -901,15 +964,18 @@ function renderErrorCard(e, adminMode){
 
 /* ===================== FULLSCREEN ERROR DETAIL ===================== */
 let openErrorDetailId = null;
-function openErrorDetail(errorId){
+async function openErrorDetail(errorId){
   const err = DATA.errors.find(e=>e.id===errorId); if(!err) return;
-  err.viewCount = (err.viewCount||0)+1; persist();
-  if(currentMode==='eng') renderTechResults();
-  if(currentMode==='sup') renderSupSearchResults();
   openErrorDetailId = errorId;
-  renderErrorDetailPanel();
+  $('error-detail-content').innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>กำลังโหลด...</h3></div>`;
   $('error-detail-panel').classList.add('show');
   window.scrollTo({top:0});
+  err.viewCount = (err.viewCount||0)+1;
+  fsIncrementView(errorId).catch(()=>{});
+  if(currentMode==='eng') renderTechResults();
+  if(currentMode==='sup') renderSupSearchResults();
+  await loadSolutionsFor(errorId);
+  if(openErrorDetailId===errorId) renderErrorDetailPanel();
 }
 function closeErrorDetail(){ $('error-detail-panel').classList.remove('show'); openErrorDetailId = null; }
 $('error-detail-close').addEventListener('click', closeErrorDetail);
@@ -918,7 +984,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('error-detail
 function renderErrorDetailPanel(){
   const e = DATA.errors.find(x=>x.id===openErrorDetailId); if(!e) return;
   const pending = pendingDownCount(e.id);
-  const totalUps = e.solutions.reduce((a,s)=>a+(s.feedback||[]).filter(f=>f.type==='up').length,0);
+  const totalUps = e.totalUps||0;
   const downLocked = myVotes['down:'+e.id];
   const downNames = (DATA.proposals||[]).filter(p=>p.errorId===e.id && p.status==='pending').map(p=>p.submitterName).filter(Boolean);
   const content = $('error-detail-content');
@@ -970,8 +1036,12 @@ function bindFeedbackButtons(root){
 }
 async function submitUp(solId){
   if(myVotes['up:'+solId]){ showToast('คุณเคยกดแก้ได้จริงไว้แล้ว'); return; }
-  for(const e of DATA.errors){ const sol=e.solutions.find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push({type:'up', name:myUserName}); break; } }
-  myVotes['up:'+solId]=true; await persist(); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  const entry = {type:'up', name:myUserName, ts:Date.now()};
+  let targetErrId = null;
+  for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(entry); targetErrId=e.id; break; } }
+  myVotes['up:'+solId]=true;
+  if(targetErrId){ try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); } }
+  renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
   if(openErrorDetailId) renderErrorDetailPanel();
   showToast('✓ บันทึก feedback แล้วในชื่อ '+myUserName);
 }
@@ -988,10 +1058,13 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   const desc = $('down-modal-desc').value.trim();
   if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
+  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:[...downModalImages], status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
-  DATA.proposals.push({ id:uid('p'), errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:[...downModalImages], status:'pending', createdAt:Date.now(), submitterName: myUserName });
+  let newId;
+  try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  DATA.proposals.push({ id:newId, ...fields });
   myVotes['down:'+downModalErrorId] = true;
-  await persist(); $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
   if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
   showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
 });
@@ -1150,8 +1223,10 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
   DATA.pendingErrors = DATA.pendingErrors || [];
-  DATA.pendingErrors.push({ id:uid('pe'), category, model, errorCode:$('eng-f-code').value.trim(), symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() });
-  await persist();
+  const fields = { category, model, errorCode:$('eng-f-code').value.trim(), symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
+  let newId;
+  try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  DATA.pendingErrors.push({ id:newId, ...fields });
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
@@ -1192,7 +1267,7 @@ function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model)
 
 function renderSupStats(){
   const mine = myErrors();
-  const totalUps = mine.reduce((a,e)=>a+e.solutions.reduce((b,s)=>b+(s.feedback||[]).filter(f=>f.type==='up').length,0),0);
+  const totalUps = mine.reduce((a,e)=>a+(e.totalUps||0),0);
   const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
   const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
   $('sup-stats').innerHTML = `
@@ -1229,8 +1304,22 @@ function renderSolutionsEditor(){
 }
 $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
 
+let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
+
+async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
+  await fsSaveError(errorId, fields);
+  const keepIds = new Set(validSolutions.map(s=>s.id));
+  if(originalSolutionIds){
+    for(const oldId of originalSolutionIds){ if(!keepIds.has(oldId)) await fsDeleteSolution(errorId, oldId); }
+  }
+  for(let i=0;i<validSolutions.length;i++){
+    const s = validSolutions[i];
+    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:s.images||[], tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
+  }
+}
+
 function resetErrorForm(){
-  editingErrorId = null; reviewingPendingErrorId = null;
+  editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
   $('f-code').value=''; $('f-symptom').value='';
   editingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
   renderSolutionsEditor();
@@ -1243,31 +1332,42 @@ $('save-error-btn').addEventListener('click', async ()=>{
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
   const validSolutions = editingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  const errorCode = $('f-code').value.trim();
 
   if(reviewingPendingErrorId){
     const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
-    DATA.errors.push({id:uid('e'), category, model, errorCode:$('f-code').value.trim(), symptom, viewCount:0, solutions: validSolutions.map(s=>({...s, feedback:[]}))});
-    if(pe){ pe.status='approved'; pe.reviewedAt=Date.now(); }
-    await persist();
+    const newId = uid('e');
+    try{
+      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
+      if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
+      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+    }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
     resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
     renderAll(); renderSupView();
     showToast('✓ แก้ไขและอนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
     return;
   }
 
-  if(editingErrorId){
-    const err = DATA.errors.find(e=>e.id===editingErrorId);
-    Object.assign(err, {category, model, errorCode:$('f-code').value.trim(), symptom, solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
-  } else { DATA.errors.push({id:uid('e'), category, model, errorCode:$('f-code').value.trim(), symptom, viewCount:0, solutions: validSolutions.map(s=>({...s, feedback:[]}))}); }
-  await persist();
+  try{
+    if(editingErrorId){
+      const err = DATA.errors.find(e=>e.id===editingErrorId);
+      await saveErrorWithSolutions(editingErrorId, {category, model, errorCode, symptom}, validSolutions, _originalSolutionIds);
+      Object.assign(err, {category, model, errorCode, symptom, solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
+    } else {
+      const newId = uid('e');
+      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
+      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+    }
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
   resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll(); renderSupView();
 });
 
-function startEditError(id){
+async function startEditError(id){
   const err = DATA.errors.find(e=>e.id===id); if(!err) return;
-  editingErrorId = id; reviewingPendingErrorId = null;
+  await loadSolutionsFor(id);
+  editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
   $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
   $('sup-form-heading').innerHTML = 'แก้ไข Error <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'แก้ไขข้อมูล Error ที่มีอยู่แล้ว';
@@ -1277,7 +1377,11 @@ function startEditError(id){
   editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])]}));
   renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
 }
-async function deleteError(id){ if(!confirm('ยืนยันการลบ Error นี้?')) return; DATA.errors = DATA.errors.filter(e=>e.id!==id); await persist(); renderAll(); renderSupView(); showToast('ลบแล้ว'); }
+async function deleteError(id){
+  if(!confirm('ยืนยันการลบ Error นี้?')) return;
+  try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+  DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); renderSupView(); showToast('ลบแล้ว');
+}
 
 /* ===================== SUP PRODUCT: REVIEW PENDING ERRORS FROM ENGINEER ===================== */
 function myPendingErrors(){
@@ -1317,17 +1421,24 @@ function startReviewPendingError(id){
 }
 async function quickApprovePendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
-  DATA.errors.push({id:uid('e'), category:pe.category, model:pe.model, errorCode:pe.errorCode, symptom:pe.symptom, viewCount:0, solutions: pe.solutions.map(s=>({...s, feedback:[]}))});
+  const newId = uid('e');
+  try{
+    await saveErrorWithSolutions(newId, {category:pe.category, model:pe.model, errorCode:pe.errorCode||'', symptom:pe.symptom, viewCount:0, totalUps:0}, pe.solutions, []);
+    await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()});
+  }catch(e){ showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
+  DATA.errors.push({id:newId, category:pe.category, model:pe.model, errorCode:pe.errorCode, symptom:pe.symptom, viewCount:0, totalUps:0, solutions: pe.solutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
   pe.status='approved'; pe.reviewedAt=Date.now();
-  await persist(); renderAll(); renderSupView();
+  renderAll(); renderSupView();
   showToast('✓ อนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
 }
 async function rejectPendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
   const reason = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ — Engineer จะเห็นข้อความนี้)') || '';
   if(!confirm('ยืนยันการปฏิเสธ Error นี้?')) return;
+  try{ await fsUpdatePendingError(pe.id, {status:'rejected', rejectionReason:reason, reviewedAt:Date.now()}); }
+  catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
   pe.status='rejected'; pe.rejectionReason=reason; pe.reviewedAt=Date.now();
-  await persist(); renderAll(); renderSupView();
+  renderAll(); renderSupView();
   showToast('ปฏิเสธแล้ว — Engineer จะเห็นผลใน 🔔');
 }
 
@@ -1388,11 +1499,21 @@ function renderProposals(){
 async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
-  err.solutions.push({id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]});
-  p.status = 'accepted'; await persist(); renderAll(); renderSupView();
+  await loadSolutionsFor(err.id);
+  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
+  try{
+    await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    await fsUpdateProposal(pid, {status:'accepted'});
+  }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  err.solutions.push(newSol);
+  p.status = 'accepted'; renderAll(); renderSupView();
   showToast('✓ เพิ่มเป็นวิธีแก้ไขใหม่แล้ว · จำนวนที่ค้างอยู่ลดลง');
 }
-async function rejectProposal(pid){ const p=DATA.proposals.find(x=>x.id===pid); if(!p) return; p.status='rejected'; await persist(); renderAll(); renderSupView(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง'); }
+async function rejectProposal(pid){
+  const p=DATA.proposals.find(x=>x.id===pid); if(!p) return;
+  try{ await fsUpdateProposal(pid, {status:'rejected'}); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  p.status='rejected'; renderAll(); renderSupView(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง');
+}
 
 /* ===================== SUP PRODUCT: DOCUMENTS ===================== */
 function renderSupDocTypeBar(){
@@ -1407,10 +1528,12 @@ $('doc-save-btn').addEventListener('click', async ()=>{
   const category=$('doc-f-category').value, model=$('doc-f-model').value, title=$('doc-f-title').value.trim();
   const method = document.querySelector('input[name="doc-method"]:checked').value;
   if(!category||!model||!title){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และชื่อเอกสาร'); return; }
-  const doc = { id:uid('d'), docType:supDocTypeActive, category, model, title, method, uploadedAt:Date.now() };
-  if(method==='link'){ const url=$('doc-f-url').value.trim(); if(!url){ showToast('⚠ กรุณาวางลิงก์ Google Drive'); return; } doc.url = url; }
-  else{ const f=$('doc-f-file').files[0]; if(!f){ showToast('⚠ กรุณาเลือกไฟล์'); return; } doc.fileName = f.name; }
-  DATA.documents.push(doc); await persist();
+  const fields = { docType:supDocTypeActive, category, model, title, method, uploadedAt:Date.now() };
+  if(method==='link'){ const url=$('doc-f-url').value.trim(); if(!url){ showToast('⚠ กรุณาวางลิงก์ Google Drive'); return; } fields.url = url; }
+  else{ const f=$('doc-f-file').files[0]; if(!f){ showToast('⚠ กรุณาเลือกไฟล์'); return; } fields.fileName = f.name; }
+  let newId;
+  try{ newId = await fsAddDocument(fields); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  DATA.documents.push({ id:newId, ...fields });
   $('doc-f-title').value=''; $('doc-f-url').value=''; $('doc-f-file').value=''; $('doc-f-filename').textContent='ยังไม่ได้เลือกไฟล์';
   $('doc-save-msg').style.opacity=1; setTimeout(()=>$('doc-save-msg').style.opacity=0,1600);
   renderAll(); renderSupDocTab();
@@ -1425,7 +1548,12 @@ function renderSupDocList(){
       <div class="admin-row-main"><span class="badge-cat">${docTypeLabel(d.docType)}</span><span class="badge-equip">${escapeHtml(d.model)}</span><span style="font-size:12.5px;color:var(--text-dim);">${escapeHtml(d.title)}</span></div>
       <button class="icon-btn danger" data-deldoc="${d.id}">ลบ</button>
     </div>`).join('');
-  list.querySelectorAll('[data-deldoc]').forEach(b=>b.addEventListener('click', async ()=>{ if(!confirm('ยืนยันการลบเอกสารนี้?')) return; DATA.documents = DATA.documents.filter(d=>d.id!==b.getAttribute('data-deldoc')); await persist(); renderAll(); renderSupDocTab(); showToast('ลบเอกสารแล้ว'); }));
+  list.querySelectorAll('[data-deldoc]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('ยืนยันการลบเอกสารนี้?')) return;
+    const id = b.getAttribute('data-deldoc');
+    try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+    DATA.documents = DATA.documents.filter(d=>d.id!==id); renderAll(); renderSupDocTab(); showToast('ลบเอกสารแล้ว');
+  }));
 }
 function renderSupDocCoverage(){
   const models = [];
@@ -1532,14 +1660,17 @@ function renderOwnerSummary(){
   wrap.querySelectorAll('[data-confirmcat]').forEach(b=>b.addEventListener('click', async ()=>{
     const cat = b.getAttribute('data-confirmcat'); const sel = b.closest('.inline-edit').querySelector('.edit-cat-owner-select'); const newOwner = sel.value;
     DATA.owners.categoryOwners[cat] = newOwner; editingOwnerCat=null;
-    await persist(); renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwner} แล้ว`);
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwner} แล้ว`);
   }));
   wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-confirmmodel]').forEach(b=>b.addEventListener('click', async ()=>{
     const key = b.getAttribute('data-confirmmodel'); const sel = b.closest('.inline-edit').querySelector('.edit-model-owner-select'); const val = sel.value;
     if(val==='__default__'){ delete DATA.owners.modelOverrides[key]; } else { DATA.owners.modelOverrides[key] = val; }
-    editingOwnerModel=null; await persist(); renderAll();
+    editingOwnerModel=null;
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll();
     const modelName = key.split('|')[1];
     showToast(`✓ อัปเดตผู้ดูแลรุ่น ${modelName} แล้ว`);
   }));
@@ -1564,11 +1695,15 @@ function renderCatModelManage(){
   wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
     const cat=b.getAttribute('data-delcat'); if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
     (DATA.categories[cat]||[]).forEach(m=>{ delete DATA.owners.modelOverrides[cat+'|'+m]; });
-    delete DATA.categories[cat]; delete DATA.owners.categoryOwners[cat]; await persist(); renderAll(); showToast('ลบประเภทแล้ว');
+    delete DATA.categories[cat]; delete DATA.owners.categoryOwners[cat];
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast('ลบประเภทแล้ว');
   }); });
   wrap.querySelectorAll('[data-delmodel]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
     const [cat,model]=b.getAttribute('data-delmodel').split('|'); if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
-    DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model]; await persist(); renderAll(); showToast('ลบรุ่นแล้ว');
+    DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model];
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast('ลบรุ่นแล้ว');
   }); });
 }
 $('add-model-btn').addEventListener('click', async ()=>{
@@ -1599,7 +1734,8 @@ $('add-model-btn').addEventListener('click', async ()=>{
   }
 
   $('new-cat-input').value=''; $('new-model-input').value='';
-  await persist(); renderAll();
+  try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  renderAll();
   showToast(modelName ? `✓ เพิ่มรุ่น "${modelName}" แล้ว มอบหมายให้ ${owner}` : `✓ เพิ่มประเภท "${category}" แล้ว มอบหมายให้ ${owner}`);
 });
 
@@ -1607,7 +1743,7 @@ $('add-model-btn').addEventListener('click', async ()=>{
 function renderMgrView(){
   const rows = SUP_PRODUCTS.map(name=>{
     const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
-    const totalUps = mine.reduce((a,e)=>a+e.solutions.reduce((b,s)=>b+(s.feedback||[]).filter(f=>f.type==='up').length,0),0);
+    const totalUps = mine.reduce((a,e)=>a+(e.totalUps||0),0);
     const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
     const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
     const views = mine.reduce((a,e)=>a+(e.viewCount||0),0);
@@ -1649,11 +1785,13 @@ $('theme-toggle-btn').addEventListener('click', ()=>{
 });
 
 /* ===================== INIT ===================== */
-if(!CONFIG.API_URL.includes('PASTE_YOUR') && !CONFIG.GOOGLE_CLIENT_ID.includes('PASTE_YOUR')){
+if(!FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){
   const banner = document.getElementById('setup-banner');
   if(banner) banner.style.display = 'none';
 }
-loadData();
+setStatus(true, 'กรุณาเข้าสู่ระบบก่อนใช้งาน...');
+ensureSignedIn(()=>{ loadData(); });
 </script>
+
 </body>
 </html>
