@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -259,6 +259,7 @@
   .inline-edit{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .inline-edit select{width:auto;min-width:150px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -361,6 +362,16 @@
       <label>คุณคือ:</label>
       <select id="sup-identity"></select>
       <span class="privacy-note">เลือกชื่อเพื่อกรองข้อมูลและ Dashboard ที่เกี่ยวข้องกับคุณ</span>
+    </div>
+
+    <div class="panel-block">
+      <h2>สำรองข้อมูล (Backup)</h2>
+      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary btn-sm" id="sup-backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
+        <button class="btn btn-ghost btn-sm" id="sup-backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
+        <span class="mono" id="sup-backup-status" style="font-size:12px;color:var(--text-faint);"></span>
+      </div>
     </div>
 
     <div class="subtab-bar" id="sup-subtabs">
@@ -481,6 +492,15 @@
   <div id="view-mgr" style="display:none;">
     <div class="desktop-hint">🖥️ Dashboard ภาพรวม — สำหรับ Engineer Manager</div>
     <div class="panel-block">
+      <h2>สำรองข้อมูล (Backup)</h2>
+      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary btn-sm" id="mgr-backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
+        <button class="btn btn-ghost btn-sm" id="mgr-backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
+        <span class="mono" id="mgr-backup-status" style="font-size:12px;color:var(--text-faint);"></span>
+      </div>
+    </div>
+    <div class="panel-block">
       <h2>ข้อมูล Troubleshoot</h2>
       <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — Manager ดูแล้วตีความเอง</p>
       <table id="mgr-table"></table>
@@ -560,13 +580,14 @@ const IMG3 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0
 /* ===================== CONFIG — แก้ 3 ค่านี้หลัง deploy backend เสร็จ ===================== */
 /* ===================== CONFIG — วางค่าจาก Firebase Console หลังสร้างโปรเจกต์ ===================== */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCdpxuPRjPA8ygj4W-ZXhyHnGr-Yf2CsPU",
-  authDomain: "service-engineering-center.firebaseapp.com",
-  projectId: "service-engineering-center",
-  storageBucket: "service-engineering-center.firebasestorage.app",
-  messagingSenderId: "652851518589",
-  appId: "1:652851518589:web:0110d37710952ffeae6514",
+  apiKey: "PASTE_FROM_FIREBASE_CONSOLE",
+  authDomain: "PASTE_FROM_FIREBASE_CONSOLE",
+  projectId: "PASTE_FROM_FIREBASE_CONSOLE",
+  storageBucket: "PASTE_FROM_FIREBASE_CONSOLE",
+  messagingSenderId: "PASTE_FROM_FIREBASE_CONSOLE",
+  appId: "PASTE_FROM_FIREBASE_CONSOLE",
 };
+
 let db, auth, googleProvider, _fbReady = false;
 function waitForFirebaseSdk(){
   return new Promise(resolve=>{
@@ -814,7 +835,7 @@ function compressImage(file){
   });
 }
 
-/* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication) ===================== */
+/* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
 function applySignedInUI(){
   $('gsi-overlay').classList.remove('show');
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
@@ -825,24 +846,37 @@ $('gsi-signin-btn').addEventListener('click', async ()=>{
   try{
     await initFirebase();
     const sdk = window._firebaseSdk;
-    const result = await sdk.signInWithPopup(auth, googleProvider);
-    myGoogleId = result.user.uid; myUserName = result.user.displayName || result.user.email;
-    applySignedInUI();
-    showToast('✓ เข้าสู่ระบบแล้วในชื่อ '+myUserName);
-    if(window._afterSignin){ window._afterSignin(); window._afterSignin=null; }
+    await sdk.signInWithRedirect(auth, googleProvider);
+    // หน้าเว็บจะเปลี่ยนไปที่หน้า login ของ Google ตรงนี้ แล้วเด้งกลับมาเอง โค้ดถัดจากนี้จะไม่ทำงานต่อ
   }catch(e){ showToast('⚠ เข้าสู่ระบบไม่สำเร็จ: '+e.message); }
 });
 function ensureSignedIn(callback){
   if(myGoogleId){ callback(); return; }
   $('gsi-overlay').classList.add('show');
-  window._afterSignin = callback;
 }
 $('change-name-btn').addEventListener('click', async ()=>{
-  myGoogleId = null; myUserName = null;
-  $('signed-in-pill').style.display = 'none';
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
-  ensureSignedIn(()=>{});
 });
+
+// จุดเดียวที่ตัดสินว่า "ตอนนี้ล็อกอินอยู่ไหม" — ใช้ onAuthStateChanged ของ Firebase เป็นความจริงหลัก
+// ครอบคลุมทั้ง 3 กรณี: เพิ่งเด้งกลับมาจาก Google, เคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง), และตอน sign out
+async function resolveAuthAndStart(){
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  try{ await sdk.getRedirectResult(auth); }catch(e){ /* ไม่มี redirect ค้างอยู่ก็ไม่เป็นไร */ }
+  sdk.onAuthStateChanged(auth, (user)=>{
+    if(user){
+      myGoogleId = user.uid; myUserName = user.displayName || user.email;
+      applySignedInUI();
+      if(!window._appStarted){ window._appStarted = true; loadData(); }
+    } else {
+      myGoogleId = null; myUserName = null;
+      $('signed-in-pill').style.display = 'none';
+      $('gsi-overlay').classList.add('show');
+      setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
+    }
+  });
+}
 
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 const TEAM_PIN = '1234';   // ⚠️ เปลี่ยนก่อนใช้งานจริง — Sup Product / Manager
@@ -1778,6 +1812,92 @@ function renderMgrView(){
   $('mgr-doc-summary').innerHTML = dhtml;
 }
 
+/* ===================== BACKUP / EXPORT ===================== */
+async function gatherFullBackup(statusElId){
+  const statusEl = statusElId ? $(statusElId) : null;
+  if(statusEl) statusEl.textContent = 'กำลังดึงข้อมูลทั้งหมด...';
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  const [errorsSnap, docsSnap, propSnap, pendSnap, catDoc] = await Promise.all([
+    sdk.getDocs(sdk.collection(db,'errors')),
+    sdk.getDocs(sdk.collection(db,'documents')),
+    sdk.getDocs(sdk.collection(db,'proposals')),
+    sdk.getDocs(sdk.collection(db,'pendingErrors')),
+    sdk.getDoc(sdk.doc(db,'meta','categories')),
+  ]);
+  const errors = [];
+  for(const d of errorsSnap.docs){
+    const err = { id:d.id, ...d.data(), solutions:[] };
+    const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
+    solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
+    err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
+    errors.push(err);
+  }
+  const documents = []; docsSnap.forEach(d=>documents.push({id:d.id, ...d.data()}));
+  const proposals = []; propSnap.forEach(d=>proposals.push({id:d.id, ...d.data()}));
+  const pendingErrors = []; pendSnap.forEach(d=>pendingErrors.push({id:d.id, ...d.data()}));
+  const catData = catDoc.exists() ? catDoc.data() : {categories:{}, owners:{}};
+  if(statusEl) statusEl.textContent = '';
+  return { exportedAt: new Date().toISOString(), errors, documents, proposals, pendingErrors, categories: catData.categories||{}, owners: catData.owners||{} };
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+async function handleBackupJson(statusElId){
+  try{
+    const data = await gatherFullBackup(statusElId);
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    downloadBlob(JSON.stringify(data,null,2), `trbl-backup-${stamp}.json`, 'application/json');
+    showToast('✓ ดาวน์โหลด Backup (JSON) แล้ว');
+  }catch(e){ showToast('⚠ ดึงข้อมูลไม่สำเร็จ: '+e.message); }
+}
+async function handleBackupExcel(statusElId){
+  try{
+    const data = await gatherFullBackup(statusElId);
+    const wb = XLSX.utils.book_new();
+
+    const errorRows = data.errors.map(e=>({ id:e.id, ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0 }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
+
+    const solRows = [];
+    data.errors.forEach(e=> e.solutions.forEach((s,idx)=>{
+      solRows.push({ ErrorId:e.id, ประเภท:e.category, รุ่น:e.model, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตแก้ได้จริง:(s.feedback||[]).filter(f=>f.type==='up').length });
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(solRows), 'Solutions');
+
+    const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH') : '' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
+
+    const propRows = data.proposals.map(p=>({ id:p.id, ErrorId:p.errorId, คำอธิบาย:p.desc, สถานะ:p.status, เสนอโดย:p.submitterName||'', วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(propRows), 'Proposals');
+
+    const pendRows = data.pendingErrors.map(p=>({ id:p.id, ประเภท:p.category, รุ่น:p.model, ErrorCode:p.errorCode||'', อาการ:p.symptom, ส่งโดย:p.submitterName||'', สถานะ:p.status, วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pendRows), 'PendingErrors');
+
+    const catRows = [];
+    Object.entries(data.categories).forEach(([cat,models])=>{
+      (models||[]).forEach(m=>{
+        const key = cat+'|'+m;
+        const owner = (data.owners.modelOverrides||{})[key] || (data.owners.categoryOwners||{})[cat] || '';
+        catRows.push({ ประเภท:cat, รุ่น:m, ผู้ดูแล:owner });
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), 'Categories');
+
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    XLSX.writeFile(wb, `trbl-export-${stamp}.xlsx`);
+    showToast('✓ ดาวน์โหลด Excel แล้ว');
+  }catch(e){ showToast('⚠ ดึงข้อมูลไม่สำเร็จ: '+e.message); }
+}
+$('mgr-backup-json-btn').addEventListener('click', ()=>handleBackupJson('mgr-backup-status'));
+$('mgr-backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('mgr-backup-status'));
+$('sup-backup-json-btn').addEventListener('click', ()=>handleBackupJson('sup-backup-status'));
+$('sup-backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('sup-backup-status'));
+
 /* ===================== THEME TOGGLE (default: light) ===================== */
 $('theme-toggle-btn').addEventListener('click', ()=>{
   const isDark = document.body.classList.toggle('dark-theme');
@@ -1789,8 +1909,8 @@ if(!FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){
   const banner = document.getElementById('setup-banner');
   if(banner) banner.style.display = 'none';
 }
-setStatus(true, 'กรุณาเข้าสู่ระบบก่อนใช้งาน...');
-ensureSignedIn(()=>{ loadData(); });
+setStatus(true, 'กำลังตรวจสอบสถานะการเข้าสู่ระบบ...');
+resolveAuthAndStart();
 </script>
 
 </body>
