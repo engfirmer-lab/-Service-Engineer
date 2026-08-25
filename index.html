@@ -836,10 +836,8 @@ function compressImage(file){
 }
 
 /* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
-function applySignedInUI(){
-  $('gsi-overlay').classList.remove('show');
+function showSignedInPill(){
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
-  updateNotifBadge();
 }
 $('gsi-signin-btn').addEventListener('click', async ()=>{
   if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return; }
@@ -860,6 +858,8 @@ $('change-name-btn').addEventListener('click', async ()=>{
 
 // จุดเดียวที่ตัดสินว่า "ตอนนี้ล็อกอินอยู่ไหม" — ใช้ onAuthStateChanged ของ Firebase เป็นความจริงหลัก
 // ครอบคลุมทั้ง 3 กรณี: เพิ่งเด้งกลับมาจาก Google, เคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง), และตอน sign out
+// สำคัญ: จะไม่ซ่อนหน้าจอ login (ปิด overlay) จนกว่า loadData() จะโหลดเสร็จจริง กันไม่ให้มีช่วงเวลาที่หน้าจอดูเหมือนใช้งานได้
+// แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เพิ่งแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
 async function resolveAuthAndStart(){
   await initFirebase();
   const sdk = window._firebaseSdk;
@@ -867,8 +867,14 @@ async function resolveAuthAndStart(){
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
       myGoogleId = user.uid; myUserName = user.displayName || user.email;
-      applySignedInUI();
-      if(!window._appStarted){ window._appStarted = true; loadData(); }
+      showSignedInPill();
+      if(!window._appStarted){
+        window._appStarted = true;
+        loadData().then(()=>{ $('gsi-overlay').classList.remove('show'); updateNotifBadge(); });
+      } else {
+        $('gsi-overlay').classList.remove('show');
+        updateNotifBadge();
+      }
     } else {
       myGoogleId = null; myUserName = null;
       $('signed-in-pill').style.display = 'none';
@@ -1105,7 +1111,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
 
 /* ===================== NOTIFICATIONS (Engineer's submitted-error status) ===================== */
 function myResolvedSubmissions(){
-  if(!myUserName) return [];
+  if(!myUserName || !DATA) return [];
   return (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
 }
 function updateNotifBadge(){
