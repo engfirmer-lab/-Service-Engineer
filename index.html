@@ -7,12 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -519,10 +520,7 @@
     <div class="gsi-logo">TS</div>
     <h2>เข้าสู่ระบบเพื่อใช้งานระบบ</h2>
     <p>ต้อง Sign in ด้วยบัญชี Google ก่อนเข้าใช้งาน — ไม่ว่าจะเป็น Engineer, Sup Product หรือ Manager<br>ชื่อบัญชีของคุณจะ<b>แสดงคู่กับ feedback ที่คุณให้</b>เท่านั้น (ไม่กระทบสิทธิ์การใช้งาน)</p>
-    <button class="gsi-btn" id="gsi-signin-btn">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.4 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5 13.2 4.5 4.5 13.2 4.5 24S13.2 43.5 24 43.5 43.5 34.8 43.5 24c0-1.2-.1-2.4-.3-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c2.8 0 5.3 1 7.3 2.7l6-6C33.5 6.5 29 4.5 24 4.5c-7.6 0-14.1 4.3-17.4 10.6z"/><path fill="#4CAF50" d="M24 43.5c5 0 9.5-1.9 12.9-5l-6-4.9C29 35.6 26.6 36.5 24 36.5c-5.3 0-9.7-3.4-11.3-8.1l-6.6 5.1C9.8 39.1 16.4 43.5 24 43.5z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.5l6 4.9c-.4.4 6.9-5 6.9-15.4 0-1.2-.1-2.4-.4-3.5z"/></svg>
-      เข้าสู่ระบบด้วย Google
-    </button>
+    <div id="g_id_signin_container" style="display:flex;justify-content:center;min-height:44px;"></div>
     <div class="gsi-note" id="gsi-config-warning" style="display:none;color:var(--red);">⚠ ยังไม่ได้ตั้งค่า FIREBASE_CONFIG ในไฟล์นี้ — ดูคู่มือ FIRESTORE-SETUP-GUIDE.md</div>
   </div>
 </div>
@@ -839,45 +837,45 @@ function compressImage(file){
 function showSignedInPill(){
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
 }
-$('gsi-signin-btn').addEventListener('click', async ()=>{
-  if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return; }
+const GOOGLE_CLIENT_ID = "150634893334-e70hlvfu69vdu771pim0s6j7me2sg3a0.apps.googleusercontent.com";
+async function handleGisCredential(response){
   try{
     await initFirebase();
     const sdk = window._firebaseSdk;
-    try{
-      // ลอง popup ก่อน — เร็วกว่า และไม่มีปัญหาเรื่อง storage ข้ามโดเมนแบบ redirect
-      await sdk.signInWithPopup(auth, googleProvider);
-      // สำเร็จแล้ว onAuthStateChanged จะรับช่วงต่อเอง
-    }catch(popupErr){
-      const blockedCodes = ['auth/popup-blocked','auth/operation-not-supported-in-this-environment'];
-      if(blockedCodes.includes(popupErr.code)){
-        // popup ใช้ไม่ได้ (มักเกิดบนมือถือ) — fallback ไปใช้ redirect แทนอัตโนมัติ
-        showToast('กำลังเปลี่ยนไปใช้วิธี login แบบเต็มหน้าจอ...');
-        await sdk.signInWithRedirect(auth, googleProvider);
-      } else if(popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request'){
-        // ผู้ใช้ปิดหน้าต่างเอง ไม่ต้องขึ้น error ให้เข้าใจผิดว่าระบบพัง
-      } else {
-        throw popupErr;
-      }
-    }
+    const credential = sdk.GoogleAuthProvider.credential(response.credential);
+    await sdk.signInWithCredential(auth, credential);
+    // สำเร็จแล้ว onAuthStateChanged จะรับช่วงต่อเอง — ไม่ต้องผ่านหน้า firebaseapp.com เลย
   }catch(e){ showToast('⚠ เข้าสู่ระบบไม่สำเร็จ: '+e.message); }
-});
+}
+let _gisInitialized = false;
+function initGis(){
+  if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return false; }
+  if(!window.google || !window.google.accounts) return false;
+  if(!_gisInitialized){
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGisCredential, auto_select:false });
+    _gisInitialized = true;
+  }
+  $('g_id_signin_container').innerHTML = '';
+  google.accounts.id.renderButton($('g_id_signin_container'), { theme:'outline', size:'large', text:'signin_with', shape:'pill', width:280 });
+  return true;
+}
 function ensureSignedIn(callback){
   if(myGoogleId){ callback(); return; }
   $('gsi-overlay').classList.add('show');
+  const ok = initGis();
+  if(!ok && !FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ setTimeout(initGis, 400); }
 }
 $('change-name-btn').addEventListener('click', async ()=>{
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 
 // จุดเดียวที่ตัดสินว่า "ตอนนี้ล็อกอินอยู่ไหม" — ใช้ onAuthStateChanged ของ Firebase เป็นความจริงหลัก
-// ครอบคลุมทั้ง 3 กรณี: เพิ่งเด้งกลับมาจาก Google, เคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง), และตอน sign out
+// ครอบคลุมทั้ง 2 กรณี: เพิ่งเลือกบัญชี Google ผ่าน GIS สำเร็จ, และเคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง)
 // สำคัญ: จะไม่ซ่อนหน้าจอ login (ปิด overlay) จนกว่า loadData() จะโหลดเสร็จจริง กันไม่ให้มีช่วงเวลาที่หน้าจอดูเหมือนใช้งานได้
-// แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เพิ่งแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
+// แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เคยแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
 async function resolveAuthAndStart(){
   await initFirebase();
   const sdk = window._firebaseSdk;
-  try{ await sdk.getRedirectResult(auth); }catch(e){ /* ไม่มี redirect ค้างอยู่ก็ไม่เป็นไร */ }
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
       myGoogleId = user.uid; myUserName = user.displayName || user.email;
@@ -893,6 +891,7 @@ async function resolveAuthAndStart(){
       myGoogleId = null; myUserName = null;
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
+      initGis();
       setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
     }
   });
