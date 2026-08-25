@@ -1675,6 +1675,7 @@ function ownerSelectOptions(selected, includeDefault){
   opts += SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}" ${n===selected?'selected':''}>${escapeHtml(n)}</option>`).join('');
   return opts;
 }
+let editingSupName = null; // ชื่อ Sup Product ที่กำลังแสดงช่องแก้ไขอยู่ (inline edit)
 function isNameInUse(name){
   const catOwners = Object.values(DATA.owners.categoryOwners||{});
   const modelOwners = Object.values(DATA.owners.modelOverrides||{});
@@ -1684,11 +1685,51 @@ function renderSupNameList(){
   const list = $('sup-name-list');
   list.innerHTML = SUP_PRODUCTS.map(name=>{
     const inUse = isNameInUse(name);
+    const isEditing = editingSupName===name;
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">👤 ${escapeHtml(name)}</span>${inUse?'<span class="mono" style="font-size:10.5px;color:var(--text-faint);">มีประเภท/รุ่นผูกอยู่</span>':''}</div>
-      <button class="icon-btn danger" data-delsup="${escapeHtml(name)}" ${inUse?'disabled title="ต้องโยกงานออกก่อนถึงจะลบได้"':''} style="${inUse?'opacity:.35;cursor:not-allowed;':''}">ลบ</button>
+      ${isEditing ? `
+        <div class="inline-edit" style="flex:1;">
+          <input type="text" class="edit-sup-name-input" value="${escapeHtml(name)}" style="flex:1;min-width:160px;">
+          <button class="btn btn-primary btn-sm" data-confirmrename="${escapeHtml(name)}">บันทึก</button>
+          <button class="btn btn-ghost btn-sm" data-cancelrename="1">ยกเลิก</button>
+        </div>
+      ` : `
+        <div class="admin-row-main"><span style="font-size:13px;">👤 ${escapeHtml(name)}</span>${inUse?'<span class="mono" style="font-size:10.5px;color:var(--text-faint);">มีประเภท/รุ่นผูกอยู่</span>':''}</div>
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn" data-editsup="${escapeHtml(name)}">แก้ไข</button>
+          <button class="icon-btn danger" data-delsup="${escapeHtml(name)}" ${inUse?'disabled title="ต้องโยกงานออกก่อนถึงจะลบได้"':''} style="${inUse?'opacity:.35;cursor:not-allowed;':''}">ลบ</button>
+        </div>
+      `}
     </div>`;
   }).join('');
+  list.querySelectorAll('[data-editsup]').forEach(b=>b.addEventListener('click', ()=>{ editingSupName = b.getAttribute('data-editsup'); renderSupNameList(); }));
+  list.querySelectorAll('[data-cancelrename]').forEach(b=>b.addEventListener('click', ()=>{ editingSupName = null; renderSupNameList(); }));
+  list.querySelectorAll('[data-confirmrename]').forEach(b=>b.addEventListener('click', async ()=>{
+    const oldName = b.getAttribute('data-confirmrename');
+    const input = b.closest('.inline-edit').querySelector('.edit-sup-name-input');
+    const newName = input.value.trim();
+    if(!newName){ showToast('⚠ กรุณาพิมพ์ชื่อ'); return; }
+    if(newName!==oldName && SUP_PRODUCTS.includes(newName)){ showToast('⚠ มีชื่อนี้อยู่แล้ว'); return; }
+    if(newName===oldName){ editingSupName=null; renderSupNameList(); return; }
+    // สำรองค่าเดิมไว้เผื่อบันทึกไม่สำเร็จ จะได้ย้อนกลับได้
+    const prevSupProducts = [...SUP_PRODUCTS];
+    const prevCatOwners = {...DATA.owners.categoryOwners};
+    const prevModelOverrides = {...DATA.owners.modelOverrides};
+    SUP_PRODUCTS = SUP_PRODUCTS.map(n=> n===oldName ? newName : n);
+    Object.keys(DATA.owners.categoryOwners).forEach(k=>{ if(DATA.owners.categoryOwners[k]===oldName) DATA.owners.categoryOwners[k]=newName; });
+    Object.keys(DATA.owners.modelOverrides).forEach(k=>{ if(DATA.owners.modelOverrides[k]===oldName) DATA.owners.modelOverrides[k]=newName; });
+    if(currentSupIdentity===oldName) currentSupIdentity=newName;
+    try{
+      await fsSaveSupProducts();
+      await fsSaveCategoriesDoc();
+    }catch(e){
+      SUP_PRODUCTS = prevSupProducts; DATA.owners.categoryOwners = prevCatOwners; DATA.owners.modelOverrides = prevModelOverrides;
+      showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return;
+    }
+    editingSupName = null;
+    renderSupIdentityOptions(); renderAll(); renderOwnerView();
+    showToast(`✓ เปลี่ยนชื่อเป็น "${newName}" แล้ว (ปรับความรับผิดชอบที่ผูกอยู่ให้อัตโนมัติ)`);
+  }));
   list.querySelectorAll('[data-delsup]').forEach(b=>{
     if(b.disabled) return;
     b.addEventListener('click', async ()=>{
