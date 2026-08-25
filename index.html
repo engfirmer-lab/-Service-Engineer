@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -844,8 +844,22 @@ $('gsi-signin-btn').addEventListener('click', async ()=>{
   try{
     await initFirebase();
     const sdk = window._firebaseSdk;
-    await sdk.signInWithRedirect(auth, googleProvider);
-    // หน้าเว็บจะเปลี่ยนไปที่หน้า login ของ Google ตรงนี้ แล้วเด้งกลับมาเอง โค้ดถัดจากนี้จะไม่ทำงานต่อ
+    try{
+      // ลอง popup ก่อน — เร็วกว่า และไม่มีปัญหาเรื่อง storage ข้ามโดเมนแบบ redirect
+      await sdk.signInWithPopup(auth, googleProvider);
+      // สำเร็จแล้ว onAuthStateChanged จะรับช่วงต่อเอง
+    }catch(popupErr){
+      const blockedCodes = ['auth/popup-blocked','auth/operation-not-supported-in-this-environment'];
+      if(blockedCodes.includes(popupErr.code)){
+        // popup ใช้ไม่ได้ (มักเกิดบนมือถือ) — fallback ไปใช้ redirect แทนอัตโนมัติ
+        showToast('กำลังเปลี่ยนไปใช้วิธี login แบบเต็มหน้าจอ...');
+        await sdk.signInWithRedirect(auth, googleProvider);
+      } else if(popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request'){
+        // ผู้ใช้ปิดหน้าต่างเอง ไม่ต้องขึ้น error ให้เข้าใจผิดว่าระบบพัง
+      } else {
+        throw popupErr;
+      }
+    }
   }catch(e){ showToast('⚠ เข้าสู่ระบบไม่สำเร็จ: '+e.message); }
 });
 function ensureSignedIn(callback){
