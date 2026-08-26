@@ -927,19 +927,111 @@ function compressImage(file){
         const maxW=480; const scale=Math.min(1, maxW/img.width);
         const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas.height=img.height*scale;
         const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL('image/jpeg',0.55));
+        const dataUrl = canvas.toDataURL('image/jpeg',0.55);
+        canvas.toBlob(blob=>{ resolve({ pending:true, dataUrl, blob }); }, 'image/jpeg', 0.55);
       };
       img.onerror = reject; img.src = e.target.result;
     };
     reader.onerror = reject; reader.readAsDataURL(file);
   });
 }
+function imgSrcOf(img){ return typeof img==='string' ? img : img.dataUrl; } // ใช้แสดงรูปทั้งตอน preview (ยังไม่อัปโหลด) และตอนอัปโหลดแล้ว (เป็นลิงก์จริง)
 
 /* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
 function showSignedInPill(){
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
 }
 const GOOGLE_CLIENT_ID = "652851518589-9jdarip7ndm82967s3bkllnbcj9hmuvh.apps.googleusercontent.com";
+
+/* ===================== GOOGLE DRIVE — เก็บรูปภาพ/เอกสารจริง ===================== */
+const DRIVE_ROOT_FOLDER_ID = "1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu"; // โฟลเดอร์ "Service Center"
+let driveAccessToken = null;
+let driveTokenClient = null;
+function initDriveTokenClient(){
+  if(driveTokenClient) return;
+  driveTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: '',
+  });
+}
+function ensureDriveAccess(){
+  return new Promise((resolve, reject)=>{
+    if(driveAccessToken){ resolve(driveAccessToken); return; }
+    initDriveTokenClient();
+    showToast('กำลังขอสิทธิ์เข้าถึง Google Drive เพื่ออัปโหลดรูปภาพ...');
+    driveTokenClient.callback = (resp)=>{
+      if(resp.error){ reject(new Error(resp.error)); return; }
+      driveAccessToken = resp.access_token;
+      resolve(driveAccessToken);
+    };
+    driveTokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+function sanitizeFolderName(name){ return String(name).replace(/['"\\\/]/g,'-').trim().slice(0,120) || 'ไม่มีชื่อ'; }
+async function driveFindOrCreateFolder(name, parentId){
+  const token = await ensureDriveAccess();
+  const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
+  const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+  const data = await res.json();
+  if(data.files && data.files.length>0) return data.files[0].id;
+  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
+  });
+  if(!createRes.ok) throw new Error('สร้างโฟลเดอร์ Drive ไม่สำเร็จ ('+createRes.status+')');
+  const created = await createRes.json();
+  return created.id;
+}
+// สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
+async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
+  const owner = ownerOf(category, model);
+  const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+  const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
+  const f2 = await driveFindOrCreateFolder(category, f1);
+  const f3 = await driveFindOrCreateFolder(model, f2);
+  const f4 = await driveFindOrCreateFolder('Troubleshooting', f3);
+  const errorFolderName = errorCode ? `${errorCode} - ${symptom}` : symptom;
+  const f5 = await driveFindOrCreateFolder(errorFolderName, f4);
+  const f6 = await driveFindOrCreateFolder(`วิธี ${solutionIndex+1}`, f5);
+  return f6;
+}
+async function driveUploadImage(blob, filename, parentId){
+  const token = await ensureDriveAccess();
+  const metadata = { name: filename, parents:[parentId] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], {type:'application/json'}));
+  form.append('file', blob);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method:'POST', headers:{ Authorization:`Bearer ${token}` }, body: form
+  });
+  if(!res.ok) throw new Error('อัปโหลดรูปขึ้น Drive ไม่สำเร็จ ('+res.status+')');
+  const data = await res.json();
+  const fileId = data.id;
+  const permRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ role:'reader', type:'anyone' })
+  });
+  if(!permRes.ok) throw new Error('ตั้งค่าสิทธิ์ดูรูปไม่สำเร็จ ('+permRes.status+')');
+  return `https://lh3.googleusercontent.com/d/${fileId}`; // ลิงก์ที่ใช้เป็น <img src> ได้ตรงๆ
+}
+// อัปโหลดรูปที่ยัง "pending" (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) ขึ้น Drive จริง — รูปที่อัปโหลดไปแล้ว (เป็นลิงก์อยู่แล้ว) จะข้ามไป
+async function resolveImagesForUpload(images, category, model, errorCode, symptom, solutionIndex){
+  if(!images || images.length===0) return [];
+  const needsUpload = images.some(img=>typeof img!=='string');
+  const folderId = needsUpload ? await ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex) : null;
+  const resolved = [];
+  for(let i=0;i<images.length;i++){
+    const img = images[i];
+    if(typeof img==='string'){ resolved.push(img); continue; }
+    const filename = `img-${Date.now()}-${i}.jpg`;
+    const url = await driveUploadImage(img.blob, filename, folderId);
+    resolved.push(url);
+  }
+  return resolved;
+}
 async function handleGisCredential(response){
   try{
     await initFirebase();
@@ -1194,7 +1286,7 @@ function renderSolutionCard(err, s, idx){
   <div class="solution-block">
     <div class="solution-num">วิธี ${idx+1}</div>
     <div class="solution-desc">${escapeHtml(s.desc)}</div>
-    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${img}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
+    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${imgSrcOf(img)}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     <div class="meta-grid">
       <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(s.tools||'-')}</div></div>
       <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(s.parts||'-')}</div></div>
@@ -1243,7 +1335,7 @@ $('down-modal-close-x').addEventListener('click', ()=>{ $('down-modal').classLis
 $('down-modal-cancel').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
 function renderDownModalImages(){
   const wrap = $('down-modal-imgrow');
-  wrap.innerHTML = downModalImages.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-dm-rmimg="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label>`;
+  wrap.innerHTML = downModalImages.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-dm-rmimg="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label>`;
   $('down-modal-upload').addEventListener('change', async ()=>{ for(const file of $('down-modal-upload').files){ try{ const c=await compressImage(file); downModalImages.push(c); }catch(e){} } renderDownModalImages(); });
   wrap.querySelectorAll('[data-dm-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalImages.splice(parseInt(btn.getAttribute('data-dm-rmimg')),1); renderDownModalImages(); }));
 }
@@ -1251,7 +1343,12 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   const desc = $('down-modal-desc').value.trim();
   if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
-  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:[...downModalImages], status:'pending', createdAt:Date.now(), submitterName: myUserName };
+  const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
+  let uploadedImages = [];
+  try{
+    if(parentErr){ uploadedImages = await resolveImagesForUpload(downModalImages, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length); }
+  }catch(e){ showToast('⚠ อัปโหลดรูปไม่สำเร็จ: '+e.message); return; }
+  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:uploadedImages, status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
   let newId;
   try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
@@ -1411,7 +1508,7 @@ function renderEngSolutionsEditor(){
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="img-upload-row" data-imgrow="${s.id}">
-          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
           <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
         </div>
       </div>
@@ -1429,7 +1526,13 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
   DATA.pendingErrors = DATA.pendingErrors || [];
-  const fields = { category, model, errorCode:$('eng-f-code').value.trim(), symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
+  const errorCode = $('eng-f-code').value.trim();
+  try{
+    for(let i=0;i<validSolutions.length;i++){
+      validSolutions[i].images = await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i);
+    }
+  }catch(e){ showToast('⚠ อัปโหลดรูปไม่สำเร็จ: '+e.message); return; }
+  const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
   let newId;
   try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
   DATA.pendingErrors.push({ id:newId, ...fields });
@@ -1503,7 +1606,7 @@ function renderSolutionsEditor(){
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="img-upload-row" data-imgrow="${s.id}">
-          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
           <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
         </div>
       </div>
@@ -1525,7 +1628,9 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
-    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:s.images||[], tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
+    const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
+    s.images = uploadedImages; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
+    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
   }
 }
 
@@ -1654,7 +1759,7 @@ async function rejectPendingError(id){
 }
 
 function renderSupFilters(){
-  const cats = Object.keys(DATA.categories);
+  const cats = myOwnedCategories();
   const catPanel = $('sup-filter-cat-panel');
   catPanel.innerHTML = cats.map(c=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fcat="${escapeHtml(c)}" ${supFilterCategories.has(c)?'checked':''}> ${escapeHtml(c)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีประเภทให้เลือก</p>`;
   catPanel.querySelectorAll('[data-fcat]').forEach(cb=>cb.addEventListener('change', ()=>{
@@ -1666,9 +1771,9 @@ function renderSupFilters(){
   updateSupFilterLabels();
 }
 function updateSupModelFilterOptions(){
-  const cats = Object.keys(DATA.categories);
+  const cats = myOwnedCategories();
   const relevant = supFilterCategories.size>0 ? [...supFilterCategories] : cats;
-  const models = [...new Set(relevant.flatMap(c=>DATA.categories[c]||[]))];
+  const models = [...new Set(relevant.flatMap(c=>(DATA.categories[c]||[]).filter(m=>ownerOf(c,m)===currentSupIdentity)))];
   [...supFilterModels].forEach(m=>{ if(!models.includes(m)) supFilterModels.delete(m); });
   const panel = $('sup-filter-model-panel');
   panel.innerHTML = models.map(m=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fmodel="${escapeHtml(m)}" ${supFilterModels.has(m)?'checked':''}> ${escapeHtml(m)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีรุ่นให้เลือก</p>`;
@@ -1713,7 +1818,7 @@ function renderProposals(){
     return `<div class="proposal-card" data-pid="${p.id}">
       <div class="proposal-meta">จาก Error: ${escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ')} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
       <div class="proposal-text">${escapeHtml(p.desc)}</div>
-      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}
+      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
         <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(p.tools||'-')}</div></div>
         <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
