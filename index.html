@@ -951,7 +951,7 @@ function initDriveTokenClient(){
   if(driveTokenClient) return;
   driveTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.file',
+    scope: 'https://www.googleapis.com/auth/drive',
     callback: '',
   });
 }
