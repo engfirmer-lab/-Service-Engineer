@@ -228,7 +228,8 @@
 
   .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:300;align-items:center;justify-content:center;}
   .lightbox.show{display:flex;}
-  .lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;}
+  .lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;cursor:grab;touch-action:pan-y;user-select:none;}
+  .lightbox img:active{cursor:grabbing;}
   .lightbox-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:301;}
   .lightbox-close:hover{background:rgba(255,255,255,.22);}
   .lightbox-nav{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:301;}
@@ -1585,6 +1586,40 @@ $('lightbox').addEventListener('click', e=>{ if(e.target.id==='lightbox') closeL
 $('lightbox-prev').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex-1+lightboxImages.length)%lightboxImages.length; renderLightbox(); });
 $('lightbox-next').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex+1)%lightboxImages.length; renderLightbox(); });
 document.addEventListener('keydown', e=>{ if(!$('lightbox').classList.contains('show')) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') $('lightbox-prev').click(); if(e.key==='ArrowRight') $('lightbox-next').click(); });
+
+/* ===================== ลากซ้าย-ขวาเพื่อเปลี่ยนรูปใน Lightbox (รองรับทั้งนิ้วสัมผัสและเมาส์) ===================== */
+(function(){
+  const imgEl = $('lightbox-img');
+  let dragStartX = null;
+  let dragging = false;
+  const SWIPE_THRESHOLD = 50; // ต้องลากอย่างน้อยเท่านี้ (px) ถึงจะนับว่าเปลี่ยนรูป
+
+  function onDragStart(x){ if(lightboxImages.length<=1) return; dragStartX = x; dragging = true; imgEl.style.transition = 'none'; }
+  function onDragMove(x){
+    if(!dragging || dragStartX===null) return;
+    const dx = x - dragStartX;
+    imgEl.style.transform = `translateX(${dx}px)`;
+  }
+  function onDragEnd(x){
+    if(!dragging || dragStartX===null) return;
+    const dx = x - dragStartX;
+    imgEl.style.transition = 'transform .15s ease';
+    imgEl.style.transform = '';
+    if(Math.abs(dx) > SWIPE_THRESHOLD){
+      if(dx > 0) $('lightbox-prev').click(); else $('lightbox-next').click();
+    }
+    dragStartX = null; dragging = false;
+  }
+
+  imgEl.addEventListener('touchstart', e=>{ onDragStart(e.touches[0].clientX); }, {passive:true});
+  imgEl.addEventListener('touchmove', e=>{ onDragMove(e.touches[0].clientX); }, {passive:true});
+  imgEl.addEventListener('touchend', e=>{ onDragEnd(e.changedTouches[0].clientX); });
+
+  imgEl.addEventListener('mousedown', e=>{ e.preventDefault(); onDragStart(e.clientX); });
+  document.addEventListener('mousemove', e=>{ if(dragging) onDragMove(e.clientX); });
+  document.addEventListener('mouseup', e=>{ if(dragging) onDragEnd(e.clientX); });
+  imgEl.addEventListener('dragstart', e=>e.preventDefault()); // กันเบราว์เซอร์ลากรูปแบบเดิม (ghost image) ทับกับที่เราทำเอง
+})();
 function bindLightboxTriggers(root){
   root = root || document;
   root.querySelectorAll('[data-lightbox-sol]').forEach(img=>{
@@ -1628,14 +1663,20 @@ function bindDocOpenButtons(){
 }
 function renderEngDocResults(){
   const list = $('doc-results-list');
+  const labelForCount = engDocTypeActive==='video' ? `🎬 Video - ${videoSubtypeLabel(engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
+  const hasSearchOrFilter = docQuery.trim()!=='' || docFilterCategory!=='all' || docFilterModel!=='all';
+  if(!hasSearchOrFilter){
+    $('doc-result-count').textContent = '';
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการเอกสาร ${labelForCount} (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`;
+    return;
+  }
   let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
   if(engDocTypeActive==='video') filtered = filtered.filter(d=>d.videoSubtype===engVideoSubtype);
   if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
   if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
   if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
-  const labelForCount = engDocTypeActive==='video' ? `🎬 Video - ${videoSubtypeLabel(engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
   $('doc-result-count').textContent = `${labelForCount} · พบ ${filtered.length} เอกสาร`;
-  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีเอกสารในหมวดนี้</h3><p>รอ Sup Product อัปโหลดเอกสาร ${labelForCount} เข้ามา</p></div>`; return; }
+  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
   list.innerHTML = filtered.sort((a,b)=>b.uploadedAt-a.uploadedAt).map(docCard).join('');
   bindDocOpenButtons();
 }
