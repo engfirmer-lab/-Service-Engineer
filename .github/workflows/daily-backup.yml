@@ -1,0 +1,29 @@
+name: Daily TRBL Backup to Google Drive
+
+# รันอัตโนมัติทุกวัน ตี 1:00 เวลาไทย (18:00 UTC ของวันก่อนหน้า)
+# กดรันมือเองก็ได้ผ่านแท็บ Actions บน GitHub (ปุ่ม "Run workflow")
+on:
+  schedule:
+    - cron: '0 18 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install firebase-admin googleapis xlsx
+
+      - name: Run backup script
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+        run: node backup-script.js
