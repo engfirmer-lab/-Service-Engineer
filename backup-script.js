@@ -151,6 +151,31 @@ async function main(){
   });
 
   console.log(`✓ อัปโหลด Backup วันที่ ${dateStamp} เข้า Service Center/Backups เสร็จสมบูรณ์`);
+
+  await cleanupOldBackups(backupsFolderId, BACKUP_RETENTION_DAYS);
+}
+
+// ----- ลบไฟล์ Backup เก่าที่เก็บไว้เกิน N วัน กันไฟล์สะสมเยอะเกินไป -----
+const BACKUP_RETENTION_DAYS = 7;
+async function cleanupOldBackups(folderId, daysToKeep){
+  console.log(`กำลังตรวจสอบไฟล์ Backup เก่าที่เก็บไว้เกิน ${daysToKeep} วัน...`);
+  const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents and trashed=false and createdTime < '${cutoff}'`,
+    fields: 'files(id, name, createdTime)',
+    pageSize: 1000,
+  });
+  const oldFiles = res.data.files || [];
+  if (oldFiles.length === 0) { console.log('ไม่มีไฟล์เก่าที่ต้องลบ'); return; }
+  for (const f of oldFiles) {
+    try {
+      await drive.files.delete({ fileId: f.id });
+      console.log(`ลบไฟล์เก่าแล้ว: ${f.name} (สร้างเมื่อ ${f.createdTime})`);
+    } catch (e) {
+      console.error(`ลบไฟล์ไม่สำเร็จ: ${f.name}`, e.message);
+    }
+  }
+  console.log(`✓ ลบไฟล์ Backup เก่าไปทั้งหมด ${oldFiles.length} ไฟล์`);
 }
 
 main().catch(err => {
