@@ -9,7 +9,8 @@
  * ตามที่ตั้งเวลาไว้ใน .github/workflows/daily-backup.yml
  * ===================================================================
  */
-const admin = require('firebase-admin');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
 const { google } = require('googleapis');
 const XLSX = require('xlsx');
 const fs = require('fs');
@@ -18,8 +19,8 @@ const serviceAccountKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
 // Firestore ยังใช้ Service Account เหมือนเดิม (จุดนี้ไม่มีปัญหา) — เปลี่ยนเฉพาะฝั่ง Drive
-admin.initializeApp({ credential: admin.credential.cert(serviceAccountKey) });
-const db = admin.firestore();
+const firebaseApp = initializeApp({ credential: cert(serviceAccountKey) });
+const db = getFirestore(firebaseApp);
 
 // Drive ต้องใช้สิทธิ์ในนามบัญชี Gmail จริง (ไม่ใช่ Service Account) เพราะ Service Account
 // ไม่มีโควต้าพื้นที่เก็บข้อมูลเป็นของตัวเอง อัปโหลดไฟล์ใหม่ไม่ได้ (403)
