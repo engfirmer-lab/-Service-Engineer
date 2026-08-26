@@ -1019,6 +1019,14 @@ function ensureDriveAccess(){
     driveTokenClient.requestAccessToken({ prompt: '' });
   });
 }
+// ขอสิทธิ์ Drive ล่วงหน้าตั้งแต่ตอน login สำเร็จเลย — กันไม่ให้ popup โผล่มาขัดจังหวะทีหลังตอนกำลังอัปโหลด/ลบรูป
+let _driveAccessRequested = false;
+async function proactivelyRequestDriveAccess(){
+  if(_driveAccessRequested) return;
+  _driveAccessRequested = true;
+  try{ await ensureDriveAccess(); }
+  catch(e){ _driveAccessRequested = false; /* ถ้าพลาด/ถูกปฏิเสธ ค่อยขอใหม่ตอนใช้งานจริงทีหลัง */ }
+}
 function sanitizeFolderName(name){ return String(name).replace(/['"\\\/]/g,'-').trim().slice(0,120) || 'ไม่มีชื่อ'; }
 async function driveFindOrCreateFolder(name, parentId){
   const token = await ensureDriveAccess();
@@ -1157,6 +1165,7 @@ async function resolveAuthAndStart(){
     if(user){
       myGoogleId = user.uid; myUserName = user.displayName || user.email;
       showSignedInPill();
+      proactivelyRequestDriveAccess();
       if(!window._appStarted){
         window._appStarted = true;
         loadData().then(()=>{ $('gsi-overlay').classList.remove('show'); updateNotifBadge(); if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; } });
