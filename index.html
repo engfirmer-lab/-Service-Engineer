@@ -1291,7 +1291,15 @@ function renderNotifList(){
   }).join('');
   // เปิดดูแล้ว = ถือว่าอ่านแล้ว — บันทึกลง Firestore จริง กันเด้งซ้ำตอน refresh
   const toMark = mine.filter(p=>p.status!=='pending' && !p.notifRead);
-  toMark.forEach(p=>{ p.notifRead = true; fsUpdatePendingError(p.id, {notifRead:true}).catch(()=>{}); });
+  toMark.forEach(p=>{
+    p.notifRead = true;
+    fsUpdatePendingError(p.id, {notifRead:true}).catch(err=>{
+      console.error('บันทึกสถานะแจ้งเตือนไม่สำเร็จ:', err);
+      showToast('⚠ บันทึกสถานะแจ้งเตือนไม่สำเร็จ: '+err.message);
+      p.notifRead = false; // ย้อนสถานะกลับ เพราะบันทึกจริงไม่สำเร็จ — ป้องกันไม่ให้หน้าจอโชว์ผิดจากความจริง
+      updateNotifBadge();
+    });
+  });
   updateNotifBadge();
 }
 
