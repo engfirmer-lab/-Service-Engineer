@@ -1037,6 +1037,34 @@ async function driveFindOrCreateFolder(name, parentId){
   return created.id;
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
+async function findDriveFolder(name, parentId){
+  const token = await ensureDriveAccess();
+  const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
+  const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok) return null;
+  const data = await res.json();
+  return (data.files && data.files.length>0) ? data.files[0].id : null;
+}
+// ลบโฟลเดอร์ Drive ทั้งก้อนของ Error นี้ (รวมทุกวิธี/รูปภาพข้างใน) — เรียกหลังลบ Error ออกจากฐานข้อมูลสำเร็จแล้ว
+// ทำงานเบื้องหลังแบบไม่บล็อกการลบหลัก ถ้าล้มเหลวก็แค่เหลือไฟล์ค้าง ไม่กระทบข้อมูลหลักที่ลบไปแล้ว
+async function deleteDriveFolderForError(err){
+  showLoadingOverlay('กำลังลบรูปภาพใน Drive...');
+  try{
+    const owner = ownerOf(err.category, err.model);
+    const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+    const f1 = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!f1) return;
+    const f2 = await findDriveFolder(err.category, f1); if(!f2) return;
+    const f3 = await findDriveFolder(err.model, f2); if(!f3) return;
+    const f4 = await findDriveFolder('Troubleshooting', f3); if(!f4) return;
+    const errorFolderName = err.errorCode ? `${err.errorCode} - ${err.symptom}` : err.symptom;
+    const f5 = await findDriveFolder(errorFolderName, f4); if(!f5) return;
+    const token = await ensureDriveAccess();
+    await fetch(`https://www.googleapis.com/drive/v3/files/${f5}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+  }catch(e){
+    console.error('ลบโฟลเดอร์ Drive ของ Error ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e);
+  }finally{ hideLoadingOverlay(); }
+}
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
@@ -1830,9 +1858,11 @@ async function startEditError(id){
   renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
 }
 async function deleteError(id){
-  if(!confirm('ยืนยันการลบ Error นี้?')) return;
+  if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
+  const err = DATA.errors.find(e=>e.id===id);
   try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
   DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); showToast('ลบแล้ว');
+  if(err) deleteDriveFolderForError(err).catch(()=>{});
 }
 
 /* ===================== SUP PRODUCT: REVIEW PENDING ERRORS FROM ENGINEER ===================== */
