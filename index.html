@@ -262,6 +262,10 @@
   .owner-cat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
   .owner-cat-name{font-weight:600;font-size:13px;}
   .owner-models{font-size:12px;color:var(--text-dim);margin-top:3px;line-height:1.5;}
+  .owner-models-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .owner-model-chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--text-dim);background:var(--panel-alt);border:1px solid var(--border);border-radius:999px;padding:3px 4px 3px 10px;}
+  .owner-model-chip .icon-btn{padding:2px 8px;font-size:10.5px;color:var(--amber);}
+  .owner-model-chip.editing{background:none;border:none;padding:0;}
   .owner-exception{font-size:11px;color:var(--amber);margin-top:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .owner-cross{font-size:12px;color:var(--purple);margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .inline-edit{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -445,8 +449,19 @@
     </div>
   </div>
 
-  <!-- Modal ใส่/แก้ไข ลิงก์เอกสาร 1 ช่อง -->
-  <div class="modal-overlay" id="doclink-modal">
+  <!-- Modal รายการลิงก์ทั้งหมดใน 1 ช่อง (รองรับหลายลิงก์) -->
+  <div class="modal-overlay" id="doclink-list-modal">
+    <div class="modal">
+      <button class="modal-close-x" id="doclink-list-close">✕</button>
+      <h3 id="doclink-list-title">เอกสาร</h3>
+      <p id="doclink-list-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
+      <div id="doclink-list-items"></div>
+      <button class="btn btn-primary btn-sm" id="doclink-list-add-btn" style="margin-top:14px;">+ เพิ่มลิงก์ใหม่</button>
+    </div>
+  </div>
+
+  <!-- Modal ใส่/แก้ไข ลิงก์เอกสาร 1 รายการ (เปิดซ้อนบนรายการได้) -->
+  <div class="modal-overlay" id="doclink-modal" style="z-index:110;">
     <div class="modal">
       <button class="modal-close-x" id="doclink-modal-close">✕</button>
       <h3 id="doclink-modal-title">เพิ่มลิงก์เอกสาร</h3>
@@ -761,7 +776,7 @@ let editingOwnerModel = null; // model currently showing inline owner editor (ke
 
 let engEditingSolutions = [];
 let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไข" on a pending Engineer submission
-let readNotifIds = new Set(); // session-only: which resolved notifications the current user has seen
+// (readNotifIds ไม่ใช้แล้ว — เปลี่ยนไปเก็บสถานะ "อ่านแล้ว" ใน Firestore แทน ไม่ให้เด้งซ้ำหลัง refresh)
 
 const $ = id => document.getElementById(id);
 function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -1247,7 +1262,7 @@ function myResolvedSubmissions(){
   return (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
 }
 function updateNotifBadge(){
-  const unread = myResolvedSubmissions().filter(p=>!readNotifIds.has(p.id));
+  const unread = myResolvedSubmissions().filter(p=>!p.notifRead);
   const badge = $('notif-badge');
   if(unread.length>0){ badge.style.display='block'; badge.textContent = unread.length; }
   else{ badge.style.display='none'; }
@@ -1262,7 +1277,6 @@ function renderNotifList(){
   const mine = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
   if(mine.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">คุณยังไม่เคยส่ง Error ใหม่เข้าระบบ</p>`; return; }
   list.innerHTML = mine.map(p=>{
-    readNotifIds.add(p.id);
     let statusBadge;
     if(p.status==='pending') statusBadge = `<span class="status-badge" style="background:rgba(232,163,61,.15);color:var(--amber);">รอตรวจสอบ</span>`;
     else if(p.status==='approved') statusBadge = `<span class="status-badge" style="background:rgba(71,184,129,.15);color:var(--green);">✓ อนุมัติแล้ว</span>`;
@@ -1275,6 +1289,9 @@ function renderNotifList(){
       ${p.status==='rejected' && p.rejectionReason ? `<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">เหตุผล: ${escapeHtml(p.rejectionReason)}</div>` : ''}
     </div>`;
   }).join('');
+  // เปิดดูแล้ว = ถือว่าอ่านแล้ว — บันทึกลง Firestore จริง กันเด้งซ้ำตอน refresh
+  const toMark = mine.filter(p=>p.status!=='pending' && !p.notifRead);
+  toMark.forEach(p=>{ p.notifRead = true; fsUpdatePendingError(p.id, {notifRead:true}).catch(()=>{}); });
   updateNotifBadge();
 }
 
@@ -1723,8 +1740,8 @@ const MATRIX_COLUMNS = [
   {key:'video', videoSubtype:'alignment', label:'Video-Alignment', icon:'🎬'},
   {key:'video', videoSubtype:'replace', label:'Video-Replace', icon:'🎬'},
 ];
-function findMatrixDoc(category, model, docType, videoSubtype){
-  return DATA.documents.find(d=>d.category===category && d.model===model && d.docType===docType && (docType!=='video' || d.videoSubtype===videoSubtype));
+function findMatrixDocs(category, model, docType, videoSubtype){
+  return DATA.documents.filter(d=>d.category===category && d.model===model && d.docType===docType && (docType!=='video' || d.videoSubtype===videoSubtype));
 }
 function renderSupDocMatrix(){
   const models = [];
@@ -1735,10 +1752,10 @@ function renderSupDocMatrix(){
   models.forEach(({category,model})=>{
     html += `<tr><td class="mono" style="color:var(--text-faint);">${escapeHtml(category)}</td><td><strong>${escapeHtml(model)}</strong></td>`;
     MATRIX_COLUMNS.forEach(col=>{
-      const doc = findMatrixDoc(category, model, col.key, col.videoSubtype);
+      const docs = findMatrixDocs(category, model, col.key, col.videoSubtype);
       const cellKey = `${escapeHtml(category)}|${escapeHtml(model)}|${col.key}|${col.videoSubtype||''}`;
-      html += doc
-        ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="${escapeHtml(doc.title)} — กดเพื่อดู/แก้ไข" style="background:none;border:none;cursor:pointer;font-size:15px;">✅</button></td>`
+      html += docs.length>0
+        ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="มี ${docs.length} ลิงก์ — กดเพื่อดูทั้งหมด" style="background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--green);font-weight:700;">✅ ${docs.length}</button></td>`
         : `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="กดเพื่อใส่ลิงก์" style="background:none;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;">➕</button></td>`;
     });
     html += `</tr>`;
@@ -1747,18 +1764,61 @@ function renderSupDocMatrix(){
   table.innerHTML = html;
   table.querySelectorAll('[data-cell]').forEach(btn=>btn.addEventListener('click', ()=>{
     const [category, model, docType, videoSubtype] = btn.getAttribute('data-cell').split('|');
-    openDocLinkModal(category, model, docType, videoSubtype||undefined);
+    openDocLinkListModal(category, model, docType, videoSubtype||undefined);
   }));
 }
 function renderSupDocTab(){ renderSupDocMatrix(); }
 
-/* ===================== Modal ใส่/แก้ไข/ลบ ลิงก์เอกสาร 1 ช่อง ===================== */
-let doclinkContext = null;
-function openDocLinkModal(category, model, docType, videoSubtype){
-  const existing = findMatrixDoc(category, model, docType, videoSubtype);
-  doclinkContext = { category, model, docType, videoSubtype, existingId: existing ? existing.id : null };
+/* ===================== Modal รายการลิงก์ทั้งหมดใน 1 ช่อง (รองรับหลายลิงก์) ===================== */
+let doclinkListContext = null;
+function openDocLinkListModal(category, model, docType, videoSubtype){
+  doclinkListContext = { category, model, docType, videoSubtype };
   const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-modal-title').textContent = existing ? 'แก้ไข/ลบลิงก์เอกสาร' : 'เพิ่มลิงก์เอกสาร';
+  $('doclink-list-title').textContent = 'เอกสาร: ' + typeLabel;
+  $('doclink-list-sub').textContent = `${category} · ${model}`;
+  renderDocLinkListItems();
+  $('doclink-list-modal').classList.add('show');
+}
+function renderDocLinkListItems(){
+  if(!doclinkListContext) return;
+  const { category, model, docType, videoSubtype } = doclinkListContext;
+  const docs = findMatrixDocs(category, model, docType, videoSubtype);
+  const wrap = $('doclink-list-items');
+  wrap.innerHTML = docs.length===0
+    ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มีลิงก์ในช่องนี้</p>`
+    : docs.map(d=>`<div class="admin-row">
+        <div class="admin-row-main"><a href="${escapeHtml(d.url)}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(d.title)}</a></div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button class="icon-btn btn-sm" data-editlink="${d.id}">แก้ไข</button>
+          <button class="icon-btn danger btn-sm" data-dellink="${d.id}">ลบ</button>
+        </div>
+      </div>`).join('');
+  wrap.querySelectorAll('[data-editlink]').forEach(b=>b.addEventListener('click', ()=>{
+    openDocLinkModal(category, model, docType, videoSubtype, b.getAttribute('data-editlink'));
+  }));
+  wrap.querySelectorAll('[data-dellink]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
+    const id = b.getAttribute('data-dellink');
+    try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+    DATA.documents = DATA.documents.filter(d=>d.id!==id);
+    renderDocLinkListItems(); renderAll();
+    showToast('ลบลิงก์แล้ว');
+  }));
+}
+$('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
+$('doclink-list-add-btn').addEventListener('click', ()=>{
+  if(!doclinkListContext) return;
+  const { category, model, docType, videoSubtype } = doclinkListContext;
+  openDocLinkModal(category, model, docType, videoSubtype, null);
+});
+
+/* ===================== Modal ใส่/แก้ไข ลิงก์เอกสาร 1 รายการ ===================== */
+let doclinkContext = null;
+function openDocLinkModal(category, model, docType, videoSubtype, existingId){
+  const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
+  doclinkContext = { category, model, docType, videoSubtype, existingId: existingId || null };
+  const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+  $('doclink-modal-title').textContent = existing ? 'แก้ไขลิงก์เอกสาร' : 'เพิ่มลิงก์เอกสาร';
   $('doclink-modal-sub').textContent = `${category} · ${model} · ${typeLabel}`;
   $('doclink-title-input').value = existing ? existing.title : '';
   $('doclink-url-input').value = existing ? (existing.url||'') : '';
@@ -1787,7 +1847,9 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
       DATA.documents.push({ id:newId, ...fields });
     }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
-  closeDocLinkModal(); renderAll();
+  closeDocLinkModal();
+  if(doclinkListContext) renderDocLinkListItems();
+  renderAll();
   showToast('✓ บันทึกลิงก์เอกสารแล้ว');
 });
 $('doclink-delete-btn').addEventListener('click', async ()=>{
@@ -1796,7 +1858,9 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   const id = doclinkContext.existingId;
   try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
   DATA.documents = DATA.documents.filter(d=>d.id!==id);
-  closeDocLinkModal(); renderAll();
+  closeDocLinkModal();
+  if(doclinkListContext) renderDocLinkListItems();
+  renderAll();
   showToast('ลบลิงก์แล้ว');
 });
 
@@ -1929,7 +1993,13 @@ function renderOwnerSummary(){
               <button class="btn btn-ghost btn-sm" data-cancelcat="1">ยกเลิก</button>
             </div>` : `<button class="icon-btn" data-editcat="${escapeHtml(cat)}">แก้ไข</button>`}
         </div>
-        <div class="owner-models">${normalModels.map(escapeHtml).join(', ') || '(ไม่มีรุ่นในประเภทนี้)'}</div>
+        <div class="owner-models-list">${normalModels.length>0 ? normalModels.map(m=>{
+          const key = cat+'|'+m;
+          const isEditingModel = editingOwnerModel===key;
+          return isEditingModel
+            ? `<span class="owner-model-chip editing"><span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(sp, false)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">✓</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">✕</button></span></span>`
+            : `<span class="owner-model-chip">${escapeHtml(m)} <button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}" title="โยกย้ายผู้ดูแล">โยก</button></span>`;
+        }).join('') : '<span class="mono" style="font-size:11.5px;color:var(--text-faint);">(ไม่มีรุ่นในประเภทนี้)</span>'}</div>
         ${exceptionsAway.map(m=>{
           const key = cat+'|'+m;
           const isEditingModel = editingOwnerModel===key;
