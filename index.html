@@ -45,9 +45,10 @@
   .brand-text h1{font-size:14px;font-weight:600;}
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
-  .mode-toggle::after{content:'';position:absolute;top:0;right:0;bottom:0;width:26px;background:linear-gradient(to right, transparent, var(--panel-alt) 75%);pointer-events:none;opacity:0;transition:opacity .15s;border-radius:0 8px 8px 0;}
-  .mode-toggle.can-scroll::after{opacity:1;}
   .mode-toggle::-webkit-scrollbar{display:none;}
+  .mode-toggle-track{display:none;height:3px;background:var(--border);border-radius:999px;margin-top:5px;position:relative;overflow:hidden;}
+  .mode-toggle-track.show{display:block;}
+  .mode-toggle-thumb{position:absolute;top:0;left:0;height:100%;background:var(--amber);border-radius:999px;transition:left .1s linear, width .1s linear;}
   .mode-toggle button{flex-shrink:0;font-family:'Sarabun';font-size:12px;font-weight:600;padding:7px 11px;border-radius:6px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:.15s;white-space:nowrap;}
   .mode-toggle button.active{background:var(--amber);color:#1a1206;}
   .mode-toggle button:hover:not(.active){color:var(--text);}
@@ -299,6 +300,7 @@
       <button id="mode-mgr">Manager</button>
       <button id="mode-backup">Export/Backup</button>
     </div>
+    <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
   </div>
 </header>
 
@@ -1235,11 +1237,18 @@ $('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
 $('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
 
-/* ===================== ข้อ 2: เงาบอกว่าแถบเมนูเลื่อนได้ ===================== */
+/* ===================== แถบเลื่อนเล็กๆ ด้านล่างเมนู บอกตำแหน่งซ้าย-ขวาที่กำลังดูอยู่ ===================== */
 function updateModeToggleScrollHint(){
-  const el = $('mode-toggle'); if(!el) return;
-  const hasMore = el.scrollWidth > el.clientWidth + el.scrollLeft + 4;
-  el.classList.toggle('can-scroll', hasMore);
+  const el = $('mode-toggle'); const track = $('mode-toggle-track'); const thumb = $('mode-toggle-thumb');
+  if(!el || !track || !thumb) return;
+  const scrollable = el.scrollWidth > el.clientWidth + 2;
+  track.classList.toggle('show', scrollable);
+  if(!scrollable) return;
+  const thumbWidthPct = Math.max(15, (el.clientWidth / el.scrollWidth) * 100);
+  const maxScrollLeft = el.scrollWidth - el.clientWidth;
+  const scrollPct = maxScrollLeft>0 ? (el.scrollLeft / maxScrollLeft) : 0;
+  thumb.style.width = thumbWidthPct + '%';
+  thumb.style.left = (scrollPct * (100 - thumbWidthPct)) + '%';
 }
 $('mode-toggle').addEventListener('scroll', updateModeToggleScrollHint);
 window.addEventListener('resize', updateModeToggleScrollHint);
@@ -2823,6 +2832,7 @@ if(!_appInitBlocked){
   setStatus(true, 'กำลังตรวจสอบสถานะการเข้าสู่ระบบ...');
   resolveAuthAndStart();
 }
+setTimeout(updateModeToggleScrollHint, 200);
 </script>
 
 </body>
