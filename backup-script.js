@@ -17,8 +17,19 @@ const fs = require('fs');
 const serviceAccountKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 const DRIVE_FOLDER_ID = process.env.DRIVE_FOLDER_ID;
 
+// Firestore ยังใช้ Service Account เหมือนเดิม (จุดนี้ไม่มีปัญหา) — เปลี่ยนเฉพาะฝั่ง Drive
 admin.initializeApp({ credential: admin.credential.cert(serviceAccountKey) });
 const db = admin.firestore();
+
+// Drive ต้องใช้สิทธิ์ในนามบัญชี Gmail จริง (ไม่ใช่ Service Account) เพราะ Service Account
+// ไม่มีโควต้าพื้นที่เก็บข้อมูลเป็นของตัวเอง อัปโหลดไฟล์ใหม่ไม่ได้ (403)
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_OAUTH_CLIENT_ID,
+  process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+  'http://localhost:53682'
+);
+oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_OAUTH_REFRESH_TOKEN });
+const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
 function docTypeLabel(key){
   const map = { service_manual:'Service Manual', spare_part:'Spare Part', install_checklist:'Install Checklist', pm_checklist:'PM Checklist', video:'Video' };
@@ -108,14 +119,9 @@ async function main(){
   const excelFilename = `trbl-backup-${dateStamp}.xlsx`;
   XLSX.writeFile(wb, excelFilename);
 
-  console.log('สร้างไฟล์ backup เสร็จแล้ว กำลังอัปโหลดขึ้น Google Drive...');
+  console.log('สร้างไฟล์ backup เสร็จแล้ว กำลังอัปโหลดขึ้น Google Drive (ในนามบัญชี Gmail จริง)...');
 
-  // ----- อัปโหลดเข้า Google Drive -----
-  const auth = new google.auth.GoogleAuth({
-    credentials: serviceAccountKey,
-    scopes: ['https://www.googleapis.com/auth/drive'],
-  });
-  const drive = google.drive({ version: 'v3', auth });
+  // ----- อัปโหลดเข้า Google Drive (ใช้ drive client ที่สร้างไว้ด้านบนสุดของไฟล์แล้ว) -----
 
   // หาหรือสร้างโฟลเดอร์ "Backups" ใต้ Service Center
   let backupsFolderId;
