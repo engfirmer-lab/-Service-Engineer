@@ -2647,6 +2647,18 @@ async function driveUploadFile(blob, filename, mimeType, parentId){
     return data.id;
   }finally{ hideLoadingOverlay(); }
 }
+const BACKUP_RETENTION_DAYS = 7;
+async function cleanupOldBackupsInDrive(folderId, daysToKeep){
+  const token = await ensureDriveAccess();
+  const cutoff = new Date(Date.now() - daysToKeep*24*60*60*1000).toISOString();
+  const q = encodeURIComponent(`'${folderId}' in parents and trashed=false and createdTime < '${cutoff}'`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok) return; // ไม่ต้องทำให้การ backup ล้มเหลวถ้าลบไฟล์เก่าไม่สำเร็จ แค่ข้ามไป
+  const data = await res.json();
+  for(const f of (data.files||[])){
+    try{ await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); }catch(e){}
+  }
+}
 async function handleBackupToDriveNow(statusElId){
   const statusEl = statusElId ? $(statusElId) : null;
   try{
@@ -2662,6 +2674,7 @@ async function handleBackupToDriveNow(statusElId){
     const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
     await driveUploadFile(jsonBlob, `trbl-backup-${stamp}.json`, 'application/json', backupsFolderId);
     await driveUploadFile(excelBlob, `trbl-backup-${stamp}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', backupsFolderId);
+    await cleanupOldBackupsInDrive(backupsFolderId, BACKUP_RETENTION_DAYS);
     if(statusEl) statusEl.textContent = '';
     showToast('✓ Backup เข้า Service Center/Backups สำเร็จแล้ว');
   }catch(e){
