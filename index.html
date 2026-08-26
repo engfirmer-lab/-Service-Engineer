@@ -44,8 +44,11 @@
   .brand-mark{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,var(--amber),#b97324);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#1a1206;font-size:12px;flex-shrink:0;}
   .brand-text h1{font-size:14px;font-weight:600;}
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
-  .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:wrap;}
-  .mode-toggle button{font-family:'Sarabun';font-size:12px;font-weight:600;padding:7px 11px;border-radius:6px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:.15s;white-space:nowrap;}
+  .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
+  .mode-toggle::after{content:'';position:absolute;top:0;right:0;bottom:0;width:26px;background:linear-gradient(to right, transparent, var(--panel-alt) 75%);pointer-events:none;opacity:0;transition:opacity .15s;border-radius:0 8px 8px 0;}
+  .mode-toggle.can-scroll::after{opacity:1;}
+  .mode-toggle::-webkit-scrollbar{display:none;}
+  .mode-toggle button{flex-shrink:0;font-family:'Sarabun';font-size:12px;font-weight:600;padding:7px 11px;border-radius:6px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:.15s;white-space:nowrap;}
   .mode-toggle button.active{background:var(--amber);color:#1a1206;}
   .mode-toggle button:hover:not(.active){color:var(--text);}
 
@@ -268,7 +271,7 @@
 </head>
 <body>
 
-<div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า FIREBASE_CONFIG ที่ต้นไฟล์ index.html (6 ค่าจาก Firebase Console) — ดูขั้นตอนใน FIRESTORE-SETUP-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่ลิงก์ Drive) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
+<div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า FIREBASE_CONFIG ที่ต้นไฟล์ index.html (6 ค่าจาก Firebase Console) — ดูขั้นตอนใน FIRESTORE-SETUP-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่แปะลิงก์) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
 
 <header>
   <div class="header-inner">
@@ -279,11 +282,12 @@
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
     </div>
-    <div class="mode-toggle">
-      <button id="mode-eng" class="active">Engineer 📱</button>
-      <button id="mode-sup">Sup Product 🖥️</button>
-      <button id="mode-owner">ผู้รับผิดชอบ Product 🗂️</button>
-      <button id="mode-mgr">Manager 🖥️</button>
+    <div class="mode-toggle" id="mode-toggle">
+      <button id="mode-eng" class="active">Engineer</button>
+      <button id="mode-sup">Sup Product</button>
+      <button id="mode-owner">จัดการ Product</button>
+      <button id="mode-mgr">Manager</button>
+      <button id="mode-backup">Database Backup</button>
     </div>
   </div>
 </header>
@@ -292,7 +296,7 @@
   <div class="gsi-avatar" id="signed-in-avatar">?</div>
   <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
   <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
-  <button id="change-name-btn" title="สลับบัญชี Google" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:12px;padding:2px 4px;">✎</button>
+  <button id="change-name-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">ออกจากระบบ</button>
 </div>
 
 <div class="modal-overlay" id="notif-modal">
@@ -315,6 +319,7 @@
       <button data-tab="spare_part">🔧 Spare Part</button>
       <button data-tab="install_checklist">📋 Install Checklist</button>
       <button data-tab="pm_checklist">🗓️ PM Checklist</button>
+      <button data-tab="video">🎬 Video</button>
     </div>
 
     <div id="eng-tab-trbl">
@@ -350,6 +355,11 @@
     </div>
 
     <div id="eng-tab-docs" style="display:none;">
+      <div class="subtab-bar" id="eng-video-subtabs" style="display:none;margin-bottom:10px;">
+        <button data-vsub="training" class="active">🎓 Training</button>
+        <button data-vsub="alignment">📐 Alignment</button>
+        <button data-vsub="replace">🔄 Replace</button>
+      </div>
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ รุ่นเครื่อง..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
       <div class="filter-row">
         <select id="doc-filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
@@ -367,16 +377,6 @@
       <label>คุณคือ:</label>
       <select id="sup-identity"></select>
       <span class="privacy-note">เลือกชื่อเพื่อกรองข้อมูลและ Dashboard ที่เกี่ยวข้องกับคุณ</span>
-    </div>
-
-    <div class="panel-block">
-      <h2>สำรองข้อมูล (Backup)</h2>
-      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-primary btn-sm" id="sup-backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
-        <button class="btn btn-ghost btn-sm" id="sup-backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
-        <span class="mono" id="sup-backup-status" style="font-size:12px;color:var(--text-faint);"></span>
-      </div>
     </div>
 
     <div class="subtab-bar" id="sup-subtabs">
@@ -421,9 +421,15 @@
         <h2>ค้นหา / จัดการ Error ของฉัน</h2>
         <p class="panel-sub">ค้นหาและกรองเหมือนหน้า Engineer เพื่อหา Error ที่ต้องการแก้ไข</p>
         <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, รุ่นเครื่อง, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
-        <div class="filter-row">
-          <select id="sup-filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
-          <select id="sup-filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+        <div class="filter-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <div style="position:relative;">
+            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">ประเภทเครื่องจักร: ทั้งหมด ▾</button>
+            <div id="sup-filter-cat-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+          </div>
+          <div style="position:relative;">
+            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">รุ่นเครื่อง: ทั้งหมด ▾</button>
+            <div id="sup-filter-model-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
+          </div>
         </div>
         <div class="result-count" id="sup-result-count"></div>
         <div id="sup-results-list"></div>
@@ -432,31 +438,26 @@
 
     <div id="sup-tab-docs" style="display:none;">
       <div class="panel-block">
-        <h2>ความครบถ้วนของเอกสารที่ฉันดูแล</h2>
-        <p class="panel-sub">เช็คได้เลยว่ารุ่นไหนยังขาดเอกสารประเภทไหน</p>
-        <div style="overflow-x:auto;"><table id="sup-doc-coverage"></table></div>
+        <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
+        <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
+        <div style="overflow-x:auto;"><table id="sup-doc-matrix"></table></div>
       </div>
-      <div class="panel-block">
-        <h2>อัปโหลดเอกสาร <span class="tag">SUP PRODUCT</span></h2>
-        <p class="panel-sub">เลือกประเภทเอกสาร แล้วกรอกข้อมูล — แนบได้ทั้งลิงก์ Google Drive หรืออัปโหลดไฟล์ตรง</p>
-        <div class="doc-type-bar" id="sup-doc-type-bar"></div>
-        <div class="form-grid two">
-          <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="doc-f-category"></select></div>
-          <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="doc-f-model"></select></div>
-          <div class="field-wrap full"><label>ชื่อเอกสาร *</label><input type="text" id="doc-f-title" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
-        </div>
-        <div class="method-radio" style="margin-top:12px;">
-          <label><input type="radio" name="doc-method" value="link" checked> แปะลิงก์ Google Drive</label>
-          <label><input type="radio" name="doc-method" value="direct"> อัปโหลดไฟล์ตรง</label>
-        </div>
-        <div id="doc-method-link"><input type="text" id="doc-f-url" placeholder="วางลิงก์ Google Drive ที่นี่"></div>
-        <div id="doc-method-direct" style="display:none;">
-          <div class="upload-file-row"><label class="btn btn-ghost btn-sm" style="cursor:pointer;">เลือกไฟล์<input type="file" id="doc-f-file" style="display:none;" accept=".xlsx,.xls,.docx,.doc,.pptx,.ppt,.pdf"></label><span class="mono" id="doc-f-filename" style="font-size:12px;color:var(--text-faint);">ยังไม่ได้เลือกไฟล์</span></div>
-        </div>
-        <button class="btn btn-primary" id="doc-save-btn" style="margin-top:14px;">บันทึกเอกสาร</button>
-        <span class="mono" id="doc-save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;margin-left:10px;">✓ บันทึกแล้ว</span>
+    </div>
+  </div>
+
+  <!-- Modal ใส่/แก้ไข ลิงก์เอกสาร 1 ช่อง -->
+  <div class="modal-overlay" id="doclink-modal">
+    <div class="modal">
+      <button class="modal-close-x" id="doclink-modal-close">✕</button>
+      <h3 id="doclink-modal-title">เพิ่มลิงก์เอกสาร</h3>
+      <p id="doclink-modal-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
+      <div class="field-wrap"><label>ชื่อเอกสาร *</label><input type="text" id="doclink-title-input" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
+      <div class="field-wrap" style="margin-top:10px;"><label>ลิงก์ *</label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="doclink-save-btn">บันทึก</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-delete-btn" style="display:none;color:var(--red);border-color:var(--red);">ลบลิงก์นี้</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-cancel-btn">ยกเลิก</button>
       </div>
-      <div class="panel-block"><h2>เอกสารทั้งหมดของฉัน (<span id="sup-doc-count">0</span>)</h2><div id="sup-doc-list"></div></div>
     </div>
   </div>
 
@@ -507,15 +508,6 @@
   <div id="view-mgr" style="display:none;">
     <div class="desktop-hint">🖥️ Dashboard ภาพรวม — สำหรับ Engineer Manager</div>
     <div class="panel-block">
-      <h2>สำรองข้อมูล (Backup)</h2>
-      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว</p>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-primary btn-sm" id="mgr-backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
-        <button class="btn btn-ghost btn-sm" id="mgr-backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
-        <span class="mono" id="mgr-backup-status" style="font-size:12px;color:var(--text-faint);"></span>
-      </div>
-    </div>
-    <div class="panel-block">
       <h2>ข้อมูล Troubleshoot</h2>
       <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — Manager ดูแล้วตีความเอง</p>
       <table id="mgr-table"></table>
@@ -524,6 +516,20 @@
       <h2>ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
       <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
       <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ DATABASE BACKUP VIEW (แยกออกมาต่างหาก) ============ -->
+  <div id="view-backup" style="display:none;">
+    <div class="desktop-hint">💾 สำรองข้อมูลทั้งระบบ — เน้น Troubleshooting เป็นหลัก</div>
+    <div class="panel-block">
+      <h2>สำรองข้อมูล (Backup)</h2>
+      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว — เน้น Error Code, อาการเสีย, วิธีการ, อุปกรณ์ที่ใช้, อะไหล่ที่ใช้, เวลาที่ใช้ ส่วนข้อมูลอื่น (เอกสาร) จะแสดงเป็นลิงก์อ้างอิงเท่านั้น</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary btn-sm" id="backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
+        <button class="btn btn-ghost btn-sm" id="backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
+        <span class="mono" id="backup-status" style="font-size:12px;color:var(--text-faint);"></span>
+      </div>
     </div>
   </div>
 </main>
@@ -683,7 +689,22 @@ const DOC_TYPES = [
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
+  {key:'video', label:'Video', icon:'🎬'},
 ];
+const VIDEO_SUBTYPES = [
+  {key:'training', label:'Training', icon:'🎓'},
+  {key:'alignment', label:'Alignment', icon:'📐'},
+  {key:'replace', label:'Replace', icon:'🔄'},
+];
+function videoSubtypeLabel(key){ const d = VIDEO_SUBTYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
+const COVERAGE_COLUMNS = [
+  ...DOC_TYPES.filter(t=>t.key!=='video'),
+  {key:'video_training', label:'Video Training', icon:'🎬'},
+];
+function hasCoverageDoc(colKey, category, model){
+  if(colKey==='video_training') return DATA.documents.some(d=>d.docType==='video' && d.videoSubtype==='training' && d.category===category && d.model===model);
+  return DATA.documents.some(d=>d.docType===colKey && d.category===category && d.model===model);
+}
 function docTypeLabel(key){ const d = DOC_TYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
 
 function seedData(){
@@ -719,11 +740,11 @@ let currentMode = 'eng';
 let currentSupIdentity = SUP_PRODUCTS[0];
 let engActiveTab = 'trbl';
 let supActiveTab = 'trbl';
-let supDocTypeActive = 'service_manual';
+// (supDocTypeActive ไม่ใช้แล้ว — เปลี่ยนเป็นตาราง matrix แสดงทุกประเภทพร้อมกัน)
 let engDocTypeActive = 'service_manual';
 
 let currentQuery=''; let filterCategory='all'; let filterModel='all';
-let supQuery=''; let supFilterCategory='all'; let supFilterModel='all';
+let supQuery=''; let supFilterCategories=new Set(); let supFilterModels=new Set();
 let docQuery=''; let docFilterCategory='all'; let docFilterModel='all';
 
 let editingErrorId = null;
@@ -860,6 +881,7 @@ async function fsUpdateProposal(id, fields){ await initFirebase(); const sdk=win
 async function fsAddPendingError(fields){ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'pendingErrors'), fields); return ref.id; }
 async function fsUpdatePendingError(id, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'pendingErrors',id), fields); }
 async function fsAddDocument(fields){ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'documents'), fields); return ref.id; }
+async function fsUpdateDocument(id, fields){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'documents',id), fields); }
 async function fsDeleteDocument(id){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); }
 async function fsSaveCategoriesDoc(){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners }); }
 // อัปเดตฟิลด์ (category หรือ model) ให้ตรงกับชื่อใหม่ ในทุกเอกสารของ collection ที่ระบุ — แบ่งเป็นชุดละ 400 กันชนลิมิต 500 ของ Firestore batch
@@ -882,4 +904,1452 @@ function compressImage(file){
       const img = new Image();
       img.onload = ()=>{
         const maxW=480; const scale=Math.min(1, maxW/img.width);
-        const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas
+        const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas.height=img.height*scale;
+        const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg',0.55));
+      };
+      img.onerror = reject; img.src = e.target.result;
+    };
+    reader.onerror = reject; reader.readAsDataURL(file);
+  });
+}
+
+/* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
+function showSignedInPill(){
+  $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
+}
+const GOOGLE_CLIENT_ID = "150634893334-e70hlvfu69vdu771pim0s6j7me2sg3a0.apps.googleusercontent.com";
+async function handleGisCredential(response){
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const credential = sdk.GoogleAuthProvider.credential(response.credential);
+    await sdk.signInWithCredential(auth, credential);
+    // สำเร็จแล้ว onAuthStateChanged จะรับช่วงต่อเอง — ไม่ต้องผ่านหน้า firebaseapp.com เลย
+  }catch(e){ showToast('⚠ เข้าสู่ระบบไม่สำเร็จ: '+e.message); }
+}
+let _gisInitialized = false;
+function initGis(){
+  if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return false; }
+  if(!window.google || !window.google.accounts) return false;
+  if(!_gisInitialized){
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGisCredential, auto_select:false });
+    _gisInitialized = true;
+  }
+  $('g_id_signin_container').innerHTML = '';
+  google.accounts.id.renderButton($('g_id_signin_container'), { theme:'outline', size:'large', text:'signin_with', shape:'pill', width:280 });
+  return true;
+}
+function ensureSignedIn(callback){
+  if(myGoogleId){ callback(); return; }
+  $('gsi-overlay').classList.add('show');
+  const ok = initGis();
+  if(!ok && !FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ setTimeout(initGis, 400); }
+}
+$('change-name-btn').addEventListener('click', async ()=>{
+  try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
+});
+
+// จุดเดียวที่ตัดสินว่า "ตอนนี้ล็อกอินอยู่ไหม" — ใช้ onAuthStateChanged ของ Firebase เป็นความจริงหลัก
+// ครอบคลุมทั้ง 2 กรณี: เพิ่งเลือกบัญชี Google ผ่าน GIS สำเร็จ, และเคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง)
+// สำคัญ: จะไม่ซ่อนหน้าจอ login (ปิด overlay) จนกว่า loadData() จะโหลดเสร็จจริง กันไม่ให้มีช่วงเวลาที่หน้าจอดูเหมือนใช้งานได้
+// แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เคยแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
+async function resolveAuthAndStart(){
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  sdk.onAuthStateChanged(auth, (user)=>{
+    if(user){
+      myGoogleId = user.uid; myUserName = user.displayName || user.email;
+      showSignedInPill();
+      if(!window._appStarted){
+        window._appStarted = true;
+        loadData().then(()=>{ $('gsi-overlay').classList.remove('show'); updateNotifBadge(); if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; } });
+      } else {
+        $('gsi-overlay').classList.remove('show');
+        updateNotifBadge();
+      }
+    } else {
+      myGoogleId = null; myUserName = null;
+      $('signed-in-pill').style.display = 'none';
+      $('gsi-overlay').classList.add('show');
+      initGis();
+      setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
+    }
+  });
+}
+
+/* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
+const TEAM_PIN = '1234';   // ⚠️ เปลี่ยนก่อนใช้งานจริง — Sup Product / Manager
+const OWNER_PIN = '5678';  // ⚠️ เปลี่ยนก่อนใช้งานจริง — ผู้รับผิดชอบ Product (เข้มงวดกว่า)
+let pinUnlockedTeam = false;
+let pinUnlockedOwner = false;
+let pendingModeAfterPin = null;
+function requestModeSwitch(mode){
+  if(mode==='eng'){ switchMode(mode); return; }
+  if(mode==='owner'){ if(pinUnlockedOwner){ switchMode(mode); return; } openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้า "จัดการ Product" กระทบข้อมูลทั้งระบบ — ใช้ PIN แยกต่างหาก ไม่ใช่ PIN เดียวกับ Sup Product/Manager'); return; }
+  if(pinUnlockedTeam){ switchMode(mode); return; }
+  openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้านี้มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง');
+}
+function openPinModal(mode, title, desc){
+  pendingModeAfterPin = mode; $('pin-modal-title').textContent = title; $('pin-modal-desc').textContent = desc;
+  $('pin-input').value=''; $('pin-error').classList.remove('show'); $('pin-modal').classList.add('show'); setTimeout(()=>$('pin-input').focus(),50);
+}
+$('pin-submit').addEventListener('click', ()=>{
+  const val = $('pin-input').value;
+  const correct = pendingModeAfterPin==='owner' ? (val===OWNER_PIN) : (val===TEAM_PIN);
+  if(correct){
+    if(pendingModeAfterPin==='owner') pinUnlockedOwner = true; else pinUnlockedTeam = true;
+    $('pin-modal').classList.remove('show'); if(pendingModeAfterPin) switchMode(pendingModeAfterPin);
+  } else { $('pin-error').classList.add('show'); $('pin-input').value=''; $('pin-input').focus(); }
+});
+$('pin-input').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pin-submit').click(); });
+$('pin-cancel').addEventListener('click', ()=>{ $('pin-modal').classList.remove('show'); pendingModeAfterPin=null; });
+
+function switchMode(mode){
+  if(!DATA){ window._pendingModeSwitch = mode; showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...'); return; }
+  closeErrorDetail();
+  currentMode = mode;
+  $('view-eng').style.display = mode==='eng' ? 'block':'none';
+  $('view-sup').style.display = mode==='sup' ? 'block':'none';
+  $('view-owner').style.display = mode==='owner' ? 'block':'none';
+  $('view-mgr').style.display = mode==='mgr' ? 'block':'none';
+  $('view-backup').style.display = mode==='backup' ? 'block':'none';
+  $('mode-eng').classList.toggle('active', mode==='eng');
+  $('mode-sup').classList.toggle('active', mode==='sup');
+  $('mode-owner').classList.toggle('active', mode==='owner');
+  $('mode-mgr').classList.toggle('active', mode==='mgr');
+  $('mode-backup').classList.toggle('active', mode==='backup');
+  if(mode==='sup') renderSupView();
+  if(mode==='owner') renderOwnerView();
+  if(mode==='mgr') renderMgrView();
+}
+$('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
+$('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
+$('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
+$('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
+$('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
+
+/* ===================== ข้อ 2: เงาบอกว่าแถบเมนูเลื่อนได้ ===================== */
+function updateModeToggleScrollHint(){
+  const el = $('mode-toggle'); if(!el) return;
+  const hasMore = el.scrollWidth > el.clientWidth + el.scrollLeft + 4;
+  el.classList.toggle('can-scroll', hasMore);
+}
+$('mode-toggle').addEventListener('scroll', updateModeToggleScrollHint);
+window.addEventListener('resize', updateModeToggleScrollHint);
+
+function renderAll(){
+  renderCategoryFilter(); renderTechResults();
+  renderDocFilterEng(); renderEngDocResults();
+  populateSupSelectors();
+  populateEngErrorFormSelectors();
+  updateNotifBadge();
+  if(currentMode==='sup') renderSupView();
+  if(currentMode==='owner') renderOwnerView();
+  if(currentMode==='mgr') renderMgrView();
+}
+
+/* ===================== ENGINEER SUB-TABS ===================== */
+let engVideoSubtype = 'training';
+document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    engActiveTab = btn.getAttribute('data-tab');
+    if(engActiveTab==='trbl'){ $('eng-tab-trbl').style.display='block'; $('eng-tab-docs').style.display='none'; }
+    else{
+      $('eng-tab-trbl').style.display='none'; $('eng-tab-docs').style.display='block'; engDocTypeActive = engActiveTab;
+      $('eng-video-subtabs').style.display = engActiveTab==='video' ? 'flex' : 'none';
+      renderDocFilterEng(); renderEngDocResults();
+    }
+  });
+});
+document.querySelectorAll('#eng-video-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#eng-video-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    engVideoSubtype = btn.getAttribute('data-vsub');
+    renderEngDocResults();
+  });
+});
+
+/* ===================== TROUBLESHOOTING (Engineer) ===================== */
+function renderCategoryFilter(){
+  const cats = Object.keys(DATA.categories);
+  $('filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('filter-category').value = filterCategory; updateModelFilter();
+}
+function updateModelFilter(){
+  const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]);
+  $('filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
+}
+$('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); renderTechResults(); });
+$('filter-model').addEventListener('change', e=>{ filterModel=e.target.value; renderTechResults(); });
+$('search-input').addEventListener('input', e=>{ currentQuery=e.target.value; renderTechResults(); });
+$('clear-search').addEventListener('click', ()=>{ $('search-input').value=''; currentQuery=''; renderTechResults(); });
+
+function matchesQuery(e,q){ if(!q) return true; const hay=[e.category,e.model,e.errorCode,e.symptom].join(' ').toLowerCase(); return hay.includes(q.toLowerCase()); }
+function nameSummary(names){ if(names.length===0) return ''; if(names.length<=4) return names.join(', '); return names.slice(0,4).join(', ')+` และอีก ${names.length-4} คน`; }
+
+function renderTechResults(){
+  const list = $('results-list');
+  const hasSearchOrFilter = currentQuery.trim()!=='' || filterCategory!=='all' || filterModel!=='all';
+  if(DATA.errors.length===0){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีข้อมูลในระบบ</h3><p>รอ Sup Product เพิ่มรายการ Troubleshoot เข้ามาก่อน</p></div>`; return; }
+  if(!hasSearchOrFilter){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`; return; }
+  let filtered = DATA.errors.filter(e=>matchesQuery(e,currentQuery));
+  if(filterCategory!=='all') filtered = filtered.filter(e=>e.category===filterCategory);
+  if(filterModel!=='all') filtered = filtered.filter(e=>e.model===filterModel);
+  $('result-count').textContent = `พบ ${filtered.length} รายการ`;
+  if(filtered.length===0){ list.innerHTML=`<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  list.innerHTML = filtered.map(e=>renderErrorCard(e,false)).join('');
+  list.querySelectorAll('.card-head').forEach(h=>{
+    h.addEventListener('click', ()=>{ openErrorDetail(h.closest('.card').getAttribute('data-id')); });
+  });
+}
+
+function renderErrorCard(e, adminMode){
+  const pending = pendingDownCount(e.id);
+  const totalUps = e.totalUps||0;
+  return `
+  <div class="card" data-id="${e.id}">
+    <div class="card-head">
+      <div style="min-width:0;">
+        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span></div>
+        <div class="card-symptom">${escapeHtml(e.symptom)}</div>
+        <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
+      </div>
+      <span class="chev">⤢</span>
+    </div>
+    ${adminMode?`<div class="card-admin-actions"><button class="icon-btn" data-edit="${e.id}">แก้ไข Error นี้</button><button class="icon-btn danger" data-del="${e.id}">ลบ Error นี้</button></div>`:''}
+  </div>`;
+}
+
+/* ===================== FULLSCREEN ERROR DETAIL ===================== */
+let openErrorDetailId = null;
+async function openErrorDetail(errorId){
+  const err = DATA.errors.find(e=>e.id===errorId); if(!err) return;
+  openErrorDetailId = errorId;
+  $('error-detail-content').innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>กำลังโหลด...</h3></div>`;
+  $('error-detail-panel').classList.add('show');
+  window.scrollTo({top:0});
+  err.viewCount = (err.viewCount||0)+1;
+  fsIncrementView(errorId).catch(()=>{});
+  if(currentMode==='eng') renderTechResults();
+  if(currentMode==='sup') renderSupSearchResults();
+  await loadSolutionsFor(errorId);
+  if(openErrorDetailId===errorId) renderErrorDetailPanel();
+}
+function closeErrorDetail(){ $('error-detail-panel').classList.remove('show'); openErrorDetailId = null; }
+$('error-detail-close').addEventListener('click', closeErrorDetail);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('error-detail-panel').classList.contains('show') && !$('lightbox').classList.contains('show')) closeErrorDetail(); });
+
+function renderErrorDetailPanel(){
+  const e = DATA.errors.find(x=>x.id===openErrorDetailId); if(!e) return;
+  const pending = pendingDownCount(e.id);
+  const totalUps = e.totalUps||0;
+  const downLocked = myVotes['down:'+e.id];
+  const downNames = (DATA.proposals||[]).filter(p=>p.errorId===e.id && p.status==='pending').map(p=>p.submitterName).filter(Boolean);
+  const content = $('error-detail-content');
+  content.innerHTML = `
+    <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span></div>
+    <div class="detail-symptom">${escapeHtml(e.symptom)}</div>
+    <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
+    <div style="margin-top:14px;">
+      ${e.solutions.map((s,idx)=>renderSolutionCard(e,s,idx)).join('')}
+      <div class="error-fb-block">
+        <div class="t">ลองวิธีข้างบนทั้งหมดแล้ว แต่ยังแก้ปัญหานี้ไม่ได้?</div>
+        <button class="fb-down-btn ${downLocked?'locked':''}" data-errdown="${e.id}" ${downLocked?'disabled':''}>${downLocked?'✓ คุณแจ้งไปแล้ว':'👎 ลองทุกวิธีแล้วไม่ได้ผล'}</button>
+        ${downNames.length?`<div class="names">แจ้งโดย: ${escapeHtml(nameSummary(downNames))}</div>`:''}
+      </div>
+    </div>
+  `;
+  bindFeedbackButtons(content); bindLightboxTriggers(content);
+}
+
+function renderSolutionCard(err, s, idx){
+  const up = (s.feedback||[]).filter(f=>f.type==='up');
+  const upLocked = myVotes['up:'+s.id];
+  const names = up.map(f=>f.name).filter(Boolean);
+  return `
+  <div class="solution-block">
+    <div class="solution-num">วิธี ${idx+1}</div>
+    <div class="solution-desc">${escapeHtml(s.desc)}</div>
+    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${img}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
+    <div class="meta-grid">
+      <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(s.tools||'-')}</div></div>
+      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(s.parts||'-')}</div></div>
+      <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(s.time||'-')}</div></div>
+    </div>
+    <div class="fb-row">
+      <button class="fb-btn up ${upLocked?'sel':''}" data-sol="${s.id}" title="${upLocked?'แตะอีกครั้งเพื่อยกเลิก':''}">${upLocked?'✓ คุณกดแล้ว (แตะเพื่อยกเลิก)':'👍 แก้ได้จริง'} (${up.length})</button>
+      ${names.length?`<div class="fb-names">${escapeHtml(nameSummary(names))}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function bindFeedbackButtons(root){
+  root = root || document;
+  root.querySelectorAll('.fb-btn.up').forEach(btn=>{ btn.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=btn.getAttribute('data-sol'); ensureSignedIn(()=>submitUp(solId)); }); });
+  root.querySelectorAll('[data-errdown]').forEach(btn=>{
+    if(btn.disabled) return;
+    btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errdown');
+      ensureSignedIn(()=>{ downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
+  });
+}
+async function submitUp(solId){
+  const existing = myVotes['up:'+solId];
+  let targetErrId = null;
+  for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ targetErrId=e.id; break; } }
+  if(!targetErrId) return;
+
+  if(existing){
+    // เคยกดแล้ว — กดซ้ำ = ยกเลิก (เผื่อกดผิด)
+    for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=(sol.feedback||[]).filter(f=>f.ts!==existing.ts || f.name!==existing.name); e.totalUps=Math.max(0,(e.totalUps||0)-1); break; } }
+    delete myVotes['up:'+solId];
+    try{ await fsRemoveFeedback(targetErrId, solId, existing); }catch(e){ showToast('⚠ ยกเลิกไม่สำเร็จ: '+e.message); }
+    showToast('ยกเลิกการโหวตแล้ว');
+  } else {
+    const entry = {type:'up', name:myUserName, ts:Date.now()};
+    for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(entry); e.totalUps=(e.totalUps||0)+1; break; } }
+    myVotes['up:'+solId]=entry;
+    try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+    showToast('✓ บันทึก feedback แล้วในชื่อ '+myUserName);
+  }
+  renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  if(openErrorDetailId) renderErrorDetailPanel();
+}
+
+$('down-modal-close-x').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
+$('down-modal-cancel').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
+function renderDownModalImages(){
+  const wrap = $('down-modal-imgrow');
+  wrap.innerHTML = downModalImages.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-dm-rmimg="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label>`;
+  $('down-modal-upload').addEventListener('change', async ()=>{ for(const file of $('down-modal-upload').files){ try{ const c=await compressImage(file); downModalImages.push(c); }catch(e){} } renderDownModalImages(); });
+  wrap.querySelectorAll('[data-dm-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalImages.splice(parseInt(btn.getAttribute('data-dm-rmimg')),1); renderDownModalImages(); }));
+}
+$('down-modal-submit').addEventListener('click', async ()=>{
+  const desc = $('down-modal-desc').value.trim();
+  if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
+  if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
+  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:[...downModalImages], status:'pending', createdAt:Date.now(), submitterName: myUserName };
+  DATA.proposals = DATA.proposals || [];
+  let newId;
+  try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  DATA.proposals.push({ id:newId, ...fields });
+  myVotes['down:'+downModalErrorId] = true;
+  $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
+  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
+});
+
+/* ===================== NOTIFICATIONS (Engineer's submitted-error status) ===================== */
+function myResolvedSubmissions(){
+  if(!myUserName || !DATA) return [];
+  return (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
+}
+function updateNotifBadge(){
+  const unread = myResolvedSubmissions().filter(p=>!readNotifIds.has(p.id));
+  const badge = $('notif-badge');
+  if(unread.length>0){ badge.style.display='block'; badge.textContent = unread.length; }
+  else{ badge.style.display='none'; }
+}
+$('notif-bell').addEventListener('click', ()=>{
+  if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
+  renderNotifList(); $('notif-modal').classList.add('show');
+});
+$('notif-modal-close').addEventListener('click', ()=>{ $('notif-modal').classList.remove('show'); });
+function renderNotifList(){
+  const list = $('notif-list');
+  const mine = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
+  if(mine.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">คุณยังไม่เคยส่ง Error ใหม่เข้าระบบ</p>`; return; }
+  list.innerHTML = mine.map(p=>{
+    readNotifIds.add(p.id);
+    let statusBadge;
+    if(p.status==='pending') statusBadge = `<span class="status-badge" style="background:rgba(232,163,61,.15);color:var(--amber);">รอตรวจสอบ</span>`;
+    else if(p.status==='approved') statusBadge = `<span class="status-badge" style="background:rgba(71,184,129,.15);color:var(--green);">✓ อนุมัติแล้ว</span>`;
+    else statusBadge = `<span class="status-badge" style="background:rgba(229,83,75,.15);color:var(--red);">✕ ถูกปฏิเสธ</span>`;
+    return `<div class="admin-row" style="flex-direction:column;align-items:flex-start;">
+      <div class="admin-row-main" style="width:100%;justify-content:space-between;">
+        <span style="font-size:12.5px;">${escapeHtml(p.model)} — ${escapeHtml(p.errorCode||p.symptom)}</span>
+        ${statusBadge}
+      </div>
+      ${p.status==='rejected' && p.rejectionReason ? `<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">เหตุผล: ${escapeHtml(p.rejectionReason)}</div>` : ''}
+    </div>`;
+  }).join('');
+  updateNotifBadge();
+}
+
+/* ===================== LIGHTBOX ===================== */
+let lightboxImages=[]; let lightboxIndex=0;
+function openLightbox(images, idx){ lightboxImages=images; lightboxIndex=idx; renderLightbox(); $('lightbox').classList.add('show'); }
+function renderLightbox(){ $('lightbox-img').src=lightboxImages[lightboxIndex]; $('lightbox-counter').textContent=lightboxImages.length>1?`${lightboxIndex+1} / ${lightboxImages.length}`:''; const multi=lightboxImages.length>1; $('lightbox-prev').style.display=multi?'flex':'none'; $('lightbox-next').style.display=multi?'flex':'none'; }
+function closeLightbox(){ $('lightbox').classList.remove('show'); }
+$('lightbox-close').addEventListener('click', closeLightbox);
+$('lightbox').addEventListener('click', e=>{ if(e.target.id==='lightbox') closeLightbox(); });
+$('lightbox-prev').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex-1+lightboxImages.length)%lightboxImages.length; renderLightbox(); });
+$('lightbox-next').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex+1)%lightboxImages.length; renderLightbox(); });
+document.addEventListener('keydown', e=>{ if(!$('lightbox').classList.contains('show')) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') $('lightbox-prev').click(); if(e.key==='ArrowRight') $('lightbox-next').click(); });
+function bindLightboxTriggers(root){
+  root = root || document;
+  root.querySelectorAll('[data-lightbox-sol]').forEach(img=>{
+    img.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=img.getAttribute('data-lightbox-sol'); const idx=parseInt(img.getAttribute('data-lightbox-idx'));
+      let images=null; for(const e of DATA.errors){ const sol=e.solutions.find(s=>s.id===solId); if(sol){ images=sol.images; break; } } if(images) openLightbox(images, idx); });
+  });
+}
+
+/* ===================== DOCUMENTS (Engineer) ===================== */
+function renderDocFilterEng(){
+  const cats = Object.keys(DATA.categories);
+  $('doc-filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('doc-filter-category').value = docFilterCategory; updateDocModelFilterEng();
+}
+function updateDocModelFilterEng(){
+  const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]);
+  $('doc-filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
+}
+$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
+$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; renderEngDocResults(); });
+$('doc-search-input').addEventListener('input', e=>{ docQuery=e.target.value; renderEngDocResults(); });
+$('doc-clear-search').addEventListener('click', ()=>{ $('doc-search-input').value=''; docQuery=''; renderEngDocResults(); });
+
+function docCard(d){
+  const typeInfo = DOC_TYPES.find(t=>t.key===d.docType);
+  const dateStr = new Date(d.uploadedAt).toLocaleDateString('th-TH');
+  const subtypeTag = d.docType==='video' && d.videoSubtype ? ` · ${videoSubtypeLabel(d.videoSubtype)}` : '';
+  return `<div class="doc-card">
+    <div class="doc-main"><div class="doc-icon">${typeInfo?typeInfo.icon:'📄'}</div>
+      <div><div class="doc-title">${escapeHtml(d.title)}</div><div class="doc-meta">${escapeHtml(d.category)} · ${escapeHtml(d.model)}${subtypeTag} · อัปโหลด ${dateStr}${d.method==='direct'?' · ไฟล์: '+escapeHtml(d.fileName||''):''}</div></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" data-openfile="${d.id}">${d.method==='link'?'เปิดลิงก์ ↗':'ดาวน์โหลด (จำลอง)'}</button>
+  </div>`;
+}
+function bindDocOpenButtons(){
+  document.querySelectorAll('[data-openfile]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const doc=DATA.documents.find(d=>d.id===btn.getAttribute('data-openfile')); if(!doc) return;
+      if(doc.method==='link'){ window.open(doc.url, '_blank'); } else{ showToast('🖨 จำลอง: กำลังเปิดไฟล์ "'+doc.fileName+'"'); } });
+  });
+}
+function renderEngDocResults(){
+  const list = $('doc-results-list');
+  let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
+  if(engDocTypeActive==='video') filtered = filtered.filter(d=>d.videoSubtype===engVideoSubtype);
+  if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
+  if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
+  if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
+  const labelForCount = engDocTypeActive==='video' ? `🎬 Video - ${videoSubtypeLabel(engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
+  $('doc-result-count').textContent = `${labelForCount} · พบ ${filtered.length} เอกสาร`;
+  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีเอกสารในหมวดนี้</h3><p>รอ Sup Product อัปโหลดเอกสาร ${labelForCount} เข้ามา</p></div>`; return; }
+  list.innerHTML = filtered.sort((a,b)=>b.uploadedAt-a.uploadedAt).map(docCard).join('');
+  bindDocOpenButtons();
+}
+
+/* ===================== ENGINEER: ADD NEW ERROR (goes to pending queue) ===================== */
+function populateEngErrorFormSelectors(){
+  const cats = Object.keys(DATA.categories);
+  $('eng-f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  updateEngModelSelect();
+}
+function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=DATA.categories[cat]||[]; $('eng-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+$('eng-f-category').addEventListener('change', updateEngModelSelect);
+
+$('eng-toggle-add-error-btn').addEventListener('click', ()=>{
+  ensureSignedIn(()=>{
+    const form = $('eng-add-error-form'); const showing = form.style.display==='block';
+    form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
+    if(!showing) resetEngErrorForm();
+  });
+});
+$('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+
+function resetEngErrorForm(){
+  $('eng-f-code').value=''; $('eng-f-symptom').value='';
+  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  renderEngSolutionsEditor();
+}
+function renderEngSolutionsEditor(){
+  const wrap = $('eng-solutions-editor');
+  wrap.innerHTML = engEditingSolutions.map((s,idx)=>`
+    <div class="solution-editor" data-sid="${s.id}">
+      <div class="num-badge">วิธี ${idx+1}</div>
+      ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
+      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="form-grid two" style="margin-top:8px;">
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
+        <div class="img-upload-row" data-imgrow="${s.id}">
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        </div>
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
+}
+$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
+
+$('eng-save-error-btn').addEventListener('click', async ()=>{
+  const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
+  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  DATA.pendingErrors = DATA.pendingErrors || [];
+  const fields = { category, model, errorCode:$('eng-f-code').value.trim(), symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
+  let newId;
+  try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  DATA.pendingErrors.push({ id:newId, ...fields });
+  $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
+  resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+  renderAll();
+  showToast('✓ ส่งให้ Sup Product ตรวจสอบแล้ว — ดูสถานะได้ที่ 🔔');
+});
+
+/* ===================== SUP PRODUCT: sub-tabs ===================== */
+document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#sup-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    supActiveTab = btn.getAttribute('data-tab');
+    $('sup-tab-trbl').style.display = supActiveTab==='trbl' ? 'block':'none';
+    $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
+    if(supActiveTab==='docs') renderSupDocTab();
+  });
+});
+
+$('toggle-add-error-btn').addEventListener('click', ()=>{
+  const form = $('add-error-form'); const showing = form.style.display==='block';
+  form.style.display = showing ? 'none':'block'; $('toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
+  if(!showing) resetErrorForm();
+});
+$('cancel-error-btn').addEventListener('click', ()=>{ resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+
+function renderSupIdentityOptions(){
+  $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
+  $('sup-identity').value = currentSupIdentity;
+}
+function myOwnedCategories(){
+  return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity));
+}
+function populateSupSelectors(){
+  const cats = myOwnedCategories();
+  $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
+  updateModelSelect();
+}
+function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
+$('f-category').addEventListener('change', updateModelSelect);
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; renderSupView(); });
+
+function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
+
+function renderSupStats(){
+  const mine = myErrors();
+  const totalUps = mine.reduce((a,e)=>a+(e.totalUps||0),0);
+  const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
+  const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
+  $('sup-stats').innerHTML = `
+    <div class="stat-card"><div class="label">Error ที่กรอก (ปริมาณ)</div><div class="value">${mine.length}</div></div>
+    <div class="stat-card"><div class="label">👍 แก้ได้จริง สะสม</div><div class="value green">${totalUps}</div></div>
+    <div class="stat-card"><div class="label">ข้อเสนอที่ถูกรับ</div><div class="value amber">${acceptedCount}</div></div>
+    <div class="stat-card"><div class="label">แจ้งแก้ไม่ได้ (ค้างอยู่ตอนนี้)</div><div class="value" style="color:${pendingTotal>0?'var(--red)':'var(--text-dim)'};">${pendingTotal}</div></div>
+  `;
+}
+
+function renderSolutionsEditor(){
+  const wrap = $('solutions-editor');
+  wrap.innerHTML = editingSolutions.map((s,idx)=>`
+    <div class="solution-editor" data-sid="${s.id}">
+      <div class="num-badge">วิธี ${idx+1}</div>
+      ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
+      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="form-grid two" style="margin-top:8px;">
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
+        <div class="img-upload-row" data-imgrow="${s.id}">
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${img}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        </div>
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }));
+}
+$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
+
+let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
+
+async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
+  await fsSaveError(errorId, fields);
+  const keepIds = new Set(validSolutions.map(s=>s.id));
+  if(originalSolutionIds){
+    for(const oldId of originalSolutionIds){ if(!keepIds.has(oldId)) await fsDeleteSolution(errorId, oldId); }
+  }
+  for(let i=0;i<validSolutions.length;i++){
+    const s = validSolutions[i];
+    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:s.images||[], tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
+  }
+}
+
+function resetErrorForm(){
+  editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
+  $('f-code').value=''; $('f-symptom').value='';
+  editingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  renderSolutionsEditor();
+  $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
+  $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
+  $('save-error-btn').textContent = 'บันทึก Error';
+}
+$('save-error-btn').addEventListener('click', async ()=>{
+  const category=$('f-category').value, model=$('f-model').value, symptom=$('f-symptom').value.trim();
+  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  const validSolutions = editingSolutions.filter(s=>s.desc.trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  const errorCode = $('f-code').value.trim();
+
+  if(reviewingPendingErrorId){
+    const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
+    const newId = uid('e');
+    try{
+      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
+      if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
+      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+    }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+    renderAll();
+    showToast('✓ แก้ไขและอนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
+    return;
+  }
+
+  try{
+    if(editingErrorId){
+      const err = DATA.errors.find(e=>e.id===editingErrorId);
+      await saveErrorWithSolutions(editingErrorId, {category, model, errorCode, symptom}, validSolutions, _originalSolutionIds);
+      Object.assign(err, {category, model, errorCode, symptom, solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
+    } else {
+      const newId = uid('e');
+      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
+      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+    }
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
+  resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
+  renderAll();
+});
+
+async function startEditError(id){
+  const err = DATA.errors.find(e=>e.id===id); if(!err) return;
+  await loadSolutionsFor(id);
+  editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
+  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('sup-form-heading').innerHTML = 'แก้ไข Error <span class="tag">SUP PRODUCT</span>';
+  $('sup-form-sub').textContent = 'แก้ไขข้อมูล Error ที่มีอยู่แล้ว';
+  $('save-error-btn').textContent = 'บันทึกการแก้ไข';
+  $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
+  $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
+  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function deleteError(id){
+  if(!confirm('ยืนยันการลบ Error นี้?')) return;
+  try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+  DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); showToast('ลบแล้ว');
+}
+
+/* ===================== SUP PRODUCT: REVIEW PENDING ERRORS FROM ENGINEER ===================== */
+function myPendingErrors(){
+  return (DATA.pendingErrors||[]).filter(p=>p.status==='pending' && ownerOf(p.category,p.model)===currentSupIdentity);
+}
+function renderPendingErrors(){
+  const pending = myPendingErrors();
+  $('pending-error-count').textContent = pending.length;
+  const list = $('pending-errors-list');
+  if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มี Error ใหม่รอตรวจสอบ</p>`; return; }
+  list.innerHTML = pending.map(p=>`
+    <div class="proposal-card" data-peid="${p.id}">
+      <div class="proposal-meta">${escapeHtml(p.category)} · ${escapeHtml(p.model)} ${p.errorCode?'· '+escapeHtml(p.errorCode):''} · ส่งโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      <div class="proposal-text"><strong>${escapeHtml(p.symptom)}</strong></div>
+      <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">${p.solutions.length} วิธีแก้ไขที่เสนอมา</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" data-editpending="${p.id}">✎ แก้ไขก่อนอนุมัติ</button>
+        <button class="btn btn-primary btn-sm" data-quickapprove="${p.id}">✓ อนุมัติทันที</button>
+        <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);" data-rejectpending="${p.id}">✕ ปฏิเสธ</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('[data-editpending]').forEach(b=>b.addEventListener('click', ()=>startReviewPendingError(b.getAttribute('data-editpending'))));
+  list.querySelectorAll('[data-quickapprove]').forEach(b=>b.addEventListener('click', ()=>quickApprovePendingError(b.getAttribute('data-quickapprove'))));
+  list.querySelectorAll('[data-rejectpending]').forEach(b=>b.addEventListener('click', ()=>rejectPendingError(b.getAttribute('data-rejectpending'))));
+}
+function startReviewPendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  editingErrorId = null; reviewingPendingErrorId = id;
+  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('sup-form-heading').innerHTML = 'แก้ไขก่อนอนุมัติ <span class="tag">จาก '+escapeHtml(pe.submitterName||'Engineer')+'</span>';
+  $('sup-form-sub').textContent = 'ปรับแก้เนื้อหาได้ก่อนกด "อนุมัติ" ด้านล่าง — Engineer จะเห็นผลใน 🔔';
+  $('save-error-btn').textContent = 'อนุมัติ Error นี้';
+  $('f-category').value = pe.category; updateModelSelect(); $('f-model').value = pe.model;
+  $('f-code').value = pe.errorCode||''; $('f-symptom').value = pe.symptom;
+  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function quickApprovePendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  const newId = uid('e');
+  try{
+    await saveErrorWithSolutions(newId, {category:pe.category, model:pe.model, errorCode:pe.errorCode||'', symptom:pe.symptom, viewCount:0, totalUps:0}, pe.solutions, []);
+    await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()});
+  }catch(e){ showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
+  DATA.errors.push({id:newId, category:pe.category, model:pe.model, errorCode:pe.errorCode, symptom:pe.symptom, viewCount:0, totalUps:0, solutions: pe.solutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+  pe.status='approved'; pe.reviewedAt=Date.now();
+  renderAll();
+  showToast('✓ อนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
+}
+async function rejectPendingError(id){
+  const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  const reason = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ — Engineer จะเห็นข้อความนี้)') || '';
+  if(!confirm('ยืนยันการปฏิเสธ Error นี้?')) return;
+  try{ await fsUpdatePendingError(pe.id, {status:'rejected', rejectionReason:reason, reviewedAt:Date.now()}); }
+  catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  pe.status='rejected'; pe.rejectionReason=reason; pe.reviewedAt=Date.now();
+  renderAll();
+  showToast('ปฏิเสธแล้ว — Engineer จะเห็นผลใน 🔔');
+}
+
+function renderSupFilters(){
+  const cats = Object.keys(DATA.categories);
+  const catPanel = $('sup-filter-cat-panel');
+  catPanel.innerHTML = cats.map(c=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fcat="${escapeHtml(c)}" ${supFilterCategories.has(c)?'checked':''}> ${escapeHtml(c)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีประเภทให้เลือก</p>`;
+  catPanel.querySelectorAll('[data-fcat]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const c = cb.getAttribute('data-fcat');
+    if(cb.checked) supFilterCategories.add(c); else supFilterCategories.delete(c);
+    updateSupModelFilterOptions(); updateSupFilterLabels(); renderSupSearchResults();
+  }));
+  updateSupModelFilterOptions();
+  updateSupFilterLabels();
+}
+function updateSupModelFilterOptions(){
+  const cats = Object.keys(DATA.categories);
+  const relevant = supFilterCategories.size>0 ? [...supFilterCategories] : cats;
+  const models = [...new Set(relevant.flatMap(c=>DATA.categories[c]||[]))];
+  [...supFilterModels].forEach(m=>{ if(!models.includes(m)) supFilterModels.delete(m); });
+  const panel = $('sup-filter-model-panel');
+  panel.innerHTML = models.map(m=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fmodel="${escapeHtml(m)}" ${supFilterModels.has(m)?'checked':''}> ${escapeHtml(m)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีรุ่นให้เลือก</p>`;
+  panel.querySelectorAll('[data-fmodel]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const m = cb.getAttribute('data-fmodel');
+    if(cb.checked) supFilterModels.add(m); else supFilterModels.delete(m);
+    updateSupFilterLabels(); renderSupSearchResults();
+  }));
+}
+function updateSupFilterLabels(){
+  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'ประเภทเครื่องจักร: ทั้งหมด' : `ประเภทเครื่องจักร: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
+  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'รุ่นเครื่อง: ทั้งหมด' : `รุ่นเครื่อง: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
+}
+$('sup-filter-cat-btn').addEventListener('click', ()=>{ const p=$('sup-filter-cat-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-model-panel').style.display='none'; });
+$('sup-filter-model-btn').addEventListener('click', ()=>{ const p=$('sup-filter-model-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-cat-panel').style.display='none'; });
+$('sup-search-input').addEventListener('input', e=>{ supQuery=e.target.value; renderSupSearchResults(); });
+$('sup-clear-search').addEventListener('click', ()=>{ $('sup-search-input').value=''; supQuery=''; renderSupSearchResults(); });
+
+function renderSupSearchResults(){
+  const list = $('sup-results-list'); const mine = myErrors();
+  if(mine.length===0){ $('sup-result-count').textContent=''; list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มี Error ของคุณ</h3><p>เพิ่มรายการแรกด้วยฟอร์มด้านบน</p></div>`; return; }
+  const hasSearchOrFilter = supQuery.trim()!=='' || supFilterCategories.size>0 || supFilterModels.size>0;
+  if(!hasSearchOrFilter){ $('sup-result-count').textContent = `${currentSupIdentity} · ทั้งหมด ${mine.length} รายการ`; list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error ของคุณ (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`; return; }
+  let filtered = mine.filter(e=>matchesQuery(e,supQuery));
+  if(supFilterCategories.size>0) filtered = filtered.filter(e=>supFilterCategories.has(e.category));
+  if(supFilterModels.size>0) filtered = filtered.filter(e=>supFilterModels.has(e.model));
+  $('sup-result-count').textContent = `${currentSupIdentity} · พบ ${filtered.length} จากทั้งหมด ${mine.length} รายการ`;
+  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  list.innerHTML = filtered.map(e=>renderErrorCard(e,true)).join('');
+  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=> openErrorDetail(h.closest('.card').getAttribute('data-id'))); });
+  list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); startEditError(b.getAttribute('data-edit')); }));
+  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); deleteError(b.getAttribute('data-del')); }));
+}
+
+function renderProposals(){
+  const pending = (DATA.proposals||[]).filter(p=>p.status==='pending').filter(p=>{ const err=DATA.errors.find(e=>e.id===p.errorId); return err && ownerOf(err.category,err.model)===currentSupIdentity; });
+  $('proposal-count').textContent = pending.length;
+  const list = $('proposals-list');
+  if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มีข้อเสนอรอตรวจสอบ</p>`; return; }
+  list.innerHTML = pending.map(p=>{
+    const err = DATA.errors.find(e=>e.id===p.errorId);
+    return `<div class="proposal-card" data-pid="${p.id}">
+      <div class="proposal-meta">จาก Error: ${escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ')} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      <div class="proposal-text">${escapeHtml(p.desc)}</div>
+      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${img}">`).join('')}</div>`:''}
+      <div class="meta-grid" style="margin-bottom:4px;">
+        <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(p.tools||'-')}</div></div>
+        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
+        <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(p.time||'-')}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary btn-sm" data-accept="${p.id}">✓ รับเป็นวิธีแก้ไขทางการ</button>
+        <button class="btn btn-ghost btn-sm" data-reject="${p.id}">ไม่รับ</button>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-accept]').forEach(b=>b.addEventListener('click', ()=>acceptProposal(b.getAttribute('data-accept'))));
+  list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>rejectProposal(b.getAttribute('data-reject'))));
+}
+async function acceptProposal(pid){
+  const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
+  const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
+  await loadSolutionsFor(err.id);
+  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
+  try{
+    await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    await fsUpdateProposal(pid, {status:'accepted'});
+  }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  err.solutions.push(newSol);
+  p.status = 'accepted'; renderAll();
+  showToast('✓ เพิ่มเป็นวิธีแก้ไขใหม่แล้ว · จำนวนที่ค้างอยู่ลดลง');
+}
+async function rejectProposal(pid){
+  const p=DATA.proposals.find(x=>x.id===pid); if(!p) return;
+  try{ await fsUpdateProposal(pid, {status:'rejected'}); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  p.status='rejected'; renderAll(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง');
+}
+
+/* ===================== SUP PRODUCT: DOCUMENTS (ตารางเดียว เห็นทุกรุ่น กดใส่ลิงก์ตรงช่อง) ===================== */
+const MATRIX_COLUMNS = [
+  ...DOC_TYPES.filter(t=>t.key!=='video'),
+  {key:'video', videoSubtype:'training', label:'Video-Training', icon:'🎬'},
+  {key:'video', videoSubtype:'alignment', label:'Video-Alignment', icon:'🎬'},
+  {key:'video', videoSubtype:'replace', label:'Video-Replace', icon:'🎬'},
+];
+function findMatrixDoc(category, model, docType, videoSubtype){
+  return DATA.documents.find(d=>d.category===category && d.model===model && d.docType===docType && (docType!=='video' || d.videoSubtype===videoSubtype));
+}
+function renderSupDocMatrix(){
+  const models = [];
+  Object.entries(DATA.categories).forEach(([cat,ms])=>{ ms.forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) models.push({category:cat, model:m}); }); });
+  const table = $('sup-doc-matrix');
+  if(models.length===0){ table.innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">ยังไม่มีรุ่นที่คุณดูแล</td></tr></tbody>`; return; }
+  let html = `<thead><tr><th>ประเภท</th><th>รุ่นเครื่อง</th>${MATRIX_COLUMNS.map(c=>`<th>${c.icon} ${c.label}</th>`).join('')}</tr></thead><tbody>`;
+  models.forEach(({category,model})=>{
+    html += `<tr><td class="mono" style="color:var(--text-faint);">${escapeHtml(category)}</td><td><strong>${escapeHtml(model)}</strong></td>`;
+    MATRIX_COLUMNS.forEach(col=>{
+      const doc = findMatrixDoc(category, model, col.key, col.videoSubtype);
+      const cellKey = `${escapeHtml(category)}|${escapeHtml(model)}|${col.key}|${col.videoSubtype||''}`;
+      html += doc
+        ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="${escapeHtml(doc.title)} — กดเพื่อดู/แก้ไข" style="background:none;border:none;cursor:pointer;font-size:15px;">✅</button></td>`
+        : `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="กดเพื่อใส่ลิงก์" style="background:none;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;">➕</button></td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  table.innerHTML = html;
+  table.querySelectorAll('[data-cell]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const [category, model, docType, videoSubtype] = btn.getAttribute('data-cell').split('|');
+    openDocLinkModal(category, model, docType, videoSubtype||undefined);
+  }));
+}
+function renderSupDocTab(){ renderSupDocMatrix(); }
+
+/* ===================== Modal ใส่/แก้ไข/ลบ ลิงก์เอกสาร 1 ช่อง ===================== */
+let doclinkContext = null;
+function openDocLinkModal(category, model, docType, videoSubtype){
+  const existing = findMatrixDoc(category, model, docType, videoSubtype);
+  doclinkContext = { category, model, docType, videoSubtype, existingId: existing ? existing.id : null };
+  const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+  $('doclink-modal-title').textContent = existing ? 'แก้ไข/ลบลิงก์เอกสาร' : 'เพิ่มลิงก์เอกสาร';
+  $('doclink-modal-sub').textContent = `${category} · ${model} · ${typeLabel}`;
+  $('doclink-title-input').value = existing ? existing.title : '';
+  $('doclink-url-input').value = existing ? (existing.url||'') : '';
+  $('doclink-delete-btn').style.display = existing ? 'inline-block' : 'none';
+  $('doclink-modal').classList.add('show');
+  setTimeout(()=>$('doclink-title-input').focus(), 50);
+}
+function closeDocLinkModal(){ $('doclink-modal').classList.remove('show'); doclinkContext = null; }
+$('doclink-modal-close').addEventListener('click', closeDocLinkModal);
+$('doclink-cancel-btn').addEventListener('click', closeDocLinkModal);
+$('doclink-save-btn').addEventListener('click', async ()=>{
+  if(!doclinkContext) return;
+  const title = $('doclink-title-input').value.trim();
+  const url = $('doclink-url-input').value.trim();
+  if(!title || !url){ showToast('⚠ กรุณากรอกชื่อเอกสารและลิงก์ให้ครบ'); return; }
+  const { category, model, docType, videoSubtype, existingId } = doclinkContext;
+  try{
+    if(existingId){
+      await fsUpdateDocument(existingId, { title, url });
+      const doc = DATA.documents.find(d=>d.id===existingId);
+      if(doc){ doc.title = title; doc.url = url; }
+    } else {
+      const fields = { docType, category, model, title, method:'link', url, uploadedAt: Date.now() };
+      if(docType==='video') fields.videoSubtype = videoSubtype;
+      const newId = await fsAddDocument(fields);
+      DATA.documents.push({ id:newId, ...fields });
+    }
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  closeDocLinkModal(); renderAll();
+  showToast('✓ บันทึกลิงก์เอกสารแล้ว');
+});
+$('doclink-delete-btn').addEventListener('click', async ()=>{
+  if(!doclinkContext || !doclinkContext.existingId) return;
+  if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
+  const id = doclinkContext.existingId;
+  try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+  DATA.documents = DATA.documents.filter(d=>d.id!==id);
+  closeDocLinkModal(); renderAll();
+  showToast('ลบลิงก์แล้ว');
+});
+
+function renderSupView(){ populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors(); renderProposals(); renderSupFilters(); renderSupSearchResults(); if(supActiveTab==='docs') renderSupDocTab(); }
+
+/* ===================== OWNER VIEW (ผู้รับผิดชอบ Product) ===================== */
+function ownerSelectOptions(selected, includeDefault){
+  let opts = includeDefault ? `<option value="__default__">(ใช้ค่าเริ่มต้นของประเภท)</option>` : '';
+  opts += SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}" ${n===selected?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  return opts;
+}
+let editingSupName = null; // ชื่อ Sup Product ที่กำลังแสดงช่องแก้ไขอยู่ (inline edit)
+function isNameInUse(name){
+  const catOwners = Object.values(DATA.owners.categoryOwners||{});
+  const modelOwners = Object.values(DATA.owners.modelOverrides||{});
+  return catOwners.includes(name) || modelOwners.includes(name);
+}
+function renderSupNameList(){
+  const list = $('sup-name-list');
+  list.innerHTML = SUP_PRODUCTS.map(name=>{
+    const inUse = isNameInUse(name);
+    const isEditing = editingSupName===name;
+    return `<div class="admin-row">
+      ${isEditing ? `
+        <div class="inline-edit" style="flex:1;">
+          <input type="text" class="edit-sup-name-input" value="${escapeHtml(name)}" style="flex:1;min-width:160px;">
+          <button class="btn btn-primary btn-sm" data-confirmrename="${escapeHtml(name)}">บันทึก</button>
+          <button class="btn btn-ghost btn-sm" data-cancelrename="1">ยกเลิก</button>
+        </div>
+      ` : `
+        <div class="admin-row-main"><span style="font-size:13px;">👤 ${escapeHtml(name)}</span>${inUse?'<span class="mono" style="font-size:10.5px;color:var(--text-faint);">มีประเภท/รุ่นผูกอยู่</span>':''}</div>
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn" data-editsup="${escapeHtml(name)}">แก้ไข</button>
+          <button class="icon-btn danger" data-delsup="${escapeHtml(name)}" ${inUse?'disabled title="ต้องโยกงานออกก่อนถึงจะลบได้"':''} style="${inUse?'opacity:.35;cursor:not-allowed;':''}">ลบ</button>
+        </div>
+      `}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-editsup]').forEach(b=>b.addEventListener('click', ()=>{ editingSupName = b.getAttribute('data-editsup'); renderSupNameList(); }));
+  list.querySelectorAll('[data-cancelrename]').forEach(b=>b.addEventListener('click', ()=>{ editingSupName = null; renderSupNameList(); }));
+  list.querySelectorAll('[data-confirmrename]').forEach(b=>b.addEventListener('click', async ()=>{
+    const oldName = b.getAttribute('data-confirmrename');
+    const input = b.closest('.inline-edit').querySelector('.edit-sup-name-input');
+    const newName = input.value.trim();
+    if(!newName){ showToast('⚠ กรุณาพิมพ์ชื่อ'); return; }
+    if(newName!==oldName && SUP_PRODUCTS.includes(newName)){ showToast('⚠ มีชื่อนี้อยู่แล้ว'); return; }
+    if(newName===oldName){ editingSupName=null; renderSupNameList(); return; }
+    // สำรองค่าเดิมไว้เผื่อบันทึกไม่สำเร็จ จะได้ย้อนกลับได้
+    const prevSupProducts = [...SUP_PRODUCTS];
+    const prevCatOwners = {...DATA.owners.categoryOwners};
+    const prevModelOverrides = {...DATA.owners.modelOverrides};
+    SUP_PRODUCTS = SUP_PRODUCTS.map(n=> n===oldName ? newName : n);
+    Object.keys(DATA.owners.categoryOwners).forEach(k=>{ if(DATA.owners.categoryOwners[k]===oldName) DATA.owners.categoryOwners[k]=newName; });
+    Object.keys(DATA.owners.modelOverrides).forEach(k=>{ if(DATA.owners.modelOverrides[k]===oldName) DATA.owners.modelOverrides[k]=newName; });
+    if(currentSupIdentity===oldName) currentSupIdentity=newName;
+    try{
+      await fsSaveSupProducts();
+      await fsSaveCategoriesDoc();
+    }catch(e){
+      SUP_PRODUCTS = prevSupProducts; DATA.owners.categoryOwners = prevCatOwners; DATA.owners.modelOverrides = prevModelOverrides;
+      showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return;
+    }
+    editingSupName = null;
+    renderSupIdentityOptions(); renderAll(); renderOwnerView();
+    showToast(`✓ เปลี่ยนชื่อเป็น "${newName}" แล้ว (ปรับความรับผิดชอบที่ผูกอยู่ให้อัตโนมัติ)`);
+  }));
+  list.querySelectorAll('[data-delsup]').forEach(b=>{
+    if(b.disabled) return;
+    b.addEventListener('click', async ()=>{
+      const name = b.getAttribute('data-delsup');
+      if(!confirm(`ยืนยันการลบ "${name}" ออกจากรายชื่อ Sup Product?`)) return;
+      SUP_PRODUCTS = SUP_PRODUCTS.filter(n=>n!==name);
+      try{ await fsSaveSupProducts(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+      renderSupIdentityOptions(); renderOwnerView();
+      showToast('ลบชื่อแล้ว');
+    });
+  });
+}
+$('add-sup-name-btn').addEventListener('click', async ()=>{
+  const name = $('new-sup-name-input').value.trim();
+  if(!name){ showToast('⚠ กรุณาพิมพ์ชื่อก่อนเพิ่ม'); return; }
+  if(SUP_PRODUCTS.includes(name)){ showToast('⚠ มีชื่อนี้อยู่แล้ว'); return; }
+  SUP_PRODUCTS.push(name);
+  try{ await fsSaveSupProducts(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); SUP_PRODUCTS = SUP_PRODUCTS.filter(n=>n!==name); return; }
+  $('new-sup-name-input').value = '';
+  renderSupIdentityOptions(); renderOwnerView();
+  showToast(`✓ เพิ่ม "${name}" แล้ว`);
+});
+function renderOwnerView(){
+  renderSupNameList();
+  populateOwnerFormSelectors();
+  renderOwnerSummary();
+  renderCatModelManage();
+}
+function populateOwnerFormSelectors(){
+  const cats = Object.keys(DATA.categories);
+  $('new-model-cat').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') + `<option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option>`;
+  $('new-model-owner').innerHTML = ownerSelectOptions(SUP_PRODUCTS[0], false);
+  toggleNewCatInput();
+}
+function toggleNewCatInput(){
+  const isNew = $('new-model-cat').value === '__new__';
+  $('new-cat-input').style.display = isNew ? 'block' : 'none';
+}
+$('new-model-cat').addEventListener('change', toggleNewCatInput);
+function renderOwnerSummary(){
+  const wrap = $('owner-summary');
+  wrap.innerHTML = SUP_PRODUCTS.map(sp=>{
+    const ownedCats = Object.keys(DATA.categories).filter(c=>DATA.owners.categoryOwners[c]===sp);
+    const crossExceptions = Object.entries(DATA.owners.modelOverrides).filter(([key,owner])=>{
+      if(owner!==sp) return false;
+      const [cat] = key.split('|');
+      return DATA.owners.categoryOwners[cat] !== sp;
+    });
+    let catRows = ownedCats.map(cat=>{
+      const models = DATA.categories[cat];
+      const exceptionsAway = models.filter(m=>DATA.owners.modelOverrides[cat+'|'+m] && DATA.owners.modelOverrides[cat+'|'+m]!==sp);
+      const normalModels = models.filter(m=>!exceptionsAway.includes(m));
+      const isEditingCat = editingOwnerCat===cat;
+      return `<div class="owner-cat-row">
+        <div class="owner-cat-head">
+          <div>
+            <span class="owner-cat-name">${escapeHtml(cat)}</span>
+            <span class="mono" style="font-size:10.5px;color:var(--text-faint);"> (${models.length} รุ่น)</span>
+          </div>
+          ${isEditingCat ? `
+            <div class="inline-edit">
+              <select class="edit-cat-owner-select">${ownerSelectOptions(sp, false)}</select>
+              <button class="btn btn-primary btn-sm" data-confirmcat="${escapeHtml(cat)}">บันทึก</button>
+              <button class="btn btn-ghost btn-sm" data-cancelcat="1">ยกเลิก</button>
+            </div>` : `<button class="icon-btn" data-editcat="${escapeHtml(cat)}">แก้ไข</button>`}
+        </div>
+        <div class="owner-models">${normalModels.map(escapeHtml).join(', ') || '(ไม่มีรุ่นในประเภทนี้)'}</div>
+        ${exceptionsAway.map(m=>{
+          const key = cat+'|'+m;
+          const isEditingModel = editingOwnerModel===key;
+          return `<div class="owner-exception">⚠ ยกเว้น: <strong>${escapeHtml(m)}</strong> → ${escapeHtml(DATA.owners.modelOverrides[key])}
+            ${isEditingModel ? `<span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(DATA.owners.modelOverrides[key], true)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">บันทึก</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">ยกเลิก</button></span>`
+            : `<button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}">แก้ไข</button>`}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+
+    let crossRows = crossExceptions.map(([key])=>{
+      const [catName, model] = key.split('|');
+      const isEditingModel = editingOwnerModel===key;
+      return `<div class="owner-cat-row">
+        <div class="owner-cross">🔧 <strong>${escapeHtml(model)}</strong> <span class="mono" style="color:var(--text-faint);">(จาก ${escapeHtml(catName)} ปกติเป็นของ ${escapeHtml(DATA.owners.categoryOwners[catName]||'-')})</span>
+        ${isEditingModel ? `<span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(DATA.owners.modelOverrides[key], true)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">บันทึก</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">ยกเลิก</button></span>`
+        : `<button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}">แก้ไข</button>`}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="owner-card">
+      <h3>👤 ${escapeHtml(sp)}</h3>
+      ${catRows || '<p style="font-size:12px;color:var(--text-faint);">ยังไม่ได้ดูแลประเภทใด</p>'}
+      ${crossRows}
+    </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-editcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=b.getAttribute('data-editcat'); editingOwnerModel=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-cancelcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-confirmcat]').forEach(b=>b.addEventListener('click', async ()=>{
+    const cat = b.getAttribute('data-confirmcat'); const sel = b.closest('.inline-edit').querySelector('.edit-cat-owner-select'); const newOwner = sel.value;
+    DATA.owners.categoryOwners[cat] = newOwner; editingOwnerCat=null;
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwner} แล้ว`);
+  }));
+  wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
+  wrap.querySelectorAll('[data-confirmmodel]').forEach(b=>b.addEventListener('click', async ()=>{
+    const key = b.getAttribute('data-confirmmodel'); const sel = b.closest('.inline-edit').querySelector('.edit-model-owner-select'); const val = sel.value;
+    if(val==='__default__'){ delete DATA.owners.modelOverrides[key]; } else { DATA.owners.modelOverrides[key] = val; }
+    editingOwnerModel=null;
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll();
+    const modelName = key.split('|')[1];
+    showToast(`✓ อัปเดตผู้ดูแลรุ่น ${modelName} แล้ว`);
+  }));
+}
+
+let editingCatName = null;   // ประเภทที่กำลังแสดงช่องแก้ไขชื่ออยู่
+let editingModelKey = null;  // "cat|model" ที่กำลังแสดงช่องแก้ไขชื่ออยู่
+
+function renderCatModelManage(){
+  const wrap = $('cat-model-manage');
+  wrap.innerHTML = Object.entries(DATA.categories).map(([cat,models])=>{
+    const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat) || DATA.pendingErrors.some(p=>p.category===cat);
+    const isEditingCat = editingCatName===cat;
+    return `<div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+        ${isEditingCat ? `
+          <input type="text" class="edit-cat-name-input" value="${escapeHtml(cat)}" style="flex:1;min-width:160px;max-width:280px;">
+          <button class="btn btn-primary btn-sm" data-confirmcatname="${escapeHtml(cat)}">บันทึก</button>
+          <button class="btn btn-ghost btn-sm" data-cancelcatname="1">ยกเลิก</button>
+        ` : `
+          <strong style="font-size:13px;">${escapeHtml(cat)}</strong>
+          <span class="mono" style="font-size:10px;color:var(--text-faint);">(${escapeHtml(DATA.owners.categoryOwners[cat]||'ยังไม่มีผู้ดูแล')})</span>
+          <button class="icon-btn btn-sm" data-editcatname="${escapeHtml(cat)}">แก้ไขชื่อ</button>
+          <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
+        `}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${models.map(m=>{
+          const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m) || DATA.pendingErrors.some(p=>p.category===cat && p.model===m);
+          const key = cat+'|'+m;
+          const isEditingModel = editingModelKey===key;
+          if(isEditingModel){
+            return `<span class="mono" style="display:inline-flex;align-items:center;gap:4px;border:1px solid var(--amber);background:var(--panel-alt);border-radius:999px;padding:3px 6px 3px 10px;font-size:11px;">
+              <input type="text" class="edit-model-name-input" value="${escapeHtml(m)}" style="width:120px;padding:3px 6px;font-size:11px;">
+              <button data-confirmmodelname="${escapeHtml(key)}" style="background:var(--amber);border:none;color:#1a1206;border-radius:999px;padding:3px 8px;cursor:pointer;font-weight:600;">✓</button>
+              <button data-cancelmodelname="1" style="background:none;border:none;color:var(--text-faint);cursor:pointer;">✕</button>
+            </span>`;
+          }
+          return `<span class="mono" style="border:1px solid var(--border);background:var(--panel-alt);border-radius:999px;padding:4px 10px;font-size:11px;">
+            <span data-editmodelname="${escapeHtml(key)}" style="cursor:pointer;" title="คลิกเพื่อแก้ไขชื่อรุ่น">${escapeHtml(m)}</span>
+            <button data-delmodel="${escapeHtml(key)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'#555':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};margin-left:4px;">✕</button>
+          </span>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  // ลบประเภท
+  wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
+    const cat=b.getAttribute('data-delcat'); if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
+    (DATA.categories[cat]||[]).forEach(m=>{ delete DATA.owners.modelOverrides[cat+'|'+m]; });
+    delete DATA.categories[cat]; delete DATA.owners.categoryOwners[cat];
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast('ลบประเภทแล้ว');
+  }); });
+
+  // ลบรุ่น
+  wrap.querySelectorAll('[data-delmodel]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
+    const [cat,model]=b.getAttribute('data-delmodel').split('|'); if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
+    DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model];
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    renderAll(); showToast('ลบรุ่นแล้ว');
+  }); });
+
+  // แก้ไขชื่อประเภท — เปิด/ปิดช่องแก้ไข
+  wrap.querySelectorAll('[data-editcatname]').forEach(b=>b.addEventListener('click', ()=>{ editingCatName=b.getAttribute('data-editcatname'); editingModelKey=null; renderCatModelManage(); }));
+  wrap.querySelectorAll('[data-cancelcatname]').forEach(b=>b.addEventListener('click', ()=>{ editingCatName=null; renderCatModelManage(); }));
+  wrap.querySelectorAll('[data-confirmcatname]').forEach(b=>b.addEventListener('click', async ()=>{
+    const oldCat = b.getAttribute('data-confirmcatname');
+    const input = b.parentElement.querySelector('.edit-cat-name-input');
+    const newCat = input.value.trim();
+    if(!newCat){ showToast('⚠ กรุณาพิมพ์ชื่อประเภท'); return; }
+    if(newCat!==oldCat && DATA.categories[newCat]){ showToast('⚠ มีประเภทนี้อยู่แล้ว'); return; }
+    if(newCat===oldCat){ editingCatName=null; renderCatModelManage(); return; }
+    await renameCategoryEverywhere(oldCat, newCat);
+  }));
+
+  // แก้ไขชื่อรุ่น — เปิด/ปิดช่องแก้ไข
+  wrap.querySelectorAll('[data-editmodelname]').forEach(el=>el.addEventListener('click', ()=>{ editingModelKey=el.getAttribute('data-editmodelname'); editingCatName=null; renderCatModelManage(); }));
+  wrap.querySelectorAll('[data-cancelmodelname]').forEach(b=>b.addEventListener('click', ()=>{ editingModelKey=null; renderCatModelManage(); }));
+  wrap.querySelectorAll('[data-confirmmodelname]').forEach(b=>b.addEventListener('click', async ()=>{
+    const key = b.getAttribute('data-confirmmodelname');
+    const [cat, oldModel] = key.split('|');
+    const input = b.parentElement.querySelector('.edit-model-name-input');
+    const newModel = input.value.trim();
+    if(!newModel){ showToast('⚠ กรุณาพิมพ์ชื่อรุ่น'); return; }
+    if(newModel!==oldModel && (DATA.categories[cat]||[]).includes(newModel)){ showToast('⚠ มีรุ่นนี้ในประเภทเดียวกันอยู่แล้ว'); return; }
+    if(newModel===oldModel){ editingModelKey=null; renderCatModelManage(); return; }
+    await renameModelEverywhere(cat, oldModel, newModel);
+  }));
+}
+
+// เปลี่ยนชื่อประเภท — ปรับทุกจุดที่อ้างอิงชื่อเดิม (ผู้ดูแล, ข้อยกเว้นรายรุ่น, และ Error/เอกสาร/รายการรออนุมัติทุกรายการ)
+async function renameCategoryEverywhere(oldCat, newCat){
+  const backup = JSON.parse(JSON.stringify(DATA.categories));
+  const backupOwners = JSON.parse(JSON.stringify(DATA.owners));
+  try{
+    const models = DATA.categories[oldCat] || [];
+    delete DATA.categories[oldCat];
+    DATA.categories[newCat] = models;
+    if(DATA.owners.categoryOwners[oldCat]!==undefined){ DATA.owners.categoryOwners[newCat]=DATA.owners.categoryOwners[oldCat]; delete DATA.owners.categoryOwners[oldCat]; }
+    const newOverrides = {};
+    Object.entries(DATA.owners.modelOverrides).forEach(([k,v])=>{
+      if(k.startsWith(oldCat+'|')){ newOverrides[newCat+'|'+k.slice(oldCat.length+1)] = v; } else { newOverrides[k]=v; }
+    });
+    DATA.owners.modelOverrides = newOverrides;
+
+    const errIds = DATA.errors.filter(e=>e.category===oldCat).map(e=>e.id);
+    const docIds = DATA.documents.filter(d=>d.category===oldCat).map(d=>d.id);
+    const pendIds = DATA.pendingErrors.filter(p=>p.category===oldCat).map(p=>p.id);
+
+    await fsSaveCategoriesDoc();
+    await fsBatchUpdateField('errors', errIds, {category:newCat});
+    await fsBatchUpdateField('documents', docIds, {category:newCat});
+    await fsBatchUpdateField('pendingErrors', pendIds, {category:newCat});
+
+    DATA.errors.forEach(e=>{ if(e.category===oldCat) e.category=newCat; });
+    DATA.documents.forEach(d=>{ if(d.category===oldCat) d.category=newCat; });
+    DATA.pendingErrors.forEach(p=>{ if(p.category===oldCat) p.category=newCat; });
+
+    editingCatName = null;
+    renderAll(); renderOwnerView();
+    showToast(`✓ เปลี่ยนชื่อประเภทเป็น "${newCat}" แล้ว (ปรับ ${errIds.length} Error, ${docIds.length} เอกสาร, ${pendIds.length} รายการรออนุมัติ ให้อัตโนมัติ)`);
+  }catch(e){
+    DATA.categories = backup; DATA.owners = backupOwners;
+    showToast('⚠ เปลี่ยนชื่อไม่สำเร็จ: '+e.message);
+    renderCatModelManage();
+  }
+}
+
+// เปลี่ยนชื่อรุ่น — ปรับทุกจุดที่อ้างอิงชื่อเดิมภายในประเภทเดียวกัน
+async function renameModelEverywhere(cat, oldModel, newModel){
+  const backup = JSON.parse(JSON.stringify(DATA.categories));
+  const backupOwners = JSON.parse(JSON.stringify(DATA.owners));
+  try{
+    DATA.categories[cat] = DATA.categories[cat].map(m=> m===oldModel ? newModel : m);
+    const oldKey = cat+'|'+oldModel, newKey = cat+'|'+newModel;
+    if(DATA.owners.modelOverrides[oldKey]!==undefined){ DATA.owners.modelOverrides[newKey]=DATA.owners.modelOverrides[oldKey]; delete DATA.owners.modelOverrides[oldKey]; }
+
+    const errIds = DATA.errors.filter(e=>e.category===cat && e.model===oldModel).map(e=>e.id);
+    const docIds = DATA.documents.filter(d=>d.category===cat && d.model===oldModel).map(d=>d.id);
+    const pendIds = DATA.pendingErrors.filter(p=>p.category===cat && p.model===oldModel).map(p=>p.id);
+
+    await fsSaveCategoriesDoc();
+    await fsBatchUpdateField('errors', errIds, {model:newModel});
+    await fsBatchUpdateField('documents', docIds, {model:newModel});
+    await fsBatchUpdateField('pendingErrors', pendIds, {model:newModel});
+
+    DATA.errors.forEach(e=>{ if(e.category===cat && e.model===oldModel) e.model=newModel; });
+    DATA.documents.forEach(d=>{ if(d.category===cat && d.model===oldModel) d.model=newModel; });
+    DATA.pendingErrors.forEach(p=>{ if(p.category===cat && p.model===oldModel) p.model=newModel; });
+
+    editingModelKey = null;
+    renderAll(); renderOwnerView();
+    showToast(`✓ เปลี่ยนชื่อรุ่นเป็น "${newModel}" แล้ว (ปรับ ${errIds.length} Error, ${docIds.length} เอกสาร, ${pendIds.length} รายการรออนุมัติ ให้อัตโนมัติ)`);
+  }catch(e){
+    DATA.categories = backup; DATA.owners = backupOwners;
+    showToast('⚠ เปลี่ยนชื่อไม่สำเร็จ: '+e.message);
+    renderCatModelManage();
+  }
+}
+$('add-model-btn').addEventListener('click', async ()=>{
+  const catSelectVal = $('new-model-cat').value;
+  const modelName = $('new-model-input').value.trim();
+  const owner = $('new-model-owner').value;
+  let category;
+  let createdNewCategory = false;
+
+  if(catSelectVal === '__new__'){
+    const newCatName = $('new-cat-input').value.trim();
+    if(!newCatName){ showToast('⚠ กรุณาพิมพ์ชื่อประเภทใหม่'); return; }
+    if(DATA.categories[newCatName]){ showToast('⚠ มีประเภทนี้อยู่แล้ว'); return; }
+    DATA.categories[newCatName] = [];
+    DATA.owners.categoryOwners[newCatName] = owner;
+    category = newCatName;
+    createdNewCategory = true;
+  } else {
+    category = catSelectVal;
+    if(!modelName){ showToast('⚠ ประเภทนี้มีอยู่แล้ว กรุณาระบุชื่อรุ่นที่จะเพิ่ม'); return; }
+  }
+
+  if(modelName){
+    if(!DATA.categories[category].includes(modelName)) DATA.categories[category].push(modelName);
+    const key = category+'|'+modelName;
+    if(owner !== DATA.owners.categoryOwners[category]){ DATA.owners.modelOverrides[key] = owner; }
+    else { delete DATA.owners.modelOverrides[key]; }
+  }
+
+  $('new-cat-input').value=''; $('new-model-input').value='';
+  try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  renderAll();
+  showToast(modelName ? `✓ เพิ่มรุ่น "${modelName}" แล้ว มอบหมายให้ ${owner}` : `✓ เพิ่มประเภท "${category}" แล้ว มอบหมายให้ ${owner}`);
+});
+
+/* ===================== MANAGER VIEW ===================== */
+function renderMgrView(){
+  const rows = SUP_PRODUCTS.map(name=>{
+    const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
+    const totalUps = mine.reduce((a,e)=>a+(e.totalUps||0),0);
+    const acceptedCount = (DATA.proposals||[]).filter(p=>p.status==='accepted' && mine.some(e=>e.id===p.errorId)).length;
+    const pendingTotal = mine.reduce((a,e)=>a+pendingDownCount(e.id),0);
+    const views = mine.reduce((a,e)=>a+(e.viewCount||0),0);
+    return {name, count:mine.length, views, totalUps, acceptedCount, pendingTotal};
+  });
+  let html = `<thead><tr><th>Sup Product</th><th>Error ที่กรอก</th><th>เปิดดูรวม</th><th>👍 สะสม</th><th>ข้อเสนอที่ถูกรับ</th><th>แจ้งแก้ไม่ได้ (ค้างอยู่)</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    html += `<tr><td><strong>${escapeHtml(r.name)}</strong></td><td class="mono">${r.count}</td><td class="mono">${r.views}</td><td class="mono" style="color:var(--green);">${r.totalUps}</td><td class="mono" style="color:var(--amber);">${r.acceptedCount}</td><td class="mono" style="color:${r.pendingTotal>0?'var(--red)':'var(--text-faint)'};">${r.pendingTotal}</td></tr>`;
+  });
+  html += `</tbody>`;
+  $('mgr-table').innerHTML = html;
+
+  /* document summary per person, broken down by doc type as fraction */
+  function allModelsOwnedBy(sp){
+    const list = [];
+    Object.entries(DATA.categories).forEach(([cat,models])=>{ models.forEach(m=>{ if(ownerOf(cat,m)===sp) list.push({category:cat, model:m}); }); });
+    return list;
+  }
+  let dhtml = `<thead><tr><th>Sup Product</th><th>จำนวนรุ่นที่ดูแล</th>${COVERAGE_COLUMNS.map(t=>`<th>${t.icon} ${t.label}</th>`).join('')}</tr></thead><tbody>`;
+  SUP_PRODUCTS.forEach(sp=>{
+    const models = allModelsOwnedBy(sp);
+    dhtml += `<tr><td><strong>${escapeHtml(sp)}</strong></td><td class="mono">${models.length}</td>`;
+    COVERAGE_COLUMNS.forEach(t=>{
+      const have = models.filter(({category,model})=>hasCoverageDoc(t.key, category, model)).length;
+      const total = models.length;
+      const color = total===0 ? 'var(--text-faint)' : (have===total ? 'var(--green)' : (have===0 ? 'var(--red)' : 'var(--amber)'));
+      dhtml += `<td class="frac" style="color:${color};">${have}/${total}</td>`;
+    });
+    dhtml += `</tr>`;
+  });
+  dhtml += `</tbody>`;
+  $('mgr-doc-summary').innerHTML = dhtml;
+}
+
+/* ===================== BACKUP / EXPORT ===================== */
+async function gatherFullBackup(statusElId){
+  const statusEl = statusElId ? $(statusElId) : null;
+  if(statusEl) statusEl.textContent = 'กำลังดึงข้อมูลทั้งหมด...';
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  const [errorsSnap, docsSnap, propSnap, pendSnap, catDoc] = await Promise.all([
+    sdk.getDocs(sdk.collection(db,'errors')),
+    sdk.getDocs(sdk.collection(db,'documents')),
+    sdk.getDocs(sdk.collection(db,'proposals')),
+    sdk.getDocs(sdk.collection(db,'pendingErrors')),
+    sdk.getDoc(sdk.doc(db,'meta','categories')),
+  ]);
+  const errors = [];
+  for(const d of errorsSnap.docs){
+    const err = { id:d.id, ...d.data(), solutions:[] };
+    const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
+    solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
+    err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
+    errors.push(err);
+  }
+  const documents = []; docsSnap.forEach(d=>documents.push({id:d.id, ...d.data()}));
+  const proposals = []; propSnap.forEach(d=>proposals.push({id:d.id, ...d.data()}));
+  const pendingErrors = []; pendSnap.forEach(d=>pendingErrors.push({id:d.id, ...d.data()}));
+  const catData = catDoc.exists() ? catDoc.data() : {categories:{}, owners:{}};
+  if(statusEl) statusEl.textContent = '';
+  return { exportedAt: new Date().toISOString(), errors, documents, proposals, pendingErrors, categories: catData.categories||{}, owners: catData.owners||{} };
+}
+function downloadBlob(content, filename, mime){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+async function handleBackupJson(statusElId){
+  try{
+    const data = await gatherFullBackup(statusElId);
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    downloadBlob(JSON.stringify(data,null,2), `trbl-backup-${stamp}.json`, 'application/json');
+    showToast('✓ ดาวน์โหลด Backup (JSON) แล้ว');
+  }catch(e){ showToast('⚠ ดึงข้อมูลไม่สำเร็จ: '+e.message); }
+}
+async function handleBackupExcel(statusElId){
+  try{
+    const data = await gatherFullBackup(statusElId);
+    const wb = XLSX.utils.book_new();
+
+    const errorRows = data.errors.map(e=>({ id:e.id, ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0 }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
+
+    const solRows = [];
+    data.errors.forEach(e=> e.solutions.forEach((s,idx)=>{
+      solRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตแก้ได้จริง:(s.feedback||[]).filter(f=>f.type==='up').length, ErrorId:e.id });
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(solRows), 'Solutions');
+
+    const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH') : '' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
+
+    const propRows = data.proposals.map(p=>({ id:p.id, ErrorId:p.errorId, คำอธิบาย:p.desc, สถานะ:p.status, เสนอโดย:p.submitterName||'', วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(propRows), 'Proposals');
+
+    const pendRows = data.pendingErrors.map(p=>({ id:p.id, ประเภท:p.category, รุ่น:p.model, ErrorCode:p.errorCode||'', อาการ:p.symptom, ส่งโดย:p.submitterName||'', สถานะ:p.status, วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pendRows), 'PendingErrors');
+
+    const catRows = [];
+    Object.entries(data.categories).forEach(([cat,models])=>{
+      (models||[]).forEach(m=>{
+        const key = cat+'|'+m;
+        const owner = (data.owners.modelOverrides||{})[key] || (data.owners.categoryOwners||{})[cat] || '';
+        catRows.push({ ประเภท:cat, รุ่น:m, ผู้ดูแล:owner });
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), 'Categories');
+
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    XLSX.writeFile(wb, `trbl-export-${stamp}.xlsx`);
+    showToast('✓ ดาวน์โหลด Excel แล้ว');
+  }catch(e){ showToast('⚠ ดึงข้อมูลไม่สำเร็จ: '+e.message); }
+}
+$('backup-json-btn').addEventListener('click', ()=>handleBackupJson('backup-status'));
+$('backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('backup-status'));
+
+/* ===================== THEME TOGGLE (default: light) ===================== */
+$('theme-toggle-btn').addEventListener('click', ()=>{
+  const isDark = document.body.classList.toggle('dark-theme');
+  $('theme-toggle-btn').textContent = isDark ? '☀️' : '🌙';
+});
+
+/* ===================== ตรวจจับเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) ===================== */
+// Google Sign-in ใช้ไม่ได้ในเบราว์เซอร์ในแอปพวกนี้ — เป็นข้อจำกัดของ Google เอง ไม่ใช่บั๊กของระบบเรา
+function isInAppBrowser(){
+  const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+  return /Line\//i.test(ua) || /FBAN|FBAV/i.test(ua) || /Instagram/i.test(ua) || /MicroMessenger/i.test(ua) || /KAKAOTALK/i.test(ua) || /Twitter/i.test(ua);
+}
+function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.MSStream; }
+function isAndroid(){ return /Android/i.test(navigator.userAgent); }
+
+async function copyCurrentLink(){
+  const url = location.href;
+  try{ await navigator.clipboard.writeText(url); showToast('✓ คัดลอกลิงก์แล้ว'); }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); showToast('✓ คัดลอกลิงก์แล้ว'); }catch(e2){ showToast('⚠ คัดลอกไม่สำเร็จ ลองกดค้างที่ลิงก์ด้านบนแทน'); }
+    document.body.removeChild(ta);
+  }
+}
+$('inapp-copy-link-btn').addEventListener('click', copyCurrentLink);
+
+function showInAppWarning(msg){
+  if(msg) $('inapp-warning-msg').innerHTML = msg;
+  $('inapp-warning-panel').classList.add('show');
+}
+
+let _appInitBlocked = false;
+if(isInAppBrowser()){
+  if(isAndroid()){
+    // ลองเปิดเบราว์เซอร์เริ่มต้นของเครื่องให้อัตโนมัติก่อน (ไม่บังคับ Chrome — ใช้ตัวที่เครื่องตั้งค่าไว้)
+    const bareUrl = location.href.replace(/^https?:\/\//, '');
+    const intentUrl = `intent://${bareUrl}#Intent;scheme=https;end`;
+    showInAppWarning('กำลังเปิดในเบราว์เซอร์อื่นให้อัตโนมัติ...<br>ถ้าไม่มีอะไรเกิดขึ้นภายในไม่กี่วินาที กรุณากดปุ่มด้านล่างแล้วเปิดเองผ่าน <b>Chrome</b> หรือเบราว์เซอร์ที่ใช้ประจำ');
+    _appInitBlocked = true;
+    setTimeout(()=>{ window.location.href = intentUrl; }, 300);
+  } else if(isIOS()){
+    showInAppWarning();
+    _appInitBlocked = true;
+  }
+}
+
+/* ===================== INIT ===================== */
+if(!FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){
+  const banner = document.getElementById('setup-banner');
+  if(banner) banner.style.display = 'none';
+}
+if(!_appInitBlocked){
+  setStatus(true, 'กำลังตรวจสอบสถานะการเข้าสู่ระบบ...');
+  resolveAuthAndStart();
+}
+</script>
+
+</body>
+</html>
