@@ -1923,10 +1923,11 @@ $('save-error-btn').addEventListener('click', async ()=>{
   if(reviewingPendingErrorId){
     const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
     const newId = uid('e');
+    const fields = {category, model, errorCode, symptom, viewCount:0, totalUps:0};
     try{
-      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
+      await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
-      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+      DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
     }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
     await flushPendingDriveDeletions();
     resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
@@ -1938,12 +1939,14 @@ $('save-error-btn').addEventListener('click', async ()=>{
   try{
     if(editingErrorId){
       const err = DATA.errors.find(e=>e.id===editingErrorId);
-      await saveErrorWithSolutions(editingErrorId, {category, model, errorCode, symptom}, validSolutions, _originalSolutionIds);
-      Object.assign(err, {category, model, errorCode, symptom, solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
+      const fields = {category, model, errorCode, symptom};
+      await saveErrorWithSolutions(editingErrorId, fields, validSolutions, _originalSolutionIds); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
+      Object.assign(err, fields, {solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
     } else {
       const newId = uid('e');
-      await saveErrorWithSolutions(newId, {category, model, errorCode, symptom, viewCount:0, totalUps:0}, validSolutions, []);
-      DATA.errors.push({id:newId, category, model, errorCode, symptom, viewCount:0, totalUps:0, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+      const fields = {category, model, errorCode, symptom, viewCount:0, totalUps:0};
+      await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
+      DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
     }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
   await flushPendingDriveDeletions();
@@ -2014,11 +2017,12 @@ function startReviewPendingError(id){
 async function quickApprovePendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
   const newId = uid('e');
+  const fields = {category:pe.category, model:pe.model, errorCode:pe.errorCode||'', symptom:pe.symptom, viewCount:0, totalUps:0};
   try{
-    await saveErrorWithSolutions(newId, {category:pe.category, model:pe.model, errorCode:pe.errorCode||'', symptom:pe.symptom, viewCount:0, totalUps:0}, pe.solutions, []);
+    await saveErrorWithSolutions(newId, fields, pe.solutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
     await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()});
   }catch(e){ showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
-  DATA.errors.push({id:newId, category:pe.category, model:pe.model, errorCode:pe.errorCode, symptom:pe.symptom, viewCount:0, totalUps:0, solutions: pe.solutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+  DATA.errors.push({id:newId, ...fields, solutions: pe.solutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
   pe.status='approved'; pe.reviewedAt=Date.now();
   renderAll();
   showToast('✓ อนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
