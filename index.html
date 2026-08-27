@@ -229,7 +229,7 @@
 
   .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:300;align-items:center;justify-content:center;}
   .lightbox.show{display:flex;}
-  .lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;cursor:grab;touch-action:pan-y;user-select:none;}
+  .lightbox img{max-width:92vw;max-height:82vh;object-fit:contain;border-radius:6px;cursor:grab;touch-action:none;user-select:none;}
   .lightbox img:active{cursor:grabbing;}
   .lightbox-close{position:fixed;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:301;}
   .lightbox-close:hover{background:rgba(255,255,255,.22);}
@@ -1328,7 +1328,7 @@ function renderErrorCard(e, adminMode){
   <div class="card" data-id="${e.id}">
     <div class="card-head">
       <div style="min-width:0;">
-        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span></div>
+        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span>${e.hasImages?`<span title="มีรูปภาพประกอบ" style="font-size:12px;">🖼️</span>`:''}</div>
         <div class="card-symptom">${escapeHtml(e.symptom)}</div>
         <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
       </div>
@@ -1373,8 +1373,7 @@ function renderErrorDetailPanel(){
       <div class="error-fb-block">
         <div class="t">ลองวิธีข้างบนทั้งหมดแล้ว แต่ยังแก้ปัญหานี้ไม่ได้?</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="fb-down-btn ${downLocked?'locked':''}" data-errpropose="${e.id}" ${downLocked?'disabled':''}>${downLocked?'✓ คุณแจ้งไปแล้ว':'💡 มีวิธีอื่นที่ได้ผลกว่านี้'}</button>
-          <button class="fb-down-btn" data-errfail="${e.id}">👎 ลองทุกวิธีแล้วไม่ได้ผล</button>
+          <button class="fb-down-btn ${downLocked?'locked':''}" data-errpropose="${e.id}" ${downLocked?'disabled':''}>${downLocked?'✓ คุณแจ้งไปแล้ว':'เสนอวิธีการให้ Sup Product พิจารณา'}</button>
         </div>
         ${downNames.length?`<div class="names">แจ้งโดย: ${escapeHtml(nameSummary(downNames))}</div>`:''}
       </div>
@@ -1411,19 +1410,6 @@ function bindFeedbackButtons(root){
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
       ensureSignedIn(()=>{ downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
-  });
-  root.querySelectorAll('[data-errfail]').forEach(btn=>{
-    btn.addEventListener('click', ev=>{ ev.stopPropagation();
-      ensureSignedIn(()=>{
-        closeErrorDetail();
-        switchMode('eng');
-        resetEngErrorForm();
-        $('eng-add-error-form').style.display='block';
-        $('eng-toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
-        showToast('กรอกอาการที่เจอเป็น Error ใหม่ได้เลยครับ');
-        setTimeout(()=>{ $('eng-add-error-form').scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
-      });
-    });
   });
 }
 async function submitUp(solId){
@@ -1588,46 +1574,109 @@ function renderNotifList(){
 /* ===================== LIGHTBOX ===================== */
 let lightboxImages=[]; let lightboxIndex=0;
 function openLightbox(images, idx){ lightboxImages=images; lightboxIndex=idx; renderLightbox(); $('lightbox').classList.add('show'); }
-function renderLightbox(){ $('lightbox-img').src=lightboxImages[lightboxIndex]; $('lightbox-counter').textContent=lightboxImages.length>1?`${lightboxIndex+1} / ${lightboxImages.length}`:''; const multi=lightboxImages.length>1; $('lightbox-prev').style.display=multi?'flex':'none'; $('lightbox-next').style.display=multi?'flex':'none'; }
-function closeLightbox(){ $('lightbox').classList.remove('show'); }
+function renderLightbox(){ if(window._resetLightboxZoom) window._resetLightboxZoom(); $('lightbox-img').src=lightboxImages[lightboxIndex]; $('lightbox-counter').textContent=lightboxImages.length>1?`${lightboxIndex+1} / ${lightboxImages.length}`:''; const multi=lightboxImages.length>1; $('lightbox-prev').style.display=multi?'flex':'none'; $('lightbox-next').style.display=multi?'flex':'none'; }
+function closeLightbox(){ $('lightbox').classList.remove('show'); if(window._resetLightboxZoom) window._resetLightboxZoom(); }
 $('lightbox-close').addEventListener('click', closeLightbox);
 $('lightbox').addEventListener('click', e=>{ if(e.target.id==='lightbox') closeLightbox(); });
 $('lightbox-prev').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex-1+lightboxImages.length)%lightboxImages.length; renderLightbox(); });
 $('lightbox-next').addEventListener('click', e=>{ e.stopPropagation(); lightboxIndex=(lightboxIndex+1)%lightboxImages.length; renderLightbox(); });
 document.addEventListener('keydown', e=>{ if(!$('lightbox').classList.contains('show')) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') $('lightbox-prev').click(); if(e.key==='ArrowRight') $('lightbox-next').click(); });
 
-/* ===================== ลากซ้าย-ขวาเพื่อเปลี่ยนรูปใน Lightbox (รองรับทั้งนิ้วสัมผัสและเมาส์) ===================== */
+/* ===================== Lightbox: ซูมด้วย 2 นิ้ว/ดับเบิลแตะ + ลากเลื่อนดู(ตอนซูม) + ลากเปลี่ยนรูป(ตอนไม่ซูม) ===================== */
 (function(){
   const imgEl = $('lightbox-img');
-  let dragStartX = null;
-  let dragging = false;
-  const SWIPE_THRESHOLD = 50; // ต้องลากอย่างน้อยเท่านี้ (px) ถึงจะนับว่าเปลี่ยนรูป
+  let scale = 1, panX = 0, panY = 0;
+  let mode = null; // 'swipe' | 'pan' | 'pinch' | null
+  let swipeStartX = 0;
+  let panStartX = 0, panStartY = 0, panOriginX = 0, panOriginY = 0;
+  let pinchStartDist = 0, pinchStartScale = 1;
+  let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+  const SWIPE_THRESHOLD = 50;
+  const MAX_SCALE = 4;
 
-  function onDragStart(x){ if(lightboxImages.length<=1) return; dragStartX = x; dragging = true; imgEl.style.transition = 'none'; }
-  function onDragMove(x){
-    if(!dragging || dragStartX===null) return;
-    const dx = x - dragStartX;
-    imgEl.style.transform = `translateX(${dx}px)`;
+  function applyTransform(withTransition){
+    imgEl.style.transition = withTransition ? 'transform .18s ease' : 'none';
+    imgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
   }
-  function onDragEnd(x){
-    if(!dragging || dragStartX===null) return;
-    const dx = x - dragStartX;
-    imgEl.style.transition = 'transform .15s ease';
-    imgEl.style.transform = '';
-    if(Math.abs(dx) > SWIPE_THRESHOLD){
-      if(dx > 0) $('lightbox-prev').click(); else $('lightbox-next').click();
+  function resetZoom(withTransition){ scale=1; panX=0; panY=0; applyTransform(withTransition); }
+  window._resetLightboxZoom = ()=>resetZoom(false);
+
+  function clampPan(){
+    const maxPanX = (scale-1) * (imgEl.clientWidth/2 || 150);
+    const maxPanY = (scale-1) * (imgEl.clientHeight/2 || 150);
+    panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+    panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+  }
+  function dist(t1,t2){ const dx=t1.clientX-t2.clientX, dy=t1.clientY-t2.clientY; return Math.sqrt(dx*dx+dy*dy); }
+  function toggleZoom(){ if(scale>1){ resetZoom(true); } else { scale=2; applyTransform(true); } }
+
+  // ----- นิ้วสัมผัส -----
+  imgEl.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){
+      mode = 'pinch';
+      pinchStartDist = dist(e.touches[0], e.touches[1]);
+      pinchStartScale = scale;
+    } else if(e.touches.length===1){
+      const now = Date.now(); const t = e.touches[0];
+      if(now - lastTapTime < 300 && Math.abs(t.clientX-lastTapX)<30 && Math.abs(t.clientY-lastTapY)<30){
+        toggleZoom(); lastTapTime = 0; mode = null; return;
+      }
+      lastTapTime = now; lastTapX = t.clientX; lastTapY = t.clientY;
+      if(scale>1){ mode='pan'; panStartX=t.clientX; panStartY=t.clientY; panOriginX=panX; panOriginY=panY; }
+      else if(lightboxImages.length>1){ mode='swipe'; swipeStartX=t.clientX; imgEl.style.transition='none'; }
     }
-    dragStartX = null; dragging = false;
-  }
+  }, {passive:true});
+  imgEl.addEventListener('touchmove', e=>{
+    if(mode==='pinch' && e.touches.length===2){
+      const newDist = dist(e.touches[0], e.touches[1]);
+      scale = Math.min(MAX_SCALE, Math.max(1, pinchStartScale * (newDist/pinchStartDist)));
+      clampPan(); applyTransform(false);
+    } else if(mode==='pan' && e.touches.length===1){
+      const t = e.touches[0];
+      panX = panOriginX + (t.clientX - panStartX); panY = panOriginY + (t.clientY - panStartY);
+      clampPan(); applyTransform(false);
+    } else if(mode==='swipe' && e.touches.length===1){
+      const dx = e.touches[0].clientX - swipeStartX;
+      imgEl.style.transform = `translateX(${dx}px)`;
+    }
+  }, {passive:true});
+  imgEl.addEventListener('touchend', e=>{
+    if(mode==='swipe'){
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      imgEl.style.transition = 'transform .15s ease'; imgEl.style.transform = '';
+      if(Math.abs(dx) > SWIPE_THRESHOLD){ if(dx>0) $('lightbox-prev').click(); else $('lightbox-next').click(); }
+    } else if(mode==='pinch' && scale<=1){ resetZoom(true); }
+    if(e.touches.length===0) mode = null;
+  });
 
-  imgEl.addEventListener('touchstart', e=>{ onDragStart(e.touches[0].clientX); }, {passive:true});
-  imgEl.addEventListener('touchmove', e=>{ onDragMove(e.touches[0].clientX); }, {passive:true});
-  imgEl.addEventListener('touchend', e=>{ onDragEnd(e.changedTouches[0].clientX); });
-
-  imgEl.addEventListener('mousedown', e=>{ e.preventDefault(); onDragStart(e.clientX); });
-  document.addEventListener('mousemove', e=>{ if(dragging) onDragMove(e.clientX); });
-  document.addEventListener('mouseup', e=>{ if(dragging) onDragEnd(e.clientX); });
-  imgEl.addEventListener('dragstart', e=>e.preventDefault()); // กันเบราว์เซอร์ลากรูปแบบเดิม (ghost image) ทับกับที่เราทำเอง
+  // ----- เมาส์ (คอมพิวเตอร์): ดับเบิลคลิกซูม, ลากเลื่อนตอนซูม, ลากเปลี่ยนรูปตอนไม่ซูม, ล้อเมาส์ซูมได้ -----
+  let mouseDragging=false, mouseIsPan=false, mouseStartX=0, mouseStartY=0, mouseOriginX=0, mouseOriginY=0;
+  imgEl.addEventListener('dblclick', e=>{ e.preventDefault(); toggleZoom(); });
+  imgEl.addEventListener('mousedown', e=>{
+    e.preventDefault(); mouseDragging = true;
+    if(scale>1){ mouseIsPan=true; mouseStartX=e.clientX; mouseStartY=e.clientY; mouseOriginX=panX; mouseOriginY=panY; }
+    else{ mouseIsPan=false; mouseStartX=e.clientX; imgEl.style.transition='none'; }
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!mouseDragging) return;
+    if(mouseIsPan){ panX=mouseOriginX+(e.clientX-mouseStartX); panY=mouseOriginY+(e.clientY-mouseStartY); clampPan(); applyTransform(false); }
+    else{ const dx=e.clientX-mouseStartX; imgEl.style.transform=`translateX(${dx}px)`; }
+  });
+  document.addEventListener('mouseup', e=>{
+    if(!mouseDragging) return;
+    if(!mouseIsPan){
+      const dx = e.clientX - mouseStartX;
+      imgEl.style.transition='transform .15s ease'; imgEl.style.transform='';
+      if(Math.abs(dx) > SWIPE_THRESHOLD){ if(dx>0) $('lightbox-prev').click(); else $('lightbox-next').click(); }
+    }
+    mouseDragging=false; mouseIsPan=false;
+  });
+  imgEl.addEventListener('dragstart', e=>e.preventDefault());
+  imgEl.addEventListener('wheel', e=>{
+    e.preventDefault();
+    scale = Math.min(MAX_SCALE, Math.max(1, scale + (e.deltaY<0?0.15:-0.15)));
+    clampPan(); applyTransform(false);
+  }, {passive:false});
 })();
 function bindLightboxTriggers(root){
   root = root || document;
@@ -1841,6 +1890,7 @@ $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
 async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
+  fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   await fsSaveError(errorId, fields);
   const keepIds = new Set(validSolutions.map(s=>s.id));
   if(originalSolutionIds){
