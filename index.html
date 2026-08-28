@@ -2123,6 +2123,8 @@ async function acceptProposal(pid){
   const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
   try{
     await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
+    if(newHasImages !== err.hasImages){ await fsSaveError(err.id, {hasImages:newHasImages}); err.hasImages = newHasImages; }
     await fsUpdateProposal(pid, {status:'accepted'});
   }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
   err.solutions.push(newSol);
@@ -2700,12 +2702,18 @@ async function gatherFullBackup(statusElId){
       sdk.getDoc(sdk.doc(db,'meta','categories')),
     ]);
     const errors = [];
-    for(const d of errorsSnap.docs){
-      const err = { id:d.id, ...d.data(), solutions:[] };
-      const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
-      solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
-      err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
-      errors.push(err);
+    const CHUNK_SIZE = 100; // ดึงพร้อมกันทีละก้อน แทนที่จะรอทีละ Error (เร็วขึ้นมาก)
+    for(let i=0;i<errorsSnap.docs.length;i+=CHUNK_SIZE){
+      const chunk = errorsSnap.docs.slice(i, i+CHUNK_SIZE);
+      const chunkResults = await Promise.all(chunk.map(async d=>{
+        const err = { id:d.id, ...d.data(), solutions:[] };
+        const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
+        solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
+        err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
+        return err;
+      }));
+      errors.push(...chunkResults);
+      if(statusEl) statusEl.textContent = `กำลังดึงข้อมูล Error... (${Math.min(i+CHUNK_SIZE, errorsSnap.docs.length)}/${errorsSnap.docs.length})`;
     }
     const documents = []; docsSnap.forEach(d=>documents.push({id:d.id, ...d.data()}));
     const proposals = []; propSnap.forEach(d=>proposals.push({id:d.id, ...d.data()}));
