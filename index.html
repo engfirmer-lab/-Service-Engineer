@@ -555,6 +555,12 @@
         <span class="mono" id="backup-status" style="font-size:12px;color:var(--text-faint);"></span>
       </div>
     </div>
+    <div class="panel-block">
+      <h2>การใช้งานพื้นที่โดยประมาณ</h2>
+      <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น</p>
+      <button class="btn btn-ghost btn-sm" id="check-usage-btn">🔍 เช็คการใช้งานตอนนี้</button>
+      <div id="usage-result" style="margin-top:14px;"></div>
+    </div>
   </div>
 </main>
 
@@ -616,7 +622,7 @@
     <div class="lock-icon">🔒</div>
     <h3 id="pin-modal-title">ต้องใส่ PIN เพื่อเข้าหน้านี้</h3>
     <p id="pin-modal-desc">หน้า Sup Product / Manager มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง</p>
-    <input type="text" id="pin-input" inputmode="numeric" maxlength="6" placeholder="••••">
+    <input type="password" id="pin-input" inputmode="numeric" maxlength="6" placeholder="••••">
     <div class="pin-error" id="pin-error">PIN ไม่ถูกต้อง ลองใหม่อีกครั้ง</div>
     <div class="modal-actions" style="justify-content:center;margin-top:14px;"><button class="btn btn-primary btn-sm" id="pin-submit">ยืนยัน</button><button class="btn btn-ghost btn-sm" id="pin-cancel">ยกเลิก</button></div>
   </div>
@@ -807,6 +813,8 @@ let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไ
 const $ = id => document.getElementById(id);
 function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// เรียงตามตัวอักษร + ตัวเลขในตัว (เช่น "รุ่น 2" มาก่อน "รุ่น 10") ใช้กับตัวกรอง/dropdown ประเภทและรุ่นเครื่องทุกจุด
+function naturalSort(a, b){ return String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}); }
 function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function setStatus(loading, text){ $('status-dot').className='dot'+(loading?' loading':''); $('status-text').textContent=text; }
 const NO_OWNER = '__none__';
@@ -1300,12 +1308,12 @@ document.querySelectorAll('#eng-video-subtabs button').forEach(btn=>{
 
 /* ===================== TROUBLESHOOTING (Engineer) ===================== */
 function renderCategoryFilter(){
-  const cats = Object.keys(DATA.categories);
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
   $('filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('filter-category').value = filterCategory; updateModelFilter();
 }
 function updateModelFilter(){
-  const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]);
+  const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]).slice().sort(naturalSort);
   $('filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
 }
@@ -1389,9 +1397,13 @@ function renderErrorDetailPanel(){
         </div>
         ${downNames.length?`<div class="names">แจ้งโดย: ${escapeHtml(nameSummary(downNames))}</div>`:''}
       </div>
+      <div style="margin-top:24px;text-align:center;padding-bottom:8px;">
+        <button class="btn btn-ghost" id="error-detail-back-bottom-btn">← ย้อนกลับ</button>
+      </div>
     </div>
   `;
   bindFeedbackButtons(content); bindLightboxTriggers(content);
+  content.querySelector('#error-detail-back-bottom-btn')?.addEventListener('click', closeErrorDetail);
 }
 
 function renderSolutionCard(err, s, idx){
@@ -1421,7 +1433,7 @@ function bindFeedbackButtons(root){
   root.querySelectorAll('[data-errpropose]').forEach(btn=>{
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
-      ensureSignedIn(()=>{ downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
+      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
   });
 }
 async function submitUp(solId){
@@ -1700,12 +1712,12 @@ function bindLightboxTriggers(root){
 
 /* ===================== DOCUMENTS (Engineer) ===================== */
 function renderDocFilterEng(){
-  const cats = Object.keys(DATA.categories);
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
   $('doc-filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('doc-filter-category').value = docFilterCategory; updateDocModelFilterEng();
 }
 function updateDocModelFilterEng(){
-  const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]);
+  const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]).slice().sort(naturalSort);
   $('doc-filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
 }
@@ -1753,11 +1765,11 @@ function renderEngDocResults(){
 
 /* ===================== ENGINEER: ADD NEW ERROR (goes to pending queue) ===================== */
 function populateEngErrorFormSelectors(){
-  const cats = Object.keys(DATA.categories);
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
   $('eng-f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   updateEngModelSelect();
 }
-function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=DATA.categories[cat]||[]; $('eng-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=(DATA.categories[cat]||[]).slice().sort(naturalSort); $('eng-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
 $('eng-f-category').addEventListener('change', updateEngModelSelect);
 
 $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
@@ -1847,14 +1859,14 @@ function renderSupIdentityOptions(){
   $('sup-identity').value = currentSupIdentity;
 }
 function myOwnedCategories(){
-  return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity));
+  return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity)).sort(naturalSort);
 }
 function populateSupSelectors(){
   const cats = myOwnedCategories();
   $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
   updateModelSelect();
 }
-function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
+function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
 $('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; renderSupView(); updateNotifBadge(); });
 
@@ -2065,7 +2077,7 @@ function renderSupFilters(){
 function updateSupModelFilterOptions(){
   const cats = myOwnedCategories();
   const relevant = supFilterCategories.size>0 ? [...supFilterCategories] : cats;
-  const models = [...new Set(relevant.flatMap(c=>(DATA.categories[c]||[]).filter(m=>ownerOf(c,m)===currentSupIdentity)))];
+  const models = [...new Set(relevant.flatMap(c=>(DATA.categories[c]||[]).filter(m=>ownerOf(c,m)===currentSupIdentity)))].sort(naturalSort);
   [...supFilterModels].forEach(m=>{ if(!models.includes(m)) supFilterModels.delete(m); });
   const panel = $('sup-filter-model-panel');
   panel.innerHTML = models.map(m=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fmodel="${escapeHtml(m)}" ${supFilterModels.has(m)?'checked':''}> ${escapeHtml(m)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีรุ่นให้เลือก</p>`;
@@ -2103,6 +2115,7 @@ function renderSupSearchResults(){
   list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); deleteError(b.getAttribute('data-del')); }));
 }
 
+let editingProposalId = null;
 function renderProposals(){
   const pending = (DATA.proposals||[]).filter(p=>p.status==='pending').filter(p=>{ const err=DATA.errors.find(e=>e.id===p.errorId); return err && ownerOf(err.category,err.model)===currentSupIdentity; });
   $('proposal-count').textContent = pending.length;
@@ -2110,8 +2123,26 @@ function renderProposals(){
   if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มีข้อเสนอรอตรวจสอบ</p>`; return; }
   list.innerHTML = pending.map(p=>{
     const err = DATA.errors.find(e=>e.id===p.errorId);
+    const errLabel = escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ');
+    const metaLine = `<div class="proposal-meta">จาก Error: ${errLabel} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>`;
+    if(editingProposalId===p.id){
+      return `<div class="proposal-card" data-pid="${p.id}">
+        ${metaLine}
+        <div class="field-wrap"><label>คำอธิบายขั้นตอน *</label><textarea id="prop-edit-desc-${p.id}" rows="3">${escapeHtml(p.desc)}</textarea></div>
+        <div class="meta-grid" style="margin-top:8px;">
+          <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" id="prop-edit-tools-${p.id}" value="${escapeHtml(p.tools||'')}"></div>
+          <div class="field-wrap"><label>อะไหล่</label><input type="text" id="prop-edit-parts-${p.id}" value="${escapeHtml(p.parts||'')}"></div>
+          <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" id="prop-edit-time-${p.id}" value="${escapeHtml(p.time||'')}"></div>
+        </div>
+        ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-primary btn-sm" data-savepropedit="${p.id}">บันทึกการแก้ไข</button>
+          <button class="btn btn-ghost btn-sm" data-cancelpropedit="1">ยกเลิก</button>
+        </div>
+      </div>`;
+    }
     return `<div class="proposal-card" data-pid="${p.id}">
-      <div class="proposal-meta">จาก Error: ${escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ')} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      ${metaLine}
       <div class="proposal-text">${escapeHtml(p.desc)}</div>
       ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
@@ -2119,14 +2150,31 @@ function renderProposals(){
         <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
         <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(p.time||'-')}</div></div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" data-accept="${p.id}">✓ รับเป็นวิธีแก้ไขทางการ</button>
+        <button class="btn btn-ghost btn-sm" data-editprop="${p.id}">แก้ไข</button>
         <button class="btn btn-ghost btn-sm" data-reject="${p.id}">ไม่รับ</button>
       </div>
     </div>`;
   }).join('');
   list.querySelectorAll('[data-accept]').forEach(b=>b.addEventListener('click', ()=>acceptProposal(b.getAttribute('data-accept'))));
   list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>rejectProposal(b.getAttribute('data-reject'))));
+  list.querySelectorAll('[data-editprop]').forEach(b=>b.addEventListener('click', ()=>{ editingProposalId=b.getAttribute('data-editprop'); renderProposals(); }));
+  list.querySelectorAll('[data-cancelpropedit]').forEach(b=>b.addEventListener('click', ()=>{ editingProposalId=null; renderProposals(); }));
+  list.querySelectorAll('[data-savepropedit]').forEach(b=>b.addEventListener('click', async ()=>{
+    const pid = b.getAttribute('data-savepropedit');
+    const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
+    const desc = $('prop-edit-desc-'+pid).value.trim();
+    const tools = $('prop-edit-tools-'+pid).value.trim();
+    const parts = $('prop-edit-parts-'+pid).value.trim();
+    const time = $('prop-edit-time-'+pid).value.trim();
+    if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอน'); return; }
+    try{ await fsUpdateProposal(pid, {desc, tools, parts, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    p.desc=desc; p.tools=tools; p.parts=parts; p.time=time;
+    editingProposalId = null;
+    renderProposals();
+    showToast('✓ แก้ไขข้อเสนอแล้ว');
+  }));
 }
 async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
@@ -2373,7 +2421,7 @@ function renderOwnerView(){
   renderCatModelManage();
 }
 function populateOwnerFormSelectors(){
-  const cats = Object.keys(DATA.categories);
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
   $('new-model-cat').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') + `<option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option>`;
   $('new-model-owner').innerHTML = ownerSelectOptions(SUP_PRODUCTS[0], false);
   toggleNewCatInput();
@@ -2753,14 +2801,17 @@ async function handleBackupJson(statusElId){
 function buildBackupWorkbook(data){
   const wb = XLSX.utils.book_new();
 
-  const errorRows = data.errors.map(e=>({ id:e.id, ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0 }));
+  const errorRows = [];
+  data.errors.forEach(e=>{
+    if((e.solutions||[]).length===0){
+      errorRows.push({ id:e.id, ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'', จำนวนรูป:'', จำนวนโหวตวิธีนี้:'' });
+    } else {
+      e.solutions.forEach((s,idx)=>{
+        errorRows.push({ id:e.id, ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตวิธีนี้:(s.feedback||[]).filter(f=>f.type==='up').length });
+      });
+    }
+  });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
-
-  const solRows = [];
-  data.errors.forEach(e=> e.solutions.forEach((s,idx)=>{
-    solRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตแก้ได้จริง:(s.feedback||[]).filter(f=>f.type==='up').length, ErrorId:e.id });
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(solRows), 'Solutions');
 
   const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH') : '' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
@@ -2835,8 +2886,10 @@ async function handleBackupToDriveNow(statusElId){
 
     if(statusEl) statusEl.textContent = 'กำลังอัปโหลดเข้า Google Drive...';
     const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
-    await driveUploadFile(jsonBlob, `trbl-backup-${stamp}.json`, 'application/json', backupsFolderId);
-    await driveUploadFile(excelBlob, `trbl-backup-${stamp}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', backupsFolderId);
+    const dateFolderName = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const dateFolderId = await driveFindOrCreateFolder(dateFolderName, backupsFolderId);
+    await driveUploadFile(jsonBlob, `trbl-backup-${stamp}.json`, 'application/json', dateFolderId);
+    await driveUploadFile(excelBlob, `trbl-backup-${stamp}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', dateFolderId);
     await cleanupOldBackupsInDrive(backupsFolderId, BACKUP_RETENTION_DAYS);
     if(statusEl) statusEl.textContent = '';
     showToast('✓ Backup เข้า Service Center/Backups สำเร็จแล้ว');
@@ -2848,6 +2901,31 @@ async function handleBackupToDriveNow(statusElId){
 $('backup-json-btn').addEventListener('click', ()=>handleBackupJson('backup-status'));
 $('backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('backup-status'));
 $('backup-drive-now-btn').addEventListener('click', ()=>handleBackupToDriveNow('backup-status'));
+
+/* ===================== ประมาณการใช้งานพื้นที่ Firestore (โดยประมาณเท่านั้น) ===================== */
+async function checkStorageUsage(){
+  const resultEl = $('usage-result');
+  resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังตรวจสอบ...</p>`;
+  try{
+    const data = await gatherFullBackup(null);
+    const totalSolutions = data.errors.reduce((sum,e)=>sum+(e.solutions||[]).length,0);
+    const totalDocsCount = data.errors.length + totalSolutions + data.documents.length + data.proposals.length + data.pendingErrors.length;
+    const jsonSizeBytes = new Blob([JSON.stringify(data)]).size;
+    const sizeMB = (jsonSizeBytes/1024/1024).toFixed(2);
+    const FREE_STORAGE_GB = 1; // โควต้าฟรี Firestore มาตรฐาน
+    const pctUsed = ((jsonSizeBytes/1024/1024/1024) / FREE_STORAGE_GB * 100).toFixed(3);
+    resultEl.innerHTML = `
+      <div class="meta-grid">
+        <div class="meta-item"><div class="k">จำนวนเอกสารทั้งหมด</div><div class="v">${totalDocsCount.toLocaleString()} รายการ</div></div>
+        <div class="meta-item"><div class="k">แยกเป็น Error / วิธีแก้ไข</div><div class="v">${data.errors.length.toLocaleString()} / ${totalSolutions.toLocaleString()}</div></div>
+        <div class="meta-item"><div class="k">ขนาดข้อมูลโดยประมาณ</div><div class="v">${sizeMB} MB</div></div>
+        <div class="meta-item"><div class="k">เทียบกับโควต้าฟรี (1 GB)</div><div class="v">ประมาณ ${pctUsed}%</div></div>
+      </div>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* ประมาณจากขนาดข้อมูล JSON เป็นตัวแทนคร่าวๆ ไม่ใช่ตัวเลขจัดเก็บจริงของ Firestore (ซึ่งคิดต่างกันเล็กน้อย) ดูค่าที่แม่นยำได้ที่ <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase Console → Usage</a></p>
+    `;
+  }catch(e){ resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ ตรวจสอบไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
+}
+$('check-usage-btn').addEventListener('click', checkStorageUsage);
 
 /* ===================== THEME TOGGLE (default: light) ===================== */
 $('theme-toggle-btn').addEventListener('click', ()=>{
