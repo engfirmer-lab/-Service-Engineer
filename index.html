@@ -1147,11 +1147,23 @@ function initGis(){
   google.accounts.id.renderButton($('g_id_signin_container'), { theme:'outline', size:'large', text:'signin_with', shape:'pill', width:280 });
   return true;
 }
+// เผื่อสคริปต์ของ Google (accounts.google.com/gsi/client) ยังโหลดไม่เสร็จตอนเปิดหน้าครั้งแรก (เน็ตช้า/ไม่เคยแคชมาก่อน)
+// พยายามเรียกซ้ำเป็นระยะจนกว่าจะสำเร็จ แทนที่จะลองแค่ครั้งเดียวแล้วปล่อยผ่าน
+function initGisWithRetry(maxAttempts, delay){
+  let attempts = 0;
+  function tryInit(){
+    attempts++;
+    const ok = initGis();
+    if(!ok && attempts < maxAttempts && !FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){
+      setTimeout(tryInit, delay);
+    }
+  }
+  tryInit();
+}
 function ensureSignedIn(callback){
   if(myGoogleId){ callback(); return; }
   $('gsi-overlay').classList.add('show');
-  const ok = initGis();
-  if(!ok && !FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ setTimeout(initGis, 400); }
+  initGisWithRetry(15, 300);
 }
 $('change-name-btn').addEventListener('click', async ()=>{
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
@@ -1180,7 +1192,7 @@ async function resolveAuthAndStart(){
       myGoogleId = null; myUserName = null;
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
-      initGis();
+      initGisWithRetry(15, 300);
       setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
     }
   });
