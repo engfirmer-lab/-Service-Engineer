@@ -89,14 +89,17 @@ async function main(){
   // ----- ไฟล์ Excel (โครงสร้างเดียวกับปุ่ม Backup ในเว็บ) -----
   const wb = XLSX.utils.book_new();
 
-  const errorRows = errors.map(e => ({ id: e.id, ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0 }));
+  const errorRows = [];
+  errors.forEach(e => {
+    if ((e.solutions || []).length === 0) {
+      errorRows.push({ id: e.id, ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: '', คำอธิบาย: '', อุปกรณ์: '', อะไหล่: '', เวลาโดยประมาณ: '', จำนวนรูป: '', จำนวนโหวตวิธีนี้: '' });
+    } else {
+      e.solutions.forEach((s, idx) => {
+        errorRows.push({ id: e.id, ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: idx + 1, คำอธิบาย: s.desc, อุปกรณ์: s.tools || '', อะไหล่: s.parts || '', เวลาโดยประมาณ: s.time || '', จำนวนรูป: (s.images || []).length, จำนวนโหวตวิธีนี้: (s.feedback || []).filter(f => f.type === 'up').length });
+      });
+    }
+  });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
-
-  const solRows = [];
-  errors.forEach(e => e.solutions.forEach((s, idx) => {
-    solRows.push({ ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, ลำดับวิธี: idx + 1, คำอธิบาย: s.desc, อุปกรณ์: s.tools || '', อะไหล่: s.parts || '', เวลาโดยประมาณ: s.time || '', จำนวนรูป: (s.images || []).length, จำนวนโหวตแก้ได้จริง: (s.feedback || []).filter(f => f.type === 'up').length, ErrorId: e.id });
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(solRows), 'Solutions');
 
   const docRows = documents.map(d => ({ id: d.id, ประเภทเอกสาร: docTypeLabel(d.docType) + (d.videoSubtype ? ' - ' + d.videoSubtype : ''), ประเภทเครื่องจักร: d.category, รุ่น: d.model, ชื่อเอกสาร: d.title, ลิงก์: d.url || '', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toISOString() : '' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
@@ -124,33 +127,33 @@ async function main(){
 
   // ----- อัปโหลดเข้า Google Drive (ใช้ drive client ที่สร้างไว้ด้านบนสุดของไฟล์แล้ว) -----
 
-  // หาหรือสร้างโฟลเดอร์ "Backups" ใต้ Service Center
-  let backupsFolderId;
-  const searchRes = await drive.files.list({
-    q: `'${DRIVE_FOLDER_ID}' in parents and name='Backups' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    fields: 'files(id, name)',
-  });
-  if (searchRes.data.files.length > 0) {
-    backupsFolderId = searchRes.data.files[0].id;
-  } else {
+  async function findOrCreateFolder(name, parentId){
+    const searchRes = await drive.files.list({
+      q: `'${parentId}' in parents and name='${name}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    if (searchRes.data.files.length > 0) return searchRes.data.files[0].id;
     const folderRes = await drive.files.create({
-      resource: { name: 'Backups', mimeType: 'application/vnd.google-apps.folder', parents: [DRIVE_FOLDER_ID] },
+      resource: { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] },
       fields: 'id',
     });
-    backupsFolderId = folderRes.data.id;
-    console.log('สร้างโฟลเดอร์ "Backups" ใหม่ใน Service Center แล้ว');
+    console.log(`สร้างโฟลเดอร์ "${name}" ใหม่แล้ว`);
+    return folderRes.data.id;
   }
 
+  const backupsFolderId = await findOrCreateFolder('Backups', DRIVE_FOLDER_ID);
+  const dateFolderId = await findOrCreateFolder(dateStamp, backupsFolderId); // แยกเป็นโฟลเดอร์ตามวันที่ก่อน
+
   await drive.files.create({
-    resource: { name: jsonFilename, parents: [backupsFolderId] },
+    resource: { name: jsonFilename, parents: [dateFolderId] },
     media: { mimeType: 'application/json', body: fs.createReadStream(jsonFilename) },
   });
   await drive.files.create({
-    resource: { name: excelFilename, parents: [backupsFolderId] },
+    resource: { name: excelFilename, parents: [dateFolderId] },
     media: { mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: fs.createReadStream(excelFilename) },
   });
 
-  console.log(`✓ อัปโหลด Backup วันที่ ${dateStamp} เข้า Service Center/Backups เสร็จสมบูรณ์`);
+  console.log(`✓ อัปโหลด Backup วันที่ ${dateStamp} เข้า Service Center/Backups/${dateStamp} เสร็จสมบูรณ์`);
 
   await cleanupOldBackups(backupsFolderId, BACKUP_RETENTION_DAYS);
 }
