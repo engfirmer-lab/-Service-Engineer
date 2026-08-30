@@ -92,10 +92,10 @@ async function main(){
   const errorRows = [];
   errors.forEach(e => {
     if ((e.solutions || []).length === 0) {
-      errorRows.push({ id: e.id, ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: '', คำอธิบาย: '', อุปกรณ์: '', อะไหล่: '', เวลาโดยประมาณ: '', จำนวนรูป: '', จำนวนโหวตวิธีนี้: '' });
+      errorRows.push({ ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: '', คำอธิบาย: '', อุปกรณ์: '', อะไหล่: '', เวลาโดยประมาณ: '', จำนวนรูป: '', จำนวนโหวตวิธีนี้: '' });
     } else {
       e.solutions.forEach((s, idx) => {
-        errorRows.push({ id: e.id, ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: idx + 1, คำอธิบาย: s.desc, อุปกรณ์: s.tools || '', อะไหล่: s.parts || '', เวลาโดยประมาณ: s.time || '', จำนวนรูป: (s.images || []).length, จำนวนโหวตวิธีนี้: (s.feedback || []).filter(f => f.type === 'up').length });
+        errorRows.push({ ประเภท: e.category, รุ่น: e.model, ErrorCode: e.errorCode || '', อาการ: e.symptom, เปิดดู: e.viewCount || 0, ยอดโหวตแก้ได้จริง: e.totalUps || 0, ลำดับวิธี: idx + 1, คำอธิบาย: s.desc, อุปกรณ์: s.tools || '', อะไหล่: s.parts || '', เวลาโดยประมาณ: s.time || '', จำนวนรูป: (s.images || []).length, จำนวนโหวตวิธีนี้: (s.feedback || []).filter(f => f.type === 'up').length });
       });
     }
   });
