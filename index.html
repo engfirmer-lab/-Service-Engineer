@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 1.5
+  เวอร์ชันปัจจุบัน: 1.8
   อัปเดตล่าสุด: 31 สิงหาคม 2569
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v1.5</title>
+<title>Firmer Service Center — v1.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -227,7 +227,7 @@
   .gsi-avatar{width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px;flex-shrink:0;}
   .gsi-account .info .name{font-size:13.5px;font-weight:600;}
   .gsi-account .info .email{font-size:11.5px;color:var(--text-faint);}
-  .signed-in-pill{position:fixed;top:66px;right:12px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 12px 5px 5px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-dim);z-index:15;}
+  .signed-in-pill{background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 12px 5px 5px;display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-dim);flex-shrink:0;}
   .signed-in-pill .gsi-avatar{width:22px;height:22px;font-size:10px;}
 
   .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:300;align-items:center;justify-content:center;}
@@ -289,12 +289,18 @@
 
 <header>
   <div class="header-inner">
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>ระบบสนับสนุนงานวิศวกร — v1.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 1.8</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
+      <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
+        <div class="gsi-avatar" id="signed-in-avatar">?</div>
+        <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
+        <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
+        <button id="change-name-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">ออกจากระบบ</button>
+      </div>
     </div>
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
@@ -307,13 +313,6 @@
     <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
   </div>
 </header>
-
-<div class="signed-in-pill" id="signed-in-pill" style="display:none;">
-  <div class="gsi-avatar" id="signed-in-avatar">?</div>
-  <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
-  <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
-  <button id="change-name-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">ออกจากระบบ</button>
-</div>
 
 <div class="modal-overlay" id="notif-modal">
   <div class="modal" style="max-width:420px;">
@@ -625,7 +624,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.5 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.8 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -846,6 +845,7 @@ function seedData(){
 }
 
 let DATA = null;
+let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
 let currentSupIdentity = SUP_PRODUCTS[0];
 let engActiveTab = 'trbl';
@@ -912,8 +912,7 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [errorsSnap, docsSnap, propSnap, pendSnap, catDoc, supDoc] = await Promise.all([
-      sdk.getDocs(sdk.collection(db,'errors')),
+    const [docsSnap, propSnap, pendSnap, catDoc, supDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
@@ -921,7 +920,7 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
     ]);
     DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
-    errorsSnap.forEach(d=> DATA.errors.push({ id:d.id, solutions:[], _solutionsLoaded:false, ...d.data() }));
+    loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     docsSnap.forEach(d=> DATA.documents.push({ id:d.id, ...d.data() }));
     propSnap.forEach(d=> DATA.proposals.push({ id:d.id, ...d.data() }));
     pendSnap.forEach(d=> DATA.pendingErrors.push({ id:d.id, ...d.data() }));
@@ -940,7 +939,7 @@ async function loadData(){
     }
     if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
     renderSupIdentityOptions();
-    setStatus(false, `พร้อมใช้งาน · ${DATA.errors.length} Error · ${DATA.documents.length} เอกสาร`);
+    setStatus(false, `พร้อมใช้งาน · ${DATA.documents.length} เอกสาร · เลือกประเภทเครื่องจักรเพื่อดู Error`);
   }catch(e){
     setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
     showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
@@ -949,6 +948,24 @@ async function loadData(){
     renderSupIdentityOptions();
   }
   renderAll();
+}
+// โหลด Error เฉพาะประเภทที่ต้องใช้จริง (แทนที่จะโหลดทั้งหมดทีเดียวตอน login) — ลดการใช้โควต้า Firestore ลงมาก
+// มีแคชกันโหลดซ้ำ (loadedErrorCategories) — เรียกซ้ำกี่ครั้งก็ไม่เสียโควต้าเพิ่มถ้าเคยโหลดประเภทนั้นไปแล้ว
+async function ensureErrorsLoadedForCategory(category){
+  if(!category || category==='all' || loadedErrorCategories.has(category)) return;
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const q = sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',category));
+    const snap = await sdk.getDocs(q);
+    const existingIds = new Set(DATA.errors.map(e=>e.id));
+    snap.forEach(d=>{ if(!existingIds.has(d.id)) DATA.errors.push({ id:d.id, solutions:[], _solutionsLoaded:false, ...d.data() }); });
+    loadedErrorCategories.add(category);
+  }catch(e){ showToast('⚠ โหลด Error ประเภท '+category+' ไม่สำเร็จ: '+e.message); }
+}
+// โหลด Error ทุกประเภทที่ยังไม่เคยโหลด — ใช้เฉพาะตอนค้นหาแบบไม่ระบุประเภท (ผู้ใช้ต้องกดยืนยันเองก่อนเสมอ เพราะกินโควต้าเยอะกว่าปกติ)
+async function ensureAllErrorsLoaded(){
+  const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
+  for(const cat of remaining){ await ensureErrorsLoadedForCategory(cat); }
 }
 async function fsSaveSupProducts(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS }); }finally{ hideLoadingOverlay(); } }
 async function fsSaveAdminEmails(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','adminEmails'), { emails: adminEmails }); }finally{ hideLoadingOverlay(); } }
@@ -1452,8 +1469,14 @@ function switchMode(mode){
   if(mode==='sup') renderSupView();
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
-  if(mode==='mgr') renderMgrView();
+  if(mode==='mgr') loadAllErrorsThenRenderMgr();
   if(mode==='backup'){ checkStorageUsage(); }
+}
+async function loadAllErrorsThenRenderMgr(){
+  const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
+  if(remaining.length>0){ $('mgr-table').innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">⏳ กำลังโหลดข้อมูลทั้งหมด (Manager ต้องดูภาพรวมของทุกคน)...</td></tr></tbody>`; }
+  await ensureAllErrorsLoaded();
+  renderMgrView();
 }
 $('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
 $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
@@ -1530,11 +1553,26 @@ $('clear-search').addEventListener('click', ()=>{ $('search-input').value=''; cu
 function matchesQuery(e,q){ if(!q) return true; const hay=[e.category,e.model,e.errorCode,e.symptom].join(' ').toLowerCase(); return hay.includes(q.toLowerCase()); }
 function nameSummary(names){ if(names.length===0) return ''; if(names.length<=4) return names.join(', '); return names.slice(0,4).join(', ')+` และอีก ${names.length-4} คน`; }
 
-function renderTechResults(){
+async function renderTechResults(){
   const list = $('results-list');
   const hasSearchOrFilter = currentQuery.trim()!=='' || filterCategory!=='all' || filterModel!=='all';
-  if(DATA.errors.length===0){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มีข้อมูลในระบบ</h3><p>รอ Sup Product เพิ่มรายการ Troubleshoot เข้ามาก่อน</p></div>`; return; }
   if(!hasSearchOrFilter){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`; return; }
+
+  if(filterCategory!=='all'){
+    if(!loadedErrorCategories.has(filterCategory)){
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลดข้อมูล...</h3></div>`;
+      await ensureErrorsLoadedForCategory(filterCategory);
+    }
+  } else if(currentQuery.trim()!==''){
+    const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
+    if(remaining.length>0){
+      list.innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลดข้อมูล...</h3></div>`;
+      await ensureAllErrorsLoaded();
+      // เผื่อผู้ใช้พิมพ์คำอื่นระหว่างรอโหลด — เช็คว่าตัวกรอง/คำค้นหายังตรงกับตอนเริ่มโหลดอยู่ไหม ถ้าเปลี่ยนไปแล้วให้ปล่อยการ render รอบใหม่ (ที่ถูก trigger ไปแล้ว) จัดการแทน ไม่ render ซ้อนกัน
+      if(currentQuery.trim()==='' || filterCategory!=='all') return;
+    }
+  }
+
   let filtered = DATA.errors.filter(e=>matchesQuery(e,currentQuery));
   if(filterCategory!=='all') filtered = filtered.filter(e=>e.category===filterCategory);
   if(filterModel!=='all') filtered = filtered.filter(e=>e.model===filterModel);
@@ -2605,7 +2643,17 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   showToast('ลบลิงก์แล้ว');
 });
 
-function renderSupView(){ populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors(); renderProposals(); renderSupFilters(); renderSupSearchResults(); if(supActiveTab==='docs') renderSupDocTab(); }
+async function renderSupView(){
+  populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors(); renderSupFilters();
+  const owned = myOwnedCategories();
+  const notYetLoaded = owned.filter(c=>!loadedErrorCategories.has(c));
+  if(notYetLoaded.length>0){
+    $('sup-results-list').innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลดข้อมูล...</h3></div>`;
+    for(const cat of notYetLoaded){ await ensureErrorsLoadedForCategory(cat); }
+  }
+  renderProposals(); renderSupSearchResults();
+  if(supActiveTab==='docs') renderSupDocTab();
+}
 
 /* ===================== OWNER VIEW (ผู้รับผิดชอบ Product) ===================== */
 function ownerSelectOptions(selected, includeDefault){
@@ -2858,10 +2906,15 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
   renderSupIdentityOptions(); renderOwnerView();
   showToast(`✓ เพิ่ม "${name}" แล้ว`);
 });
-function renderOwnerView(){
+async function renderOwnerView(){
   renderSupNameList();
   populateOwnerFormSelectors();
   renderOwnerSummary();
+  const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
+  if(remaining.length>0){
+    $('cat-model-manage').innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล (ต้องเช็คให้แน่ใจก่อนว่าประเภท/รุ่นไหนมีข้อมูลผูกอยู่บ้าง กันลบผิดพลาด)...</p>`;
+    await ensureAllErrorsLoaded();
+  }
   renderCatModelManage();
 }
 function populateOwnerFormSelectors(){
