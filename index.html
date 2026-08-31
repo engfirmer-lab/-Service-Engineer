@@ -3410,20 +3410,45 @@ async function checkStorageUsage(){
 }
 
 /* ===================== ขนาดไฟล์จริงใน Google Drive — กดเช็คเอง (ไม่อัตโนมัติ เพราะช้าและต้องขอสิทธิ์ Drive) ===================== */
+async function getDriveStorageQuota(){
+  const token = await ensureDriveAccess();
+  const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', { headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok) throw new Error('เช็คโควต้า Drive ไม่สำเร็จ ('+res.status+')');
+  const data = await res.json();
+  return data.storageQuota || {};
+}
 async function checkDriveUsage(){
   const driveEl = $('drive-usage-result');
   driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังคำนวณขนาดไฟล์ใน Drive (อาจใช้เวลาสักครู่)...</p>`;
   try{
-    const totalBytes = await calculateDriveFolderSize(DRIVE_ROOT_FOLDER_ID, 0);
+    const [totalBytes, quota] = await Promise.all([
+      calculateDriveFolderSize(DRIVE_ROOT_FOLDER_ID, 0),
+      getDriveStorageQuota(),
+    ]);
     const sizeMB = (totalBytes/1024/1024).toFixed(1);
-    const FREE_DRIVE_GB = 15; // โควต้าฟรีมาตรฐานของ Google Drive
-    const pctUsed = ((totalBytes/1024/1024/1024) / FREE_DRIVE_GB * 100).toFixed(2);
+    let quotaRow;
+    if(quota.limit){
+      const limitBytes = parseInt(quota.limit, 10);
+      const usageBytes = parseInt(quota.usage || '0', 10);
+      const limitGB = (limitBytes/1024/1024/1024).toFixed(0);
+      const usageGB = (usageBytes/1024/1024/1024).toFixed(2);
+      const pctOfAccountUsed = (usageBytes/limitBytes*100).toFixed(1);
+      const pctFromServiceCenter = (totalBytes/limitBytes*100).toFixed(2);
+      quotaRow = `
+        <div class="meta-item"><div class="k">พื้นที่ Drive ทั้งหมดของบัญชีนี้</div><div class="v">${limitGB} GB</div></div>
+        <div class="meta-item"><div class="k">ใช้ไปแล้วทั้งบัญชี</div><div class="v">${usageGB} GB (${pctOfAccountUsed}%)</div></div>
+        <div class="meta-item"><div class="k">สัดส่วนที่ Service Center ใช้</div><div class="v">${pctFromServiceCenter}% ของพื้นที่ทั้งหมด</div></div>
+      `;
+    } else {
+      // บัญชี Workspace บางแบบไม่มีเพดานจำกัด (unlimited) — Google จะไม่ส่งค่า limit มาให้
+      quotaRow = `<div class="meta-item"><div class="k">พื้นที่ Drive ทั้งหมดของบัญชีนี้</div><div class="v">ไม่จำกัด (Unlimited)</div></div>`;
+    }
     driveEl.innerHTML = `
       <div class="meta-grid">
         <div class="meta-item"><div class="k">ขนาดไฟล์ทั้งหมดใน Service Center</div><div class="v">${sizeMB} MB</div></div>
-        <div class="meta-item"><div class="k">เทียบกับโควต้าฟรี Drive (15 GB)</div><div class="v">ประมาณ ${pctUsed}%</div></div>
+        ${quotaRow}
       </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* นับจากไฟล์จริงในโฟลเดอร์ Service Center ทั้งหมด (รูป, วิดีโอ, เอกสารที่อัปโหลด, Backup) เป็นตัวเลขจริงจาก Google Drive ไม่ใช่ตัวเลขประมาณการ</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* นับจากไฟล์จริงในโฟลเดอร์ Service Center ทั้งหมด เทียบกับพื้นที่ Drive จริงของบัญชีที่ login อยู่ตอนนี้ (ไม่ใช่ค่ามาตรฐาน 15GB ตายตัว — ถ้าบัญชีนี้ซื้อพื้นที่เพิ่มหรือใช้ Workspace ตัวเลขจะเปลี่ยนตามจริง)</p>
     `;
   }catch(e){ driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ คำนวณขนาดไฟล์ Drive ไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
 }
