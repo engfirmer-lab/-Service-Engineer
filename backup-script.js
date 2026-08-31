@@ -181,7 +181,52 @@ async function cleanupOldBackups(folderId, daysToKeep){
   console.log(`✓ ลบไฟล์ Backup เก่าไปทั้งหมด ${oldFiles.length} ไฟล์`);
 }
 
-main().catch(err => {
-  console.error('เกิดข้อผิดพลาด:', err);
-  process.exit(1);
-});
+// ----- บันทึกสถานะการ backup ล่าสุด (สำเร็จ/ไม่สำเร็จ + เวลา) ไว้ในไฟล์เล็กๆ ให้หน้าเว็บอ่านไปแสดงผลได้ -----
+// ไม่ใช้ Firestore เพราะ Service Account ตั้งใจให้เป็น "อ่านอย่างเดียว" เพื่อความปลอดภัย (ถ้า Key หลุดจะได้เขียน/ลบอะไรไม่ได้)
+async function writeStatusFile(success, errorMessage){
+  try{
+    const searchRes = await drive.files.list({
+      q: `'${DRIVE_FOLDER_ID}' in parents and name='Backups' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    let backupsFolderId;
+    if (searchRes.data.files.length > 0) {
+      backupsFolderId = searchRes.data.files[0].id;
+    } else {
+      const folderRes = await drive.files.create({
+        resource: { name: 'Backups', mimeType: 'application/vnd.google-apps.folder', parents: [DRIVE_FOLDER_ID] },
+        fields: 'id',
+      });
+      backupsFolderId = folderRes.data.id;
+    }
+
+    const statusContent = JSON.stringify({
+      success,
+      timestamp: Date.now(),
+      dateStamp: new Date().toISOString().slice(0, 10),
+      error: errorMessage || null,
+    }, null, 2);
+
+    const statusSearch = await drive.files.list({
+      q: `'${backupsFolderId}' in parents and name='backup-status.json' and trashed=false`,
+      fields: 'files(id)',
+    });
+    const media = { mimeType: 'application/json', body: statusContent };
+    if (statusSearch.data.files.length > 0) {
+      await drive.files.update({ fileId: statusSearch.data.files[0].id, media });
+    } else {
+      await drive.files.create({ resource: { name: 'backup-status.json', parents: [backupsFolderId] }, media });
+    }
+    console.log(`บันทึกสถานะ backup-status.json แล้ว (success=${success})`);
+  } catch (e) {
+    console.error('บันทึกไฟล์สถานะไม่สำเร็จ (ไม่กระทบผลลัพธ์หลักของการ backup):', e.message);
+  }
+}
+
+main()
+  .then(() => writeStatusFile(true, null))
+  .catch(async err => {
+    console.error('เกิดข้อผิดพลาด:', err);
+    await writeStatusFile(false, err.message);
+    process.exit(1);
+  });
