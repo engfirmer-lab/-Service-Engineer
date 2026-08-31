@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 1.4
+  เวอร์ชันปัจจุบัน: 1.5
   อัปเดตล่าสุด: 31 สิงหาคม 2569
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v1.4</title>
+<title>Firmer Service Center — v1.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,9 +18,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, getCountFromServer };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>ระบบสนับสนุนงานวิศวกร — v1.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>ระบบสนับสนุนงานวิศวกร — v1.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
     </div>
@@ -618,12 +618,13 @@
       <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น</p>
       <div id="usage-result">กำลังตรวจสอบ...</div>
       <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
-      <h3 style="font-size:13px;margin-bottom:6px;">Google Drive (ไฟล์ที่อัปโหลดผ่านระบบ)</h3>
-      <p class="panel-sub">✓ ตัวเลขนี้เป็น<strong>ขนาดไฟล์จริง</strong>จาก Google Drive (นับเฉพาะไฟล์ที่อัปโหลดจริงผ่านระบบ — รูป, วิดีโอ, เอกสารที่อัปโหลด, Backup) — เอกสารที่แค่แปะลิงก์ภายนอกไม่สามารถทราบขนาดได้ (ไปตรวจสอบที่ต้นทางเอง)</p>
-      <div id="drive-usage-result">กำลังตรวจสอบ...</div>
+      <h3 style="font-size:13px;margin-bottom:6px;">Google Drive (โฟลเดอร์ "Service Center" ทั้งหมด)</h3>
+      <p class="panel-sub">✓ ตัวเลขนี้เป็น<strong>ขนาดไฟล์จริง</strong>ของโฟลเดอร์ "Service Center" ทั้งก้อน — รวมทุกไฟล์ข้างในไม่ว่าจะมาจากไหน (รูป/วิดีโอ/เอกสารที่อัปโหลดผ่านแอป, ไฟล์ Backup รายวัน, หรือไฟล์ที่วางไว้เองโดยตรงใน Drive) — ไม่นับเอกสารที่แค่แปะลิงก์ไปที่อื่นภายนอกโฟลเดอร์นี้ (ไม่สามารถทราบขนาดได้ ต้องไปตรวจสอบที่ต้นทางเอง) — กดเช็คเองเพราะต้องไล่ดูทุกโฟลเดอร์ อาจใช้เวลาสักครู่</p>
+      <button class="btn btn-ghost btn-sm" id="check-drive-usage-btn">🔍 เช็คขนาดไฟล์ใน Drive</button>
+      <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.4 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.5 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -3372,39 +3373,46 @@ $('backup-json-btn').addEventListener('click', ()=>handleBackupJson('backup-stat
 $('backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('backup-status'));
 $('backup-drive-now-btn').addEventListener('click', ()=>handleBackupToDriveNow('backup-status'));
 
-/* ===================== ประมาณการใช้งานพื้นที่ Firestore (โดยประมาณเท่านั้น) ===================== */
+/* ===================== ประมาณการใช้งานพื้นที่ Firestore (นับจริงแบบเร็ว ไม่โหลดข้อมูลเต็ม) ===================== */
 async function checkStorageUsage(){
   const resultEl = $('usage-result');
-  const driveEl = $('drive-usage-result');
   resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังตรวจสอบ...</p>`;
-  driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังคำนวณขนาดไฟล์ใน Drive (อาจใช้เวลาสักครู่)...</p>`;
-
-  // ----- ส่วน Firestore (รวม Log ด้วย) -----
   try{
-    const data = await gatherFullBackup(null);
-    const totalSolutions = data.errors.reduce((sum,e)=>sum+(e.solutions||[]).length,0);
-    let logs = [];
-    try{ logs = await fsGetAllLogs(); }catch(e){ /* ถ้าไม่ใช่ Super Admin จะอ่านไม่ได้ ข้ามไปเฉยๆ */ }
-    const totalDocsCount = data.errors.length + totalSolutions + data.documents.length + data.proposals.length + data.pendingErrors.length + logs.length;
-    const jsonSizeBytes = new Blob([JSON.stringify(data)]).size;
-    const logSizeBytes = new Blob([JSON.stringify(logs)]).size;
-    const totalSizeBytes = jsonSizeBytes + logSizeBytes;
-    const sizeMB = (totalSizeBytes/1024/1024).toFixed(2);
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const [errCount, solCount, docCount, propCount, pendCount] = await Promise.all([
+      sdk.getCountFromServer(sdk.collection(db,'errors')),
+      sdk.getCountFromServer(sdk.collectionGroup(db,'solutions')),
+      sdk.getCountFromServer(sdk.collection(db,'documents')),
+      sdk.getCountFromServer(sdk.collection(db,'proposals')),
+      sdk.getCountFromServer(sdk.collection(db,'pendingErrors')),
+    ]);
+    let logCount = 0;
+    try{ const logSnap = await sdk.getCountFromServer(sdk.collection(db,'activityLogs')); logCount = logSnap.data().count; }
+    catch(e){ /* ไม่ใช่ Super Admin อ่าน Log ไม่ได้ตาม Rules — ข้ามไปเฉยๆ ไม่กระทบตัวเลขอื่น */ }
+    const errN = errCount.data().count, solN = solCount.data().count, docN = docCount.data().count, propN = propCount.data().count, pendN = pendCount.data().count;
+    const totalDocsCount = errN + solN + docN + propN + pendN + logCount;
+    const AVG_BYTES_PER_DOC = 300; // ค่าเฉลี่ยคร่าวๆ จากขนาดจริงที่เคยวัดไว้ก่อนหน้า — ใช้ประมาณการเร็วๆ แทนการโหลดข้อมูลเต็มมาวัด
+    const estSizeBytes = totalDocsCount * AVG_BYTES_PER_DOC;
+    const sizeMB = (estSizeBytes/1024/1024).toFixed(2);
     const FREE_STORAGE_GB = 1; // โควต้าฟรี Firestore มาตรฐาน
-    const pctUsed = ((totalSizeBytes/1024/1024/1024) / FREE_STORAGE_GB * 100).toFixed(3);
+    const pctUsed = ((estSizeBytes/1024/1024/1024) / FREE_STORAGE_GB * 100).toFixed(3);
     resultEl.innerHTML = `
       <div class="meta-grid">
         <div class="meta-item"><div class="k">จำนวนเอกสารทั้งหมด</div><div class="v">${totalDocsCount.toLocaleString()} รายการ</div></div>
-        <div class="meta-item"><div class="k">แยกเป็น Error / วิธีแก้ไข</div><div class="v">${data.errors.length.toLocaleString()} / ${totalSolutions.toLocaleString()}</div></div>
-        <div class="meta-item"><div class="k">Log การใช้งาน</div><div class="v">${logs.length.toLocaleString()} รายการ</div></div>
-        <div class="meta-item"><div class="k">ขนาดข้อมูลโดยประมาณ (รวม Log)</div><div class="v">${sizeMB} MB</div></div>
+        <div class="meta-item"><div class="k">แยกเป็น Error / วิธีแก้ไข</div><div class="v">${errN.toLocaleString()} / ${solN.toLocaleString()}</div></div>
+        <div class="meta-item"><div class="k">Log การใช้งาน</div><div class="v">${logCount.toLocaleString()} รายการ</div></div>
+        <div class="meta-item"><div class="k">ขนาดข้อมูลโดยประมาณ (รวม Log)</div><div class="v">~${sizeMB} MB</div></div>
         <div class="meta-item"><div class="k">เทียบกับโควต้าฟรี Firestore (1 GB)</div><div class="v">ประมาณ ${pctUsed}%</div></div>
       </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* ประมาณจากขนาดข้อมูล JSON เป็นตัวแทนคร่าวๆ ไม่ใช่ตัวเลขจัดเก็บจริงของ Firestore (ซึ่งคิดต่างกันเล็กน้อย) ดูค่าที่แม่นยำได้ที่ <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase Console → Usage</a></p>
+      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* จำนวนรายการเป็นตัวเลขจริง (นับสดจาก Firestore) แต่ขนาด MB เป็นการประมาณการคร่าวๆ เพื่อความรวดเร็ว (ไม่ได้โหลดข้อมูลเต็มมาวัดจริง) ดูค่าที่แม่นยำได้ที่ <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase Console → Usage</a></p>
     `;
   }catch(e){ resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ ตรวจสอบไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
+}
 
-  // ----- ส่วน Google Drive (ตัวเลขจริง ไม่ใช่ประมาณการ) -----
+/* ===================== ขนาดไฟล์จริงใน Google Drive — กดเช็คเอง (ไม่อัตโนมัติ เพราะช้าและต้องขอสิทธิ์ Drive) ===================== */
+async function checkDriveUsage(){
+  const driveEl = $('drive-usage-result');
+  driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังคำนวณขนาดไฟล์ใน Drive (อาจใช้เวลาสักครู่)...</p>`;
   try{
     const totalBytes = await calculateDriveFolderSize(DRIVE_ROOT_FOLDER_ID, 0);
     const sizeMB = (totalBytes/1024/1024).toFixed(1);
@@ -3419,6 +3427,7 @@ async function checkStorageUsage(){
     `;
   }catch(e){ driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ คำนวณขนาดไฟล์ Drive ไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
 }
+$('check-drive-usage-btn').addEventListener('click', checkDriveUsage);
 // คำนวณขนาดไฟล์ทั้งหมดใน Google Drive แบบไล่ลึกทุกโฟลเดอร์ย่อย (รูป/วิดีโอ/เอกสารที่อัปโหลด/Backup)
 async function calculateDriveFolderSize(folderId, depth){
   if(depth > 10) return 0; // กันวนลึกเกินไปเผื่อโครงสร้างผิดปกติ
