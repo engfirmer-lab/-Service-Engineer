@@ -1,9 +1,16 @@
 <!DOCTYPE html>
+<!--
+  ===================================================================
+  APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
+  เวอร์ชันปัจจุบัน: 1.2
+  อัปเดตล่าสุด: 31 สิงหาคม 2569
+  ===================================================================
+-->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TRBL // ระบบสนับสนุนงานวิศวกร Firmer — v1.0</title>
+<title>Firmer Service Center — v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,9 +18,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -42,6 +49,7 @@
   .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .brand{display:flex;align-items:center;gap:9px;}
   .brand-mark{width:32px;height:32px;border-radius:7px;background:linear-gradient(135deg,var(--amber),#b97324);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#1a1206;font-size:12px;flex-shrink:0;}
+  .brand-logo{height:34px;width:auto;flex-shrink:0;object-fit:contain;}
   .brand-text h1{font-size:14px;font-weight:600;}
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
@@ -201,16 +209,11 @@
   .badge-count{background:var(--red);color:#fff;font-family:'IBM Plex Mono';font-size:10px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:6px;}
   .status-badge{font-family:'IBM Plex Mono';font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;}
 
-  .pin-modal .modal{max-width:320px;text-align:center;}
-  .pin-modal input{text-align:center;font-family:'IBM Plex Mono';font-size:24px;letter-spacing:0.3em;padding:12px;width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;color:var(--text);}
-  .pin-error{color:var(--red);font-size:12px;font-family:'IBM Plex Mono';margin-top:8px;display:none;}
-  .pin-error.show{display:block;}
-  .lock-icon{font-size:28px;margin-bottom:8px;}
-
   .gsi-overlay{position:fixed;inset:0;background:var(--bg);z-index:150;display:none;align-items:center;justify-content:center;padding:24px;}
   .gsi-overlay.show{display:flex;}
   .gsi-card{max-width:360px;width:100%;text-align:center;}
   .gsi-logo{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--amber),#b97324);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono';font-weight:700;color:#1a1206;font-size:20px;margin:0 auto 18px;}
+  .gsi-logo-img{height:56px;width:auto;object-fit:contain;margin:0 auto 18px;display:block;}
   .gsi-card h2{font-size:18px;margin-bottom:8px;}
   .gsi-card p{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:22px;}
   .gsi-btn{width:100%;background:#fff;color:#3c4043;border:1px solid #dadce0;border-radius:8px;padding:12px 16px;font-family:'Sarabun';font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.12s;}
@@ -288,8 +291,8 @@
   <div class="header-inner">
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="brand">
-        <div class="brand-mark">TS</div>
-        <div class="brand-text"><h1>ระบบสนับสนุนงานวิศวกร</h1><p>FIRMER // ENGINEER SUPPORT HUB — v1.0</p></div>
+        <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>ระบบสนับสนุนงานวิศวกร — v1.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
     </div>
@@ -472,10 +475,22 @@
   <div class="modal-overlay" id="doclink-modal" style="z-index:110;">
     <div class="modal">
       <button class="modal-close-x" id="doclink-modal-close">✕</button>
-      <h3 id="doclink-modal-title">เพิ่มลิงก์เอกสาร</h3>
+      <h3 id="doclink-modal-title">เพิ่มเอกสาร</h3>
       <p id="doclink-modal-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <button class="btn btn-primary btn-sm" id="doclink-mode-link-btn" style="flex:1;">🔗 วางลิงก์</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-mode-upload-btn" style="flex:1;">⬆ อัปโหลดไฟล์</button>
+      </div>
       <div class="field-wrap"><label>ชื่อเอกสาร *</label><input type="text" id="doclink-title-input" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
-      <div class="field-wrap" style="margin-top:10px;"><label>ลิงก์ *</label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
+      <div class="field-wrap" style="margin-top:10px;" id="doclink-url-field"><label>ลิงก์ *</label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
+      <div class="field-wrap" style="margin-top:10px;display:none;" id="doclink-upload-field">
+        <label>เลือกไฟล์ *</label>
+        <input type="file" id="doclink-file-input">
+        <div id="doclink-upload-progress-wrap" style="display:none;margin-top:8px;">
+          <div style="height:6px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="doclink-upload-progress-bar" style="height:100%;width:0%;background:var(--amber);transition:width .2s;"></div></div>
+          <div id="doclink-upload-progress-text" style="font-size:11px;color:var(--text-faint);margin-top:4px;"></div>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="doclink-save-btn">บันทึก</button>
         <button class="btn btn-ghost btn-sm" id="doclink-delete-btn" style="display:none;color:var(--red);border-color:var(--red);">ลบลิงก์นี้</button>
@@ -486,7 +501,35 @@
 
   <!-- ============ OWNER VIEW (ผู้รับผิดชอบ Product) ============ -->
   <div id="view-owner" style="display:none;">
-    <div class="desktop-hint">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — ใช้ PIN แยกต่างหากจาก Sup Product/Manager</div>
+    <div class="desktop-hint">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — เข้าถึงได้เฉพาะผู้ดูแลระบบ (Editor)</div>
+
+    <div class="panel-block" id="access-requests-panel" style="display:none;">
+      <h2>คำขอสิทธิ์เข้าถึงที่รอการอนุมัติ <span class="badge-count" id="access-request-count">0</span></h2>
+      <p class="panel-sub">เฉพาะ Super Admin (Visanu) เท่านั้นที่อนุมัติ/ปฏิเสธคำขอได้</p>
+      <div id="access-requests-list"></div>
+    </div>
+
+    <div class="panel-block">
+      <h2>จัดการรายชื่อผู้มีสิทธิ์เข้าถึงระบบ</h2>
+      <p class="panel-sub">อีเมล Google ในรายชื่อนี้เท่านั้นที่เข้า<strong>อ่าน</strong>ข้อมูลในระบบได้ (คนที่ไม่อยู่ในรายชื่อจะเห็นแค่หน้า "ขอสิทธิ์เข้าถึง") — ผู้ดูแลแก้ไขข้อมูล (Editor) ด้านล่างนี้ นับเป็นผู้มีสิทธิ์เข้าถึงอัตโนมัติอยู่แล้ว ไม่ต้องเพิ่มซ้ำ <strong>การบังคับใช้จริงอยู่ที่ Firestore Security Rules ไม่ใช่หน้าเว็บนี้</strong></p>
+      <p class="panel-sub" id="approved-user-perm-note" style="color:var(--amber);"></p>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="email" id="new-approved-email-input" placeholder="อีเมล Google เช่น somchai@gmail.com" style="flex:1;min-width:220px;">
+        <button class="btn btn-primary btn-sm" id="add-approved-email-btn">+ เพิ่มสิทธิ์เข้าถึง</button>
+      </div>
+      <div id="approved-user-list"></div>
+    </div>
+
+    <div class="panel-block">
+      <h2>จัดการสิทธิ์แก้ไขข้อมูล (Editor)</h2>
+      <p class="panel-sub">อีเมล Google ในรายชื่อนี้ + ผู้ดูแลสูงสุด (Super Admin) เท่านั้นที่แก้ไข/ลบข้อมูล Error, เอกสาร, ผู้ดูแล Product ได้จริง — Engineer ทั่วไปอ่านได้อย่างเดียว <strong>การบังคับใช้จริงอยู่ที่ Firestore Security Rules ไม่ใช่หน้าเว็บนี้</strong> ต้องตั้งค่า Rules ให้ตรงกันด้วยถึงจะมีผลจริง</p>
+      <p class="panel-sub" id="admin-email-perm-note" style="color:var(--amber);"></p>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <input type="email" id="new-admin-email-input" placeholder="อีเมล Google เช่น somchai@gmail.com" style="flex:1;min-width:220px;">
+        <button class="btn btn-primary btn-sm" id="add-admin-email-btn">+ เพิ่มสิทธิ์</button>
+      </div>
+      <div id="admin-email-list"></div>
+    </div>
 
     <div class="panel-block">
       <h2>จัดการรายชื่อ Sup Product</h2>
@@ -546,6 +589,11 @@
   <div id="view-backup" style="display:none;">
     <div class="desktop-hint">💾 สำรองข้อมูลทั้งระบบ — เน้น Troubleshooting เป็นหลัก</div>
     <div class="panel-block">
+      <h2>สถานะ Backup อัตโนมัติล่าสุด</h2>
+      <p class="panel-sub">ระบบสำรองข้อมูลอัตโนมัติทุกวันตี 1 — ตรวจสอบว่าครั้งล่าสุดสำเร็จหรือไม่</p>
+      <div id="auto-backup-status" style="font-size:13px;">กำลังตรวจสอบ...</div>
+    </div>
+    <div class="panel-block">
       <h2>สำรองข้อมูล (Backup)</h2>
       <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว — เน้น Error Code, อาการเสีย, วิธีการ, อุปกรณ์ที่ใช้, อะไหล่ที่ใช้, เวลาที่ใช้ ส่วนข้อมูลอื่น (เอกสาร) จะแสดงเป็นลิงก์อ้างอิงเท่านั้น</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -562,6 +610,7 @@
       <div id="usage-result" style="margin-top:14px;"></div>
     </div>
   </div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.2 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -591,11 +640,20 @@
 <!-- Google Sign-in mock overlay -->
 <div class="gsi-overlay" id="gsi-overlay">
   <div class="gsi-card">
-    <div class="gsi-logo">TS</div>
+    <img src="firmer-logo.png" alt="Firmer" class="gsi-logo-img">
     <h2>เข้าสู่ระบบเพื่อใช้งานระบบ</h2>
     <p>ต้อง Sign in ด้วยบัญชี Google ก่อนเข้าใช้งาน — ไม่ว่าจะเป็น Engineer, Sup Product หรือ Manager<br>ชื่อบัญชีของคุณจะ<b>แสดงคู่กับ feedback ที่คุณให้</b>เท่านั้น (ไม่กระทบสิทธิ์การใช้งาน)</p>
     <div id="g_id_signin_container" style="display:flex;justify-content:center;min-height:44px;"></div>
     <div class="gsi-note" id="gsi-config-warning" style="display:none;color:var(--red);">⚠ ยังไม่ได้ตั้งค่า FIREBASE_CONFIG ในไฟล์นี้ — ดูคู่มือ FIRESTORE-SETUP-GUIDE.md</div>
+  </div>
+</div>
+
+<!-- หน้าจอรอการอนุมัติสิทธิ์เข้าถึง — โชว์แทนแอปจริงถ้ายัง login แต่ยังไม่ได้รับอนุมัติ -->
+<div class="gsi-overlay" id="access-request-overlay">
+  <div class="gsi-card">
+    <img src="firmer-logo.png" alt="Firmer" class="gsi-logo-img">
+    <h2>ยังไม่มีสิทธิ์เข้าถึงระบบ</h2>
+    <div id="access-request-body"></div>
   </div>
 </div>
 
@@ -613,18 +671,8 @@
       <div class="field-wrap full"><label>เวลาโดยประมาณ</label><input type="text" id="down-modal-time" placeholder="เช่น 30 นาที"></div>
     </div>
     <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label><div class="img-upload-row" id="down-modal-imgrow"><label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label></div></div>
+    <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label><div style="display:flex;flex-wrap:wrap;gap:8px;" id="down-modal-vidrow"><label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" id="down-modal-upload-vid"></label></div></div>
     <div class="modal-actions" style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="down-modal-submit">ส่งข้อเสนอ</button><button class="btn btn-ghost btn-sm" id="down-modal-cancel">ปิด (กดผิด/ยกเลิก)</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay pin-modal" id="pin-modal">
-  <div class="modal">
-    <div class="lock-icon">🔒</div>
-    <h3 id="pin-modal-title">ต้องใส่ PIN เพื่อเข้าหน้านี้</h3>
-    <p id="pin-modal-desc">หน้า Sup Product / Manager มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง</p>
-    <input type="password" id="pin-input" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off" data-lpignore="true" data-1p-ignore>
-    <div class="pin-error" id="pin-error">PIN ไม่ถูกต้อง ลองใหม่อีกครั้ง</div>
-    <div class="modal-actions" style="justify-content:center;margin-top:14px;"><button class="btn btn-primary btn-sm" id="pin-submit">ยืนยัน</button><button class="btn btn-ghost btn-sm" id="pin-cancel">ยกเลิก</button></div>
   </div>
 </div>
 
@@ -798,9 +846,14 @@ let editingErrorId = null;
 let editingSolutions = [];
 let downModalErrorId = null;
 let downModalImages = [];
+let downModalVideos = [];
 
 let myGoogleId = null;
 let myUserName = null;
+let myUserEmail = null;
+const SUPER_ADMIN_EMAIL = 'engfirmer@gmail.com'; // ผู้ดูแลสูงสุดตายตัว — แก้ไขได้เสมอแม้รายชื่ออื่นจะถูกลบผิดพลาด (บังคับใช้จริงที่ Firestore Rules ไม่ใช่ตรงนี้)
+let adminEmails = []; // รายชื่ออีเมลที่แก้ไขข้อมูลได้ (โหลดจาก Firestore)
+let approvedUsers = []; // รายชื่ออีเมลที่มีสิทธิ์เข้าถึง (อ่าน) ระบบได้ (โหลดจาก Firestore)
 let myVotes = {};
 
 let editingOwnerCat = null;   // category currently showing inline owner editor
@@ -883,6 +936,12 @@ async function loadData(){
   renderAll();
 }
 async function fsSaveSupProducts(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS }); }finally{ hideLoadingOverlay(); } }
+async function fsSaveAdminEmails(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','adminEmails'), { emails: adminEmails }); }finally{ hideLoadingOverlay(); } }
+async function fsSaveApprovedUsers(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','approvedUsers'), { emails: approvedUsers }); }finally{ hideLoadingOverlay(); } }
+async function fsSubmitAccessRequest(){ showLoadingOverlay('กำลังส่งคำขอ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.addDoc(sdk.collection(db,'accessRequests'), { uid:myGoogleId, email:myUserEmail, name:myUserName, status:'pending', requestedAt:Date.now() }); }finally{ hideLoadingOverlay(); } }
+async function fsGetMyAccessRequest(){ await initFirebase(); const sdk=window._firebaseSdk; const q = sdk.query(sdk.collection(db,'accessRequests'), sdk.where('uid','==',myGoogleId)); const snap = await sdk.getDocs(q); if(snap.empty) return null; let latest=null; snap.forEach(d=>{ const v={id:d.id, ...d.data()}; if(!latest || v.requestedAt>latest.requestedAt) latest=v; }); return latest; }
+async function fsGetPendingAccessRequests(){ await initFirebase(); const sdk=window._firebaseSdk; const q = sdk.query(sdk.collection(db,'accessRequests'), sdk.where('status','==','pending')); const snap = await sdk.getDocs(q); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>a.requestedAt-b.requestedAt); }
+async function fsUpdateAccessRequest(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'accessRequests',id), fields); }finally{ hideLoadingOverlay(); } }
 function ensureDataShape(){
   if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
   if(!DATA.pendingErrors) DATA.pendingErrors = [];
@@ -986,11 +1045,11 @@ function compressImage(file){
     reader.onload = e=>{
       const img = new Image();
       img.onload = ()=>{
-        const maxW=480; const scale=Math.min(1, maxW/img.width);
+        const maxW=1600; const scale=Math.min(1, maxW/img.width); // เดิม 480px — ตอนนี้เก็บที่ Drive แล้วไม่ต้องบีบแรงเหมือนตอนฝังใน Firestore
         const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas.height=img.height*scale;
         const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg',0.55);
-        canvas.toBlob(blob=>{ resolve({ pending:true, dataUrl, blob }); }, 'image/jpeg', 0.55);
+        const dataUrl = canvas.toDataURL('image/jpeg',0.88);
+        canvas.toBlob(blob=>{ resolve({ pending:true, dataUrl, blob }); }, 'image/jpeg', 0.88);
       };
       img.onerror = reject; img.src = e.target.result;
     };
@@ -1039,6 +1098,22 @@ async function proactivelyRequestDriveAccess(){
   catch(e){ _driveAccessRequested = false; /* ถ้าพลาด/ถูกปฏิเสธ ค่อยขอใหม่ตอนใช้งานจริงทีหลัง */ }
 }
 function sanitizeFolderName(name){ return String(name).replace(/['"\\\/]/g,'-').trim().slice(0,120) || 'ไม่มีชื่อ'; }
+// แปลงลิงก์ Google Drive ทุกรูปแบบให้เป็นแบบ "เปิดดูตัวอย่างในตัว" เสมอ (กันปัญหาบางลิงก์กดแล้วดาวน์โหลดแทนที่จะเปิดดู)
+function normalizeDriveLink(url){
+  if(!url) return url;
+  const trimmed = url.trim();
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,     // .../file/d/FILE_ID/...
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,      // .../open?id=FILE_ID
+    /drive\.google\.com\/uc\?.*[?&]id=([a-zA-Z0-9_-]+)/,  // .../uc?export=download&id=FILE_ID (ลิงก์ดาวน์โหลดตรง)
+    /[?&]id=([a-zA-Z0-9_-]+)/,                             // เผื่อรูปแบบอื่นที่มี id= อยู่ใน query string
+  ];
+  for(const re of patterns){
+    const m = trimmed.match(re);
+    if(m && m[1]) return `https://drive.google.com/file/d/${m[1]}/view`;
+  }
+  return trimmed; // ไม่ใช่ลิงก์ Drive หรือจับรูปแบบไม่ได้ — ปล่อยผ่านตามเดิม ไม่ยุ่ง
+}
 async function driveFindOrCreateFolder(name, parentId){
   const token = await ensureDriveAccess();
   const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
@@ -1083,6 +1158,53 @@ async function deleteDriveFolderForError(err){
   }catch(e){
     console.error('ลบโฟลเดอร์ Drive ของ Error ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e);
   }finally{ hideLoadingOverlay(); }
+}
+// สร้าง/หาโฟลเดอร์สำหรับเอกสาร (ไม่ผูกกับ Error เหมือนรูปภาพ แค่ ผู้ดูแล > ประเภท > รุ่น > ประเภทเอกสาร)
+async function ensureDocumentFolderPath(category, model, docTypeFolderName){
+  const owner = ownerOf(category, model);
+  const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+  const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
+  const f2 = await driveFindOrCreateFolder(category, f1);
+  const f3 = await driveFindOrCreateFolder(model, f2);
+  const f4 = await driveFindOrCreateFolder(docTypeFolderName, f3);
+  return f4;
+}
+// อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
+async function driveUploadLargeFile(file, filename, parentId, onProgress){
+  const token = await ensureDriveAccess();
+  const initRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': file.type || 'application/octet-stream',
+    },
+    body: JSON.stringify({ name: filename, parents: [parentId] }),
+  });
+  if(!initRes.ok) throw new Error('เริ่มอัปโหลดไม่สำเร็จ ('+initRes.status+')');
+  const uploadUrl = initRes.headers.get('Location');
+  if(!uploadUrl) throw new Error('ไม่ได้รับลิงก์อัปโหลดจาก Google');
+
+  const fileId = await new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+    xhr.upload.onprogress = (e)=>{ if(e.lengthComputable && onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload = ()=>{
+      if(xhr.status>=200 && xhr.status<300){
+        try{ resolve(JSON.parse(xhr.responseText).id); }catch(e){ reject(new Error('อ่านผลอัปโหลดไม่สำเร็จ')); }
+      } else { reject(new Error('อัปโหลดไม่สำเร็จ ('+xhr.status+')')); }
+    };
+    xhr.onerror = ()=> reject(new Error('อัปโหลดล้มเหลว (เครือข่ายขัดข้อง) — ลองใหม่อีกครั้ง'));
+    xhr.send(file);
+  });
+
+  // ตั้งสิทธิ์ให้ทุกคนดูไฟล์ได้ (จำเป็นเพื่อให้ Engineer ทุกคนเปิดดูได้โดยไม่ต้อง login Drive เพิ่ม)
+  await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ role:'reader', type:'anyone' })
+  });
+  return `https://drive.google.com/file/d/${fileId}/view`;
 }
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
@@ -1133,6 +1255,35 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     }
     return resolved;
   }finally{ hideLoadingOverlay(); }
+}
+// อัปโหลดวิดีโอที่ยัง pending (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) — ใช้ resumable upload รองรับไฟล์วิดีโอขนาดใหญ่
+async function resolveVideosForUpload(videos, category, model, errorCode, symptom, solutionIndex){
+  if(!videos || videos.length===0) return [];
+  const needsUpload = videos.some(v=>typeof v!=='string');
+  if(!needsUpload) return [...videos];
+  showLoadingOverlay('กำลังอัปโหลดวิดีโอ...');
+  try{
+    const folderId = await ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex);
+    const resolved = [];
+    for(const v of videos){
+      if(typeof v==='string'){ resolved.push(v); continue; }
+      const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ showLoadingOverlay(`กำลังอัปโหลดวิดีโอ... ${pct}%`); });
+      resolved.push(url);
+    }
+    return resolved;
+  }finally{ hideLoadingOverlay(); }
+}
+// สร้าง HTML สำหรับแสดง/เล่นวิดีโอ — ทั้งตอน preview ในเครื่อง (ยังไม่อัปโหลด) และตอนอัปโหลดขึ้น Drive แล้ว (เล่นได้จริงผ่าน iframe ของ Drive)
+function videoEmbedHtml(v, opts){
+  opts = opts || {};
+  const w = opts.width || '100%'; const h = opts.height || '220';
+  if(typeof v==='string'){
+    const m = v.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    const fileId = m ? m[1] : null;
+    if(!fileId) return '';
+    return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
+  }
+  return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${v.localUrl}"></video>`;
 }
 async function handleGisCredential(response){
   try{
@@ -1186,52 +1337,79 @@ async function resolveAuthAndStart(){
   const sdk = window._firebaseSdk;
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
-      myGoogleId = user.uid; myUserName = user.displayName || user.email;
+      myGoogleId = user.uid; myUserName = user.displayName || user.email; myUserEmail = (user.email||'').toLowerCase();
       showSignedInPill();
       proactivelyRequestDriveAccess();
       if(!window._appStarted){
         window._appStarted = true;
-        loadData().then(()=>{ $('gsi-overlay').classList.remove('show'); updateNotifBadge(); if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; } });
+        checkAccessAndLoad();
       } else {
         $('gsi-overlay').classList.remove('show');
-        updateNotifBadge();
+        if(isApproved()) updateNotifBadge();
       }
     } else {
-      myGoogleId = null; myUserName = null;
+      myGoogleId = null; myUserName = null; myUserEmail = null;
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
+      $('access-request-overlay').classList.remove('show');
       initGisWithRetry(15, 300);
       setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
     }
   });
 }
 
+// เช็คสิทธิ์เข้าถึงก่อนโหลดข้อมูลเต็มรูปแบบ — กันไม่ให้ผู้ใช้ที่ยังไม่ได้รับอนุมัติเจอ permission denied ตอนอ่านข้อมูลจริง
+async function checkAccessAndLoad(){
+  setStatus(true, 'กำลังตรวจสอบสิทธิ์เข้าถึง...');
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const [adminDoc, approvedDoc] = await Promise.all([
+      sdk.getDoc(sdk.doc(db,'meta','adminEmails')),
+      sdk.getDoc(sdk.doc(db,'meta','approvedUsers')),
+    ]);
+    if(adminDoc.exists() && Array.isArray(adminDoc.data().emails)){
+      adminEmails = adminDoc.data().emails;
+    } else {
+      adminEmails = ['v.sombatpattanakul@gmail.com', 'wanchai.p125@gmail.com'];
+      try{ await sdk.setDoc(sdk.doc(db,'meta','adminEmails'), { emails: adminEmails }); }
+      catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อ Editor เริ่มต้นไม่ได้ (ต้องให้ Super Admin เปิดแอปก่อนครั้งแรก):', bootstrapErr); }
+    }
+    if(approvedDoc.exists() && Array.isArray(approvedDoc.data().emails)){
+      approvedUsers = approvedDoc.data().emails;
+    } else {
+      approvedUsers = [];
+      try{ await sdk.setDoc(sdk.doc(db,'meta','approvedUsers'), { emails: approvedUsers }); }
+      catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อผู้มีสิทธิ์เข้าถึงเริ่มต้นไม่ได้:', bootstrapErr); }
+    }
+  }catch(e){
+    setStatus(false, '⚠ ตรวจสอบสิทธิ์ไม่สำเร็จ: '+e.message);
+    return;
+  }
+
+  if(!isApproved()){
+    $('gsi-overlay').classList.remove('show');
+    setStatus(false, '');
+    await renderAccessRequestScreen();
+    return;
+  }
+
+  await loadData();
+  $('gsi-overlay').classList.remove('show');
+  $('access-request-overlay').classList.remove('show');
+  updateNotifBadge();
+  if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; }
+}
+
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
-const TEAM_PIN = '1234';   // ⚠️ เปลี่ยนก่อนใช้งานจริง — Sup Product / Manager
-const OWNER_PIN = '5678';  // ⚠️ เปลี่ยนก่อนใช้งานจริง — ผู้รับผิดชอบ Product (เข้มงวดกว่า)
-let pinUnlockedTeam = false;
-let pinUnlockedOwner = false;
-let pendingModeAfterPin = null;
 function requestModeSwitch(mode){
   if(mode==='eng'){ switchMode(mode); return; }
-  if(mode==='owner'){ if(pinUnlockedOwner){ switchMode(mode); return; } openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้า "จัดการ Product" กระทบข้อมูลทั้งระบบ — ใช้ PIN แยกต่างหาก ไม่ใช่ PIN เดียวกับ Sup Product/Manager'); return; }
-  if(pinUnlockedTeam){ switchMode(mode); return; }
-  openPinModal(mode, 'ต้องใส่ PIN เพื่อเข้าหน้านี้', 'หน้านี้มีข้อมูลการจัดการระบบ — ใส่ PIN ของทีมเพื่อเข้าถึง');
+  if(!isEditor()){
+    showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้ — เฉพาะผู้ดูแลระบบ (Editor) เท่านั้น');
+    return;
+  }
+  switchMode(mode);
 }
-function openPinModal(mode, title, desc){
-  pendingModeAfterPin = mode; $('pin-modal-title').textContent = title; $('pin-modal-desc').textContent = desc;
-  $('pin-input').value=''; $('pin-error').classList.remove('show'); $('pin-modal').classList.add('show'); setTimeout(()=>$('pin-input').focus(),50);
-}
-$('pin-submit').addEventListener('click', ()=>{
-  const val = $('pin-input').value;
-  const correct = pendingModeAfterPin==='owner' ? (val===OWNER_PIN) : (val===TEAM_PIN);
-  if(correct){
-    if(pendingModeAfterPin==='owner') pinUnlockedOwner = true; else pinUnlockedTeam = true;
-    $('pin-modal').classList.remove('show'); if(pendingModeAfterPin) switchMode(pendingModeAfterPin);
-  } else { $('pin-error').classList.add('show'); $('pin-input').value=''; $('pin-input').focus(); }
-});
-$('pin-input').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pin-submit').click(); });
-$('pin-cancel').addEventListener('click', ()=>{ $('pin-modal').classList.remove('show'); pendingModeAfterPin=null; });
 
 function switchMode(mode){
   if(!DATA){ window._pendingModeSwitch = mode; showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...'); return; }
@@ -1250,6 +1428,7 @@ function switchMode(mode){
   if(mode==='sup') renderSupView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') renderMgrView();
+  if(mode==='backup') checkAutomatedBackupStatus();
 }
 $('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
 $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
@@ -1415,6 +1594,7 @@ function renderSolutionCard(err, s, idx){
     <div class="solution-num">วิธี ${idx+1}</div>
     <div class="solution-desc">${escapeHtml(s.desc)}</div>
     ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${imgSrcOf(img)}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
+    ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
     <div class="meta-grid">
       <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(s.tools||'-')}</div></div>
       <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(s.parts||'-')}</div></div>
@@ -1433,7 +1613,7 @@ function bindFeedbackButtons(root){
   root.querySelectorAll('[data-errpropose]').forEach(btn=>{
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
-      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); $('down-modal').classList.add('show'); }); });
+      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); $('down-modal').classList.add('show'); }); });
   });
 }
 async function submitUp(solId){
@@ -1467,16 +1647,25 @@ function renderDownModalImages(){
   $('down-modal-upload').addEventListener('change', async ()=>{ for(const file of $('down-modal-upload').files){ try{ const c=await compressImage(file); downModalImages.push(c); }catch(e){} } renderDownModalImages(); });
   wrap.querySelectorAll('[data-dm-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalImages.splice(parseInt(btn.getAttribute('data-dm-rmimg')),1); renderDownModalImages(); }));
 }
+function renderDownModalVideos(){
+  const wrap = $('down-modal-vidrow');
+  wrap.innerHTML = downModalVideos.map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-dm-rmvid="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" id="down-modal-upload-vid"></label>`;
+  $('down-modal-upload-vid').addEventListener('change', ()=>{ for(const file of $('down-modal-upload-vid').files){ downModalVideos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalVideos(); });
+  wrap.querySelectorAll('[data-dm-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalVideos.splice(parseInt(btn.getAttribute('data-dm-rmvid')),1); renderDownModalVideos(); }));
+}
 $('down-modal-submit').addEventListener('click', async ()=>{
   const desc = $('down-modal-desc').value.trim();
   if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
   const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
-  let uploadedImages = [];
+  let uploadedImages = []; let uploadedVideos = [];
   try{
-    if(parentErr){ uploadedImages = await resolveImagesForUpload(downModalImages, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length); }
-  }catch(e){ showToast('⚠ อัปโหลดรูปไม่สำเร็จ: '+e.message); return; }
-  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:uploadedImages, status:'pending', createdAt:Date.now(), submitterName: myUserName };
+    if(parentErr){
+      uploadedImages = await resolveImagesForUpload(downModalImages, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
+      uploadedVideos = await resolveVideosForUpload(downModalVideos, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
+    }
+  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); return; }
+  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
   let newId;
   try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
@@ -1783,7 +1972,7 @@ $('eng-cancel-error-btn').addEventListener('click', ()=>{ clearPendingDriveDelet
 
 function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
-  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}];
   renderEngSolutionsEditor();
 }
 function renderEngSolutionsEditor(){
@@ -1804,13 +1993,21 @@ function renderEngSolutionsEditor(){
           <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
         </div>
       </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        </div>
+      </div>
     </div>`).join('');
   wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.images[parseInt(idx)]); sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.videos[parseInt(idx)]); sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
 }
-$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
+$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
 
 $('eng-save-error-btn').addEventListener('click', async ()=>{
   const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
@@ -1822,8 +2019,9 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   try{
     for(let i=0;i<validSolutions.length;i++){
       validSolutions[i].images = await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i);
+      validSolutions[i].videos = await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i);
     }
-  }catch(e){ showToast('⚠ อัปโหลดรูปไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); return; }
   const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
   let newId;
   try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
@@ -1903,18 +2101,27 @@ function renderSolutionsEditor(){
           <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
         </div>
       </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        </div>
+      </div>
     </div>`).join('');
   wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.images[parseInt(idx)]); sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.videos[parseInt(idx)]); sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }));
 }
-$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
+$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
 
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
 async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
+  fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
   await fsSaveError(errorId, fields);
   const keepIds = new Set(validSolutions.map(s=>s.id));
   if(originalSolutionIds){
@@ -1923,15 +2130,16 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
     const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
-    s.images = uploadedImages; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
-    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
+    const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
+    s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
+    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
   }
 }
 
 function resetErrorForm(){
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
   $('f-code').value=''; $('f-symptom').value='';
-  editingSolutions = [{id:uid('sol'), desc:'', images:[], tools:'', parts:'', time:''}];
+  editingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}];
   renderSolutionsEditor();
   $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
@@ -1990,7 +2198,7 @@ async function startEditError(id){
   $('save-error-btn').textContent = 'บันทึกการแก้ไข';
   $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
-  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
   renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
 }
 async function deleteError(id){
@@ -2035,7 +2243,7 @@ function startReviewPendingError(id){
   $('save-error-btn').textContent = 'อนุมัติ Error นี้';
   $('f-category').value = pe.category; updateModelSelect(); $('f-model').value = pe.model;
   $('f-code').value = pe.errorCode||''; $('f-symptom').value = pe.symptom;
-  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])]}));
+  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
   renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
 }
 async function quickApprovePendingError(id){
@@ -2135,6 +2343,7 @@ function renderProposals(){
           <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" id="prop-edit-time-${p.id}" value="${escapeHtml(p.time||'')}"></div>
         </div>
         ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
+        ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin:10px 0;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button class="btn btn-primary btn-sm" data-savepropedit="${p.id}">บันทึกการแก้ไข</button>
           <button class="btn btn-ghost btn-sm" data-cancelpropedit="1">ยกเลิก</button>
@@ -2145,6 +2354,7 @@ function renderProposals(){
       ${metaLine}
       <div class="proposal-text">${escapeHtml(p.desc)}</div>
       ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
+      ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin-bottom:10px;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
         <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(p.tools||'-')}</div></div>
         <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
@@ -2180,11 +2390,15 @@ async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
   await loadSolutionsFor(err.id);
-  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
+  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
   try{
-    await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
     const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
-    if(newHasImages !== err.hasImages){ await fsSaveError(err.id, {hasImages:newHasImages}); err.hasImages = newHasImages; }
+    const newHasVideos = err.solutions.concat([newSol]).some(s=>(s.videos||[]).length>0);
+    const errUpdateFields = {};
+    if(newHasImages !== err.hasImages) errUpdateFields.hasImages = newHasImages;
+    if(newHasVideos !== err.hasVideos) errUpdateFields.hasVideos = newHasVideos;
+    if(Object.keys(errUpdateFields).length>0){ await fsSaveError(err.id, errUpdateFields); Object.assign(err, errUpdateFields); }
     await fsUpdateProposal(pid, {status:'accepted'});
   }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
   err.solutions.push(newSol);
@@ -2276,17 +2490,32 @@ $('doclink-list-add-btn').addEventListener('click', ()=>{
   openDocLinkModal(category, model, docType, videoSubtype, null);
 });
 
-/* ===================== Modal ใส่/แก้ไข ลิงก์เอกสาร 1 รายการ ===================== */
+/* ===================== Modal ใส่/แก้ไข เอกสาร 1 รายการ (วางลิงก์ หรือ อัปโหลดไฟล์) ===================== */
 let doclinkContext = null;
+let doclinkMode = 'link'; // 'link' | 'upload'
+function setDoclinkMode(mode){
+  doclinkMode = mode;
+  $('doclink-mode-link-btn').className = mode==='link' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  $('doclink-mode-upload-btn').className = mode==='upload' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  $('doclink-url-field').style.display = mode==='link' ? 'block' : 'none';
+  $('doclink-upload-field').style.display = mode==='upload' ? 'block' : 'none';
+}
+$('doclink-mode-link-btn').addEventListener('click', ()=>setDoclinkMode('link'));
+$('doclink-mode-upload-btn').addEventListener('click', ()=>setDoclinkMode('upload'));
+
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
   doclinkContext = { category, model, docType, videoSubtype, existingId: existingId || null };
   const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-modal-title').textContent = existing ? 'แก้ไขลิงก์เอกสาร' : 'เพิ่มลิงก์เอกสาร';
+  $('doclink-modal-title').textContent = existing ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสาร';
   $('doclink-modal-sub').textContent = `${category} · ${model} · ${typeLabel}`;
   $('doclink-title-input').value = existing ? existing.title : '';
   $('doclink-url-input').value = existing ? (existing.url||'') : '';
+  $('doclink-file-input').value = '';
+  $('doclink-upload-progress-wrap').style.display = 'none';
+  $('doclink-upload-progress-bar').style.width = '0%';
   $('doclink-delete-btn').style.display = existing ? 'inline-block' : 'none';
+  setDoclinkMode('link');
   $('doclink-modal').classList.add('show');
   setTimeout(()=>$('doclink-title-input').focus(), 50);
 }
@@ -2296,9 +2525,31 @@ $('doclink-cancel-btn').addEventListener('click', closeDocLinkModal);
 $('doclink-save-btn').addEventListener('click', async ()=>{
   if(!doclinkContext) return;
   const title = $('doclink-title-input').value.trim();
-  const url = $('doclink-url-input').value.trim();
-  if(!title || !url){ showToast('⚠ กรุณากรอกชื่อเอกสารและลิงก์ให้ครบ'); return; }
+  if(!title){ showToast('⚠ กรุณากรอกชื่อเอกสาร'); return; }
   const { category, model, docType, videoSubtype, existingId } = doclinkContext;
+
+  let url;
+  if(doclinkMode==='link'){
+    const rawUrl = $('doclink-url-input').value.trim();
+    if(!rawUrl){ showToast('⚠ กรุณากรอกลิงก์'); return; }
+    url = normalizeDriveLink(rawUrl);
+  } else {
+    const file = $('doclink-file-input').files[0];
+    if(!file){ showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลด'); return; }
+    try{
+      $('doclink-upload-progress-wrap').style.display = 'block';
+      const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+      showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
+      let folderId;
+      try{ folderId = await ensureDocumentFolderPath(category, model, typeLabel); }
+      finally{ hideLoadingOverlay(); }
+      url = await driveUploadLargeFile(file, file.name, folderId, (pct)=>{
+        $('doclink-upload-progress-bar').style.width = pct+'%';
+        $('doclink-upload-progress-text').textContent = `กำลังอัปโหลด... ${pct}%`;
+      });
+    }catch(e){ showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); return; }
+  }
+
   try{
     if(existingId){
       await fsUpdateDocument(existingId, { title, url });
@@ -2314,7 +2565,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
   renderAll();
-  showToast('✓ บันทึกลิงก์เอกสารแล้ว');
+  showToast('✓ บันทึกเอกสารแล้ว');
 });
 $('doclink-delete-btn').addEventListener('click', async ()=>{
   if(!doclinkContext || !doclinkContext.existingId) return;
@@ -2343,6 +2594,148 @@ function isNameInUse(name){
   const modelOwners = Object.values(DATA.owners.modelOverrides||{});
   return catOwners.includes(name) || modelOwners.includes(name);
 }
+function isSuperAdmin(){ return myUserEmail === SUPER_ADMIN_EMAIL; }
+// เช็คสิทธิ์ฝั่งหน้าเว็บ (UX เท่านั้น) — การบังคับใช้จริงอยู่ที่ Firestore Rules เสมอ ต่อให้ข้ามจุดนี้ก็เขียนข้อมูลจริงไม่ได้อยู่ดี
+function isEditor(){ return isSuperAdmin() || (myUserEmail && adminEmails.includes(myUserEmail)); }
+function isApproved(){ return isEditor() || (myUserEmail && approvedUsers.includes(myUserEmail)); }
+/* ===================== หน้าจอขอสิทธิ์เข้าถึง (สำหรับคนที่ยังไม่ได้รับอนุมัติ) ===================== */
+async function renderAccessRequestScreen(){
+  $('access-request-overlay').classList.add('show');
+  const body = $('access-request-body');
+  body.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังตรวจสอบสถานะ...</p>`;
+  let existing;
+  try{ existing = await fsGetMyAccessRequest(); }
+  catch(e){ body.innerHTML = `<p style="color:var(--red);font-size:12.5px;">⚠ ตรวจสอบสถานะไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; return; }
+
+  if(!existing || existing.status==='rejected'){
+    body.innerHTML = `
+      ${existing && existing.status==='rejected' ? `<p style="font-size:12.5px;color:var(--red);margin-bottom:10px;">คำขอครั้งก่อนของคุณถูกปฏิเสธ — ส่งคำขอใหม่ได้อีกครั้ง</p>` : ''}
+      <p style="font-size:12.5px;">บัญชี <strong>${escapeHtml(myUserEmail)}</strong> ยังไม่มีสิทธิ์เข้าถึงระบบนี้ กดปุ่มด้านล่างเพื่อส่งคำขอให้ผู้ดูแลระบบอนุมัติ</p>
+      <button class="btn btn-primary btn-sm" id="req-access-btn" style="margin-top:14px;">ขอสิทธิ์เข้าถึง</button>
+    `;
+    $('req-access-btn').addEventListener('click', async ()=>{
+      try{ await fsSubmitAccessRequest(); }catch(e){ showToast('⚠ ส่งคำขอไม่สำเร็จ: '+e.message); return; }
+      showToast('✓ ส่งคำขอแล้ว รอผู้ดูแลระบบอนุมัติ');
+      renderAccessRequestScreen();
+    });
+  } else if(existing.status==='pending'){
+    body.innerHTML = `<p style="font-size:12.5px;">คำขอของคุณ (<strong>${escapeHtml(myUserEmail)}</strong>) ถูกส่งเมื่อ ${new Date(existing.requestedAt).toLocaleString('th-TH')} แล้ว<br>กำลังรอผู้ดูแลระบบอนุมัติ — เปิดหน้านี้ใหม่อีกครั้งภายหลังเพื่อเช็คผล</p>`;
+  }
+}
+
+/* ===================== แผงอนุมัติคำขอสิทธิ์เข้าถึง (Super Admin เท่านั้น) ===================== */
+async function renderAccessRequestsPanel(){
+  const panel = $('access-requests-panel');
+  if(!isSuperAdmin()){ panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  let pending;
+  try{ pending = await fsGetPendingAccessRequests(); }
+  catch(e){ $('access-requests-list').innerHTML = `<p style="color:var(--red);font-size:12.5px;">⚠ โหลดคำขอไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; return; }
+  $('access-request-count').textContent = pending.length;
+  const list = $('access-requests-list');
+  if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มีคำขอรอการอนุมัติ</p>`; return; }
+  list.innerHTML = pending.map(r=>`<div class="admin-row">
+    <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(r.name||r.email)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(r.email)} · ${new Date(r.requestedAt).toLocaleString('th-TH')}</span></div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-primary btn-sm" data-approvereq="${r.id}" data-email="${escapeHtml(r.email)}">✓ อนุมัติ</button>
+      <button class="btn btn-ghost btn-sm" data-rejectreq="${r.id}">✕ ปฏิเสธ</button>
+    </div>
+  </div>`).join('');
+  list.querySelectorAll('[data-approvereq]').forEach(b=>b.addEventListener('click', async ()=>{
+    const id = b.getAttribute('data-approvereq'); const email = b.getAttribute('data-email');
+    if(!approvedUsers.includes(email)){
+      const prev = [...approvedUsers]; approvedUsers = [...approvedUsers, email];
+      try{ await fsSaveApprovedUsers(); }catch(e){ approvedUsers = prev; showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
+    }
+    try{ await fsUpdateAccessRequest(id, {status:'approved', reviewedAt:Date.now()}); }catch(e){ showToast('⚠ อัปเดตคำขอไม่สำเร็จ: '+e.message); }
+    renderAccessRequestsPanel(); renderApprovedUserList();
+    showToast('✓ อนุมัติแล้ว');
+  }));
+  list.querySelectorAll('[data-rejectreq]').forEach(b=>b.addEventListener('click', async ()=>{
+    const id = b.getAttribute('data-rejectreq');
+    try{ await fsUpdateAccessRequest(id, {status:'rejected', reviewedAt:Date.now()}); }catch(e){ showToast('⚠ ปฏิเสธไม่สำเร็จ: '+e.message); return; }
+    renderAccessRequestsPanel();
+    showToast('ปฏิเสธคำขอแล้ว');
+  }));
+}
+
+/* ===================== จัดการรายชื่อผู้มีสิทธิ์เข้าถึง (approvedUsers) ===================== */
+function renderApprovedUserList(){
+  const noteEl = $('approved-user-perm-note');
+  const canEdit = isSuperAdmin();
+  noteEl.textContent = canEdit ? '' : `⚠ แก้ไขรายชื่อนี้ได้เฉพาะ Super Admin (${SUPER_ADMIN_EMAIL}) เท่านั้น`;
+  $('new-approved-email-input').disabled = !canEdit;
+  $('add-approved-email-btn').disabled = !canEdit;
+  $('add-approved-email-btn').style.opacity = canEdit ? '1' : '.4';
+
+  const list = $('approved-user-list');
+  if(approvedUsers.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายชื่อเพิ่มเติม (ผู้ดูแลแก้ไขข้อมูล/Editor ด้านล่างเข้าถึงได้อยู่แล้วโดยอัตโนมัติ)</p>`; return; }
+  list.innerHTML = approvedUsers.map(email=>`<div class="admin-row">
+    <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(email)}</span></div>
+    <button class="icon-btn danger" data-delapproved="${escapeHtml(email)}" ${canEdit?'':'disabled style="opacity:.35;cursor:not-allowed;"'}>ลบ</button>
+  </div>`).join('');
+  list.querySelectorAll('[data-delapproved]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!isSuperAdmin()) return;
+    const email = b.getAttribute('data-delapproved');
+    if(!confirm(`ยืนยันการลบสิทธิ์เข้าถึงของ ${email}?`)) return;
+    const prev = [...approvedUsers];
+    approvedUsers = approvedUsers.filter(e=>e!==email);
+    try{ await fsSaveApprovedUsers(); }catch(e){ approvedUsers = prev; showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+    renderApprovedUserList();
+    showToast('ลบสิทธิ์แล้ว');
+  }));
+}
+$('add-approved-email-btn').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่เพิ่มได้'); return; }
+  const raw = $('new-approved-email-input').value.trim().toLowerCase();
+  if(!raw || !raw.includes('@')){ showToast('⚠ กรุณากรอกอีเมลให้ถูกต้อง'); return; }
+  if(approvedUsers.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
+  const prev = [...approvedUsers];
+  approvedUsers = [...approvedUsers, raw];
+  try{ await fsSaveApprovedUsers(); }catch(e){ approvedUsers = prev; showToast('⚠ เพิ่มไม่สำเร็จ: '+e.message); return; }
+  $('new-approved-email-input').value = '';
+  renderApprovedUserList();
+  showToast('✓ เพิ่มสิทธิ์เข้าถึงแล้ว');
+});
+function renderAdminEmailList(){
+  const noteEl = $('admin-email-perm-note');
+  const canEdit = isSuperAdmin();
+  noteEl.textContent = canEdit
+    ? '✓ คุณคือ Super Admin — แก้ไขรายชื่อนี้ได้'
+    : `⚠ แก้ไขรายชื่อนี้ได้เฉพาะ Super Admin (${SUPER_ADMIN_EMAIL}) เท่านั้น — บัญชีที่ login อยู่ตอนนี้ (${escapeHtml(myUserEmail||'-')}) ดูรายชื่อได้อย่างเดียว`;
+  $('new-admin-email-input').disabled = !canEdit;
+  $('add-admin-email-btn').disabled = !canEdit;
+  $('add-admin-email-btn').style.opacity = canEdit ? '1' : '.4';
+
+  const list = $('admin-email-list');
+  const allEntries = [ { email: SUPER_ADMIN_EMAIL, isSuper:true }, ...adminEmails.map(e=>({email:e, isSuper:false})) ];
+  list.innerHTML = allEntries.map(({email,isSuper})=>`<div class="admin-row">
+    <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(email)}</span>${isSuper?'<span class="mono" style="font-size:10.5px;color:var(--amber);">Super Admin (แก้ไม่ได้)</span>':''}</div>
+    ${!isSuper ? `<button class="icon-btn danger" data-deladminemail="${escapeHtml(email)}" ${canEdit?'':'disabled style="opacity:.35;cursor:not-allowed;"'}>ลบ</button>` : ''}
+  </div>`).join('');
+  list.querySelectorAll('[data-deladminemail]').forEach(b=>b.addEventListener('click', async ()=>{
+    if(!isSuperAdmin()) return;
+    const email = b.getAttribute('data-deladminemail');
+    if(!confirm(`ยืนยันการลบสิทธิ์แก้ไขของ ${email}?`)) return;
+    const prev = [...adminEmails];
+    adminEmails = adminEmails.filter(e=>e!==email);
+    try{ await fsSaveAdminEmails(); }catch(e){ adminEmails = prev; showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+    renderAdminEmailList();
+    showToast('ลบสิทธิ์แล้ว');
+  }));
+}
+$('add-admin-email-btn').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่เพิ่มได้'); return; }
+  const raw = $('new-admin-email-input').value.trim().toLowerCase();
+  if(!raw || !raw.includes('@')){ showToast('⚠ กรุณากรอกอีเมลให้ถูกต้อง'); return; }
+  if(raw===SUPER_ADMIN_EMAIL || adminEmails.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
+  const prev = [...adminEmails];
+  adminEmails = [...adminEmails, raw];
+  try{ await fsSaveAdminEmails(); }catch(e){ adminEmails = prev; showToast('⚠ เพิ่มไม่สำเร็จ: '+e.message); return; }
+  $('new-admin-email-input').value = '';
+  renderAdminEmailList();
+  showToast('✓ เพิ่มสิทธิ์แล้ว');
+});
 function renderSupNameList(){
   const list = $('sup-name-list');
   list.innerHTML = SUP_PRODUCTS.map(name=>{
@@ -2415,6 +2808,9 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
   showToast(`✓ เพิ่ม "${name}" แล้ว`);
 });
 function renderOwnerView(){
+  renderAccessRequestsPanel();
+  renderApprovedUserList();
+  renderAdminEmailList();
   renderSupNameList();
   populateOwnerFormSelectors();
   renderOwnerSummary();
@@ -2871,6 +3267,31 @@ async function cleanupOldBackupsInDrive(folderId, daysToKeep){
   const data = await res.json();
   for(const f of (data.files||[])){
     try{ await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); }catch(e){}
+  }
+}
+/* ===================== เช็คสถานะ Backup อัตโนมัติล่าสุด (อ่านไฟล์ที่สคริปต์อัตโนมัติเขียนไว้) ===================== */
+async function checkAutomatedBackupStatus(){
+  const el = $('auto-backup-status');
+  el.innerHTML = 'กำลังตรวจสอบ...';
+  try{
+    const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
+    const token = await ensureDriveAccess();
+    const q = encodeURIComponent(`'${backupsFolderId}' in parents and name='backup-status.json' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!res.ok) throw new Error('ค้นหาไฟล์สถานะไม่สำเร็จ ('+res.status+')');
+    const data = await res.json();
+    if(!data.files || data.files.length===0){ el.innerHTML = `<p style="color:var(--text-faint);">ยังไม่เคยมีการ backup อัตโนมัติ (หรือยังไม่ได้ตั้งค่าระบบอัตโนมัติ)</p>`; return; }
+    const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${data.files[0].id}?alt=media`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!contentRes.ok) throw new Error('อ่านไฟล์สถานะไม่สำเร็จ ('+contentRes.status+')');
+    const status = await contentRes.json();
+    const dt = new Date(status.timestamp).toLocaleString('th-TH', { dateStyle:'long', timeStyle:'short' });
+    if(status.success){
+      el.innerHTML = `<span style="color:var(--green);">✅ สำเร็จ</span> — เมื่อ ${dt}`;
+    } else {
+      el.innerHTML = `<span style="color:var(--red);">❌ ไม่สำเร็จ</span> — เมื่อ ${dt}<br><span style="font-size:11.5px;color:var(--text-faint);">สาเหตุ: ${escapeHtml(status.error||'ไม่ทราบสาเหตุ')}</span>`;
+    }
+  }catch(e){
+    el.innerHTML = `<p style="color:var(--red);">⚠ ตรวจสอบสถานะไม่สำเร็จ: ${escapeHtml(e.message)}</p>`;
   }
 }
 async function handleBackupToDriveNow(statusElId){
