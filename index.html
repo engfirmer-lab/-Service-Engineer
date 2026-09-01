@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.5
-  อัปเดตล่าสุด: 1 กันยายน 2569 06:12 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 2.6
+  อัปเดตล่าสุด: 1 กันยายน 2569 06:25 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.5</title>
+<title>Firmer Service Center — v2.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.6</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -345,8 +345,8 @@
         </div>
         <div id="eng-add-error-form" style="display:none;margin-top:14px;">
           <div class="form-grid two">
-            <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="eng-f-category"></select></div>
-            <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="eng-f-model"></select></div>
+            <div class="field-wrap"><label>Product *</label><select id="eng-f-category"></select></div>
+            <div class="field-wrap"><label>Model *</label><select id="eng-f-model"></select></div>
             <div class="field-wrap"><label>Error Code</label><input type="text" id="eng-f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
             <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
           </div>
@@ -360,10 +360,10 @@
         </div>
       </div>
 
-      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, รุ่นเครื่อง, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
+      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
       <div class="filter-row">
-        <select id="filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
-        <select id="filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+        <select id="filter-category"><option value="all">Product: ทั้งหมด</option></select>
+        <select id="filter-model"><option value="all">Model: ทั้งหมด</option></select>
       </div>
       <div class="result-count" id="result-count"></div>
       <div id="results-list"></div>
@@ -375,10 +375,10 @@
         <button data-vsub="alignment">📐 Alignment</button>
         <button data-vsub="replace">🔄 Replace</button>
       </div>
-      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ รุ่นเครื่อง..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
+      <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ Model..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
       <div class="filter-row">
-        <select id="doc-filter-category"><option value="all">ประเภทเครื่องจักร: ทั้งหมด</option></select>
-        <select id="doc-filter-model"><option value="all">รุ่นเครื่อง: ทั้งหมด</option></select>
+        <select id="doc-filter-category"><option value="all">Product: ทั้งหมด</option></select>
+        <select id="doc-filter-model"><option value="all">Model: ทั้งหมด</option></select>
       </div>
       <div class="result-count" id="doc-result-count"></div>
       <div id="doc-results-list"></div>
@@ -408,8 +408,8 @@
         </div>
         <div id="add-error-form" style="display:none;margin-top:16px;">
           <div class="form-grid two">
-            <div class="field-wrap"><label>ประเภทเครื่องจักร *</label><select id="f-category"></select></div>
-            <div class="field-wrap"><label>รุ่นเครื่อง *</label><select id="f-model"></select></div>
+            <div class="field-wrap"><label>Product *</label><select id="f-category"></select></div>
+            <div class="field-wrap"><label>Model *</label><select id="f-model"></select></div>
             <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
             <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
           </div>
@@ -435,14 +435,14 @@
       <div class="panel-block">
         <h2>ค้นหา / จัดการ Error ของฉัน</h2>
         <p class="panel-sub">ค้นหาและกรองเหมือนหน้า Engineer เพื่อหา Error ที่ต้องการแก้ไข</p>
-        <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, รุ่นเครื่อง, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
+        <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
         <div class="filter-row" style="flex-direction:column;align-items:stretch;gap:8px;">
           <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">ประเภทเครื่องจักร: ทั้งหมด ▾</button>
+            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">Product: ทั้งหมด ▾</button>
             <div id="sup-filter-cat-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
           </div>
           <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">รุ่นเครื่อง: ทั้งหมด ▾</button>
+            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">Model: ทั้งหมด ▾</button>
             <div id="sup-filter-model-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
           </div>
         </div>
@@ -527,12 +527,6 @@
       </div>
       <div id="perm-user-list"></div>
     </div>
-
-    <div class="panel-block" id="activity-log-panel" style="display:none;">
-      <h2>ประวัติการใช้งาน (Log)</h2>
-      <p class="panel-sub">บันทึกเฉพาะการกระทำสำคัญ (ลบ, ดาวน์โหลด Backup, แก้ไขสิทธิ์) ไม่บันทึกทุกคลิก — เก็บไว้ตลอดไป เห็นได้เฉพาะ Super Admin</p>
-      <div id="activity-log-list" style="max-height:400px;overflow-y:auto;"></div>
-    </div>
   </div>
 
   <!-- ============ OWNER VIEW (ผู้รับผิดชอบ Product) ============ -->
@@ -541,7 +535,7 @@
 
     <div class="panel-block">
       <h2>จัดการรายชื่อ Sup Product</h2>
-      <p class="panel-sub">เพิ่ม/ลบคนในทีม Sup Product — ลบไม่ได้ถ้ายังมีประเภท/รุ่นเครื่องผูกอยู่ (ต้องย้ายงานออกก่อน)</p>
+      <p class="panel-sub">เพิ่ม/ลบคนในทีม Sup Product — ลบไม่ได้ถ้ายังมี Product/Model ผูกอยู่ (ต้องย้ายงานออกก่อน)</p>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
         <input type="text" id="new-sup-name-input" placeholder="ชื่อ Sup Product คนใหม่" style="flex:1;min-width:200px;">
         <button class="btn btn-primary btn-sm" id="add-sup-name-btn">+ เพิ่มชื่อ</button>
@@ -556,16 +550,16 @@
     </div>
 
     <div class="panel-block">
-      <h2>เพิ่มประเภท/รุ่นเครื่อง</h2>
+      <h2>เพิ่ม Product/Model</h2>
       <p class="panel-sub">เลือกประเภทที่มีอยู่แล้ว หรือพิมพ์ชื่อประเภทใหม่ได้ในช่องเดียวกัน — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
       <div class="form-grid">
         <div class="field-wrap">
-          <label>ประเภทเครื่องจักร *</label>
+          <label>Product *</label>
           <select id="new-model-cat"><option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option></select>
           <input type="text" id="new-cat-input" placeholder="พิมพ์ชื่อประเภทใหม่" style="margin-top:6px;display:none;">
         </div>
         <div class="field-wrap">
-          <label>รุ่นเครื่อง (เว้นว่างได้ถ้าจะเพิ่มแค่ประเภท)</label>
+          <label>Model (เว้นว่างได้ถ้าจะเพิ่มแค่ Product)</label>
           <input type="text" id="new-model-input" placeholder="ชื่อรุ่น">
         </div>
         <div class="field-wrap">
@@ -612,6 +606,12 @@
         <span class="mono" id="backup-status" style="font-size:12px;color:var(--text-faint);"></span>
       </div>
     </div>
+    <div class="panel-block" id="export-log-panel" style="display:none;">
+      <h2>Export ประวัติการใช้งาน (Log)</h2>
+      <p class="panel-sub">บันทึกเฉพาะการกระทำสำคัญ (ลบ, ดาวน์โหลด Backup, แก้ไขสิทธิ์) ไม่บันทึกทุกคลิก — เก็บไว้ตลอดไป เห็นเฉพาะ Super Admin เท่านั้น</p>
+      <button class="btn btn-primary btn-sm" id="export-log-excel-btn">⬇ Export Log เป็น Excel</button>
+      <span class="mono" id="export-log-status" style="font-size:12px;color:var(--text-faint);margin-left:8px;"></span>
+    </div>
     <div class="panel-block">
       <h2>การใช้งานพื้นที่</h2>
       <h3 style="font-size:13px;margin-bottom:6px;">Firestore (ฐานข้อมูลหลัก)</h3>
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.5 (อัปเดตล่าสุด 1 กันยายน 2569 06:12 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.6 (อัปเดตล่าสุด 1 กันยายน 2569 06:25 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -942,7 +942,7 @@ async function loadData(){
     }
     if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
     renderSupIdentityOptions();
-    setStatus(false, `พร้อมใช้งาน · เลือกประเภทเครื่องจักรเพื่อดู Error`);
+    setStatus(false, `พร้อมใช้งาน · เลือก Product เพื่อดู Error`);
   }catch(e){
     setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
     showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
@@ -1477,7 +1477,7 @@ function switchMode(mode){
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') loadAllErrorsThenRenderMgr();
-  if(mode==='backup'){ /* ทุกอย่างในหน้านี้ตอนนี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
+  if(mode==='backup'){ updateExportLogPanelVisibility(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -1544,12 +1544,12 @@ document.querySelectorAll('#eng-video-subtabs button').forEach(btn=>{
 /* ===================== TROUBLESHOOTING (Engineer) ===================== */
 function renderCategoryFilter(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  $('filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('filter-category').innerHTML = `<option value="all">Product: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('filter-category').value = filterCategory; updateModelFilter();
 }
 function updateModelFilter(){
   const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]).slice().sort(naturalSort);
-  $('filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('filter-model').innerHTML = `<option value="all">Model: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
 }
 $('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); renderTechResults(); });
@@ -1973,12 +1973,12 @@ function bindLightboxTriggers(root){
 /* ===================== DOCUMENTS (Engineer) ===================== */
 function renderDocFilterEng(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  $('doc-filter-category').innerHTML = `<option value="all">ประเภทเครื่องจักร: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('doc-filter-category').innerHTML = `<option value="all">Product: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('doc-filter-category').value = docFilterCategory; updateDocModelFilterEng();
 }
 function updateDocModelFilterEng(){
   const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]).slice().sort(naturalSort);
-  $('doc-filter-model').innerHTML = `<option value="all">รุ่นเครื่อง: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('doc-filter-model').innerHTML = `<option value="all">Model: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
 }
 $('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
@@ -2367,8 +2367,8 @@ function updateSupModelFilterOptions(){
   }));
 }
 function updateSupFilterLabels(){
-  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'ประเภทเครื่องจักร: ทั้งหมด' : `ประเภทเครื่องจักร: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
-  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'รุ่นเครื่อง: ทั้งหมด' : `รุ่นเครื่อง: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
+  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'Product: ทั้งหมด' : `Product: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
+  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'Model: ทั้งหมด' : `Model: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
 }
 $('sup-filter-cat-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-cat-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-model-panel').style.display='none'; });
 $('sup-filter-model-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-model-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-cat-panel').style.display='none'; });
@@ -2497,7 +2497,7 @@ function renderSupDocMatrix(){
   Object.entries(DATA.categories).forEach(([cat,ms])=>{ ms.forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) models.push({category:cat, model:m}); }); });
   const table = $('sup-doc-matrix');
   if(models.length===0){ table.innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">ยังไม่มีรุ่นที่คุณดูแล</td></tr></tbody>`; return; }
-  let html = `<thead><tr><th>ประเภท</th><th>รุ่นเครื่อง</th>${MATRIX_COLUMNS.map(c=>`<th>${c.icon} ${c.label}</th>`).join('')}</tr></thead><tbody>`;
+  let html = `<thead><tr><th>Product</th><th>Model</th>${MATRIX_COLUMNS.map(c=>`<th>${c.icon} ${c.label}</th>`).join('')}</tr></thead><tbody>`;
   models.forEach(({category,model})=>{
     html += `<tr><td class="mono" style="color:var(--text-faint);">${escapeHtml(category)}</td><td><strong>${escapeHtml(model)}</strong></td>`;
     MATRIX_COLUMNS.forEach(col=>{
@@ -2708,22 +2708,6 @@ async function renderAccessRequestScreen(){
 function renderAccessView(){
   renderAccessRequestsPanel();
   renderUnifiedPermissionList();
-  renderActivityLogPanel();
-}
-async function renderActivityLogPanel(){
-  const panel = $('activity-log-panel');
-  if(!isSuperAdmin()){ panel.style.display = 'none'; return; }
-  panel.style.display = 'block';
-  const list = $('activity-log-list');
-  list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังโหลด...</p>`;
-  let logs;
-  try{ logs = await fsGetAllLogs(); }
-  catch(e){ list.innerHTML = `<p style="color:var(--red);font-size:12.5px;">⚠ โหลด Log ไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; return; }
-  if(logs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีประวัติการใช้งาน</p>`; return; }
-  list.innerHTML = logs.slice(0,100).map(l=>`<div class="admin-row">
-    <div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(l.action)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(l.name||l.email||'-')} · ${new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'})}</span></div>
-  </div>`).join('');
-  if(logs.length>100){ list.innerHTML += `<p style="font-size:11px;color:var(--text-faint);margin-top:8px;">แสดง 100 รายการล่าสุดจากทั้งหมด ${logs.length.toLocaleString()} รายการ</p>`; }
 }
 async function renderAccessRequestsPanel(){
   const panel = $('access-requests-panel');
@@ -3318,7 +3302,7 @@ function buildBackupWorkbook(data){
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
 
-  const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) : '' }));
+  const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), Product:d.category, Model:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) : '' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
 
   const propRows = data.proposals.map(p=>({ id:p.id, ErrorId:p.errorId, คำอธิบาย:p.desc, สถานะ:p.status, เสนอโดย:p.submitterName||'', วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}):'' }));
@@ -3349,6 +3333,25 @@ async function handleBackupExcel(statusElId){
     showToast('✓ ดาวน์โหลด Excel แล้ว');
   }catch(e){ showToast('⚠ ดึงข้อมูลไม่สำเร็จ: '+e.message); }
 }
+
+/* ===================== Export ประวัติการใช้งาน (Log) เป็น Excel — Super Admin เท่านั้น ===================== */
+function updateExportLogPanelVisibility(){
+  $('export-log-panel').style.display = isSuperAdmin() ? 'block' : 'none';
+}
+async function exportLogToExcel(){
+  const statusEl = $('export-log-status');
+  statusEl.textContent = 'กำลังดึงข้อมูล...';
+  try{
+    const logs = await fsGetAllLogs();
+    const rows = logs.map(l=>({ การกระทำ:l.action, ผู้ใช้:l.name||'', อีเมล:l.email||'', เวลา: new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'ActivityLog');
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    XLSX.writeFile(wb, `trbl-activity-log-${stamp}.xlsx`);
+    statusEl.textContent = `✓ Export แล้ว (${logs.length.toLocaleString()} รายการ)`;
+  }catch(e){ statusEl.textContent = ''; showToast('⚠ Export ไม่สำเร็จ: '+e.message); }
+}
+$('export-log-excel-btn').addEventListener('click', exportLogToExcel);
 
 /* ===================== Backup ทันทีเข้า Google Drive (ไม่ต้องรอรอบอัตโนมัติทุกวัน) ===================== */
 async function driveUploadFile(blob, filename, mimeType, parentId){
