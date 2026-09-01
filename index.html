@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.1
-  อัปเดตล่าสุด: 31 สิงหาคม 2569
+  เวอร์ชันปัจจุบัน: 2.2
+  อัปเดตล่าสุด: 1 กันยายน 2569 05:45 น.
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.1</title>
+<title>Firmer Service Center — v2.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.1</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.2</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.1 (อัปเดตล่าสุด 1 กันยายน 2569)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.2 (อัปเดตล่าสุด 1 กันยายน 2569 05:45 น.)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1596,7 +1596,7 @@ function renderErrorCard(e, adminMode){
   <div class="card" data-id="${e.id}">
     <div class="card-head">
       <div style="min-width:0;">
-        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span>${e.hasImages?`<span title="มีรูปภาพประกอบ" style="font-size:12px;">🖼️</span>`:''}</div>
+        <div class="card-badges">${e.errorCode?`<span class="badge-code mono">${escapeHtml(e.errorCode)}</span>`:''}<span class="badge-equip">${escapeHtml(e.model)}</span><span class="badge-cat">${escapeHtml(e.category)}</span>${e.hasImages?`<span title="มีรูปภาพประกอบ" style="font-size:12px;">🖼️</span>`:''}${e.hasVideos?`<span title="มีวิดีโอประกอบ" style="font-size:12px;">🎬</span>`:''}</div>
         <div class="card-symptom">${escapeHtml(e.symptom)}</div>
         <div class="card-views"><span>👁 เปิดดู ${e.viewCount||0} ครั้ง</span><span>👍 ${totalUps}</span>${pending>0?`<span class="pending-warn">👎 แจ้งว่าแก้ไม่ได้ ${pending} ครั้ง (รอตรวจสอบ)</span>`:''}</div>
       </div>
