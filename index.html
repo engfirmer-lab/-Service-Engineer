@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.6
-  อัปเดตล่าสุด: 1 กันยายน 2569 06:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 2.8
+  อัปเดตล่าสุด: 1 กันยายน 2569 06:48 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.6</title>
+<title>Firmer Service Center — v2.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.6</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.8</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -362,8 +362,8 @@
 
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
       <div class="filter-row">
-        <select id="filter-category"><option value="all">Product: ทั้งหมด</option></select>
-        <select id="filter-model"><option value="all">Model: ทั้งหมด</option></select>
+        <select id="filter-category"><option value="all">Product: All</option></select>
+        <select id="filter-model"><option value="all">Model: All</option></select>
       </div>
       <div class="result-count" id="result-count"></div>
       <div id="results-list"></div>
@@ -377,8 +377,8 @@
       </div>
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ Model..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
       <div class="filter-row">
-        <select id="doc-filter-category"><option value="all">Product: ทั้งหมด</option></select>
-        <select id="doc-filter-model"><option value="all">Model: ทั้งหมด</option></select>
+        <select id="doc-filter-category"><option value="all">Product: All</option></select>
+        <select id="doc-filter-model"><option value="all">Model: All</option></select>
       </div>
       <div class="result-count" id="doc-result-count"></div>
       <div id="doc-results-list"></div>
@@ -438,11 +438,11 @@
         <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
         <div class="filter-row" style="flex-direction:column;align-items:stretch;gap:8px;">
           <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">Product: ทั้งหมด ▾</button>
+            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">Product: All ▾</button>
             <div id="sup-filter-cat-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
           </div>
           <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">Model: ทั้งหมด ▾</button>
+            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">Model: All ▾</button>
             <div id="sup-filter-model-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
           </div>
         </div>
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.6 (อัปเดตล่าสุด 1 กันยายน 2569 06:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.8 (อัปเดตล่าสุด 1 กันยายน 2569 06:48 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -748,7 +748,10 @@ async function initFirebase(){
   const app = sdk.initializeApp(FIREBASE_CONFIG);
   auth = sdk.getAuth(app);
   try{ await sdk.setPersistence(auth, sdk.browserLocalPersistence); } // บังคับให้จำ session ไว้ในเครื่อง (ไม่หลุดตอน Refresh) แทนที่จะพึ่งค่าเริ่มต้นของ SDK เฉยๆ
-  catch(e){ console.warn('ตั้งค่าการจำ session ไม่สำเร็จ (อาจเป็นเพราะเบราว์เซอร์ตั้งค่าบล็อกไว้ เช่น โหมดส่วนตัว):', e); }
+  catch(e){
+    console.warn('ตั้งค่าการจำ session ไม่สำเร็จ (อาจเป็นเพราะเบราว์เซอร์ตั้งค่าบล็อกไว้ เช่น โหมดส่วนตัว):', e);
+    setTimeout(()=>showToast('⚠ DEBUG: ตั้งค่าจำ session ไม่สำเร็จ — '+e.code+': '+e.message), 500);
+  }
   db = sdk.getFirestore(app);
   googleProvider = new sdk.GoogleAuthProvider();
   _fbReady = true;
@@ -1384,6 +1387,7 @@ async function resolveAuthAndStart(){
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
       myGoogleId = user.uid; myUserName = user.displayName || user.email; myUserEmail = (user.email||'').toLowerCase();
+      try{ localStorage.setItem('trbl_has_signed_in_before', '1'); }catch(e){} // เผื่อไว้ตรวจสอบภายหลังว่าเคย login สำเร็จมาก่อนจริง
       showSignedInPill();
       proactivelyRequestDriveAccess();
       if(!window._appStarted){
@@ -1398,6 +1402,10 @@ async function resolveAuthAndStart(){
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
       $('access-request-overlay').classList.remove('show');
+      // DEBUG: ถ้าเคย login สำเร็จมาก่อน (มี flag ใน localStorage) แต่ตอนนี้ Firebase บอกว่าไม่มีใคร login อยู่ — แปลว่า session ไม่ถูกจำไว้จริง โชว์ข้อความนี้ให้เห็นบนจอเพื่อยืนยันปัญหา
+      let hadPreviousSession = false;
+      try{ hadPreviousSession = localStorage.getItem('trbl_has_signed_in_before') === '1'; }catch(e){}
+      if(hadPreviousSession){ setTimeout(()=>showToast('⚠ DEBUG: เคย login สำเร็จมาก่อน แต่ session หายไป (localStorage ยังอยู่ แต่ Firebase Auth จำไม่ได้)'), 800); }
       initGisWithRetry(15, 300);
       setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
     }
@@ -1544,12 +1552,12 @@ document.querySelectorAll('#eng-video-subtabs button').forEach(btn=>{
 /* ===================== TROUBLESHOOTING (Engineer) ===================== */
 function renderCategoryFilter(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  $('filter-category').innerHTML = `<option value="all">Product: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('filter-category').innerHTML = `<option value="all">Product: All</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('filter-category').value = filterCategory; updateModelFilter();
 }
 function updateModelFilter(){
   const models = filterCategory==='all' ? [] : (DATA.categories[filterCategory]||[]).slice().sort(naturalSort);
-  $('filter-model').innerHTML = `<option value="all">Model: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('filter-model').innerHTML = `<option value="all">Model: All</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
 }
 $('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); renderTechResults(); });
@@ -1973,12 +1981,12 @@ function bindLightboxTriggers(root){
 /* ===================== DOCUMENTS (Engineer) ===================== */
 function renderDocFilterEng(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  $('doc-filter-category').innerHTML = `<option value="all">Product: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('doc-filter-category').innerHTML = `<option value="all">Product: All</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   $('doc-filter-category').value = docFilterCategory; updateDocModelFilterEng();
 }
 function updateDocModelFilterEng(){
   const models = docFilterCategory==='all' ? [] : (DATA.categories[docFilterCategory]||[]).slice().sort(naturalSort);
-  $('doc-filter-model').innerHTML = `<option value="all">Model: ทั้งหมด</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  $('doc-filter-model').innerHTML = `<option value="all">Model: All</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
 }
 $('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
@@ -2367,8 +2375,8 @@ function updateSupModelFilterOptions(){
   }));
 }
 function updateSupFilterLabels(){
-  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'Product: ทั้งหมด' : `Product: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
-  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'Model: ทั้งหมด' : `Model: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
+  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'Product: All' : `Product: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
+  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'Model: All' : `Model: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
 }
 $('sup-filter-cat-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-cat-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-model-panel').style.display='none'; });
 $('sup-filter-model-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-model-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-cat-panel').style.display='none'; });
