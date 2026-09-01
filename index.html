@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.0
+  เวอร์ชันปัจจุบัน: 2.1
   อัปเดตล่าสุด: 31 สิงหาคม 2569
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.0</title>
+<title>Firmer Service Center — v2.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.0</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.1</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.0 (อัปเดตล่าสุด 1 กันยายน 2569)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.1 (อัปเดตล่าสุด 1 กันยายน 2569)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1154,20 +1154,24 @@ function normalizeDriveLink(url){
   }
   return trimmed; // ไม่ใช่ลิงก์ Drive หรือจับรูปแบบไม่ได้ — ปล่อยผ่านตามเดิม ไม่ยุ่ง
 }
+const _driveFolderCache = new Map(); // แคชโฟลเดอร์ที่เคยหา/สร้างไปแล้วในเซสชันนี้ — กันการค้นหาซ้ำๆ ทุกครั้งที่บันทึก (สาเหตุหลักที่บันทึกวิดีโอ/รูปช้า)
 async function driveFindOrCreateFolder(name, parentId){
+  const cacheKey = parentId+'::'+name;
+  if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
   const token = await ensureDriveAccess();
   const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
   const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
   const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
   if(!res.ok) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
   const data = await res.json();
-  if(data.files && data.files.length>0) return data.files[0].id;
+  if(data.files && data.files.length>0){ _driveFolderCache.set(cacheKey, data.files[0].id); return data.files[0].id; }
   const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
   });
   if(!createRes.ok) throw new Error('สร้างโฟลเดอร์ Drive ไม่สำเร็จ ('+createRes.status+')');
   const created = await createRes.json();
+  _driveFolderCache.set(cacheKey, created.id);
   return created.id;
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
