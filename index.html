@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 1.8
+  เวอร์ชันปัจจุบัน: 2.0
   อัปเดตล่าสุด: 31 สิงหาคม 2569
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v1.8</title>
+<title>Firmer Service Center — v2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 1.8</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -615,8 +615,9 @@
     <div class="panel-block">
       <h2>การใช้งานพื้นที่</h2>
       <h3 style="font-size:13px;margin-bottom:6px;">Firestore (ฐานข้อมูลหลัก)</h3>
-      <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น</p>
-      <div id="usage-result">กำลังตรวจสอบ...</div>
+      <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น — กดเช็คเองเพื่อประหยัดโควต้า (ใช้เล็กน้อยทุกครั้งที่เช็ค)</p>
+      <button class="btn btn-ghost btn-sm" id="check-firestore-usage-btn">🔍 เช็คการใช้งาน Firestore</button>
+      <div id="usage-result" style="margin-top:10px;"></div>
       <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
       <h3 style="font-size:13px;margin-bottom:6px;">Google Drive (โฟลเดอร์ "Service Center" ทั้งหมด)</h3>
       <p class="panel-sub">✓ ตัวเลขนี้เป็น<strong>ขนาดไฟล์จริง</strong>ของโฟลเดอร์ "Service Center" ทั้งก้อน — รวมทุกไฟล์ข้างในไม่ว่าจะมาจากไหน (รูป/วิดีโอ/เอกสารที่อัปโหลดผ่านแอป, ไฟล์ Backup รายวัน, หรือไฟล์ที่วางไว้เองโดยตรงใน Drive) — ไม่นับเอกสารที่แค่แปะลิงก์ไปที่อื่นภายนอกโฟลเดอร์นี้ (ไม่สามารถทราบขนาดได้ ต้องไปตรวจสอบที่ต้นทางเอง) — กดเช็คเองเพราะต้องไล่ดูทุกโฟลเดอร์ อาจใช้เวลาสักครู่</p>
@@ -624,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 1.8 (อัปเดตล่าสุด 31 สิงหาคม 2569)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.0 (อัปเดตล่าสุด 1 กันยายน 2569)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1470,7 +1471,7 @@ function switchMode(mode){
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') loadAllErrorsThenRenderMgr();
-  if(mode==='backup'){ checkStorageUsage(); }
+  if(mode==='backup'){ /* ทุกอย่างในหน้านี้ตอนนี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -3463,6 +3464,7 @@ async function checkStorageUsage(){
     `;
   }catch(e){ resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ ตรวจสอบไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
 }
+$('check-firestore-usage-btn').addEventListener('click', checkStorageUsage);
 
 /* ===================== ขนาดไฟล์จริงใน Google Drive — กดเช็คเอง (ไม่อัตโนมัติ เพราะช้าและต้องขอสิทธิ์ Drive) ===================== */
 async function getDriveStorageQuota(){
@@ -3599,6 +3601,7 @@ setTimeout(updateModeToggleScrollHint, 200);
 
   document.addEventListener('touchstart', e=>{
     if($('lightbox').classList.contains('show')){ pulling = false; startY = null; return; }
+    if($('error-detail-panel').classList.contains('show')){ pulling = false; startY = null; return; } // แผงนี้เลื่อนในตัวเอง (position:fixed) window.scrollY เลยค้างที่ 0 ตลอด ต้องข้ามการเช็ค pull-to-refresh ไปเลย
     if(window.scrollY <= 0){ startY = e.touches[0].clientY; pulling = true; }
     else { pulling = false; startY = null; }
   }, {passive:true});
