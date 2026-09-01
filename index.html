@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.4
-  อัปเดตล่าสุด: 1 กันยายน 2569 06:05 น.
+  เวอร์ชันปัจจุบัน: 2.5
+  อัปเดตล่าสุด: 1 กันยายน 2569 06:12 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.4</title>
+<title>Firmer Service Center — v2.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.4 (อัปเดตล่าสุด 1 กันยายน 2569 06:05 น.)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.5 (อัปเดตล่าสุด 1 กันยายน 2569 06:12 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1988,7 +1988,7 @@ $('doc-clear-search').addEventListener('click', ()=>{ $('doc-search-input').valu
 
 function docCard(d){
   const typeInfo = DOC_TYPES.find(t=>t.key===d.docType);
-  const dateStr = new Date(d.uploadedAt).toLocaleDateString('th-TH');
+  const dateStr = new Date(d.uploadedAt).toLocaleDateString('th-TH', {timeZone:'Asia/Bangkok'});
   const subtypeTag = d.docType==='video' && d.videoSubtype ? ` · ${videoSubtypeLabel(d.videoSubtype)}` : '';
   return `<div class="doc-card">
     <div class="doc-main"><div class="doc-icon">${typeInfo?typeInfo.icon:'📄'}</div>
@@ -2291,7 +2291,7 @@ function renderPendingErrors(){
   if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มี Error ใหม่รอตรวจสอบ</p>`; return; }
   list.innerHTML = pending.map(p=>`
     <div class="proposal-card" data-peid="${p.id}">
-      <div class="proposal-meta">${escapeHtml(p.category)} · ${escapeHtml(p.model)} ${p.errorCode?'· '+escapeHtml(p.errorCode):''} · ส่งโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>
+      <div class="proposal-meta">${escapeHtml(p.category)} · ${escapeHtml(p.model)} ${p.errorCode?'· '+escapeHtml(p.errorCode):''} · ส่งโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH', {timeZone:'Asia/Bangkok'})}</div>
       <div class="proposal-text"><strong>${escapeHtml(p.symptom)}</strong></div>
       <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">${p.solutions.length} วิธีแก้ไขที่เสนอมา</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -2403,7 +2403,7 @@ function renderProposals(){
   list.innerHTML = pending.map(p=>{
     const err = DATA.errors.find(e=>e.id===p.errorId);
     const errLabel = escapeHtml(err?err.model+' / '+(err.errorCode||err.symptom):'ไม่พบ');
-    const metaLine = `<div class="proposal-meta">จาก Error: ${errLabel} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH')}</div>`;
+    const metaLine = `<div class="proposal-meta">จาก Error: ${errLabel} · เสนอโดย ${escapeHtml(p.submitterName||'ไม่ระบุ')} · ${new Date(p.createdAt).toLocaleDateString('th-TH', {timeZone:'Asia/Bangkok'})}</div>`;
     if(editingProposalId===p.id){
       return `<div class="proposal-card" data-pid="${p.id}">
         ${metaLine}
@@ -2700,7 +2700,7 @@ async function renderAccessRequestScreen(){
       renderAccessRequestScreen();
     });
   } else if(existing.status==='pending'){
-    body.innerHTML = `<p style="font-size:12.5px;">คำขอของคุณ (<strong>${escapeHtml(myUserEmail)}</strong>) ถูกส่งเมื่อ ${new Date(existing.requestedAt).toLocaleString('th-TH')} แล้ว<br>กำลังรอผู้ดูแลระบบอนุมัติ — เปิดหน้านี้ใหม่อีกครั้งภายหลังเพื่อเช็คผล</p>`;
+    body.innerHTML = `<p style="font-size:12.5px;">คำขอของคุณ (<strong>${escapeHtml(myUserEmail)}</strong>) ถูกส่งเมื่อ ${new Date(existing.requestedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'})} แล้ว<br>กำลังรอผู้ดูแลระบบอนุมัติ — เปิดหน้านี้ใหม่อีกครั้งภายหลังเพื่อเช็คผล</p>`;
   }
 }
 
@@ -2721,7 +2721,7 @@ async function renderActivityLogPanel(){
   catch(e){ list.innerHTML = `<p style="color:var(--red);font-size:12.5px;">⚠ โหลด Log ไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; return; }
   if(logs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีประวัติการใช้งาน</p>`; return; }
   list.innerHTML = logs.slice(0,100).map(l=>`<div class="admin-row">
-    <div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(l.action)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(l.name||l.email||'-')} · ${new Date(l.timestamp).toLocaleString('th-TH')}</span></div>
+    <div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(l.action)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(l.name||l.email||'-')} · ${new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'})}</span></div>
   </div>`).join('');
   if(logs.length>100){ list.innerHTML += `<p style="font-size:11px;color:var(--text-faint);margin-top:8px;">แสดง 100 รายการล่าสุดจากทั้งหมด ${logs.length.toLocaleString()} รายการ</p>`; }
 }
@@ -2736,7 +2736,7 @@ async function renderAccessRequestsPanel(){
   const list = $('access-requests-list');
   if(pending.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่มีคำขอรอการอนุมัติ</p>`; return; }
   list.innerHTML = pending.map(r=>`<div class="admin-row">
-    <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(r.name||r.email)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(r.email)} · ${new Date(r.requestedAt).toLocaleString('th-TH')}</span></div>
+    <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(r.name||r.email)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(r.email)} · ${new Date(r.requestedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'})}</span></div>
     <div style="display:flex;gap:6px;">
       <button class="btn btn-primary btn-sm" data-approvereq="${r.id}" data-email="${escapeHtml(r.email)}">✓ อนุมัติ</button>
       <button class="btn btn-ghost btn-sm" data-rejectreq="${r.id}">✕ ปฏิเสธ</button>
@@ -3318,13 +3318,13 @@ function buildBackupWorkbook(data){
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(errorRows), 'Errors');
 
-  const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH') : '' }));
+  const docRows = data.documents.map(d=>({ id:d.id, ประเภทเอกสาร:docTypeLabel(d.docType), ประเภทเครื่องจักร:d.category, รุ่น:d.model, ชื่อเอกสาร:d.title, วิธี:d.method, ลิงก์หรือไฟล์:d.url||d.fileName||'', อัปโหลดเมื่อ: d.uploadedAt ? new Date(d.uploadedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) : '' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docRows), 'Documents');
 
-  const propRows = data.proposals.map(p=>({ id:p.id, ErrorId:p.errorId, คำอธิบาย:p.desc, สถานะ:p.status, เสนอโดย:p.submitterName||'', วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+  const propRows = data.proposals.map(p=>({ id:p.id, ErrorId:p.errorId, คำอธิบาย:p.desc, สถานะ:p.status, เสนอโดย:p.submitterName||'', วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}):'' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(propRows), 'Proposals');
 
-  const pendRows = data.pendingErrors.map(p=>({ id:p.id, ประเภท:p.category, รุ่น:p.model, ErrorCode:p.errorCode||'', อาการ:p.symptom, ส่งโดย:p.submitterName||'', สถานะ:p.status, วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH'):'' }));
+  const pendRows = data.pendingErrors.map(p=>({ id:p.id, ประเภท:p.category, รุ่น:p.model, ErrorCode:p.errorCode||'', อาการ:p.symptom, ส่งโดย:p.submitterName||'', สถานะ:p.status, วันที่:p.createdAt?new Date(p.createdAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}):'' }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(pendRows), 'PendingErrors');
 
   const catRows = [];
@@ -3394,7 +3394,7 @@ async function checkAutomatedBackupStatus(){
     const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${data.files[0].id}?alt=media`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!contentRes.ok) throw new Error('อ่านไฟล์สถานะไม่สำเร็จ ('+contentRes.status+')');
     const status = await contentRes.json();
-    const dt = new Date(status.timestamp).toLocaleString('th-TH', { dateStyle:'long', timeStyle:'short' });
+    const dt = new Date(status.timestamp).toLocaleString('th-TH', { dateStyle:'long', timeStyle:'short', timeZone:'Asia/Bangkok' });
     if(status.success){
       el.innerHTML = `<span style="color:var(--green);">✅ สำเร็จ</span> — เมื่อ ${dt}`;
     } else {
