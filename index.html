@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 3.2
-  อัปเดตล่าสุด: 1 กันยายน 2569 08:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 3.4
+  อัปเดตล่าสุด: 1 กันยายน 2569 08:32 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v3.2</title>
+<title>Firmer Service Center — v3.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.2</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.4</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -668,7 +668,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.2 (อัปเดตล่าสุด 1 กันยายน 2569 08:05 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.4 (อัปเดตล่าสุด 1 กันยายน 2569 08:32 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1822,19 +1822,11 @@ async function updateNotifBadge(){
   if(total>0){ badge.style.display='block'; badge.textContent = total; }
   else{ badge.style.display='none'; }
 }
-async function checkBackupStatusForNotif(){
-  // เช็ค backup อัตโนมัติล่าสุด เฉพาะตอนกดกระดิ่ง (มีการแตะหน้าจอโดยตรงแล้ว ไม่โดนบล็อก popup) — เฉพาะ Editor เท่านั้นที่ต้องรู้เรื่องนี้
-  if(!isEditor()) return;
-  try{
-    const [status, dismissedAt] = await Promise.all([ fetchBackupStatus(), fsGetBackupAlertDismissed() ]);
-    _cachedBackupFailureAlert = status;
-    _cachedBackupAlertDismissedAt = dismissedAt;
-  }catch(e){ /* เช็คไม่ได้ก็แค่ไม่แสดง ไม่ต้องรบกวนผู้ใช้ */ }
-}
 $('notif-bell').addEventListener('click', ()=>{
   if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
   renderNotifList(); $('notif-modal').classList.add('show');
-  checkBackupStatusForNotif().then(()=>{ updateNotifBadge(); renderNotifList(); }); // เช็คหลังเปิด modal แล้ว พอได้ผลค่อย re-render เพิ่มเข้าไป
+  // ไม่เช็คสถานะ Backup อัตโนมัติตรงนี้อีกต่อไป — เพราะต้องขอสิทธิ์ Drive ซึ่งจะเป็นการเด้ง popup ทุกครั้งที่กดกระดิ่งโดยไม่จำเป็น
+  // ถ้าเคยเช็คแล้วจากหน้า Export/Backup มาก่อน (มีแคชอยู่) จะโชว์ในรายการอัตโนมัติ ไม่ต้องเช็คซ้ำที่นี่
 });
 $('notif-modal-close').addEventListener('click', ()=>{ $('notif-modal').classList.remove('show'); });
 function statusBadgeHtml(status){
@@ -1846,6 +1838,9 @@ async function renderNotifList(){
   const list = $('notif-list');
   const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
   const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
+  // แสดงเฉพาะรายการที่ "รอตรวจสอบ" หรือ "จบสถานะแล้วแต่ยังไม่เคยเห็นผล" — พอเคยเห็นผลแล้วจะหายไปจากรายการ ไม่ค้างอยู่ตลอดไป
+  const myErrsVisible = myErrs.filter(p=>p.status==='pending' || !p.notifRead);
+  const myPropsVisible = myProps.filter(p=>p.status==='pending' || !p.notifRead);
   const pendingReviewErr = currentSupIdentity ? (DATA.pendingErrors||[]).filter(p=>p.status==='pending' && ownerOf(p.category,p.model)===currentSupIdentity) : [];
   const pendingReviewProp = currentSupIdentity ? (DATA.proposals||[]).filter(p=>{
     if(p.status!=='pending') return false;
@@ -1855,7 +1850,7 @@ async function renderNotifList(){
 
   let html = '';
 
-  // แจ้งเตือน Backup ล้มเหลว (Editor เท่านั้น) — เช็คแล้วจาก checkBackupStatusForNotif ตอนกดกระดิ่ง
+  // แจ้งเตือน Backup ล้มเหลว (Editor เท่านั้น) — ใช้แคชที่ได้จากตอนกดเช็คสถานะในหน้า Export/Backup มาก่อน ไม่เช็คใหม่ที่นี่ (กัน popup ขอสิทธิ์ Drive โผล่มาแบบไม่คาดคิดตอนกดกระดิ่ง)
   if(isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt){
     const dt = new Date(_cachedBackupFailureAlert.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'});
     html += `<div class="admin-row" style="align-items:flex-start;background:rgba(229,83,75,.08);border-radius:8px;padding:10px;margin-bottom:10px;">
@@ -1893,9 +1888,9 @@ async function renderNotifList(){
     });
     html += `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>`;
   }
-  if(myErrs.length>0){
+  if(myErrsVisible.length>0){
     html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--text-dim);">📤 Error ที่คุณส่งเข้าระบบ</h4>`;
-    html += myErrs.map(p=>`<div class="admin-row" style="flex-direction:column;align-items:flex-start;">
+    html += myErrsVisible.map(p=>`<div class="admin-row" style="flex-direction:column;align-items:flex-start;">
       <div class="admin-row-main" style="width:100%;justify-content:space-between;">
         <span style="font-size:12.5px;">${escapeHtml(p.model)} — ${escapeHtml(p.errorCode||p.symptom)}</span>
         ${statusBadgeHtml(p.status)}
@@ -1903,9 +1898,9 @@ async function renderNotifList(){
       ${p.status==='rejected' && p.rejectionReason ? `<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">เหตุผล: ${escapeHtml(p.rejectionReason)}</div>` : ''}
     </div>`).join('');
   }
-  if(myProps.length>0){
+  if(myPropsVisible.length>0){
     html += `<h4 style="font-size:12px;margin:14px 0 8px;color:var(--text-dim);">💡 ข้อเสนอวิธีแก้ไขที่คุณส่ง</h4>`;
-    html += myProps.map(p=>{
+    html += myPropsVisible.map(p=>{
       const err = DATA.errors.find(e=>e.id===p.errorId);
       return `<div class="admin-row" style="flex-direction:column;align-items:flex-start;">
         <div class="admin-row-main" style="width:100%;justify-content:space-between;">
@@ -3525,6 +3520,9 @@ async function checkAutomatedBackupStatus(){
   el.innerHTML = 'กำลังตรวจสอบ...';
   try{
     const status = await fetchBackupStatus();
+    _cachedBackupFailureAlert = status; // เก็บแคชไว้ให้กระดิ่งแจ้งเตือนใช้ต่อ โดยไม่ต้องขอสิทธิ์ Drive เองอีกรอบ
+    try{ _cachedBackupAlertDismissedAt = await fsGetBackupAlertDismissed(); }catch(e){}
+    updateNotifBadge();
     if(!status){ el.innerHTML = `<p style="color:var(--text-faint);">ยังไม่เคยมีการ backup อัตโนมัติ (หรือยังไม่ได้ตั้งค่าระบบอัตโนมัติ)</p>`; return; }
     const dt = new Date(status.timestamp).toLocaleString('th-TH', { dateStyle:'long', timeStyle:'short', timeZone:'Asia/Bangkok' });
     if(status.success){
