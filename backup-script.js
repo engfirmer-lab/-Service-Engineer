@@ -37,7 +37,7 @@ function docTypeLabel(key){
   return map[key] || key;
 }
 
-async function main(){
+async function main(schedule){
   console.log('เริ่มดึงข้อมูลจาก Firestore...');
 
   const [errorsSnap, solutionsSnap, docsSnap, propSnap, pendSnap, catDoc, supDoc] = await Promise.all([
@@ -155,11 +155,15 @@ async function main(){
 
   console.log(`✓ อัปโหลด Backup วันที่ ${dateStamp} เข้า Service Center/Backups/${dateStamp} เสร็จสมบูรณ์`);
 
-  await cleanupOldBackups(backupsFolderId, BACKUP_RETENTION_DAYS);
+  const retentionDays = schedule.retentionDays ?? 7;
+  if (retentionDays > 0) {
+    await cleanupOldBackups(backupsFolderId, retentionDays);
+  } else {
+    console.log('ตั้งค่าไว้ให้เก็บ Backup ตลอดไป — ข้ามการลบไฟล์เก่า');
+  }
 }
 
 // ----- ลบไฟล์ Backup เก่าที่เก็บไว้เกิน N วัน กันไฟล์สะสมเยอะเกินไป -----
-const BACKUP_RETENTION_DAYS = 7;
 async function cleanupOldBackups(folderId, daysToKeep){
   console.log(`กำลังตรวจสอบไฟล์ Backup เก่าที่เก็บไว้เกิน ${daysToKeep} วัน...`);
   const cutoff = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000).toISOString();
@@ -223,8 +227,76 @@ async function writeStatusFile(success, errorMessage){
   }
 }
 
-main()
-  .then(() => writeStatusFile(true, null))
+// ----- อ่านสถานะ Backup ล่าสุดจาก Drive (ใช้เช็คว่าครบจำนวนวันตามที่ตั้งไว้หรือยัง) -----
+async function readLastBackupStatus(){
+  const searchRes = await drive.files.list({
+    q: `name='Backups' and mimeType='application/vnd.google-apps.folder' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+    fields: 'files(id)',
+  });
+  if (searchRes.data.files.length === 0) return null;
+  const backupsFolderId = searchRes.data.files[0].id;
+  const statusSearch = await drive.files.list({
+    q: `'${backupsFolderId}' in parents and name='backup-status.json' and trashed=false`,
+    fields: 'files(id)',
+  });
+  if (statusSearch.data.files.length === 0) return null;
+  const fileRes = await drive.files.get({ fileId: statusSearch.data.files[0].id, alt: 'media' });
+  return fileRes.data;
+}
+
+// ----- เช็คว่าถึงเวลาต้อง Backup จริงหรือยัง ตามการตั้งค่าที่ Super Admin ตั้งไว้ในแอป (meta/backupSchedule) -----
+// รันมือ (workflow_dispatch) จะข้ามการเช็คนี้เสมอ บังคับ Backup ทันที
+async function resolveScheduleAndShouldRun(){
+  const defaultSchedule = { enabled: true, hour: 1, minute: 0, intervalDays: 1, retentionDays: 7 };
+  let schedule = { ...defaultSchedule };
+  try {
+    const scheduleDoc = await db.doc('meta/backupSchedule').get();
+    if (scheduleDoc.exists) schedule = { ...schedule, ...scheduleDoc.data() };
+  } catch (e) {
+    console.warn('อ่านการตั้งค่าตารางเวลาไม่สำเร็จ ใช้ค่าเริ่มต้นแทน (ทุกวันตี 1, เก็บไว้ 7 วัน):', e.message);
+  }
+
+  if (process.env.TRIGGER_EVENT === 'workflow_dispatch') {
+    console.log('รันด้วยมือ (workflow_dispatch) — ข้ามการเช็คตารางเวลา บังคับ Backup ทันที');
+    return { shouldRun: true, schedule };
+  }
+
+  if (!schedule.enabled) {
+    console.log('ปิดใช้งาน Backup อัตโนมัติไว้ในแอป — ข้ามรอบนี้');
+    return { shouldRun: false, schedule };
+  }
+
+  const nowThai = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+  const currentHour = nowThai.getHours();
+  if (currentHour !== (schedule.hour ?? 1)) {
+    console.log(`ยังไม่ถึงชั่วโมงที่ตั้งไว้ (ตั้งไว้ ${schedule.hour}:00 น. ตอนนี้ ${currentHour}:00 น. เวลาไทย) — ข้ามรอบนี้`);
+    return { shouldRun: false, schedule };
+  }
+
+  const intervalDays = schedule.intervalDays ?? 1;
+  if (intervalDays > 1) {
+    try {
+      const lastStatus = await readLastBackupStatus();
+      if (lastStatus && lastStatus.success) {
+        const daysSince = (Date.now() - lastStatus.timestamp) / (1000 * 60 * 60 * 24);
+        if (daysSince < intervalDays - 0.1) { // เผื่อ margin เล็กน้อยกันพลาดจากความคลาดเคลื่อนของเวลา
+          console.log(`ยังไม่ครบ ${intervalDays} วันตามที่ตั้งไว้ (ผ่านมาแล้ว ${daysSince.toFixed(1)} วัน) — ข้ามรอบนี้`);
+          return { shouldRun: false, schedule };
+        }
+      }
+    } catch (e) {
+      console.warn('เช็คสถานะ backup ล่าสุดไม่สำเร็จ ถือว่าถึงเวลาแล้วเผื่อไว้ก่อน:', e.message);
+    }
+  }
+
+  return { shouldRun: true, schedule };
+}
+
+resolveScheduleAndShouldRun()
+  .then(({ shouldRun, schedule }) => {
+    if (!shouldRun) { console.log('จบการทำงาน (ยังไม่ถึงเวลา Backup)'); process.exit(0); }
+    return main(schedule).then(() => writeStatusFile(true, null));
+  })
   .catch(async err => {
     console.error('เกิดข้อผิดพลาด:', err);
     await writeStatusFile(false, err.message);
