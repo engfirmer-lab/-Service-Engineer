@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.9
-  อัปเดตล่าสุด: 1 กันยายน 2569 07:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 3.0
+  อัปเดตล่าสุด: 1 กันยายน 2569 07:25 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.9</title>
+<title>Firmer Service Center — v3.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.9</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.9 (อัปเดตล่าสุด 1 กันยายน 2569 07:05 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.0 (อัปเดตล่าสุด 1 กันยายน 2569 07:25 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -983,6 +983,8 @@ async function fsWriteLog(action){
   catch(e){ console.warn('บันทึก Log ไม่สำเร็จ (ไม่กระทบการทำงานหลัก):', e); }
 }
 async function fsGetAllLogs(){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.collection(db,'activityLogs')); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
+async function fsGetBackupAlertDismissed(){ await initFirebase(); const sdk=window._firebaseSdk; const d = await sdk.getDoc(sdk.doc(db,'meta','backupAlertDismissed')); return d.exists() ? (d.data().dismissedAt||0) : 0; }
+async function fsSetBackupAlertDismissed(ts){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','backupAlertDismissed'), { dismissedAt: ts }); }
 async function fsUpdateAccessRequest(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'accessRequests',id), fields); }finally{ hideLoadingOverlay(); } }
 function ensureDataShape(){
   if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
@@ -1760,17 +1762,34 @@ function myPendingReviewCount(){
   }).length;
   return pendingErr + pendingProp;
 }
-function updateNotifBadge(){
+let _cachedBackupFailureAlert = null; // เก็บผลตรวจ backup ล่าสุดในเซสชันนี้ — เช็คจริงเฉพาะตอนกดกระดิ่ง (การแตะหน้าจอโดยตรง) กันปัญหา popup ถูกบล็อก
+let _cachedBackupAlertDismissedAt = 0;
+async function updateNotifBadge(){
   const unreadResolved = myResolvedSubmissions().filter(p=>!p.notifRead).length + myResolvedProposals().filter(p=>!p.notifRead).length;
   const pendingReview = myPendingReviewCount();
-  const total = unreadResolved + pendingReview;
+  let accessReqCount = 0;
+  if(isSuperAdmin()){
+    try{ accessReqCount = (await fsGetPendingAccessRequests()).length; }catch(e){}
+  }
+  const showBackupAlert = isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt;
+  const total = unreadResolved + pendingReview + accessReqCount + (showBackupAlert?1:0);
   const badge = $('notif-badge');
   if(total>0){ badge.style.display='block'; badge.textContent = total; }
   else{ badge.style.display='none'; }
 }
+async function checkBackupStatusForNotif(){
+  // เช็ค backup อัตโนมัติล่าสุด เฉพาะตอนกดกระดิ่ง (มีการแตะหน้าจอโดยตรงแล้ว ไม่โดนบล็อก popup) — เฉพาะ Editor เท่านั้นที่ต้องรู้เรื่องนี้
+  if(!isEditor()) return;
+  try{
+    const [status, dismissedAt] = await Promise.all([ fetchBackupStatus(), fsGetBackupAlertDismissed() ]);
+    _cachedBackupFailureAlert = status;
+    _cachedBackupAlertDismissedAt = dismissedAt;
+  }catch(e){ /* เช็คไม่ได้ก็แค่ไม่แสดง ไม่ต้องรบกวนผู้ใช้ */ }
+}
 $('notif-bell').addEventListener('click', ()=>{
   if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
   renderNotifList(); $('notif-modal').classList.add('show');
+  checkBackupStatusForNotif().then(()=>{ updateNotifBadge(); renderNotifList(); }); // เช็คหลังเปิด modal แล้ว พอได้ผลค่อย re-render เพิ่มเข้าไป
 });
 $('notif-modal-close').addEventListener('click', ()=>{ $('notif-modal').classList.remove('show'); });
 function statusBadgeHtml(status){
@@ -1778,7 +1797,7 @@ function statusBadgeHtml(status){
   if(status==='approved' || status==='accepted') return `<span class="status-badge" style="background:rgba(71,184,129,.15);color:var(--green);">✓ อนุมัติแล้ว</span>`;
   return `<span class="status-badge" style="background:rgba(229,83,75,.15);color:var(--red);">✕ ถูกปฏิเสธ</span>`;
 }
-function renderNotifList(){
+async function renderNotifList(){
   const list = $('notif-list');
   const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
   const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
@@ -1790,6 +1809,34 @@ function renderNotifList(){
   }) : [];
 
   let html = '';
+
+  // แจ้งเตือน Backup ล้มเหลว (Editor เท่านั้น) — เช็คแล้วจาก checkBackupStatusForNotif ตอนกดกระดิ่ง
+  if(isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt){
+    const dt = new Date(_cachedBackupFailureAlert.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'});
+    html += `<div class="admin-row" style="align-items:flex-start;background:rgba(229,83,75,.08);border-radius:8px;padding:10px;margin-bottom:10px;">
+      <div class="admin-row-main" style="flex-direction:column;align-items:flex-start;">
+        <span style="font-size:12.5px;color:var(--red);">⚠️ Backup อัตโนมัติล้มเหลว — เมื่อ ${dt}</span>
+        <span style="font-size:11px;color:var(--text-faint);margin-top:2px;">สาเหตุ: ${escapeHtml(_cachedBackupFailureAlert.error||'ไม่ทราบสาเหตุ')}</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" id="dismiss-backup-alert-btn">ปิดการแจ้งเตือนนี้</button>
+    </div>`;
+  }
+
+  // แจ้งเตือนคำขอสิทธิ์เข้าถึงใหม่ (Super Admin เท่านั้น)
+  if(isSuperAdmin()){
+    try{
+      const pendingReqs = await fsGetPendingAccessRequests();
+      if(pendingReqs.length>0){
+        html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔐 คำขอสิทธิ์เข้าถึงรอการอนุมัติ (${pendingReqs.length})</h4>`;
+        pendingReqs.forEach(r=>{
+          html += `<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(r.name||r.email)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(r.email)}</span></div></div>`;
+        });
+        html += `<p style="font-size:11px;color:var(--text-faint);margin:6px 0 0;">ไปที่หน้า "จัดการสิทธิ์" เพื่ออนุมัติ/ปฏิเสธ</p>`;
+        html += `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>`;
+      }
+    }catch(e){}
+  }
+
   if(pendingReviewErr.length>0 || pendingReviewProp.length>0){
     html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔔 รอคุณตรวจสอบ (ในฐานะ ${escapeHtml(currentSupIdentity)})</h4>`;
     pendingReviewErr.forEach(p=>{
@@ -1846,6 +1893,12 @@ function renderNotifList(){
     });
   });
   updateNotifBadge();
+  $('dismiss-backup-alert-btn')?.addEventListener('click', async ()=>{
+    const ts = _cachedBackupFailureAlert.timestamp;
+    try{ await fsSetBackupAlertDismissed(ts); }catch(e){ showToast('⚠ ปิดการแจ้งเตือนไม่สำเร็จ: '+e.message); return; }
+    _cachedBackupAlertDismissedAt = ts;
+    renderNotifList();
+  });
 }
 
 /* ===================== LIGHTBOX ===================== */
@@ -3376,20 +3429,24 @@ async function cleanupOldBackupsInDrive(folderId, daysToKeep){
   }
 }
 /* ===================== เช็คสถานะ Backup อัตโนมัติล่าสุด (อ่านไฟล์ที่สคริปต์อัตโนมัติเขียนไว้) ===================== */
+async function fetchBackupStatus(){
+  const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
+  const token = await ensureDriveAccess();
+  const q = encodeURIComponent(`'${backupsFolderId}' in parents and name='backup-status.json' and trashed=false`);
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok) throw new Error('ค้นหาไฟล์สถานะไม่สำเร็จ ('+res.status+')');
+  const data = await res.json();
+  if(!data.files || data.files.length===0) return null;
+  const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${data.files[0].id}?alt=media`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!contentRes.ok) throw new Error('อ่านไฟล์สถานะไม่สำเร็จ ('+contentRes.status+')');
+  return await contentRes.json();
+}
 async function checkAutomatedBackupStatus(){
   const el = $('auto-backup-status');
   el.innerHTML = 'กำลังตรวจสอบ...';
   try{
-    const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
-    const token = await ensureDriveAccess();
-    const q = encodeURIComponent(`'${backupsFolderId}' in parents and name='backup-status.json' and trashed=false`);
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`, { headers:{ Authorization:`Bearer ${token}` } });
-    if(!res.ok) throw new Error('ค้นหาไฟล์สถานะไม่สำเร็จ ('+res.status+')');
-    const data = await res.json();
-    if(!data.files || data.files.length===0){ el.innerHTML = `<p style="color:var(--text-faint);">ยังไม่เคยมีการ backup อัตโนมัติ (หรือยังไม่ได้ตั้งค่าระบบอัตโนมัติ)</p>`; return; }
-    const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${data.files[0].id}?alt=media`, { headers:{ Authorization:`Bearer ${token}` } });
-    if(!contentRes.ok) throw new Error('อ่านไฟล์สถานะไม่สำเร็จ ('+contentRes.status+')');
-    const status = await contentRes.json();
+    const status = await fetchBackupStatus();
+    if(!status){ el.innerHTML = `<p style="color:var(--text-faint);">ยังไม่เคยมีการ backup อัตโนมัติ (หรือยังไม่ได้ตั้งค่าระบบอัตโนมัติ)</p>`; return; }
     const dt = new Date(status.timestamp).toLocaleString('th-TH', { dateStyle:'long', timeStyle:'short', timeZone:'Asia/Bangkok' });
     if(status.success){
       el.innerHTML = `<span style="color:var(--green);">✅ สำเร็จ</span> — เมื่อ ${dt}`;
