@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 2.8
-  อัปเดตล่าสุด: 1 กันยายน 2569 06:48 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 2.9
+  อัปเดตล่าสุด: 1 กันยายน 2569 07:05 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v2.8</title>
+<title>Firmer Service Center — v2.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -292,7 +292,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.8</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 2.9</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -625,7 +625,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.8 (อัปเดตล่าสุด 1 กันยายน 2569 06:48 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 2.9 (อัปเดตล่าสุด 1 กันยายน 2569 07:05 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -748,10 +748,7 @@ async function initFirebase(){
   const app = sdk.initializeApp(FIREBASE_CONFIG);
   auth = sdk.getAuth(app);
   try{ await sdk.setPersistence(auth, sdk.browserLocalPersistence); } // บังคับให้จำ session ไว้ในเครื่อง (ไม่หลุดตอน Refresh) แทนที่จะพึ่งค่าเริ่มต้นของ SDK เฉยๆ
-  catch(e){
-    console.warn('ตั้งค่าการจำ session ไม่สำเร็จ (อาจเป็นเพราะเบราว์เซอร์ตั้งค่าบล็อกไว้ เช่น โหมดส่วนตัว):', e);
-    setTimeout(()=>showToast('⚠ DEBUG: ตั้งค่าจำ session ไม่สำเร็จ — '+e.code+': '+e.message), 500);
-  }
+  catch(e){ console.warn('ตั้งค่าการจำ session ไม่สำเร็จ (อาจเป็นเพราะเบราว์เซอร์ตั้งค่าบล็อกไว้ เช่น โหมดส่วนตัว):', e); }
   db = sdk.getFirestore(app);
   googleProvider = new sdk.GoogleAuthProvider();
   _fbReady = true;
@@ -1134,14 +1131,6 @@ function ensureDriveAccess(){
     driveTokenClient.requestAccessToken({ prompt: '' });
   });
 }
-// ขอสิทธิ์ Drive ล่วงหน้าตั้งแต่ตอน login สำเร็จเลย — กันไม่ให้ popup โผล่มาขัดจังหวะทีหลังตอนกำลังอัปโหลด/ลบรูป
-let _driveAccessRequested = false;
-async function proactivelyRequestDriveAccess(){
-  if(_driveAccessRequested) return;
-  _driveAccessRequested = true;
-  try{ await ensureDriveAccess(); }
-  catch(e){ _driveAccessRequested = false; /* ถ้าพลาด/ถูกปฏิเสธ ค่อยขอใหม่ตอนใช้งานจริงทีหลัง */ }
-}
 function sanitizeFolderName(name){ return String(name).replace(/['"\\\/]/g,'-').trim().slice(0,120) || 'ไม่มีชื่อ'; }
 // แปลงลิงก์ Google Drive ทุกรูปแบบให้เป็นแบบ "เปิดดูตัวอย่างในตัว" เสมอ (กันปัญหาบางลิงก์กดแล้วดาวน์โหลดแทนที่จะเปิดดู)
 function normalizeDriveLink(url){
@@ -1387,9 +1376,9 @@ async function resolveAuthAndStart(){
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
       myGoogleId = user.uid; myUserName = user.displayName || user.email; myUserEmail = (user.email||'').toLowerCase();
-      try{ localStorage.setItem('trbl_has_signed_in_before', '1'); }catch(e){} // เผื่อไว้ตรวจสอบภายหลังว่าเคย login สำเร็จมาก่อนจริง
       showSignedInPill();
-      proactivelyRequestDriveAccess();
+      // ไม่ขอสิทธิ์ Drive ล่วงหน้าอัตโนมัติอีกต่อไป — เพราะไม่ได้เกิดจากการแตะหน้าจอโดยตรง เบราว์เซอร์เลยบล็อก popup (โดยเฉพาะตอน Refresh แล้ว session ถูกจำได้เองเงียบๆ)
+      // จะขอสิทธิ์ก็ต่อเมื่อผู้ใช้กดปุ่มที่ต้องใช้ Drive จริงๆ (อัปโหลดรูป/วิดีโอ/เอกสาร, เช็คขนาดไฟล์ ฯลฯ) ซึ่งเป็นการแตะหน้าจอโดยตรงอยู่แล้ว ไม่โดนบล็อก
       if(!window._appStarted){
         window._appStarted = true;
         checkAccessAndLoad();
@@ -1402,10 +1391,6 @@ async function resolveAuthAndStart(){
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
       $('access-request-overlay').classList.remove('show');
-      // DEBUG: ถ้าเคย login สำเร็จมาก่อน (มี flag ใน localStorage) แต่ตอนนี้ Firebase บอกว่าไม่มีใคร login อยู่ — แปลว่า session ไม่ถูกจำไว้จริง โชว์ข้อความนี้ให้เห็นบนจอเพื่อยืนยันปัญหา
-      let hadPreviousSession = false;
-      try{ hadPreviousSession = localStorage.getItem('trbl_has_signed_in_before') === '1'; }catch(e){}
-      if(hadPreviousSession){ setTimeout(()=>showToast('⚠ DEBUG: เคย login สำเร็จมาก่อน แต่ session หายไป (localStorage ยังอยู่ แต่ Firebase Auth จำไม่ได้)'), 800); }
       initGisWithRetry(15, 300);
       setStatus(false, 'กรุณาเข้าสู่ระบบก่อนใช้งาน');
     }
