@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 3.0
-  อัปเดตล่าสุด: 1 กันยายน 2569 07:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 3.2
+  อัปเดตล่าสุด: 1 กันยายน 2569 08:05 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v3.0</title>
+<title>Firmer Service Center — v3.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -160,6 +160,12 @@
   .field-wrap{margin-bottom:4px;}
   .btn{font-family:'Sarabun';font-weight:600;font-size:13px;padding:9px 16px;border-radius:7px;border:none;cursor:pointer;transition:.12s;}
   .btn-primary{background:var(--amber);color:#1a1206;}
+  .toggle-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--panel-alt);border:1px solid var(--border);border-radius:999px;transition:.15s;}
+  .toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:var(--text-faint);border-radius:50%;transition:.15s;}
+  .toggle-switch input:checked + .toggle-slider{background:var(--amber);border-color:var(--amber);}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(18px);background:#1a1206;}
   .btn-primary:hover{filter:brightness(1.08);}
   .btn-ghost{background:transparent;color:var(--text-dim);border:1px solid var(--border);}
   .btn-ghost:hover{color:var(--text);border-color:var(--text-faint);}
@@ -292,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.0</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.2</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -590,9 +596,46 @@
   <!-- ============ DATABASE BACKUP VIEW (แยกออกมาต่างหาก) ============ -->
   <div id="view-backup" style="display:none;">
     <div class="desktop-hint">💾 สำรองข้อมูลทั้งระบบ — เน้น Troubleshooting เป็นหลัก</div>
+
+    <div class="panel-block" id="backup-schedule-panel" style="display:none;">
+      <h2>ตั้งค่า Backup อัตโนมัติ</h2>
+      <p class="panel-sub">แก้ไขได้เฉพาะ Super Admin เท่านั้น — ระบบจะเช็คทุกชั่วโมงว่าถึงเวลาตามที่ตั้งไว้หรือยัง</p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <label class="toggle-switch"><input type="checkbox" id="backup-schedule-enabled"><span class="toggle-slider"></span></label>
+        <span style="font-size:13px;">เปิดใช้งาน Backup อัตโนมัติ</span>
+      </div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="field-wrap">
+          <label>เวลา Backup (เวลาไทย)</label>
+          <select id="backup-schedule-hour"></select>
+        </div>
+        <div class="field-wrap">
+          <label>ความถี่</label>
+          <select id="backup-schedule-interval">
+            <option value="1">ทุกวัน</option>
+            <option value="2">ทุก 2 วัน</option>
+            <option value="3">ทุก 3 วัน</option>
+            <option value="7">ทุกสัปดาห์ (7 วัน)</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <label>เก็บไฟล์ Backup เก่าไว้กี่วัน</label>
+          <select id="backup-schedule-retention">
+            <option value="7">7 วัน</option>
+            <option value="14">14 วัน</option>
+            <option value="30">30 วัน</option>
+            <option value="90">90 วัน</option>
+            <option value="0">เก็บไว้ตลอดไป (ไม่ลบอัตโนมัติ)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="save-backup-schedule-btn">บันทึกการตั้งค่า</button>
+      <span class="mono" id="backup-schedule-status" style="font-size:12px;color:var(--text-faint);margin-left:8px;"></span>
+    </div>
+
     <div class="panel-block">
       <h2>สถานะ Backup อัตโนมัติล่าสุด</h2>
-      <p class="panel-sub">ระบบสำรองข้อมูลอัตโนมัติทุกวันตี 1 — กดเช็คว่าครั้งล่าสุดสำเร็จหรือไม่ (ต้องขอสิทธิ์ Google Drive ก่อน จึงให้กดเช็คเองแทนที่จะเช็คอัตโนมัติ)</p>
+      <p class="panel-sub">กดเช็คว่าครั้งล่าสุดสำเร็จหรือไม่ (ต้องขอสิทธิ์ Google Drive ก่อน จึงให้กดเช็คเองแทนที่จะเช็คอัตโนมัติ)</p>
       <button class="btn btn-ghost btn-sm" id="check-backup-status-btn">🔍 เช็คสถานะ Backup ล่าสุด</button>
       <div id="auto-backup-status" style="font-size:13px;margin-top:10px;"></div>
     </div>
@@ -625,7 +668,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.0 (อัปเดตล่าสุด 1 กันยายน 2569 07:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.2 (อัปเดตล่าสุด 1 กันยายน 2569 08:05 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -985,6 +1028,8 @@ async function fsWriteLog(action){
 async function fsGetAllLogs(){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.collection(db,'activityLogs')); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
 async function fsGetBackupAlertDismissed(){ await initFirebase(); const sdk=window._firebaseSdk; const d = await sdk.getDoc(sdk.doc(db,'meta','backupAlertDismissed')); return d.exists() ? (d.data().dismissedAt||0) : 0; }
 async function fsSetBackupAlertDismissed(ts){ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','backupAlertDismissed'), { dismissedAt: ts }); }
+async function fsGetBackupSchedule(){ await initFirebase(); const sdk=window._firebaseSdk; const d = await sdk.getDoc(sdk.doc(db,'meta','backupSchedule')); return d.exists() ? d.data() : { enabled:true, hour:1, minute:0, intervalDays:1, retentionDays:7 }; }
+async function fsSaveBackupSchedule(schedule){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','backupSchedule'), schedule); }finally{ hideLoadingOverlay(); } }
 async function fsUpdateAccessRequest(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'accessRequests',id), fields); }finally{ hideLoadingOverlay(); } }
 function ensureDataShape(){
   if(!DATA.owners) DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
@@ -1472,7 +1517,7 @@ function switchMode(mode){
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') loadAllErrorsThenRenderMgr();
-  if(mode==='backup'){ updateExportLogPanelVisibility(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
+  if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -3384,6 +3429,41 @@ async function handleBackupExcel(statusElId){
 function updateExportLogPanelVisibility(){
   $('export-log-panel').style.display = isSuperAdmin() ? 'block' : 'none';
 }
+
+/* ===================== ตั้งค่า Backup อัตโนมัติ — Super Admin เท่านั้น ===================== */
+async function renderBackupSchedulePanel(){
+  const panel = $('backup-schedule-panel');
+  if(!isSuperAdmin()){ panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  const hourSel = $('backup-schedule-hour');
+  if(hourSel.children.length===0){
+    hourSel.innerHTML = Array.from({length:24}, (_,h)=>`<option value="${h}">${String(h).padStart(2,'0')}:00 น.</option>`).join('');
+  }
+  try{
+    const schedule = await fsGetBackupSchedule();
+    $('backup-schedule-enabled').checked = schedule.enabled !== false;
+    hourSel.value = schedule.hour ?? 1;
+    $('backup-schedule-interval').value = String(schedule.intervalDays ?? 1);
+    $('backup-schedule-retention').value = String(schedule.retentionDays ?? 7);
+  }catch(e){ showToast('⚠ โหลดการตั้งค่าไม่สำเร็จ: '+e.message); }
+}
+$('save-backup-schedule-btn').addEventListener('click', async ()=>{
+  if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่แก้ไขได้'); return; }
+  const schedule = {
+    enabled: $('backup-schedule-enabled').checked,
+    hour: parseInt($('backup-schedule-hour').value, 10),
+    minute: 0,
+    intervalDays: parseInt($('backup-schedule-interval').value, 10),
+    retentionDays: parseInt($('backup-schedule-retention').value, 10),
+  };
+  const statusEl = $('backup-schedule-status');
+  try{ await fsSaveBackupSchedule(schedule); }
+  catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  statusEl.textContent = '✓ บันทึกแล้ว — มีผลตั้งแต่รอบถัดไป';
+  setTimeout(()=>{ statusEl.textContent=''; }, 4000);
+  showToast('✓ บันทึกการตั้งค่า Backup อัตโนมัติแล้ว');
+});
+
 async function exportLogToExcel(){
   const statusEl = $('export-log-status');
   statusEl.textContent = 'กำลังดึงข้อมูล...';
@@ -3416,7 +3496,6 @@ async function driveUploadFile(blob, filename, mimeType, parentId){
     return data.id;
   }finally{ hideLoadingOverlay(); }
 }
-const BACKUP_RETENTION_DAYS = 7;
 async function cleanupOldBackupsInDrive(folderId, daysToKeep){
   const token = await ensureDriveAccess();
   const cutoff = new Date(Date.now() - daysToKeep*24*60*60*1000).toISOString();
@@ -3475,7 +3554,9 @@ async function handleBackupToDriveNow(statusElId){
     const dateFolderId = await driveFindOrCreateFolder(dateFolderName, backupsFolderId);
     await driveUploadFile(jsonBlob, `trbl-backup-${stamp}.json`, 'application/json', dateFolderId);
     await driveUploadFile(excelBlob, `trbl-backup-${stamp}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', dateFolderId);
-    await cleanupOldBackupsInDrive(backupsFolderId, BACKUP_RETENTION_DAYS);
+    let retentionDays = 7;
+    try{ retentionDays = (await fsGetBackupSchedule()).retentionDays ?? 7; }catch(e){}
+    if(retentionDays > 0) await cleanupOldBackupsInDrive(backupsFolderId, retentionDays);
     if(statusEl) statusEl.textContent = '';
     fsWriteLog('Backup เข้า Google Drive ทันที');
     showToast('✓ Backup เข้า Service Center/Backups สำเร็จแล้ว');
