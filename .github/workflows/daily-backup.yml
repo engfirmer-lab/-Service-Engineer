@@ -1,10 +1,11 @@
 name: Daily TRBL Backup to Google Drive
 
-# รันอัตโนมัติทุกวัน ตี 1:00 เวลาไทย (18:00 UTC ของวันก่อนหน้า)
-# กดรันมือเองก็ได้ผ่านแท็บ Actions บน GitHub (ปุ่ม "Run workflow")
+# รันทุกชั่วโมง แล้วให้ตัวสคริปต์เองเช็คการตั้งค่าจาก Firestore (เปิด/ปิด, เวลาที่ตั้งไว้, ทุกกี่วัน) ว่าถึงเวลาต้อง Backup จริงหรือยัง
+# ถ้ายังไม่ถึงเวลา สคริปต์จะออกทันทีโดยไม่ทำอะไรเพิ่ม (ใช้โควต้า Firestore น้อยมาก แค่เช็คการตั้งค่า)
+# กดรันมือเองก็ได้ผ่านแท็บ Actions บน GitHub (ปุ่ม "Run workflow") — การรันมือจะข้ามการเช็คตารางเวลาเสมอ บังคับ Backup ทันที
 on:
   schedule:
-    - cron: '0 18 * * *'
+    - cron: '0 * * * *'
   workflow_dispatch: {}
 
 jobs:
@@ -29,4 +30,5 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           GOOGLE_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_OAUTH_REFRESH_TOKEN }}
+          TRIGGER_EVENT: ${{ github.event_name }}
         run: node backup-script.js
