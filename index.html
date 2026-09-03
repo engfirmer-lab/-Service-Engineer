@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 3.5
-  อัปเดตล่าสุด: 3 กันยายน 2569 10:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 3.6
+  อัปเดตล่าสุด: 3 กันยายน 2569 10:15 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v3.5</title>
+<title>Firmer Service Center — v3.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.6</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -674,7 +674,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.5 (อัปเดตล่าสุด 3 กันยายน 2569 10:00 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.6 (อัปเดตล่าสุด 3 กันยายน 2569 10:15 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1735,6 +1735,29 @@ function manualSectionHtml(){
       <p class="panel-sub"><b>สำรองข้อมูลด้วยตัวเอง:</b> ดาวน์โหลด JSON/Excel หรือกด "Backup เข้า Google Drive ทันที"</p>
       <p class="panel-sub"><b>Export ประวัติการใช้งาน (Log):</b> Super Admin เท่านั้น — ดาวน์โหลดเป็น Excel</p>
       <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore และขนาดไฟล์จริงใน Drive ได้ (กดเช็คเองทุกปุ่ม เพื่อประหยัดโควต้า)</p>
+    </div>
+
+    <div class="panel-block" style="border:1px solid var(--amber);">
+      <h2>7. สำหรับ Super Admin โดยเฉพาะ</h2>
+      <p class="panel-sub">รวมทุกฟังก์ชันที่ทำได้เฉพาะบัญชี Super Admin เท่านั้น (engfirmer@gmail.com) — คนเดียวในระบบที่มีสิทธิ์เหล่านี้ กระจายอยู่ในหลายหน้า สรุปรวมไว้ที่นี่ให้เห็นภาพครบ</p>
+      <p class="panel-sub"><b>📍 หน้าจัดการสิทธิ์:</b></p>
+      <ul style="font-size:13px;line-height:1.9;padding-left:20px;">
+        <li>อนุมัติ/ปฏิเสธคำขอสิทธิ์เข้าถึงระบบใหม่</li>
+        <li>โยกย้ายสิทธิ์ผู้ใช้ไปมาระหว่าง "ผู้ใช้ทั่วไป" กับ "แก้ไขข้อมูล (Editor)"</li>
+        <li>เพิ่ม/ลบสิทธิ์ผู้ใช้คนใดก็ได้ในระบบ</li>
+      </ul>
+      <p class="panel-sub"><b>📍 หน้า Export/Backup:</b></p>
+      <ul style="font-size:13px;line-height:1.9;padding-left:20px;">
+        <li>ตั้งค่า Backup อัตโนมัติ (เปิด/ปิด, เวลา, ความถี่, จำนวนวันเก็บไฟล์เก่า)</li>
+        <li>Export ประวัติการใช้งาน (Log) เป็น Excel</li>
+        <li>ดูเอกสารทางเทคนิค (โครงสร้างระบบ, ไฟล์ไหนต้อง Deploy ที่ไหน) — สำหรับใช้แก้ไขโค้ดในอนาคต</li>
+      </ul>
+      <p class="panel-sub"><b>📍 กระดิ่งแจ้งเตือน:</b></p>
+      <ul style="font-size:13px;line-height:1.9;padding-left:20px;">
+        <li>เห็นคำขอสิทธิ์เข้าถึงใหม่ทันที (คนอื่นไม่เห็นส่วนนี้)</li>
+        <li>ปิดการแจ้งเตือน "Backup ล้มเหลว" ได้ (ต้องเคยกดเช็คสถานะ Backup ที่หน้า Export/Backup มาก่อนอย่างน้อย 1 ครั้งในเซสชันนั้น ถึงจะเห็น)</li>
+      </ul>
+      <p style="font-size:11.5px;color:var(--text-faint);margin-top:10px;">⚠️ อีเมล Super Admin ฝังไว้ตายตัวในโค้ด (ไม่มีใครแก้ผ่านหน้าเว็บได้) กันเหตุการณ์ "ลบสิทธิ์ผิดจนล็อกตัวเองไม่ให้เข้าแก้ไขอะไรได้อีก" — ถ้าต้องการเปลี่ยนบัญชี Super Admin ต้องแก้ไขโค้ดโดยตรง (ดูเอกสารทางเทคนิค)</p>
     </div>
 
     <p style="font-size:11px;color:var(--text-faint);margin-top:20px;">มีคำถามหรือพบปัญหาการใช้งาน ติดต่อผู้ดูแลระบบ (Visanu Sombatpattanakul) ได้โดยตรง</p>
