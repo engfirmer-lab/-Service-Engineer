@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 3.4
-  อัปเดตล่าสุด: 1 กันยายน 2569 08:32 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 3.5
+  อัปเดตล่าสุด: 3 กันยายน 2569 10:00 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v3.4</title>
+<title>Firmer Service Center — v3.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -330,7 +330,7 @@
 </div>
 
 <main>
-  <div class="status-line"><span class="dot loading" id="status-dot"></span><span id="status-text">กำลังโหลดข้อมูลตัวอย่าง...</span></div>
+  <div class="status-line"><span class="dot loading" id="status-dot"></span><span id="status-text">กำลังโหลดข้อมูลตัวอย่าง...</span><span style="margin:0 4px;color:var(--text-faint);">·</span><button id="open-manual-btn" style="background:none;border:none;padding:0;color:var(--amber);font-family:'IBM Plex Mono';font-size:11px;cursor:pointer;text-decoration:underline;">📖 คู่มือการใช้งาน</button></div>
 
   <!-- ============ ENGINEER VIEW ============ -->
   <div id="view-eng" class="narrow">
@@ -655,6 +655,12 @@
       <button class="btn btn-primary btn-sm" id="export-log-excel-btn">⬇ Export Log เป็น Excel</button>
       <span class="mono" id="export-log-status" style="font-size:12px;color:var(--text-faint);margin-left:8px;"></span>
     </div>
+    <div class="panel-block" id="tech-docs-panel" style="display:none;">
+      <h2>เอกสารทางเทคนิค (สำหรับแก้ไขโค้ดในอนาคต)</h2>
+      <p class="panel-sub">สรุปไว้ให้กลับมาแก้ไขโค้ดได้ง่ายขึ้น เห็นเฉพาะ Super Admin เท่านั้น</p>
+      <button class="btn btn-ghost btn-sm" id="tech-docs-toggle-btn">แสดง/ซ่อนรายละเอียด</button>
+      <div id="tech-docs-content" style="display:none;margin-top:14px;font-size:12.5px;line-height:1.8;"></div>
+    </div>
     <div class="panel-block">
       <h2>การใช้งานพื้นที่</h2>
       <h3 style="font-size:13px;margin-bottom:6px;">Firestore (ฐานข้อมูลหลัก)</h3>
@@ -668,7 +674,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.4 (อัปเดตล่าสุด 1 กันยายน 2569 08:32 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.5 (อัปเดตล่าสุด 3 กันยายน 2569 10:00 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -737,6 +743,11 @@
 <div class="fullscreen-panel" id="error-detail-panel">
   <button class="fullscreen-close" id="error-detail-close">✕</button>
   <div class="fullscreen-panel-inner" id="error-detail-content"></div>
+</div>
+
+<div class="fullscreen-panel" id="manual-panel">
+  <button class="fullscreen-close" id="manual-close">✕</button>
+  <div class="fullscreen-panel-inner" id="manual-content"></div>
 </div>
 
 <div class="lightbox" id="lightbox">
@@ -985,7 +996,7 @@ async function loadData(){
     }
     if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
     renderSupIdentityOptions();
-    setStatus(false, `พร้อมใช้งาน · เลือก Product เพื่อดู Error`);
+    setStatus(false, `พร้อมใช้งาน`);
   }catch(e){
     setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
     showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
@@ -1664,6 +1675,77 @@ async function openErrorDetail(errorId){
   if(openErrorDetailId===errorId) renderErrorDetailPanel();
 }
 function closeErrorDetail(){ $('error-detail-panel').classList.remove('show'); openErrorDetailId = null; }
+
+/* ===================== คู่มือการใช้งานในแอป — แก้ไขข้อความตรงนี้เมื่อมีการเปลี่ยนแปลงฟังก์ชันใดๆ ===================== */
+function manualSectionHtml(){
+  return `
+    <h1 style="margin-bottom:4px;">📖 คู่มือการใช้งาน Firmer Service Center</h1>
+    <p style="font-size:12px;color:var(--text-faint);margin-bottom:20px;">คู่มือนี้อยู่ในแอปโดยตรง เพื่อให้อัปเดตตรงตามฟังก์ชันจริงเสมอ — ถ้ามีการแก้ไข/เพิ่มฟังก์ชันใดๆ ควรแก้ไขคู่มือส่วนนี้ควบคู่กันไปด้วย</p>
+
+    <div class="panel-block">
+      <h2>ภาพรวมระบบ</h2>
+      <p class="panel-sub">แบ่งการใช้งานเป็น 6 ส่วนหลัก ตามสิทธิ์การเข้าถึงของแต่ละคน — ทุกคนต้อง Sign in ด้วยบัญชี Google ก่อน และต้องได้รับอนุมัติจากผู้ดูแลระบบก่อนถึงจะเข้าดูข้อมูลได้</p>
+      <ul style="font-size:13px;line-height:1.9;padding-left:20px;">
+        <li><b>Engineer</b> — ค้นหาวิธีแก้ไข, โหวต, ส่ง Error ใหม่, เสนอวิธีแก้ไขเพิ่มเติม</li>
+        <li><b>Sup Product</b> — จัดการ Error/วิธีแก้ไขในความรับผิดชอบ, ตรวจสอบ Error ใหม่และข้อเสนอจาก Engineer</li>
+        <li><b>จัดการ Product</b> — จัดการรายชื่อ Sup Product, ผู้รับผิดชอบแต่ละประเภท/รุ่นเครื่อง</li>
+        <li><b>จัดการสิทธิ์</b> — อนุมัติผู้ใช้งานใหม่, กำหนดว่าใครแก้ไขข้อมูลได้บ้าง</li>
+        <li><b>Manager</b> — ดู Dashboard สรุปภาพรวมผลงานของทีม</li>
+        <li><b>Export/Backup</b> — สำรองข้อมูล, ตั้งค่า Backup อัตโนมัติ, ดูการใช้พื้นที่</li>
+      </ul>
+    </div>
+
+    <div class="panel-block">
+      <h2>1. Engineer</h2>
+      <p class="panel-sub"><b>ค้นหาวิธีแก้ไข:</b> เลือกแท็บเอกสาร (Troubleshooting/Service Manual/Spare Part/ฯลฯ) แล้วพิมพ์คำค้นหาหรือเลือกตัวกรอง Product/Model — ผลลัพธ์ซ่อนไว้จนกว่าจะค้นหา/กรอง กันรกหน้าจอ</p>
+      <p class="panel-sub"><b>ดูรายละเอียด Error:</b> กดที่การ์ด Error เพื่อดูวิธีแก้ไขทั้งหมดแบบเต็มจอ พร้อมรูป/วิดีโอ อุปกรณ์ อะไหล่ เวลาโดยประมาณ และปุ่มโหวต "แก้ได้จริง"</p>
+      <p class="panel-sub"><b>เสนอวิธีแก้ไขใหม่:</b> ถ้าลองทุกวิธีแล้วไม่หาย กดปุ่ม "เสนอวิธีการให้ Sup Product พิจารณา" แนบรูป/วิดีโอได้ ส่งแล้วรอ Sup Product ตรวจสอบ</p>
+      <p class="panel-sub"><b>ส่ง Error ใหม่:</b> กด "+ เพิ่ม Error ใหม่" กรอกรายละเอียดพร้อมวิธีแก้ไขอย่างน้อย 1 วิธี ส่งเข้าคิวให้ตรวจสอบก่อนเผยแพร่</p>
+      <p class="panel-sub"><b>การแจ้งเตือน:</b> กดกระดิ่งมุมขวาบนดูสถานะสิ่งที่เคยส่งไป — รายการ "รอตรวจสอบ" ค้างไว้จนกว่าจะมีผล ส่วนรายการที่จบสถานะแล้วโชว์ผลแค่ครั้งเดียวแล้วหายไป</p>
+    </div>
+
+    <div class="panel-block">
+      <h2>2. Sup Product</h2>
+      <p class="panel-sub"><b>เลือกตัวเอง:</b> เลือกชื่อจาก dropdown "คุณคือ:" ก่อนเริ่มใช้งาน ตัวเลขสรุปและรายการต่างๆ จะกรองตามคนที่เลือก</p>
+      <p class="panel-sub"><b>เพิ่ม/แก้ไข Error:</b> กด "+ เพิ่ม Error ใหม่" กรอก Error พร้อมวิธีแก้ไข แนบรูป/วิดีโอได้ เพิ่มได้หลายวิธีในหนึ่ง Error</p>
+      <p class="panel-sub"><b>ตรวจสอบ Error ใหม่จาก Engineer:</b> กด "แก้ไขก่อนอนุมัติ" เพื่อปรับก่อน, "อนุมัติทันที" เพื่อเผยแพร่เลย หรือ "ปฏิเสธ" พร้อมเหตุผล</p>
+      <p class="panel-sub"><b>ตรวจสอบข้อเสนอวิธีแก้ไข:</b> กด "รับเป็นวิธีแก้ไขทางการ" เพื่อเพิ่มเป็นวิธีจริง, "แก้ไข" เพื่อปรับเนื้อหาก่อนรับ หรือ "ไม่รับ"</p>
+      <p class="panel-sub"><b>จัดการเอกสาร (Document Matrix):</b> สลับแท็บ "จัดการเอกสาร" ดูตารางสรุปว่ารุ่นไหนมีเอกสารครบ/ขาดอะไรบ้าง เพิ่ม/แก้ไขลิงก์หรืออัปโหลดไฟล์ได้โดยตรง</p>
+    </div>
+
+    <div class="panel-block">
+      <h2>3. จัดการ Product</h2>
+      <p class="panel-sub">สำหรับ Editor เท่านั้น — เพิ่ม/ลบชื่อคนในทีม Sup Product (ลบไม่ได้ถ้ายังมีรุ่นผูกอยู่), ดูสรุปว่าใครดูแลอะไรบ้างและย้ายความรับผิดชอบได้, เพิ่มประเภท/รุ่นเครื่องใหม่</p>
+    </div>
+
+    <div class="panel-block">
+      <h2>4. จัดการสิทธิ์</h2>
+      <p class="panel-sub"><b>ระดับสิทธิ์:</b> ผู้ใช้ทั่วไป (ดู/โหวต/ส่ง Error ใหม่ได้ แก้ไขไม่ได้) และ แก้ไขข้อมูล/Editor (ทำได้ทุกอย่างของผู้ใช้ทั่วไป บวกแก้ไข/ลบข้อมูลได้ด้วย)</p>
+      <p class="panel-sub"><b>Super Admin</b> เท่านั้นที่โยกย้ายสิทธิ์คนอื่นได้ และเห็น/อนุมัติคำขอสิทธิ์เข้าถึงใหม่</p>
+    </div>
+
+    <div class="panel-block">
+      <h2>5. Manager</h2>
+      <p class="panel-sub">Dashboard สรุปภาพรวมผลงานของ Sup Product ทุกคนในที่เดียว ใช้ติดตามโดยไม่ต้องเข้าไปเช็คทีละคน</p>
+    </div>
+
+    <div class="panel-block">
+      <h2>6. Export/Backup</h2>
+      <p class="panel-sub"><b>ตั้งค่า Backup อัตโนมัติ</b> (Super Admin เท่านั้น): เปิด/ปิด, ตั้งเวลา, ความถี่ (ทุกวัน/2วัน/3วัน/สัปดาห์), จำนวนวันเก็บไฟล์เก่าก่อนลบอัตโนมัติ</p>
+      <p class="panel-sub"><b>สำรองข้อมูลด้วยตัวเอง:</b> ดาวน์โหลด JSON/Excel หรือกด "Backup เข้า Google Drive ทันที"</p>
+      <p class="panel-sub"><b>Export ประวัติการใช้งาน (Log):</b> Super Admin เท่านั้น — ดาวน์โหลดเป็น Excel</p>
+      <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore และขนาดไฟล์จริงใน Drive ได้ (กดเช็คเองทุกปุ่ม เพื่อประหยัดโควต้า)</p>
+    </div>
+
+    <p style="font-size:11px;color:var(--text-faint);margin-top:20px;">มีคำถามหรือพบปัญหาการใช้งาน ติดต่อผู้ดูแลระบบ (Visanu Sombatpattanakul) ได้โดยตรง</p>
+  `;
+}
+function openManual(){
+  $('manual-content').innerHTML = manualSectionHtml();
+  $('manual-panel').classList.add('show');
+}
+$('open-manual-btn').addEventListener('click', openManual);
+$('manual-close').addEventListener('click', ()=>{ $('manual-panel').classList.remove('show'); });
 $('error-detail-close').addEventListener('click', closeErrorDetail);
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && $('error-detail-panel').classList.contains('show') && !$('lightbox').classList.contains('show')) closeErrorDetail(); });
 
@@ -3423,7 +3505,63 @@ async function handleBackupExcel(statusElId){
 /* ===================== Export ประวัติการใช้งาน (Log) เป็น Excel — Super Admin เท่านั้น ===================== */
 function updateExportLogPanelVisibility(){
   $('export-log-panel').style.display = isSuperAdmin() ? 'block' : 'none';
+  $('tech-docs-panel').style.display = isSuperAdmin() ? 'block' : 'none';
 }
+
+/* ===================== เอกสารทางเทคนิค — แก้ไขข้อความตรงนี้เมื่อมีการเปลี่ยนแปลงโครงสร้างระบบ/ไฟล์/Deploy ===================== */
+function techDocsHtml(){
+  return `
+    <p style="margin-bottom:10px;"><b>🔗 ลิงก์สำคัญ</b></p>
+    <ul style="padding-left:20px;margin-bottom:16px;">
+      <li>Firebase Console: <a href="https://console.firebase.google.com/u/0/project/service-engineering-center/overview" target="_blank" rel="noopener">console.firebase.google.com (โปรเจกต์ service-engineering-center)</a></li>
+      <li>GitHub Repo: <a href="https://github.com/engfirmer-lab/-Service-Engineer" target="_blank" rel="noopener">github.com/engfirmer-lab/-Service-Engineer</a></li>
+    </ul>
+
+    <p style="margin-bottom:8px;"><b>📁 ไฟล์ไหนต้องเอาไปวางที่ไหน</b></p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+      <tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 4px;">ไฟล์</th><th style="text-align:left;padding:6px 4px;">ต้องวางที่ไหน</th></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">index.html</td><td style="padding:6px 4px;">GitHub Repo (root) — เผยแพร่เป็นเว็บผ่าน GitHub Pages อัตโนมัติ</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">firmer-logo.png</td><td style="padding:6px 4px;">GitHub Repo (root) — ต้องอยู่ระดับเดียวกับ index.html เป๊ะ ชื่อไฟล์ต้องตรง</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">backup-script.js</td><td style="padding:6px 4px;">GitHub Repo (root)</td></tr>
+      <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">daily-backup.yml</td><td style="padding:6px 4px;">GitHub Repo path: .github/workflows/daily-backup.yml</td></tr>
+      <tr><td style="padding:6px 4px;">firestore.rules</td><td style="padding:6px 4px;">Firebase Console → Firestore Database → Rules → วางทับแล้วกด Publish (ไม่ใช่ไฟล์ที่อัปโหลดขึ้น GitHub)</td></tr>
+    </table>
+
+    <p style="margin-bottom:8px;"><b>🗂️ โครงสร้างข้อมูลใน Firestore</b></p>
+    <ul style="padding-left:20px;margin-bottom:16px;">
+      <li><b>errors</b> — Error หลัก, มี subcollection <b>solutions</b> ข้างใน</li>
+      <li><b>documents</b> — เอกสาร/ลิงก์อ้างอิง (Service Manual, Video ฯลฯ)</li>
+      <li><b>proposals</b> — ข้อเสนอวิธีแก้ไขจาก Engineer</li>
+      <li><b>pendingErrors</b> — Error ใหม่จาก Engineer ที่รอตรวจสอบ</li>
+      <li><b>accessRequests</b> — คำขอสิทธิ์เข้าถึงระบบ</li>
+      <li><b>activityLogs</b> — ประวัติการใช้งาน (Log)</li>
+      <li><b>meta/categories</b> — ประเภท/รุ่นเครื่อง + ผู้ดูแล</li>
+      <li><b>meta/supProducts</b> — รายชื่อทีม Sup Product</li>
+      <li><b>meta/adminEmails</b> — รายชื่อ Editor</li>
+      <li><b>meta/approvedUsers</b> — รายชื่อผู้ใช้ทั่วไปที่ได้รับอนุมัติ</li>
+      <li><b>meta/backupSchedule</b> — ตั้งค่า Backup อัตโนมัติ (เปิด/ปิด, เวลา, ความถี่, จำนวนวันเก็บไฟล์)</li>
+      <li><b>meta/backupAlertDismissed</b> — สถานะปิดแจ้งเตือน Backup ล้มเหลว</li>
+    </ul>
+
+    <p style="margin-bottom:8px;"><b>🏗️ สถาปัตยกรรมหลักที่ควรรู้ก่อนแก้โค้ด</b></p>
+    <ul style="padding-left:20px;margin-bottom:16px;">
+      <li><b>Super Admin ตายตัว:</b> engfirmer@gmail.com — ฝังไว้ตรงๆ ทั้งใน index.html (ตัวแปร SUPER_ADMIN_EMAIL) และ firestore.rules (ฟังก์ชัน isSuperAdmin) ต้องแก้ 2 จุดพร้อมกันถ้าจะเปลี่ยน</li>
+      <li><b>สิทธิ์การเข้าถึง:</b> ตรวจสอบจริงที่ firestore.rules เท่านั้น (isSuperAdmin / isEditor / isApproved) — โค้ดฝั่งหน้าเว็บ (index.html) แค่ซ่อน/แสดงปุ่มเพื่อ UX ไม่ใช่การป้องกันจริง</li>
+      <li><b>Error โหลดแบบ Lazy:</b> ไม่ดึง Error ทั้งหมดตอน login อีกต่อไป — ดึงเฉพาะ Product ที่ถูกเลือกดู (ดูฟังก์ชัน ensureErrorsLoadedForCategory) เพื่อประหยัดโควต้า Firestore</li>
+      <li><b>รูป/วิดีโอ/เอกสารที่อัปโหลด:</b> เก็บที่ Google Drive ไม่ใช่ Firestore — โฟลเดอร์ "Service Center" (DRIVE_ROOT_FOLDER_ID ใน index.html)</li>
+      <li><b>Backup อัตโนมัติ:</b> GitHub Actions รันทุกชั่วโมง (ดู daily-backup.yml) แล้วให้ backup-script.js เช็ค meta/backupSchedule จาก Firestore เองว่าถึงเวลาจริงหรือยัง — ไม่ได้ตั้งเวลาตายตัวใน cron</li>
+      <li><b>Service Account (ใช้ใน backup-script.js):</b> ตั้งใจให้เป็น "อ่านอย่างเดียว" (Cloud Datastore Viewer) เพื่อความปลอดภัย — การอัปโหลด Backup เข้า Drive ใช้ OAuth ของ Gmail จริงแทน ไม่ใช่ Service Account</li>
+    </ul>
+
+    <p style="font-size:11px;color:var(--text-faint);">⚠️ อัปเดตส่วนนี้ทุกครั้งที่มีการเปลี่ยนแปลงโครงสร้างระบบ เพื่อให้เอกสารตรงกับโค้ดจริงเสมอ</p>
+  `;
+}
+$('tech-docs-toggle-btn').addEventListener('click', ()=>{
+  const el = $('tech-docs-content');
+  const showing = el.style.display==='block';
+  if(!showing) el.innerHTML = techDocsHtml();
+  el.style.display = showing ? 'none' : 'block';
+});
 
 /* ===================== ตั้งค่า Backup อัตโนมัติ — Super Admin เท่านั้น ===================== */
 async function renderBackupSchedulePanel(){
@@ -3739,7 +3877,7 @@ setTimeout(updateModeToggleScrollHint, 200);
 
   document.addEventListener('touchstart', e=>{
     if($('lightbox').classList.contains('show')){ pulling = false; startY = null; return; }
-    if($('error-detail-panel').classList.contains('show')){ pulling = false; startY = null; return; } // แผงนี้เลื่อนในตัวเอง (position:fixed) window.scrollY เลยค้างที่ 0 ตลอด ต้องข้ามการเช็ค pull-to-refresh ไปเลย
+    if($('error-detail-panel').classList.contains('show') || $('manual-panel').classList.contains('show')){ pulling = false; startY = null; return; } // แผงนี้เลื่อนในตัวเอง (position:fixed) window.scrollY เลยค้างที่ 0 ตลอด ต้องข้ามการเช็ค pull-to-refresh ไปเลย
     if(window.scrollY <= 0){ startY = e.touches[0].clientY; pulling = true; }
     else { pulling = false; startY = null; }
   }, {passive:true});
