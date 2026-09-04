@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.1
-  อัปเดตล่าสุด: 3 กันยายน 2569 11:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.3
+  อัปเดตล่าสุด: 5 กันยายน 2569 12:35 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.1</title>
+<title>Firmer Service Center — v4.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.1</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.3</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -674,7 +674,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.1 (อัปเดตล่าสุด 3 กันยายน 2569 11:50 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.3 (อัปเดตล่าสุด 5 กันยายน 2569 12:35 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -902,6 +902,7 @@ function seedData(){
 }
 
 let DATA = null;
+let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
 let currentSupIdentity = SUP_PRODUCTS[0];
@@ -969,15 +970,17 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [docsSnap, propSnap, pendSnap, catDoc, supDoc] = await Promise.all([
+    const [docsSnap, propSnap, pendSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
+      sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
     ]);
     DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
+    categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
     docsSnap.forEach(d=> DATA.documents.push({ id:d.id, ...d.data() }));
     propSnap.forEach(d=> DATA.proposals.push({ id:d.id, ...d.data() }));
     pendSnap.forEach(d=> DATA.pendingErrors.push({ id:d.id, ...d.data() }));
@@ -1006,10 +1009,52 @@ async function loadData(){
   }
   renderAll();
 }
+// ===================== แคช Error รายประเภทไว้ในเครื่อง (localStorage) — อยู่ข้ามการ Refresh/ปิดแอป ไม่เหมือนแคชในหน่วยความจำเดิม =====================
+const ERROR_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // แคชอยู่ได้ 6 ชั่วโมง ก่อนถือว่าเก่าแล้วดึงใหม่จาก Firestore (กันข้อมูลค้างนานเกินไปถ้ามีคนอื่นแก้ไข)
+function errorCacheKey(category){ return 'trbl_cache_errors_' + category; }
+function loadErrorsCacheFromStorage(category){
+  try{
+    const raw = localStorage.getItem(errorCacheKey(category));
+    if(!raw) return null;
+    const parsed = JSON.parse(raw);
+    if(Date.now() - parsed.cachedAt > ERROR_CACHE_TTL_MS) return null; // หมดอายุแล้ว ถือว่าไม่มีแคช
+    const serverVersion = categoryVersionsFromServer[category] || 0;
+    if(serverVersion > parsed.cachedAt) return null; // มีคนแก้ไขประเภทนี้หลังจากที่เราแคชไว้ — ถือว่าเก่าไปแล้ว ดึงใหม่
+    return parsed.errors;
+  }catch(e){ return null; } // localStorage เต็ม/ถูกบล็อก/ข้อมูลเพี้ยน ก็แค่ไม่ใช้แคช ไม่กระทบอะไร
+}
+function saveErrorsCacheToStorage(category, errors){
+  try{ localStorage.setItem(errorCacheKey(category), JSON.stringify({ cachedAt: Date.now(), errors })); }
+  catch(e){ /* เก็บไม่ได้ก็ไม่เป็นไร แค่ไม่ประหยัดโควต้ารอบหน้า */ }
+}
+function invalidateErrorsCacheForCategory(category){
+  try{ localStorage.removeItem(errorCacheKey(category)); }catch(e){}
+}
+// แจ้งเซิร์ฟเวอร์ว่า Product นี้เพิ่งถูกแก้ไข — เอกสารเล็กมาก (แค่ timestamp ต่อ Product) ราคาถูกมาก แต่ทำให้คนอื่นเห็นข้อมูลใหม่ได้ทันทีตอน login ครั้งถัดไป ไม่ต้องรอครบ 6 ชั่วโมง
+async function fsBumpCategoryVersion(category){
+  if(!category) return;
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const now = Date.now();
+    categoryVersionsFromServer[category] = now; // อัปเดตในเครื่องตัวเองด้วยทันที กันแคชตัวเองดูเก่าไปโดยไม่จำเป็น
+    await sdk.setDoc(sdk.doc(db,'meta','categoryVersions'), { [category]: now }, { merge: true });
+  }catch(e){ /* แจ้งเซิร์ฟเวอร์ไม่สำเร็จก็ไม่เป็นไร แค่คนอื่นจะเห็นข้อมูลใหม่ช้าไปหน่อย (ไม่เกิน 6 ชั่วโมง) ไม่กระทบข้อมูลจริง */ }
+}
+
 // โหลด Error เฉพาะประเภทที่ต้องใช้จริง (แทนที่จะโหลดทั้งหมดทีเดียวตอน login) — ลดการใช้โควต้า Firestore ลงมาก
-// มีแคชกันโหลดซ้ำ (loadedErrorCategories) — เรียกซ้ำกี่ครั้งก็ไม่เสียโควต้าเพิ่มถ้าเคยโหลดประเภทนั้นไปแล้ว
+// เช็คแคชในเครื่องก่อนเสมอ (loadErrorsCacheFromStorage) ถ้ามีและยังไม่หมดอายุ ใช้เลยไม่ต้องดึงจาก Firestore ซ้ำ
+// มีแคชกันโหลดซ้ำในเซสชันเดียวกันด้วย (loadedErrorCategories) — เรียกซ้ำกี่ครั้งก็ไม่เสียโควต้าเพิ่มถ้าเคยโหลดประเภทนั้นไปแล้วในเซสชันนี้
 async function ensureErrorsLoadedForCategory(category){
   if(!category || category==='all' || loadedErrorCategories.has(category)) return;
+
+  const cached = loadErrorsCacheFromStorage(category);
+  if(cached){
+    const existingIds = new Set(DATA.errors.map(e=>e.id));
+    cached.forEach(e=>{ if(!existingIds.has(e.id)) DATA.errors.push(e); });
+    loadedErrorCategories.add(category);
+    return;
+  }
+
   try{
     await initFirebase(); const sdk = window._firebaseSdk;
     const q = sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',category));
@@ -1017,6 +1062,7 @@ async function ensureErrorsLoadedForCategory(category){
     const existingIds = new Set(DATA.errors.map(e=>e.id));
     snap.forEach(d=>{ if(!existingIds.has(d.id)) DATA.errors.push({ id:d.id, solutions:[], _solutionsLoaded:false, ...d.data() }); });
     loadedErrorCategories.add(category);
+    saveErrorsCacheToStorage(category, DATA.errors.filter(e=>e.category===category));
   }catch(e){ showToast('⚠ โหลด Error ประเภท '+category+' ไม่สำเร็จ: '+e.message); }
 }
 // โหลด Error ทุกประเภทที่ยังไม่เคยโหลด — ใช้เฉพาะตอนค้นหาแบบไม่ระบุประเภท (ผู้ใช้ต้องกดยืนยันเองก่อนเสมอ เพราะกินโควต้าเยอะกว่าปกติ)
@@ -2411,6 +2457,7 @@ $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
 async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
+  if(fields.category) { invalidateErrorsCacheForCategory(fields.category); fsBumpCategoryVersion(fields.category); } // ข้อมูลเปลี่ยนแล้ว แคชเก่าใช้ไม่ได้อีกต่อไป + แจ้งคนอื่นด้วย
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
   await fsSaveError(errorId, fields);
@@ -2496,6 +2543,7 @@ async function deleteError(id){
   if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
   const err = DATA.errors.find(e=>e.id===id);
   try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+  if(err && err.category) { invalidateErrorsCacheForCategory(err.category); fsBumpCategoryVersion(err.category); }
   DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); showToast('ลบแล้ว');
   if(err){ deleteDriveFolderForError(err).catch(()=>{}); fsWriteLog(`ลบ Error: ${err.model} — ${err.errorCode||err.symptom}`); }
 }
@@ -2692,6 +2740,7 @@ async function acceptProposal(pid){
     if(Object.keys(errUpdateFields).length>0){ await fsSaveError(err.id, errUpdateFields); Object.assign(err, errUpdateFields); }
     await fsUpdateProposal(pid, {status:'accepted'});
   }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  if(err.category) { invalidateErrorsCacheForCategory(err.category); fsBumpCategoryVersion(err.category); } // มีวิธีแก้ไขใหม่เพิ่มเข้ามาแล้ว แคชเก่าใช้ไม่ได้อีก + แจ้งคนอื่นด้วย
   err.solutions.push(newSol);
   p.status = 'accepted'; renderAll();
   showToast('✓ เพิ่มเป็นวิธีแก้ไขใหม่แล้ว · จำนวนที่ค้างอยู่ลดลง');
@@ -3350,6 +3399,7 @@ async function renameCategoryEverywhere(oldCat, newCat){
     DATA.pendingErrors.forEach(p=>{ if(p.category===oldCat) p.category=newCat; });
 
     editingCatName = null;
+    invalidateErrorsCacheForCategory(oldCat); invalidateErrorsCacheForCategory(newCat); fsBumpCategoryVersion(oldCat); fsBumpCategoryVersion(newCat); // Error ย้ายชื่อประเภทแล้ว แคชเก่าใช้ไม่ได้อีก + แจ้งคนอื่นด้วย
     renderAll(); renderOwnerView();
     showToast(`✓ เปลี่ยนชื่อประเภทเป็น "${newCat}" แล้ว (ปรับ ${errIds.length} Error, ${docIds.length} เอกสาร, ${pendIds.length} รายการรออนุมัติ ให้อัตโนมัติ)`);
   }catch(e){
@@ -3382,6 +3432,7 @@ async function renameModelEverywhere(cat, oldModel, newModel){
     DATA.pendingErrors.forEach(p=>{ if(p.category===cat && p.model===oldModel) p.model=newModel; });
 
     editingModelKey = null;
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat); // Error ในประเภทนี้เปลี่ยนชื่อรุ่นแล้ว แคชเก่าใช้ไม่ได้อีก + แจ้งคนอื่นด้วย
     renderAll(); renderOwnerView();
     showToast(`✓ เปลี่ยนชื่อรุ่นเป็น "${newModel}" แล้ว (ปรับ ${errIds.length} Error, ${docIds.length} เอกสาร, ${pendIds.length} รายการรออนุมัติ ให้อัตโนมัติ)`);
   }catch(e){
