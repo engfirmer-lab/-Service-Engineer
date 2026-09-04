@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.3
-  อัปเดตล่าสุด: 5 กันยายน 2569 12:35 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.5
+  อัปเดตล่าสุด: 5 กันยายน 2569 13:10 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.3</title>
+<title>Firmer Service Center — v4.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.3</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -462,6 +462,12 @@
         <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
         <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
         <div style="overflow-x:auto;"><table id="sup-doc-matrix"></table></div>
+      </div>
+      <div class="panel-block">
+        <h2>สร้างโฟลเดอร์ล่วงหน้าใน Google Drive</h2>
+        <p class="panel-sub">สร้างโฟลเดอร์ทุกรุ่น/ทุกประเภทเอกสารที่ฉันดูแลไว้ล่วงหน้า (ยังไม่ต้องมีไฟล์) — เผื่อจะเอาไฟล์ไปวางเองใน Google Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป</p>
+        <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">📁 สร้างโฟลเดอร์ทั้งหมดล่วงหน้า</button>
+        <div id="precreate-folders-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
       </div>
     </div>
   </div>
@@ -674,7 +680,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.3 (อัปเดตล่าสุด 5 กันยายน 2569 12:35 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.5 (อัปเดตล่าสุด 5 กันยายน 2569 13:10 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1311,6 +1317,35 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   const f4 = await driveFindOrCreateFolder(docTypeFolderName, f3);
   return f4;
 }
+// สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล — เผื่อเอาไฟล์ไปวางเองใน Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป
+async function precreateDocumentFolders(){
+  const statusEl = $('precreate-folders-status');
+  const cats = myOwnedCategories();
+  const jobs = [];
+  cats.forEach(cat=>{
+    (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(model=>{
+      DOC_TYPES.forEach(dt=>{
+        if(dt.key==='video'){ VIDEO_SUBTYPES.forEach(vs=>{ jobs.push({cat, model, label: videoSubtypeLabel(vs.key)}); }); }
+        else{ jobs.push({cat, model, label: docTypeLabel(dt.key)}); }
+      });
+    });
+  });
+  if(jobs.length===0){ statusEl.textContent = 'ไม่มีรุ่นที่คุณดูแลอยู่ ไม่มีอะไรให้สร้าง'; return; }
+  if(!confirm(`จะสร้างโฟลเดอร์ทั้งหมด ${jobs.length} โฟลเดอร์ใน Google Drive (ยังไม่มีไฟล์ข้างใน) ต้องการดำเนินการต่อหรือไม่?`)) return;
+
+  let done = 0, failed = 0;
+  for(const job of jobs){
+    statusEl.textContent = `กำลังสร้าง... (${done+1}/${jobs.length}) ${job.cat} · ${job.model} · ${job.label}`;
+    try{ await ensureDocumentFolderPath(job.cat, job.model, job.label); done++; }
+    catch(e){ failed++; }
+  }
+  statusEl.textContent = failed>0
+    ? `✓ สร้างเสร็จ ${done} โฟลเดอร์ (ล้มเหลว ${failed} รายการ ลองกดใหม่อีกครั้งได้)`
+    : `✓ สร้างโฟลเดอร์ครบทั้งหมด ${done} โฟลเดอร์แล้ว`;
+  showToast('✓ สร้างโฟลเดอร์ล่วงหน้าเสร็จสิ้น');
+}
+$('precreate-folders-btn').addEventListener('click', precreateDocumentFolders);
+
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
 async function driveUploadLargeFile(file, filename, parentId, onProgress){
   const token = await ensureDriveAccess();
@@ -3626,6 +3661,7 @@ function techDocsHtml(){
     <p style="margin-bottom:10px;"><b>🔗 ลิงก์สำคัญ</b></p>
     <ul style="padding-left:20px;margin-bottom:16px;">
       <li>Firebase Console: <a href="https://console.firebase.google.com/u/0/project/service-engineering-center/overview" target="_blank" rel="noopener">console.firebase.google.com (โปรเจกต์ service-engineering-center)</a></li>
+      <li>หน้า Firestore Rules โดยตรง: <a href="https://console.firebase.google.com/u/0/project/service-engineering-center/firestore/databases/-default-/security/rules" target="_blank" rel="noopener">ลิงก์ตรงไปหน้าวางโค้ด Rules เลย (ไม่ต้องไล่เมนูเอง)</a></li>
       <li>GitHub Repo: <a href="https://github.com/engfirmer-lab/-Service-Engineer" target="_blank" rel="noopener">github.com/engfirmer-lab/-Service-Engineer</a></li>
     </ul>
 
@@ -3636,8 +3672,16 @@ function techDocsHtml(){
       <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">firmer-logo.png</td><td style="padding:6px 4px;">GitHub Repo (root) — ต้องอยู่ระดับเดียวกับ index.html เป๊ะ ชื่อไฟล์ต้องตรง</td></tr>
       <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">backup-script.js</td><td style="padding:6px 4px;">GitHub Repo (root)</td></tr>
       <tr style="border-bottom:1px solid var(--border);"><td style="padding:6px 4px;">daily-backup.yml</td><td style="padding:6px 4px;">GitHub Repo path: .github/workflows/daily-backup.yml</td></tr>
-      <tr><td style="padding:6px 4px;">firestore.rules</td><td style="padding:6px 4px;">Firebase Console → Firestore Database → Rules → วางทับแล้วกด Publish (ไม่ใช่ไฟล์ที่อัปโหลดขึ้น GitHub)</td></tr>
+      <tr><td style="padding:6px 4px;">firestore.rules</td><td style="padding:6px 4px;">Firebase Console → Firestore Database → Rules → วางทับแล้วกด Publish (ไม่ใช่ไฟล์ที่อัปโหลดขึ้น GitHub — ดูลิงก์ตรงด้านบน)</td></tr>
     </table>
+
+    <p style="margin-bottom:8px;"><b>📦 ตำแหน่งเก็บข้อมูลจริงใน Google Drive</b></p>
+    <ul style="padding-left:20px;margin-bottom:16px;">
+      <li>โฟลเดอร์หลักทั้งหมด: <b>"Service Center"</b> (ตัวแปร DRIVE_ROOT_FOLDER_ID ใน index.html ชี้มาที่นี่)</li>
+      <li><b>Service Center / [ชื่อผู้ดูแล] / [ประเภท] / [รุ่น] / Troubleshooting/[รหัส Error]/</b> — เก็บรูป/วิดีโอของแต่ละวิธีแก้ไข</li>
+      <li><b>Service Center / [ชื่อผู้ดูแล] / [ประเภท] / [รุ่น] / [ประเภทเอกสาร]/</b> — เก็บไฟล์เอกสารที่อัปโหลด (Service Manual, Spare Part ฯลฯ)</li>
+      <li><b>Service Center / Backups / [YYYY-MM-DD]/</b> — ไฟล์ Backup รายวัน (JSON + Excel)</li>
+    </ul>
 
     <p style="margin-bottom:8px;"><b>🗂️ โครงสร้างข้อมูลใน Firestore</b></p>
     <ul style="padding-left:20px;margin-bottom:16px;">
