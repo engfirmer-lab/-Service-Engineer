@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.5
-  อัปเดตล่าสุด: 5 กันยายน 2569 13:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.6
+  อัปเดตล่าสุด: 5 กันยายน 2569 13:35 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.5</title>
+<title>Firmer Service Center — v4.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.6</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -680,7 +680,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.5 (อัปเดตล่าสุด 5 กันยายน 2569 13:10 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.6 (อัปเดตล่าสุด 5 กันยายน 2569 13:35 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1307,7 +1307,39 @@ async function deleteDriveFolderForError(err){
     console.error('ลบโฟลเดอร์ Drive ของ Error ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e);
   }finally{ hideLoadingOverlay(); }
 }
-// สร้าง/หาโฟลเดอร์สำหรับเอกสาร (ไม่ผูกกับ Error เหมือนรูปภาพ แค่ ผู้ดูแล > ประเภท > รุ่น > ประเภทเอกสาร)
+// ย้ายโฟลเดอร์ Drive ทั้งก้อนของรุ่นนี้ จากผู้ดูแลเก่าไปผู้ดูแลใหม่ (แค่เปลี่ยน parent ไม่ต้อง copy ไฟล์ทีละไฟล์ เร็วและไม่เสียโควต้าอัปโหลดซ้ำ)
+// ถ้าไม่เคยมีโฟลเดอร์ของรุ่นนี้เลย (ยังไม่มีใครอัปโหลดอะไร) จะไม่ทำอะไร (no-op) ไม่ error
+async function moveDriveFolderForModel(category, model, oldOwnerName, newOwnerName){
+  if(oldOwnerName === newOwnerName) return;
+  const oldOwnerFolderName = (oldOwnerName==='ยังไม่มีผู้ดูแล') ? 'ไม่มีผู้รับผิดชอบ' : oldOwnerName;
+  const newOwnerFolderName = (newOwnerName==='ยังไม่มีผู้ดูแล') ? 'ไม่มีผู้รับผิดชอบ' : newOwnerName;
+  try{
+    const oldOwnerFolderId = await findDriveFolder(oldOwnerFolderName, DRIVE_ROOT_FOLDER_ID); if(!oldOwnerFolderId) return;
+    const oldCatFolderId = await findDriveFolder(category, oldOwnerFolderId); if(!oldCatFolderId) return;
+    const oldModelFolderId = await findDriveFolder(model, oldCatFolderId); if(!oldModelFolderId) return; // ไม่มีโฟลเดอร์รุ่นนี้เลย ไม่ต้องย้าย
+
+    const newOwnerFolderId = await driveFindOrCreateFolder(newOwnerFolderName, DRIVE_ROOT_FOLDER_ID);
+    const newCatFolderId = await driveFindOrCreateFolder(category, newOwnerFolderId);
+
+    const token = await ensureDriveAccess();
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${oldModelFolderId}?addParents=${newCatFolderId}&removeParents=${oldCatFolderId}`, {
+      method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
+    });
+    if(!res.ok) throw new Error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+  }catch(e){ console.error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ (ข้อมูลหลักย้ายสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
+}
+// ลบโฟลเดอร์ Drive ทั้งก้อนของรุ่นนี้ (รวมเอกสารและรูป/วิดีโอ Troubleshooting ข้างในทั้งหมด) — ใช้ตอนลบ Product/รุ่นออกจากระบบ ถ้าผู้ใช้เลือกให้ลบไฟล์ด้วย
+async function deleteDriveFolderForModel(category, model, ownerName){
+  const ownerFolderName = (ownerName==='ยังไม่มีผู้ดูแล') ? 'ไม่มีผู้รับผิดชอบ' : ownerName;
+  try{
+    const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId) return;
+    const catFolderId = await findDriveFolder(category, ownerFolderId); if(!catFolderId) return;
+    const modelFolderId = await findDriveFolder(model, catFolderId); if(!modelFolderId) return;
+    const token = await ensureDriveAccess();
+    await fetch(`https://www.googleapis.com/drive/v3/files/${modelFolderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+  }catch(e){ console.error('ลบโฟลเดอร์ Drive ของรุ่นนี้ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
+}
+
 async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
@@ -3301,20 +3333,36 @@ function renderOwnerSummary(){
   wrap.querySelectorAll('[data-cancelcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-confirmcat]').forEach(b=>b.addEventListener('click', async ()=>{
     const cat = b.getAttribute('data-confirmcat'); const sel = b.closest('.inline-edit').querySelector('.edit-cat-owner-select'); const newOwner = sel.value;
+    const newOwnerDisplay = newOwner===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : newOwner;
+    const modelsWithOldOwners = (DATA.categories[cat]||[]).map(m=>({ model:m, oldOwner: ownerOf(cat,m) })); // เก็บผู้ดูแลเก่าไว้ก่อนเปลี่ยน จะได้ย้ายโฟลเดอร์ถูกคน
     DATA.owners.categoryOwners[cat] = newOwner; editingOwnerCat=null;
     try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
-    renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwner===NO_OWNER?'ไม่มีผู้รับผิดชอบ':newOwner} แล้ว`);
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
+    renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwnerDisplay==='ยังไม่มีผู้ดูแล'?'ไม่มีผู้รับผิดชอบ':newOwnerDisplay} แล้ว`);
+    showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
+    try{
+      for(const {model, oldOwner} of modelsWithOldOwners){ await moveDriveFolderForModel(cat, model, oldOwner, newOwnerDisplay); }
+      showToast('✓ ย้ายโฟลเดอร์ใน Drive ไปผู้ดูแลใหม่แล้ว');
+    }catch(e){ showToast('⚠ ย้ายบางโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบย้ายแล้ว): '+e.message); }
+    finally{ hideLoadingOverlay(); }
   }));
   wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-confirmmodel]').forEach(b=>b.addEventListener('click', async ()=>{
     const key = b.getAttribute('data-confirmmodel'); const sel = b.closest('.inline-edit').querySelector('.edit-model-owner-select'); const val = sel.value;
+    const [cat, model] = key.split('|');
+    const newOwnerDisplay = val===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : val;
+    const oldOwner = ownerOf(cat, model); // เก็บผู้ดูแลเก่าไว้ก่อนเปลี่ยน
     DATA.owners.modelOverrides[key] = val;
     editingOwnerModel=null;
     try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
     renderAll();
-    const modelName = key.split('|')[1];
-    showToast(`✓ ย้ายผู้ดูแลรุ่น ${modelName} แล้ว`);
+    showToast(`✓ ย้ายผู้ดูแลรุ่น ${model} แล้ว`);
+    showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
+    try{ await moveDriveFolderForModel(cat, model, oldOwner, newOwnerDisplay); showToast('✓ ย้ายโฟลเดอร์ใน Drive ไปผู้ดูแลใหม่แล้ว'); }
+    catch(e){ showToast('⚠ ย้ายโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบย้ายแล้ว): '+e.message); }
+    finally{ hideLoadingOverlay(); }
   }));
 }
 
@@ -3363,18 +3411,36 @@ function renderCatModelManage(){
   // ลบประเภท
   wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
     const cat=b.getAttribute('data-delcat'); if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
+    const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของประเภทนี้ทั้งหมดด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
+    const modelsWithOwners = (DATA.categories[cat]||[]).map(m=>({ model:m, owner: ownerOf(cat,m) })); // เก็บไว้ก่อนลบข้อมูลจริง เพราะ ownerOf ต้องใช้ DATA.categories/owners ที่ยังไม่ถูกลบ
     (DATA.categories[cat]||[]).forEach(m=>{ delete DATA.owners.modelOverrides[cat+'|'+m]; });
     delete DATA.categories[cat]; delete DATA.owners.categoryOwners[cat];
     try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
     renderAll(); showToast('ลบประเภทแล้ว');
+    if(deleteDriveToo){
+      showLoadingOverlay('กำลังลบโฟลเดอร์ใน Google Drive...');
+      try{ for(const {model,owner} of modelsWithOwners){ await deleteDriveFolderForModel(cat, model, owner); } showToast('✓ ลบโฟลเดอร์ใน Drive แล้ว'); }
+      catch(e){ showToast('⚠ ลบบางโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
+      finally{ hideLoadingOverlay(); }
+    }
   }); });
 
   // ลบรุ่น
   wrap.querySelectorAll('[data-delmodel]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
     const [cat,model]=b.getAttribute('data-delmodel').split('|'); if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
+    const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของรุ่นนี้ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
+    const owner = ownerOf(cat, model); // เก็บไว้ก่อนลบข้อมูลจริง
     DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model];
     try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
     renderAll(); showToast('ลบรุ่นแล้ว');
+    if(deleteDriveToo){
+      showLoadingOverlay('กำลังลบโฟลเดอร์ใน Google Drive...');
+      try{ await deleteDriveFolderForModel(cat, model, owner); showToast('✓ ลบโฟลเดอร์ใน Drive แล้ว'); }
+      catch(e){ showToast('⚠ ลบโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
+      finally{ hideLoadingOverlay(); }
+    }
   }); });
 
   // แก้ไขชื่อประเภท — เปิด/ปิดช่องแก้ไข
