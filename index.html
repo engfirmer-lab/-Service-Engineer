@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 3.8
-  อัปเดตล่าสุด: 3 กันยายน 2569 11:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.1
+  อัปเดตล่าสุด: 3 กันยายน 2569 11:50 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v3.8</title>
+<title>Firmer Service Center — v4.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 3.8</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.1</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -674,7 +674,7 @@
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 3.8 (อัปเดตล่าสุด 3 กันยายน 2569 11:05 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.1 (อัปเดตล่าสุด 3 กันยายน 2569 11:50 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1736,7 +1736,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub"><b>Export ประวัติการใช้งาน (Log):</b> Super Admin เท่านั้น — ดาวน์โหลดเป็น Excel</p>
     <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore และขนาดไฟล์จริงใน Drive ได้ (กดเช็คเองทุกปุ่ม เพื่อประหยัดโควต้า)</p>
   `},
-  { id:'superadmin', icon:'⭐', title:'สำหรับ Super Admin โดยเฉพาะ', body:`
+  { id:'superadmin', icon:'⭐', title:'สำหรับ Super Admin โดยเฉพาะ', superAdminOnly:true, body:`
     <p class="panel-sub">รวมทุกฟังก์ชันที่ทำได้เฉพาะบัญชี Super Admin เท่านั้น (engfirmer@gmail.com) — คนเดียวในระบบที่มีสิทธิ์เหล่านี้ กระจายอยู่ในหลายหน้า สรุปรวมไว้ที่นี่ให้เห็นภาพครบ</p>
     <p class="panel-sub"><b>📍 หน้าจัดการสิทธิ์:</b></p>
     <ul style="font-size:13px;line-height:1.9;padding-left:20px;">
@@ -1755,31 +1755,8 @@ const MANUAL_TOPICS = [
       <li>เห็นคำขอสิทธิ์เข้าถึงใหม่ทันที (คนอื่นไม่เห็นส่วนนี้)</li>
       <li>ปิดการแจ้งเตือน "Backup ล้มเหลว" ได้ (ต้องเคยกดเช็คสถานะ Backup ที่หน้า Export/Backup มาก่อนอย่างน้อย 1 ครั้งในเซสชันนั้น ถึงจะเห็น)</li>
     </ul>
-    <p style="font-size:11.5px;color:var(--text-faint);margin-top:10px;">⚠️ อีเมล Super Admin ฝังไว้ตายตัวในโค้ด (ไม่มีใครแก้ผ่านหน้าเว็บได้) กันเหตุการณ์ "ลบสิทธิ์ผิดจนล็อกตัวเองไม่ให้เข้าแก้ไขอะไรได้อีก" — ถ้าต้องการเปลี่ยนบัญชี Super Admin ต้องแก้ไขโค้ดโดยตรง (ดูเอกสารทางเทคนิค)</p>
-
-    <div style="border-top:1px solid var(--border);margin:20px 0;"></div>
-    <h3 style="font-size:15px;margin-bottom:10px;">📤 วิธีอัปโหลด/อัปเดตไฟล์ระบบ (ทำเป็นประจำเวลาแก้ไขโค้ด)</h3>
-
-    <p class="panel-sub"><b>① อัปโหลดไฟล์ขึ้น GitHub</b> — ใช้กับไฟล์: index.html, firmer-logo.png, backup-script.js, daily-backup.yml</p>
-    <ol style="font-size:13px;line-height:1.9;padding-left:20px;">
-      <li>เข้า <a href="https://github.com/engfirmer-lab/-Service-Engineer" target="_blank" rel="noopener">github.com/engfirmer-lab/-Service-Engineer</a></li>
-      <li>ลากไฟล์ที่แก้ไขแล้วไปวางในหน้าเว็บ (หรือกด "Add file" → "Upload files")</li>
-      <li>ถ้าเป็นไฟล์ชื่อเดิม ระบบจะขึ้นข้อความแจ้งว่าจะถูกแทนที่ — ปกติ ไม่ต้องลบไฟล์เก่าออกก่อน</li>
-      <li>เลื่อนลงล่างสุด กด "Commit changes"</li>
-      <li>เว็บจะอัปเดตให้อัตโนมัติภายในไม่กี่นาที</li>
-    </ol>
-    <p style="font-size:11.5px;color:var(--red);margin-bottom:14px;">⚠️ ไฟล์ daily-backup.yml ต้องอยู่ใน path <b>.github/workflows/daily-backup.yml</b> เท่านั้น ถ้าอัปโหลดผิดที่ระบบ Backup อัตโนมัติจะไม่ทำงาน</p>
-
-    <p class="panel-sub"><b>② อัปเดต Firestore Security Rules</b> — ใช้กับไฟล์: firestore.rules</p>
-    <ol style="font-size:13px;line-height:1.9;padding-left:20px;">
-      <li>เข้า <a href="https://console.firebase.google.com/u/0/project/service-engineering-center/overview" target="_blank" rel="noopener">console.firebase.google.com (โปรเจกต์ service-engineering-center)</a></li>
-      <li>เมนูซ้าย → Firestore Database → แท็บ Rules</li>
-      <li><b>Copy เนื้อหา Rules เดิมเก็บสำรองไว้ก่อนเสมอ</b> (กันพลาดแล้วย้อนกลับไม่ได้)</li>
-      <li>ลบเนื้อหาเดิม แล้ววางเนื้อหาจากไฟล์ firestore.rules ใหม่ทับ</li>
-      <li>กด Publish</li>
-      <li><b>ทดสอบด้วยบัญชีจริงทันทีหลัง Publish เสมอ</b> — ลอง login ด้วยบัญชี Editor และบัญชีทั่วไป เช็คว่ายังเข้าใช้งานได้ปกติ ไม่ถูกล็อกออกทั้งระบบ</li>
-    </ol>
-    <p style="font-size:11.5px;color:var(--red);">⚠️ เป็นขั้นตอนที่เสี่ยงที่สุดในระบบ — ถ้าตั้งค่าผิดอาจทำให้ทุกคนเข้าใช้งานไม่ได้ทันที ควรทำตอนมีเวลาตรวจสอบผลหลัง Publish เสมอ ห้ามทำแล้วปิดหน้าจอทิ้งไปเลย</p>
+    <p style="font-size:11.5px;color:var(--text-faint);margin-top:10px;">⚠️ อีเมล Super Admin ฝังไว้ตายตัวในโค้ด (ไม่มีใครแก้ผ่านหน้าเว็บได้) กันเหตุการณ์ "ลบสิทธิ์ผิดจนล็อกตัวเองไม่ให้เข้าแก้ไขอะไรได้อีก" — ถ้าต้องการเปลี่ยนบัญชี Super Admin ต้องแก้ไขโค้ดโดยตรง (ดูเอกสารทางเทคนิคที่หน้า Export/Backup)</p>
+    <p style="font-size:12px;color:var(--amber);margin-top:14px;">📄 วิธีอัปโหลด/แก้ไขโค้ดของระบบ ดูรายละเอียดครบถ้วนได้ที่หน้า <b>Export/Backup → เอกสารทางเทคนิค</b> (มีตารางไฟล์-ลิงก์-โครงสร้างข้อมูลครบกว่าที่นี่)</p>
   `},
 ];
 
@@ -1792,7 +1769,8 @@ function renderManualMenu(){
     <div id="manual-topic-list"></div>
   `;
   const list = $('manual-topic-list');
-  list.innerHTML = MANUAL_TOPICS.map(t=>`<button class="admin-row" data-topic="${t.id}" style="width:100%;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;font-family:'Sarabun';font-size:14px;color:var(--text);display:flex;align-items:center;justify-content:space-between;">
+  const visibleTopics = MANUAL_TOPICS.filter(t=> !t.superAdminOnly || isSuperAdmin());
+  list.innerHTML = visibleTopics.map(t=>`<button class="admin-row" data-topic="${t.id}" style="width:100%;text-align:left;cursor:pointer;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px;font-family:'Sarabun';font-size:14px;color:var(--text);display:flex;align-items:center;justify-content:space-between;">
     <span>${t.icon} ${escapeHtml(t.title)}</span><span style="color:var(--text-faint);">›</span>
   </button>`).join('');
   list.querySelectorAll('[data-topic]').forEach(btn=>btn.addEventListener('click', ()=> renderManualTopic(btn.getAttribute('data-topic'))));
@@ -1800,6 +1778,7 @@ function renderManualMenu(){
 function renderManualTopic(id){
   const topic = MANUAL_TOPICS.find(t=>t.id===id);
   if(!topic) return;
+  if(topic.superAdminOnly && !isSuperAdmin()){ renderManualMenu(); return; } // กันเผื่อเรียกตรงๆ — คนอื่นไม่มีสิทธิ์ดูหัวข้อนี้
   manualAtMenu = false;
   $('manual-content').innerHTML = `
     <button id="manual-back-btn" class="btn btn-ghost btn-sm" style="margin-bottom:14px;">← กลับไปที่สารบัญ</button>
@@ -2987,11 +2966,7 @@ async function renderAccessRequestsPanel(){
   }));
 }
 
-/* ===================== จัดการสิทธิ์ผู้ใช้งานแบบรวม — โยกย้ายระหว่าง "ผู้ใช้ทั่วไป" กับ "แก้ไขข้อมูล" ได้ ===================== */
-function getAllUsersWithRoles(){
-  const emails = new Set([...adminEmails, ...approvedUsers]);
-  return [...emails].sort(naturalSort).map(email=>({ email, role: adminEmails.includes(email) ? 'editor' : 'approved' }));
-}
+/* ===================== จัดการสิทธิ์ผู้ใช้งานแบบแยกชั้น — Super Admin / แก้ไขข้อมูล / ผู้ใช้ทั่วไป ===================== */
 function renderUnifiedPermissionList(){
   const noteEl = $('perm-list-note');
   const canEdit = isSuperAdmin();
@@ -3003,22 +2978,35 @@ function renderUnifiedPermissionList(){
   $('add-perm-email-btn').disabled = !canEdit;
   $('add-perm-email-btn').style.opacity = canEdit ? '1' : '.4';
 
-  const list = $('perm-user-list');
-  const users = [ { email: SUPER_ADMIN_EMAIL, role:'super' }, ...getAllUsersWithRoles() ];
-  list.innerHTML = users.map(({email,role})=>{
-    const roleLabel = role==='super' ? 'Super Admin (แก้ไม่ได้)' : (role==='editor' ? 'แก้ไขข้อมูล (Editor)' : 'ผู้ใช้ทั่วไป');
-    const roleColor = role==='super' ? 'var(--amber)' : (role==='editor' ? 'var(--green)' : 'var(--text-faint)');
+  const editors = adminEmails.slice().sort(naturalSort);
+  const approved = approvedUsers.slice().sort(naturalSort);
+
+  function userRowHtml(email, role){
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(email)}</span><span class="mono" style="font-size:10.5px;color:${roleColor};">${roleLabel}</span></div>
-      ${role!=='super' ? `<div style="display:flex;gap:6px;align-items:center;">
+      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(email)}</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
         <select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">
           <option value="approved" ${role==='approved'?'selected':''}>ผู้ใช้ทั่วไป</option>
           <option value="editor" ${role==='editor'?'selected':''}>แก้ไขข้อมูล</option>
         </select>
         <button class="icon-btn danger" data-delperm="${escapeHtml(email)}" ${canEdit?'':'disabled style="opacity:.35;cursor:not-allowed;"'}>ลบ</button>
-      </div>` : ''}
+      </div>
     </div>`;
-  }).join('');
+  }
+
+  const list = $('perm-user-list');
+  list.innerHTML = `
+    <h3 style="font-size:13px;margin:0 0 8px;color:var(--amber);">⭐ Super Admin (1 คน)</h3>
+    <div class="admin-row">
+      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(SUPER_ADMIN_EMAIL)}</span><span class="mono" style="font-size:10.5px;color:var(--amber);">แก้ไม่ได้ — ตายตัวในโค้ด</span></div>
+    </div>
+
+    <h3 style="font-size:13px;margin:20px 0 8px;color:var(--green);">🔧 แก้ไขข้อมูล (Editor) — ${editors.length} คน</h3>
+    ${editors.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : editors.map(email=>userRowHtml(email,'editor')).join('')}
+
+    <h3 style="font-size:13px;margin:20px 0 8px;color:var(--text-dim);">👤 ผู้ใช้ทั่วไป — ${approved.length} คน</h3>
+    ${approved.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : approved.map(email=>userRowHtml(email,'approved')).join('')}
+  `;
 
   list.querySelectorAll('[data-permrole]').forEach(sel=>sel.addEventListener('change', async ()=>{
     if(!isSuperAdmin()) return;
