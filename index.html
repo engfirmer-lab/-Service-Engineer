@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.9
-  อัปเดตล่าสุด: 5 กันยายน 2569 14:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 5.0
+  อัปเดตล่าสุด: 5 กันยายน 2569 15:20 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.9</title>
+<title>Firmer Service Center — v5.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.9</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -471,6 +471,10 @@
           <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
         </div>
         <div id="precreate-folders-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <p class="panel-sub"><b>วางไฟล์เองใน Drive แล้ว?</b> กดปุ่มนี้เพื่อให้แอปไปสำรวจโฟลเดอร์แล้วสร้างลิงก์ให้อัตโนมัติ — จะได้เห็นในตาราง "เอกสารทั้งหมดที่ฉันดูแล" ด้านบนโดยไม่ต้องมากดใส่ลิงก์เองทีละไฟล์</p>
+        <button class="btn btn-ghost btn-sm" id="sync-drive-docs-btn">🔄 ซิงค์ไฟล์จาก Google Drive</button>
+        <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
       </div>
     </div>
   </div>
@@ -680,7 +684,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.9 (อัปเดตล่าสุด 5 กันยายน 2569 14:50 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.0 (อัปเดตล่าสุด 5 กันยายน 2569 15:20 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1378,6 +1382,61 @@ async function precreateDocumentFolders(){
 }
 $('precreate-folders-btn').addEventListener('click', precreateDocumentFolders);
 
+// ใช้ extractDriveFileId ที่มีอยู่แล้วในไฟล์นี้ (ดึงรหัสไฟล์ Drive จากลิงก์) — เช็คว่าไฟล์นี้เคยถูกลิงก์ไว้ในระบบแล้วหรือยัง กันสร้างซ้ำ
+// สำรวจโฟลเดอร์ Drive ของทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล หาไฟล์ที่ยังไม่เคยลิงก์ไว้ในระบบ แล้วสร้างลิงก์ให้อัตโนมัติ
+// รองรับทั้งไฟล์ที่อัปโหลดผ่านแอปและไฟล์ที่ลากไปวางเองใน Drive โดยตรง
+async function syncDocumentsFromDrive(){
+  const statusEl = $('sync-drive-docs-status');
+  const cats = myOwnedCategories();
+  const jobs = [];
+  cats.forEach(cat=>{
+    (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(model=>{
+      DOC_TYPES.forEach(dt=>{
+        if(dt.key==='video'){ VIDEO_SUBTYPES.forEach(vs=>{ jobs.push({cat, model, docType:'video', videoSubtype:vs.key, label: videoSubtypeLabel(vs.key)}); }); }
+        else{ jobs.push({cat, model, docType:dt.key, label: docTypeLabel(dt.key)}); }
+      });
+    });
+  });
+  if(jobs.length===0){ statusEl.textContent = 'ไม่มีรุ่นที่คุณดูแลอยู่ ไม่มีอะไรให้ซิงค์'; return; }
+
+  const existingFileIds = new Set(DATA.documents.map(d=>extractDriveFileId(d.url)).filter(Boolean));
+  let checked = 0, added = 0;
+  const token = await ensureDriveAccess();
+  for(const job of jobs){
+    checked++;
+    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${jobs.length}) ${job.cat} · ${job.model} · ${job.label}`;
+    try{
+      const owner = ownerOf(job.cat, job.model);
+      const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId) continue;
+      const catFolderId = await findDriveFolder(job.cat, ownerFolderId); if(!catFolderId) continue;
+      const modelFolderId = await findDriveFolder(job.model, catFolderId); if(!modelFolderId) continue;
+      const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId) continue;
+
+      const q = encodeURIComponent(`'${typeFolderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(!res.ok) continue;
+      const data = await res.json();
+      for(const f of (data.files||[])){
+        if(existingFileIds.has(f.id)) continue; // เคยลิงก์ไว้แล้ว ข้าม
+        // ตั้งสิทธิ์ให้ทุกคนดูได้ (เผื่อไฟล์ที่วางเองใน Drive ยังไม่เคยตั้งสิทธิ์แชร์ไว้ ต่างจากไฟล์ที่อัปโหลดผ่านแอปซึ่งตั้งให้อัตโนมัติแล้ว)
+        try{ await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}/permissions`, { method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ role:'reader', type:'anyone' }) }); }catch(e){}
+        const url = `https://drive.google.com/file/d/${f.id}/view`;
+        const fields = { docType: job.docType, category: job.cat, model: job.model, title: f.name, method:'link', url, uploadedAt: Date.now() };
+        if(job.videoSubtype) fields.videoSubtype = job.videoSubtype;
+        const newId = await fsAddDocument(fields);
+        DATA.documents.push({ id:newId, ...fields });
+        existingFileIds.add(f.id);
+        added++;
+      }
+    }catch(e){ /* โฟลเดอร์นี้เช็คไม่ได้ก็ข้ามไปโฟลเดอร์ถัดไป ไม่ทำให้ทั้งหมดล้มเหลว */ }
+  }
+  statusEl.textContent = `✓ ตรวจสอบครบแล้ว (${jobs.length} โฟลเดอร์) พบไฟล์ใหม่ ${added} รายการ`;
+  renderAll();
+  showToast(added>0 ? `✓ เพิ่มลิงก์เอกสารใหม่ ${added} รายการจาก Drive` : 'ไม่พบไฟล์ใหม่ใน Drive');
+}
+$('sync-drive-docs-btn').addEventListener('click', syncDocumentsFromDrive);
+
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
 async function driveUploadLargeFile(file, filename, parentId, onProgress){
   const token = await ensureDriveAccess();
@@ -1833,6 +1892,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub"><b>ตรวจสอบข้อเสนอวิธีแก้ไข:</b> กด "รับเป็นวิธีแก้ไขทางการ" เพื่อเพิ่มเป็นวิธีจริง, "แก้ไข" เพื่อปรับเนื้อหาก่อนรับ หรือ "ไม่รับ"</p>
     <p class="panel-sub"><b>จัดการเอกสาร (Document Matrix):</b> สลับแท็บ "จัดการเอกสาร" ดูตารางสรุปว่ารุ่นไหนมีเอกสารครบ/ขาดอะไรบ้าง เพิ่ม/แก้ไขลิงก์หรืออัปโหลดไฟล์ได้โดยตรง</p>
     <p class="panel-sub"><b>Google Drive Database:</b> ในแท็บ "จัดการเอกสาร" เช่นกัน — กด "สร้าง Folder ทั้งหมดบน Google Drive" เพื่อสร้างโฟลเดอร์ล่วงหน้าทุกรุ่นที่ดูแลอยู่ (ยังไม่มีไฟล์) เผื่อจะเอาไฟล์ไปวางเองใน Drive ทีหลัง หรือกด "เปิด Google Drive ที่เก็บ Database" เพื่อเข้าไปดูไฟล์จริงได้เลย</p>
+    <p class="panel-sub"><b>อัปโหลดไฟล์ได้ 2 ทาง:</b> (1) ผ่านปุ่มอัปโหลดในแอปโดยตรง หรือ (2) ลากไฟล์ไปวางเองในโฟลเดอร์ที่สร้างไว้ใน Google Drive แล้วกลับมากด "🔄 ซิงค์ไฟล์จาก Google Drive" ในหน้า "จัดการเอกสาร" — แอปจะสำรวจโฟลเดอร์แล้วสร้างลิงก์ให้อัตโนมัติ ไม่ต้องมากดใส่ลิงก์เองทีละไฟล์</p>
   `},
   { id:'owner', icon:'🗂️', title:'จัดการ Product', img:'owner', body:`
     <p class="panel-sub">สำหรับ Editor เท่านั้น — เพิ่ม/ลบชื่อคนในทีม Sup Product (ลบไม่ได้ถ้ายังมีรุ่นผูกอยู่), ดูสรุปว่าใครดูแลอะไรบ้างและย้ายความรับผิดชอบได้, เพิ่มประเภท/รุ่นเครื่องใหม่</p>
