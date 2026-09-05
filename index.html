@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.1
-  อัปเดตล่าสุด: 5 กันยายน 2569 15:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 5.2
+  อัปเดตล่าสุด: 5 กันยายน 2569 16:20 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.1</title>
+<title>Firmer Service Center — v5.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.1</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.2</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -565,31 +565,33 @@
     <div class="panel-block" id="pending-drive-moves-panel" style="display:none;border:1px solid var(--red);"></div>
 
     <div class="panel-block">
-      <h2>สรุปผู้รับผิดชอบ Product</h2>
-      <p class="panel-sub">แต่ละคนดูแลประเภท/รุ่นอะไรบ้าง กดปุ่ม "แก้ไข" เพื่อย้ายความรับผิดชอบ</p>
-      <div id="owner-summary"></div>
-    </div>
-
-    <div class="panel-block">
-      <h2>เพิ่ม Product/Model</h2>
-      <p class="panel-sub">เลือกประเภทที่มีอยู่แล้ว หรือพิมพ์ชื่อประเภทใหม่ได้ในช่องเดียวกัน — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
-      <div class="form-grid">
-        <div class="field-wrap">
-          <label>Product *</label>
-          <select id="new-model-cat"><option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option></select>
-          <input type="text" id="new-cat-input" placeholder="พิมพ์ชื่อประเภทใหม่" style="margin-top:6px;display:none;">
-        </div>
-        <div class="field-wrap">
-          <label>Model (เว้นว่างได้ถ้าจะเพิ่มแค่ Product)</label>
-          <input type="text" id="new-model-input" placeholder="ชื่อรุ่น">
-        </div>
-        <div class="field-wrap">
-          <label>ผู้ดูแล *</label>
-          <select id="new-model-owner"></select>
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <h2 style="margin:0;">จัดการ Product ทั้งหมด</h2>
+        <button class="btn btn-primary btn-sm" id="toggle-add-model-form-btn">+ เพิ่ม Product/Model</button>
       </div>
-      <button class="btn btn-primary btn-sm" id="add-model-btn" style="margin-top:12px;">เพิ่ม</button>
-      <div id="cat-model-manage" style="margin-top:18px;"></div>
+      <p class="panel-sub">แต่ละแถวคือ 1 รุ่น เปลี่ยนผู้ดูแล/แก้ชื่อ/ลบ ได้ในที่เดียว — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
+
+      <div id="add-model-form" style="display:none;background:var(--panel-alt);border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div class="form-grid">
+          <div class="field-wrap">
+            <label>Product *</label>
+            <select id="new-model-cat"><option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option></select>
+            <input type="text" id="new-cat-input" placeholder="พิมพ์ชื่อประเภทใหม่" style="margin-top:6px;display:none;">
+          </div>
+          <div class="field-wrap">
+            <label>Model (เว้นว่างได้ถ้าจะเพิ่มแค่ Product)</label>
+            <input type="text" id="new-model-input" placeholder="ชื่อรุ่น">
+          </div>
+          <div class="field-wrap">
+            <label>ผู้ดูแล *</label>
+            <select id="new-model-owner"></select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="add-model-btn" style="margin-top:12px;">เพิ่ม</button>
+      </div>
+
+      <input type="text" id="product-table-search" placeholder="ค้นหา Product, รุ่น, หรือผู้ดูแล..." style="width:100%;box-sizing:border-box;margin-bottom:12px;">
+      <div id="cat-model-manage"></div>
     </div>
   </div>
 
@@ -684,7 +686,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.1 (อัปเดตล่าสุด 5 กันยายน 2569 15:45 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.2 (อัปเดตล่าสุด 5 กันยายน 2569 16:20 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -938,9 +940,6 @@ const SUPER_ADMIN_EMAIL = 'engfirmer@gmail.com'; // ผู้ดูแลสู�
 let adminEmails = []; // รายชื่ออีเมลที่แก้ไขข้อมูลได้ (โหลดจาก Firestore)
 let approvedUsers = []; // รายชื่ออีเมลที่มีสิทธิ์เข้าถึง (อ่าน) ระบบได้ (โหลดจาก Firestore)
 let myVotes = {};
-
-let editingOwnerCat = null;   // category currently showing inline owner editor
-let editingOwnerModel = null; // model currently showing inline owner editor (key = model name)
 
 let engEditingSolutions = [];
 let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไข" on a pending Engineer submission
@@ -3322,7 +3321,6 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 async function renderOwnerView(){
   renderSupNameList();
   populateOwnerFormSelectors();
-  renderOwnerSummary();
   renderPendingDriveMovesPanel();
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
   if(remaining.length>0){
@@ -3342,106 +3340,6 @@ function toggleNewCatInput(){
   $('new-cat-input').style.display = isNew ? 'block' : 'none';
 }
 $('new-model-cat').addEventListener('change', toggleNewCatInput);
-function renderOwnerSummary(){
-  const wrap = $('owner-summary');
-
-  // จัดกลุ่ม: ใครดูแลรุ่นไหนบ้างจริงๆ (ไม่สนใจว่าเป็นค่าเริ่มต้นของประเภทหรือข้อยกเว้น — แสดงเป็นแบบเดียวกันหมด)
-  const groupsBySp = {}; SUP_PRODUCTS.forEach(sp=> groupsBySp[sp]={});
-  const unassignedGroups = {};
-  Object.entries(DATA.categories).forEach(([cat,models])=>{
-    models.forEach(m=>{
-      const owner = ownerOf(cat,m);
-      if(owner==='ยังไม่มีผู้ดูแล'){
-        (unassignedGroups[cat] = unassignedGroups[cat]||[]).push(m);
-      } else {
-        if(!groupsBySp[owner]) groupsBySp[owner] = {};
-        (groupsBySp[owner][cat] = groupsBySp[owner][cat]||[]).push(m);
-      }
-    });
-  });
-
-  function renderModelChip(cat, m, currentOwnerForSelect){
-    const key = cat+'|'+m;
-    const isEditingModel = editingOwnerModel===key;
-    return isEditingModel
-      ? `<span class="owner-model-chip editing"><span class="inline-edit"><select class="edit-model-owner-select">${ownerSelectOptions(currentOwnerForSelect, false)}</select><button class="btn btn-primary btn-sm" data-confirmmodel="${escapeHtml(key)}">✓</button><button class="btn btn-ghost btn-sm" data-cancelmodel="1">✕</button></span></span>`
-      : `<span class="owner-model-chip">${escapeHtml(m)} <button class="icon-btn btn-sm" data-editmodel="${escapeHtml(key)}" title="ย้ายผู้ดูแล">ย้าย</button></span>`;
-  }
-  function renderCatBlock(sp, cat, models, showBulkEdit){
-    const isEditingCat = editingOwnerCat===cat;
-    return `<div class="owner-cat-row">
-      <div class="owner-cat-head">
-        <div>
-          <span class="owner-cat-name">${escapeHtml(cat)}</span>
-          <span class="mono" style="font-size:10.5px;color:var(--text-faint);"> (${models.length} รุ่น)</span>
-        </div>
-        ${showBulkEdit ? (isEditingCat ? `
-          <div class="inline-edit">
-            <select class="edit-cat-owner-select">${ownerSelectOptions(sp, false)}</select>
-            <button class="btn btn-primary btn-sm" data-confirmcat="${escapeHtml(cat)}">บันทึก</button>
-            <button class="btn btn-ghost btn-sm" data-cancelcat="1">ยกเลิก</button>
-          </div>` : `<button class="icon-btn" data-editcat="${escapeHtml(cat)}">แก้ไขทั้งประเภท</button>`) : ''}
-      </div>
-      <div class="owner-models-list">${models.map(m=>renderModelChip(cat, m, sp)).join('')}</div>
-    </div>`;
-  }
-
-  wrap.innerHTML = SUP_PRODUCTS.map(sp=>{
-    const catMap = groupsBySp[sp] || {};
-    const catRows = Object.keys(catMap).map(cat=>{
-      const showBulkEdit = DATA.owners.categoryOwners[cat]===sp; // ปุ่ม "แก้ไขทั้งประเภท" โชว์เฉพาะการ์ดของผู้ดูแลหลักของประเภทนั้น
-      return renderCatBlock(sp, cat, catMap[cat], showBulkEdit);
-    }).join('');
-    return `<div class="owner-card">
-      <h3>👤 ${escapeHtml(sp)}</h3>
-      ${catRows || '<p style="font-size:12px;color:var(--text-faint);">ยังไม่ได้ดูแลประเภทใด</p>'}
-    </div>`;
-  }).join('');
-
-  const unassignedCats = Object.keys(unassignedGroups);
-  if(unassignedCats.length>0){
-    const catRows = unassignedCats.map(cat=> renderCatBlock(NO_OWNER, cat, unassignedGroups[cat], false)).join('');
-    wrap.innerHTML += `<div class="owner-card" style="border-color:var(--text-faint);">
-      <h3>⚪ ยังไม่มีผู้รับผิดชอบ</h3>
-      ${catRows}
-    </div>`;
-  }
-
-  wrap.querySelectorAll('[data-editcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=b.getAttribute('data-editcat'); editingOwnerModel=null; renderOwnerSummary(); }));
-  wrap.querySelectorAll('[data-cancelcat]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerCat=null; renderOwnerSummary(); }));
-  wrap.querySelectorAll('[data-confirmcat]').forEach(b=>b.addEventListener('click', async ()=>{
-    const cat = b.getAttribute('data-confirmcat'); const sel = b.closest('.inline-edit').querySelector('.edit-cat-owner-select'); const newOwner = sel.value;
-    const newOwnerDisplay = newOwner===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : newOwner;
-    const modelsWithOldOwners = (DATA.categories[cat]||[]).map(m=>({ model:m, oldOwner: ownerOf(cat,m) })); // เก็บผู้ดูแลเก่าไว้ก่อนเปลี่ยน จะได้ย้ายโฟลเดอร์ถูกคน
-    DATA.owners.categoryOwners[cat] = newOwner; editingOwnerCat=null;
-    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
-    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
-    renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwnerDisplay==='ยังไม่มีผู้ดูแล'?'ไม่มีผู้รับผิดชอบ':newOwnerDisplay} แล้ว`);
-    showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
-    for(const {model, oldOwner} of modelsWithOldOwners){ await attemptDriveMove(cat, model, oldOwner, newOwnerDisplay); }
-    hideLoadingOverlay();
-    renderOwnerView();
-  }));
-  wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
-  wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
-  wrap.querySelectorAll('[data-confirmmodel]').forEach(b=>b.addEventListener('click', async ()=>{
-    const key = b.getAttribute('data-confirmmodel'); const sel = b.closest('.inline-edit').querySelector('.edit-model-owner-select'); const val = sel.value;
-    const [cat, model] = key.split('|');
-    const newOwnerDisplay = val===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : val;
-    const oldOwner = ownerOf(cat, model); // เก็บผู้ดูแลเก่าไว้ก่อนเปลี่ยน
-    DATA.owners.modelOverrides[key] = val;
-    editingOwnerModel=null;
-    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
-    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
-    renderAll();
-    showToast(`✓ ย้ายผู้ดูแลรุ่น ${model} แล้ว`);
-    showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
-    await attemptDriveMove(cat, model, oldOwner, newOwnerDisplay);
-    hideLoadingOverlay();
-    renderOwnerView();
-  }));
-}
-
 // ===================== คิวติดตามการย้ายโฟลเดอร์ Drive ที่ยังไม่สำเร็จ — ถือว่า "ยังไม่เสร็จงาน" จนกว่าจะย้ายโฟลเดอร์จริงสำเร็จ ต้องกดลองใหม่เอง =====================
 let pendingDriveMoves = []; // { category, model, oldOwner, newOwner }
 async function attemptDriveMove(category, model, oldOwner, newOwner){
@@ -3485,42 +3383,76 @@ let editingModelKey = null;  // "cat|model" ที่กำลังแสดง
 
 function renderCatModelManage(){
   const wrap = $('cat-model-manage');
-  wrap.innerHTML = Object.entries(DATA.categories).map(([cat,models])=>{
+  const searchTerm = ($('product-table-search')?.value || '').trim().toLowerCase();
+
+  const entries = Object.entries(DATA.categories).map(([cat,models])=>{
+    if(!searchTerm) return [cat, models];
+    const catMatches = cat.toLowerCase().includes(searchTerm);
+    const filteredModels = models.filter(m=> catMatches || m.toLowerCase().includes(searchTerm) || ownerOf(cat,m).toLowerCase().includes(searchTerm));
+    return [cat, filteredModels];
+  }).filter(([cat, models])=> !searchTerm || cat.toLowerCase().includes(searchTerm) || models.length>0);
+
+  if(entries.length===0){ wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบ Product/รุ่น/ผู้ดูแลที่ตรงกับคำค้นหา</p>`; return; }
+
+  wrap.innerHTML = entries.map(([cat,models])=>{
     const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat) || DATA.pendingErrors.some(p=>p.category===cat);
     const isEditingCat = editingCatName===cat;
-    return `<div style="margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+    const allModels = DATA.categories[cat]||[]; // ใช้จำนวนเต็มของประเภทนี้ ไม่ใช่จำนวนที่กรองแล้ว
+    return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;">
+      <div style="background:var(--panel-alt);padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;">
         ${isEditingCat ? `
-          <input type="text" class="edit-cat-name-input" value="${escapeHtml(cat)}" style="flex:1;min-width:160px;max-width:280px;">
-          <button class="btn btn-primary btn-sm" data-confirmcatname="${escapeHtml(cat)}">บันทึก</button>
-          <button class="btn btn-ghost btn-sm" data-cancelcatname="1">ยกเลิก</button>
+          <div style="display:flex;gap:8px;align-items:center;flex:1;flex-wrap:wrap;">
+            <input type="text" class="edit-cat-name-input" value="${escapeHtml(cat)}" style="flex:1;min-width:160px;max-width:280px;">
+            <button class="btn btn-primary btn-sm" data-confirmcatname="${escapeHtml(cat)}">บันทึก</button>
+            <button class="btn btn-ghost btn-sm" data-cancelcatname="1">ยกเลิก</button>
+          </div>
         ` : `
-          <strong style="font-size:13px;">${escapeHtml(cat)}</strong>
-          <span class="mono" style="font-size:10px;color:var(--text-faint);">(${escapeHtml([...new Set(models.map(m=>ownerOf(cat,m)))].join(', ') || 'ยังไม่มีผู้ดูแล')})</span>
-          <button class="icon-btn btn-sm" data-editcatname="${escapeHtml(cat)}">แก้ไขชื่อ</button>
-          <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
+          <span style="font-size:13px;font-weight:500;">${escapeHtml(cat)} <span class="mono" style="font-size:10.5px;color:var(--text-faint);font-weight:400;">(${allModels.length} รุ่น)</span></span>
+          <div style="display:flex;gap:4px;">
+            <button class="icon-btn btn-sm" data-editcatname="${escapeHtml(cat)}">แก้ไขชื่อ</button>
+            <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
+          </div>
         `}
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${models.map(m=>{
-          const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m) || DATA.pendingErrors.some(p=>p.category===cat && p.model===m);
-          const key = cat+'|'+m;
-          const isEditingModel = editingModelKey===key;
-          if(isEditingModel){
-            return `<span class="mono" style="display:inline-flex;align-items:center;gap:4px;border:1px solid var(--amber);background:var(--panel-alt);border-radius:999px;padding:3px 6px 3px 10px;font-size:11px;">
-              <input type="text" class="edit-model-name-input" value="${escapeHtml(m)}" style="width:120px;padding:3px 6px;font-size:11px;">
-              <button data-confirmmodelname="${escapeHtml(key)}" style="background:var(--amber);border:none;color:#1a1206;border-radius:999px;padding:3px 8px;cursor:pointer;font-weight:600;">✓</button>
-              <button data-cancelmodelname="1" style="background:none;border:none;color:var(--text-faint);cursor:pointer;">✕</button>
-            </span>`;
-          }
-          return `<span class="mono" style="border:1px solid var(--border);background:var(--panel-alt);border-radius:999px;padding:4px 10px;font-size:11px;">
-            <span data-editmodelname="${escapeHtml(key)}" style="cursor:pointer;" title="คลิกเพื่อแก้ไขชื่อรุ่น">${escapeHtml(m)}</span>
-            <button data-delmodel="${escapeHtml(key)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'#555':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};margin-left:4px;">✕</button>
-          </span>`;
-        }).join('')}
-      </div>
+      ${models.map(m=>{
+        const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m) || DATA.pendingErrors.some(p=>p.category===cat && p.model===m);
+        const key = cat+'|'+m;
+        const isEditingModel = editingModelKey===key;
+        const currentOwner = ownerOf(cat,m);
+        const noOwnerYet = currentOwner==='ยังไม่มีผู้ดูแล';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--border);flex-wrap:wrap;${noOwnerYet?'background:rgba(232,163,61,.06);':''}">
+          ${isEditingModel ? `
+            <input type="text" class="edit-model-name-input" value="${escapeHtml(m)}" style="flex:1;min-width:120px;font-size:12.5px;">
+            <button class="btn btn-primary btn-sm" data-confirmmodelname="${escapeHtml(key)}">✓</button>
+            <button class="btn btn-ghost btn-sm" data-cancelmodelname="1">✕</button>
+          ` : `
+            <span data-editmodelname="${escapeHtml(key)}" style="flex:1;min-width:100px;font-size:12.5px;cursor:pointer;" title="คลิกเพื่อแก้ไขชื่อรุ่น">${escapeHtml(m)}</span>
+            <select class="model-owner-select" data-modelownerselect="${escapeHtml(key)}" style="font-size:11.5px;max-width:160px;${noOwnerYet?'border-color:var(--amber);color:var(--amber);':''}">${ownerSelectOptions(currentOwner==='ยังไม่มีผู้ดูแล'?NO_OWNER:currentOwner, false)}</select>
+            <button data-delmodel="${escapeHtml(key)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'var(--text-faint)':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};font-size:15px;">✕</button>
+          `}
+        </div>`;
+      }).join('') || `<p style="font-size:12px;color:var(--text-faint);padding:10px;">ยังไม่มีรุ่นในประเภทนี้</p>`}
     </div>`;
   }).join('');
+
+  // เปลี่ยนผู้ดูแลรายรุ่น — เปลี่ยนทันทีที่เลือก ไม่ต้องกดยืนยันแยก
+  wrap.querySelectorAll('[data-modelownerselect]').forEach(sel=>sel.addEventListener('change', async ()=>{
+    const key = sel.getAttribute('data-modelownerselect');
+    const [cat, model] = key.split('|');
+    const val = sel.value;
+    const newOwnerDisplay = val===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : val;
+    const oldOwner = ownerOf(cat, model);
+    if(oldOwner===newOwnerDisplay) return;
+    DATA.owners.modelOverrides[key] = val;
+    try{ await fsSaveCategoriesDoc(); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
+    renderAll();
+    showToast(`✓ ย้ายผู้ดูแลรุ่น ${model} แล้ว`);
+    showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
+    await attemptDriveMove(cat, model, oldOwner, newOwnerDisplay);
+    hideLoadingOverlay();
+    renderOwnerView();
+  }));
 
   // ลบประเภท
   wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
@@ -3584,6 +3516,11 @@ function renderCatModelManage(){
     await renameModelEverywhere(cat, oldModel, newModel);
   }));
 }
+$('product-table-search').addEventListener('input', renderCatModelManage);
+$('toggle-add-model-form-btn').addEventListener('click', ()=>{
+  const el = $('add-model-form');
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+});
 
 // เปลี่ยนชื่อประเภท — ปรับทุกจุดที่อ้างอิงชื่อเดิม (ผู้ดูแล, ข้อยกเว้นรายรุ่น, และ Error/เอกสาร/รายการรออนุมัติทุกรายการ)
 async function renameCategoryEverywhere(oldCat, newCat){
