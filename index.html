@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.0
-  อัปเดตล่าสุด: 5 กันยายน 2569 15:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 5.1
+  อัปเดตล่าสุด: 5 กันยายน 2569 15:45 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.0</title>
+<title>Firmer Service Center — v5.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.0</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.1</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -684,7 +684,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.0 (อัปเดตล่าสุด 5 กันยายน 2569 15:20 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.1 (อัปเดตล่าสุด 5 กันยายน 2569 15:45 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1284,13 +1284,17 @@ async function driveFindOrCreateFolder(name, parentId){
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
 async function findDriveFolder(name, parentId){
+  const cacheKey = parentId+'::'+name;
+  if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
   const token = await ensureDriveAccess();
   const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
   const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
   const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
   if(!res.ok) return null;
   const data = await res.json();
-  return (data.files && data.files.length>0) ? data.files[0].id : null;
+  const foundId = (data.files && data.files.length>0) ? data.files[0].id : null;
+  if(foundId) _driveFolderCache.set(cacheKey, foundId); // แคชเฉพาะกรณีเจอจริง — ถ้าไม่เจอ (null) ไม่แคชไว้ เผื่อโฟลเดอร์ถูกสร้างขึ้นทีหลังในเซสชันเดียวกัน
+  return foundId;
 }
 // ลบโฟลเดอร์ Drive ทั้งก้อนของ Error นี้ (รวมทุกวิธี/รูปภาพข้างใน) — เรียกหลังลบ Error ออกจากฐานข้อมูลสำเร็จแล้ว
 // ทำงานเบื้องหลังแบบไม่บล็อกการลบหลัก ถ้าล้มเหลวก็แค่เหลือไฟล์ค้าง ไม่กระทบข้อมูลหลักที่ลบไปแล้ว
@@ -1354,6 +1358,18 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   return f4;
 }
 // สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล — เผื่อเอาไฟล์ไปวางเองใน Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป
+// รันงานหลายอันพร้อมกันแบบจำกัดจำนวน (กันยิง request รัวเกินไปจน Google บล็อกชั่วคราว) เร็วกว่าทำทีละอันมาก
+async function runWithConcurrency(items, limit, worker){
+  let index = 0, completed = 0;
+  async function next(){
+    while(index < items.length){
+      const i = index++;
+      try{ await worker(items[i], i); }catch(e){ /* worker จัดการ error ของตัวเองแล้ว */ }
+      completed++;
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(limit, items.length)}, ()=>next()));
+}
 async function precreateDocumentFolders(){
   const statusEl = $('precreate-folders-status');
   const cats = myOwnedCategories();
@@ -1370,11 +1386,11 @@ async function precreateDocumentFolders(){
   if(!confirm(`จะสร้างโฟลเดอร์ทั้งหมด ${jobs.length} โฟลเดอร์ใน Google Drive (ยังไม่มีไฟล์ข้างใน) ต้องการดำเนินการต่อหรือไม่?`)) return;
 
   let done = 0, failed = 0;
-  for(const job of jobs){
-    statusEl.textContent = `กำลังสร้าง... (${done+1}/${jobs.length}) ${job.cat} · ${job.model} · ${job.label}`;
+  await runWithConcurrency(jobs, 6, async (job)=>{
     try{ await ensureDocumentFolderPath(job.cat, job.model, job.label); done++; }
     catch(e){ failed++; }
-  }
+    statusEl.textContent = `กำลังสร้าง... (${done+failed}/${jobs.length})`;
+  });
   statusEl.textContent = failed>0
     ? `✓ สร้างเสร็จ ${done} โฟลเดอร์ (ล้มเหลว ${failed} รายการ ลองกดใหม่อีกครั้งได้)`
     : `✓ สร้างโฟลเดอร์ครบทั้งหมด ${done} โฟลเดอร์แล้ว`;
@@ -1402,20 +1418,18 @@ async function syncDocumentsFromDrive(){
   const existingFileIds = new Set(DATA.documents.map(d=>extractDriveFileId(d.url)).filter(Boolean));
   let checked = 0, added = 0;
   const token = await ensureDriveAccess();
-  for(const job of jobs){
-    checked++;
-    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${jobs.length}) ${job.cat} · ${job.model} · ${job.label}`;
+  await runWithConcurrency(jobs, 6, async (job)=>{
     try{
       const owner = ownerOf(job.cat, job.model);
       const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
-      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId) continue;
-      const catFolderId = await findDriveFolder(job.cat, ownerFolderId); if(!catFolderId) continue;
-      const modelFolderId = await findDriveFolder(job.model, catFolderId); if(!modelFolderId) continue;
-      const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId) continue;
+      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId) return;
+      const catFolderId = await findDriveFolder(job.cat, ownerFolderId); if(!catFolderId) return;
+      const modelFolderId = await findDriveFolder(job.model, catFolderId); if(!modelFolderId) return;
+      const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId) return;
 
       const q = encodeURIComponent(`'${typeFolderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
       const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-      if(!res.ok) continue;
+      if(!res.ok) return;
       const data = await res.json();
       for(const f of (data.files||[])){
         if(existingFileIds.has(f.id)) continue; // เคยลิงก์ไว้แล้ว ข้าม
@@ -1430,7 +1444,9 @@ async function syncDocumentsFromDrive(){
         added++;
       }
     }catch(e){ /* โฟลเดอร์นี้เช็คไม่ได้ก็ข้ามไปโฟลเดอร์ถัดไป ไม่ทำให้ทั้งหมดล้มเหลว */ }
-  }
+    checked++;
+    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${jobs.length})`;
+  });
   statusEl.textContent = `✓ ตรวจสอบครบแล้ว (${jobs.length} โฟลเดอร์) พบไฟล์ใหม่ ${added} รายการ`;
   renderAll();
   showToast(added>0 ? `✓ เพิ่มลิงก์เอกสารใหม่ ${added} รายการจาก Drive` : 'ไม่พบไฟล์ใหม่ใน Drive');
