@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.8
-  อัปเดตล่าสุด: 5 กันยายน 2569 14:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.9
+  อัปเดตล่าสุด: 5 กันยายน 2569 14:50 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.8</title>
+<title>Firmer Service Center — v4.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.8</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.9</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -464,11 +464,11 @@
         <div style="overflow-x:auto;"><table id="sup-doc-matrix"></table></div>
       </div>
       <div class="panel-block">
-        <h2>สร้างโฟลเดอร์ล่วงหน้าใน Google Drive</h2>
+        <h2>Google Drive Database</h2>
         <p class="panel-sub">สร้างโฟลเดอร์ทุกรุ่น/ทุกประเภทเอกสารที่ฉันดูแลไว้ล่วงหน้า (ยังไม่ต้องมีไฟล์) — เผื่อจะเอาไฟล์ไปวางเองใน Google Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">📁 สร้างโฟลเดอร์ทั้งหมดล่วงหน้า</button>
-          <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive (Service Center)</a>
+          <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">สร้าง Folder ทั้งหมดบน Google Drive</button>
+          <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
         </div>
         <div id="precreate-folders-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
       </div>
@@ -678,17 +678,9 @@
       <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น — กดเช็คเองเพื่อประหยัดโควต้า (ใช้เล็กน้อยทุกครั้งที่เช็ค)</p>
       <button class="btn btn-ghost btn-sm" id="check-firestore-usage-btn">🔍 เช็คการใช้งาน Firestore</button>
       <div id="usage-result" style="margin-top:10px;"></div>
-      <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
-      <h3 style="font-size:13px;margin-bottom:6px;">Google Drive (โฟลเดอร์ "Service Center" ทั้งหมด)</h3>
-      <p class="panel-sub">✓ ตัวเลขนี้เป็น<strong>ขนาดไฟล์จริง</strong>ของโฟลเดอร์ "Service Center" ทั้งก้อน — รวมทุกไฟล์ข้างในไม่ว่าจะมาจากไหน (รูป/วิดีโอ/เอกสารที่อัปโหลดผ่านแอป, ไฟล์ Backup รายวัน, หรือไฟล์ที่วางไว้เองโดยตรงใน Drive) — ไม่นับเอกสารที่แค่แปะลิงก์ไปที่อื่นภายนอกโฟลเดอร์นี้ (ไม่สามารถทราบขนาดได้ ต้องไปตรวจสอบที่ต้นทางเอง) — กดเช็คเองเพราะต้องไล่ดูทุกโฟลเดอร์ อาจใช้เวลาสักครู่</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" id="check-drive-usage-btn">🔍 เช็คขนาดไฟล์ใน Drive</button>
-        <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive (Service Center)</a>
-      </div>
-      <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.8 (อัปเดตล่าสุด 5 กันยายน 2569 14:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.9 (อัปเดตล่าสุด 5 กันยายน 2569 14:50 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1840,6 +1832,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub"><b>ตรวจสอบ Error ใหม่จาก Engineer:</b> กด "แก้ไขก่อนอนุมัติ" เพื่อปรับก่อน, "อนุมัติทันที" เพื่อเผยแพร่เลย หรือ "ปฏิเสธ" พร้อมเหตุผล</p>
     <p class="panel-sub"><b>ตรวจสอบข้อเสนอวิธีแก้ไข:</b> กด "รับเป็นวิธีแก้ไขทางการ" เพื่อเพิ่มเป็นวิธีจริง, "แก้ไข" เพื่อปรับเนื้อหาก่อนรับ หรือ "ไม่รับ"</p>
     <p class="panel-sub"><b>จัดการเอกสาร (Document Matrix):</b> สลับแท็บ "จัดการเอกสาร" ดูตารางสรุปว่ารุ่นไหนมีเอกสารครบ/ขาดอะไรบ้าง เพิ่ม/แก้ไขลิงก์หรืออัปโหลดไฟล์ได้โดยตรง</p>
+    <p class="panel-sub"><b>Google Drive Database:</b> ในแท็บ "จัดการเอกสาร" เช่นกัน — กด "สร้าง Folder ทั้งหมดบน Google Drive" เพื่อสร้างโฟลเดอร์ล่วงหน้าทุกรุ่นที่ดูแลอยู่ (ยังไม่มีไฟล์) เผื่อจะเอาไฟล์ไปวางเองใน Drive ทีหลัง หรือกด "เปิด Google Drive ที่เก็บ Database" เพื่อเข้าไปดูไฟล์จริงได้เลย</p>
   `},
   { id:'owner', icon:'🗂️', title:'จัดการ Product', img:'owner', body:`
     <p class="panel-sub">สำหรับ Editor เท่านั้น — เพิ่ม/ลบชื่อคนในทีม Sup Product (ลบไม่ได้ถ้ายังมีรุ่นผูกอยู่), ดูสรุปว่าใครดูแลอะไรบ้างและย้ายความรับผิดชอบได้, เพิ่มประเภท/รุ่นเครื่องใหม่</p>
@@ -1855,7 +1848,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub"><b>ตั้งค่า Backup อัตโนมัติ</b> (Super Admin เท่านั้น): เปิด/ปิด, ตั้งเวลา, ความถี่ (ทุกวัน/2วัน/3วัน/สัปดาห์), จำนวนวันเก็บไฟล์เก่าก่อนลบอัตโนมัติ</p>
     <p class="panel-sub"><b>สำรองข้อมูลด้วยตัวเอง:</b> ดาวน์โหลด JSON/Excel หรือกด "Backup เข้า Google Drive ทันที"</p>
     <p class="panel-sub"><b>Export ประวัติการใช้งาน (Log):</b> Super Admin เท่านั้น — ดาวน์โหลดเป็น Excel</p>
-    <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore และขนาดไฟล์จริงใน Drive ได้ (กดเช็คเองทุกปุ่ม เพื่อประหยัดโควต้า)</p>
+    <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore ได้ (กดเช็คเองเพื่อประหยัดโควต้า)</p>
   `},
   { id:'superadmin', icon:'⭐', title:'สำหรับ Super Admin โดยเฉพาะ', superAdminOnly:true, body:`
     <p class="panel-sub">รวมทุกฟังก์ชันที่ทำได้เฉพาะบัญชี Super Admin เท่านั้น (engfirmer@gmail.com) — คนเดียวในระบบที่มีสิทธิ์เหล่านี้ กระจายอยู่ในหลายหน้า สรุปรวมไว้ที่นี่ให้เห็นภาพครบ</p>
@@ -4008,74 +4001,6 @@ async function checkStorageUsage(){
   }catch(e){ resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ ตรวจสอบไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
 }
 $('check-firestore-usage-btn').addEventListener('click', checkStorageUsage);
-
-/* ===================== ขนาดไฟล์จริงใน Google Drive — กดเช็คเอง (ไม่อัตโนมัติ เพราะช้าและต้องขอสิทธิ์ Drive) ===================== */
-async function getDriveStorageQuota(){
-  const token = await ensureDriveAccess();
-  const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=storageQuota', { headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok) throw new Error('เช็คโควต้า Drive ไม่สำเร็จ ('+res.status+')');
-  const data = await res.json();
-  return data.storageQuota || {};
-}
-async function checkDriveUsage(){
-  const driveEl = $('drive-usage-result');
-  driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังคำนวณขนาดไฟล์ใน Drive (อาจใช้เวลาสักครู่)...</p>`;
-  try{
-    const [totalBytes, quota] = await Promise.all([
-      calculateDriveFolderSize(DRIVE_ROOT_FOLDER_ID, 0),
-      getDriveStorageQuota(),
-    ]);
-    const sizeMB = (totalBytes/1024/1024).toFixed(1);
-    let quotaRow;
-    if(quota.limit){
-      const limitBytes = parseInt(quota.limit, 10);
-      const usageBytes = parseInt(quota.usage || '0', 10);
-      const limitGB = (limitBytes/1024/1024/1024).toFixed(0);
-      const usageGB = (usageBytes/1024/1024/1024).toFixed(2);
-      const pctOfAccountUsed = (usageBytes/limitBytes*100).toFixed(1);
-      const pctFromServiceCenter = (totalBytes/limitBytes*100).toFixed(2);
-      quotaRow = `
-        <div class="meta-item"><div class="k">พื้นที่ Drive ทั้งหมดของบัญชีนี้</div><div class="v">${limitGB} GB</div></div>
-        <div class="meta-item"><div class="k">ใช้ไปแล้วทั้งบัญชี</div><div class="v">${usageGB} GB (${pctOfAccountUsed}%)</div></div>
-        <div class="meta-item"><div class="k">สัดส่วนที่ Service Center ใช้</div><div class="v">${pctFromServiceCenter}% ของพื้นที่ทั้งหมด</div></div>
-      `;
-    } else {
-      // บัญชี Workspace บางแบบไม่มีเพดานจำกัด (unlimited) — Google จะไม่ส่งค่า limit มาให้
-      quotaRow = `<div class="meta-item"><div class="k">พื้นที่ Drive ทั้งหมดของบัญชีนี้</div><div class="v">ไม่จำกัด (Unlimited)</div></div>`;
-    }
-    driveEl.innerHTML = `
-      <div class="meta-grid">
-        <div class="meta-item"><div class="k">ขนาดไฟล์ทั้งหมดใน Service Center</div><div class="v">${sizeMB} MB</div></div>
-        ${quotaRow}
-      </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* นับจากไฟล์จริงในโฟลเดอร์ Service Center ทั้งหมด เทียบกับพื้นที่ Drive จริงของบัญชีที่ login อยู่ตอนนี้ (ไม่ใช่ค่ามาตรฐาน 15GB ตายตัว — ถ้าบัญชีนี้ซื้อพื้นที่เพิ่มหรือใช้ Workspace ตัวเลขจะเปลี่ยนตามจริง)</p>
-    `;
-  }catch(e){ driveEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ คำนวณขนาดไฟล์ Drive ไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
-}
-$('check-drive-usage-btn').addEventListener('click', checkDriveUsage);
-// คำนวณขนาดไฟล์ทั้งหมดใน Google Drive แบบไล่ลึกทุกโฟลเดอร์ย่อย (รูป/วิดีโอ/เอกสารที่อัปโหลด/Backup)
-async function calculateDriveFolderSize(folderId, depth){
-  if(depth > 10) return 0; // กันวนลึกเกินไปเผื่อโครงสร้างผิดปกติ
-  const token = await ensureDriveAccess();
-  let totalSize = 0;
-  let pageToken = null;
-  do{
-    const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
-    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=nextPageToken,files(id,mimeType,size)&pageSize=1000${pageToken?'&pageToken='+pageToken:''}`;
-    const res = await fetch(url, { headers:{ Authorization:`Bearer ${token}` } });
-    if(!res.ok) throw new Error('เช็คขนาดไฟล์ไม่สำเร็จ ('+res.status+')');
-    const data = await res.json();
-    for(const f of (data.files||[])){
-      if(f.mimeType === 'application/vnd.google-apps.folder'){
-        totalSize += await calculateDriveFolderSize(f.id, depth+1);
-      } else {
-        totalSize += parseInt(f.size || '0', 10);
-      }
-    }
-    pageToken = data.nextPageToken || null;
-  } while(pageToken);
-  return totalSize;
-}
 
 /* ===================== THEME TOGGLE (default: light) ===================== */
 $('theme-toggle-btn').addEventListener('click', ()=>{
