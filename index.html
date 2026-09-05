@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 4.6
-  อัปเดตล่าสุด: 5 กันยายน 2569 13:35 น. เวลาไทย
+  เวอร์ชันปัจจุบัน: 4.8
+  อัปเดตล่าสุด: 5 กันยายน 2569 14:25 น. เวลาไทย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v4.6</title>
+<title>Firmer Service Center — v4.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.6</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 4.8</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -466,7 +466,10 @@
       <div class="panel-block">
         <h2>สร้างโฟลเดอร์ล่วงหน้าใน Google Drive</h2>
         <p class="panel-sub">สร้างโฟลเดอร์ทุกรุ่น/ทุกประเภทเอกสารที่ฉันดูแลไว้ล่วงหน้า (ยังไม่ต้องมีไฟล์) — เผื่อจะเอาไฟล์ไปวางเองใน Google Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป</p>
-        <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">📁 สร้างโฟลเดอร์ทั้งหมดล่วงหน้า</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">📁 สร้างโฟลเดอร์ทั้งหมดล่วงหน้า</button>
+          <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive (Service Center)</a>
+        </div>
         <div id="precreate-folders-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
       </div>
     </div>
@@ -554,6 +557,8 @@
       </div>
       <div id="sup-name-list"></div>
     </div>
+
+    <div class="panel-block" id="pending-drive-moves-panel" style="display:none;border:1px solid var(--red);"></div>
 
     <div class="panel-block">
       <h2>สรุปผู้รับผิดชอบ Product</h2>
@@ -676,11 +681,14 @@
       <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
       <h3 style="font-size:13px;margin-bottom:6px;">Google Drive (โฟลเดอร์ "Service Center" ทั้งหมด)</h3>
       <p class="panel-sub">✓ ตัวเลขนี้เป็น<strong>ขนาดไฟล์จริง</strong>ของโฟลเดอร์ "Service Center" ทั้งก้อน — รวมทุกไฟล์ข้างในไม่ว่าจะมาจากไหน (รูป/วิดีโอ/เอกสารที่อัปโหลดผ่านแอป, ไฟล์ Backup รายวัน, หรือไฟล์ที่วางไว้เองโดยตรงใน Drive) — ไม่นับเอกสารที่แค่แปะลิงก์ไปที่อื่นภายนอกโฟลเดอร์นี้ (ไม่สามารถทราบขนาดได้ ต้องไปตรวจสอบที่ต้นทางเอง) — กดเช็คเองเพราะต้องไล่ดูทุกโฟลเดอร์ อาจใช้เวลาสักครู่</p>
-      <button class="btn btn-ghost btn-sm" id="check-drive-usage-btn">🔍 เช็คขนาดไฟล์ใน Drive</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" id="check-drive-usage-btn">🔍 เช็คขนาดไฟล์ใน Drive</button>
+        <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive (Service Center)</a>
+      </div>
       <div id="drive-usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.6 (อัปเดตล่าสุด 5 กันยายน 2569 13:35 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 4.8 (อัปเดตล่าสุด 5 กันยายน 2569 14:25 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -3246,6 +3254,7 @@ async function renderOwnerView(){
   renderSupNameList();
   populateOwnerFormSelectors();
   renderOwnerSummary();
+  renderPendingDriveMovesPanel();
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
   if(remaining.length>0){
     $('cat-model-manage').innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล (ต้องเช็คให้แน่ใจก่อนว่าประเภท/รุ่นไหนมีข้อมูลผูกอยู่บ้าง กันลบผิดพลาด)...</p>`;
@@ -3340,11 +3349,9 @@ function renderOwnerSummary(){
     invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
     renderAll(); showToast(`✓ ย้ายผู้ดูแล ${cat} ไปเป็น ${newOwnerDisplay==='ยังไม่มีผู้ดูแล'?'ไม่มีผู้รับผิดชอบ':newOwnerDisplay} แล้ว`);
     showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
-    try{
-      for(const {model, oldOwner} of modelsWithOldOwners){ await moveDriveFolderForModel(cat, model, oldOwner, newOwnerDisplay); }
-      showToast('✓ ย้ายโฟลเดอร์ใน Drive ไปผู้ดูแลใหม่แล้ว');
-    }catch(e){ showToast('⚠ ย้ายบางโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบย้ายแล้ว): '+e.message); }
-    finally{ hideLoadingOverlay(); }
+    for(const {model, oldOwner} of modelsWithOldOwners){ await attemptDriveMove(cat, model, oldOwner, newOwnerDisplay); }
+    hideLoadingOverlay();
+    renderOwnerView();
   }));
   wrap.querySelectorAll('[data-editmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=b.getAttribute('data-editmodel'); editingOwnerCat=null; renderOwnerSummary(); }));
   wrap.querySelectorAll('[data-cancelmodel]').forEach(b=>b.addEventListener('click', ()=>{ editingOwnerModel=null; renderOwnerSummary(); }));
@@ -3360,9 +3367,47 @@ function renderOwnerSummary(){
     renderAll();
     showToast(`✓ ย้ายผู้ดูแลรุ่น ${model} แล้ว`);
     showLoadingOverlay('กำลังย้ายโฟลเดอร์ใน Google Drive...');
-    try{ await moveDriveFolderForModel(cat, model, oldOwner, newOwnerDisplay); showToast('✓ ย้ายโฟลเดอร์ใน Drive ไปผู้ดูแลใหม่แล้ว'); }
-    catch(e){ showToast('⚠ ย้ายโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบย้ายแล้ว): '+e.message); }
-    finally{ hideLoadingOverlay(); }
+    await attemptDriveMove(cat, model, oldOwner, newOwnerDisplay);
+    hideLoadingOverlay();
+    renderOwnerView();
+  }));
+}
+
+// ===================== คิวติดตามการย้ายโฟลเดอร์ Drive ที่ยังไม่สำเร็จ — ถือว่า "ยังไม่เสร็จงาน" จนกว่าจะย้ายโฟลเดอร์จริงสำเร็จ ต้องกดลองใหม่เอง =====================
+let pendingDriveMoves = []; // { category, model, oldOwner, newOwner }
+async function attemptDriveMove(category, model, oldOwner, newOwner){
+  try{
+    await moveDriveFolderForModel(category, model, oldOwner, newOwner);
+    pendingDriveMoves = pendingDriveMoves.filter(p=>!(p.category===category && p.model===model)); // สำเร็จแล้ว เอาออกจากคิวที่ค้างอยู่
+    showToast(`✓ ย้ายโฟลเดอร์ Drive ของรุ่น ${model} สำเร็จแล้ว`);
+  }catch(e){
+    const existing = pendingDriveMoves.find(p=>p.category===category && p.model===model);
+    if(existing){ existing.oldOwner = oldOwner; existing.newOwner = newOwner; } // อัปเดตปลายทางล่าสุดเผื่อมีคนย้ายซ้ำไปที่อื่นอีก
+    else{ pendingDriveMoves.push({ category, model, oldOwner, newOwner }); }
+    showToast(`⚠ ย้ายโฟลเดอร์ Drive ของรุ่น ${model} ไม่สำเร็จ — ต้องกดลองใหม่จนกว่าจะสำเร็จ (ดูด้านล่างหน้านี้)`);
+  }
+}
+function renderPendingDriveMovesPanel(){
+  const el = $('pending-drive-moves-panel');
+  if(!el) return;
+  if(pendingDriveMoves.length===0){ el.style.display='none'; el.innerHTML=''; return; }
+  el.style.display='block';
+  el.innerHTML = `
+    <h2 style="color:var(--red);">⚠️ ย้ายโฟลเดอร์ Drive ยังไม่สำเร็จ (${pendingDriveMoves.length} รายการ)</h2>
+    <p class="panel-sub">ข้อมูลผู้ดูแลในระบบเปลี่ยนแล้ว แต่โฟลเดอร์ไฟล์ใน Google Drive ยังย้ายไม่สำเร็จ — กด "ลองอีกครั้ง" จนกว่าจะขึ้นว่าสำเร็จ ไม่งั้นไฟล์จะยังอยู่ผิดที่</p>
+    ${pendingDriveMoves.map((p,i)=>`
+      <div class="admin-row">
+        <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(p.category)} · ${escapeHtml(p.model)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(p.oldOwner)} → ${escapeHtml(p.newOwner==='ยังไม่มีผู้ดูแล'?'ไม่มีผู้รับผิดชอบ':p.newOwner)}</span></div>
+        <button class="btn btn-primary btn-sm" data-retrydrivemove="${i}">ลองอีกครั้ง</button>
+      </div>`).join('')}
+  `;
+  el.querySelectorAll('[data-retrydrivemove]').forEach(b=>b.addEventListener('click', async ()=>{
+    const idx = parseInt(b.getAttribute('data-retrydrivemove'), 10);
+    const p = pendingDriveMoves[idx]; if(!p) return;
+    showLoadingOverlay('กำลังลองย้ายโฟลเดอร์ใน Google Drive อีกครั้ง...');
+    await attemptDriveMove(p.category, p.model, p.oldOwner, p.newOwner);
+    hideLoadingOverlay();
+    renderPendingDriveMovesPanel();
   }));
 }
 
