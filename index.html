@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.2
+  เวอร์ชันปัจจุบัน: 5.3
   อัปเดตล่าสุด: 5 กันยายน 2569 16:20 น. เวลาไทย
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.2</title>
+<title>Firmer Service Center — v5.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.2</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.3</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -590,7 +590,11 @@
         <button class="btn btn-primary btn-sm" id="add-model-btn" style="margin-top:12px;">เพิ่ม</button>
       </div>
 
-      <input type="text" id="product-table-search" placeholder="ค้นหา Product, รุ่น, หรือผู้ดูแล..." style="width:100%;box-sizing:border-box;margin-bottom:12px;">
+      <input type="text" id="product-table-search" placeholder="ค้นหา Product, รุ่น, หรือผู้ดูแล..." style="width:100%;box-sizing:border-box;margin-bottom:8px;">
+      <div class="form-grid two" style="margin-bottom:12px;">
+        <select id="product-table-filter-owner"><option value="">กรองตามผู้ดูแล: ทั้งหมด</option></select>
+        <select id="product-table-filter-cat"><option value="">กรองตามประเภท: ทั้งหมด</option></select>
+      </div>
       <div id="cat-model-manage"></div>
     </div>
   </div>
@@ -3321,6 +3325,7 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 async function renderOwnerView(){
   renderSupNameList();
   populateOwnerFormSelectors();
+  populateProductTableFilters();
   renderPendingDriveMovesPanel();
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
   if(remaining.length>0){
@@ -3381,18 +3386,35 @@ function renderPendingDriveMovesPanel(){
 let editingCatName = null;   // ประเภทที่กำลังแสดงช่องแก้ไขชื่ออยู่
 let editingModelKey = null;  // "cat|model" ที่กำลังแสดงช่องแก้ไขชื่ออยู่
 
+function populateProductTableFilters(){
+  const ownerSel = $('product-table-filter-owner');
+  const catSel = $('product-table-filter-cat');
+  const owners = [...SUP_PRODUCTS, 'ยังไม่มีผู้ดูแล'];
+  ownerSel.innerHTML = `<option value="">กรองตามผู้ดูแล: ทั้งหมด</option>` + owners.map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
+  catSel.innerHTML = `<option value="">กรองตามประเภท: ทั้งหมด</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+}
 function renderCatModelManage(){
   const wrap = $('cat-model-manage');
   const searchTerm = ($('product-table-search')?.value || '').trim().toLowerCase();
+  const ownerFilter = $('product-table-filter-owner')?.value || '';
+  const catFilter = $('product-table-filter-cat')?.value || '';
+  const hasActiveFilter = !!(searchTerm || ownerFilter || catFilter);
 
-  const entries = Object.entries(DATA.categories).map(([cat,models])=>{
-    if(!searchTerm) return [cat, models];
-    const catMatches = cat.toLowerCase().includes(searchTerm);
-    const filteredModels = models.filter(m=> catMatches || m.toLowerCase().includes(searchTerm) || ownerOf(cat,m).toLowerCase().includes(searchTerm));
-    return [cat, filteredModels];
-  }).filter(([cat, models])=> !searchTerm || cat.toLowerCase().includes(searchTerm) || models.length>0);
+  const entries = Object.entries(DATA.categories)
+    .filter(([cat])=> !catFilter || cat===catFilter)
+    .map(([cat,models])=>{
+      let filteredModels = models;
+      if(ownerFilter) filteredModels = filteredModels.filter(m=> ownerOf(cat,m)===ownerFilter); // กรองตามผู้ดูแล — เจอเฉพาะรุ่นที่คนนี้ดูแลจริงเท่านั้น
+      if(searchTerm){
+        const catMatches = cat.toLowerCase().includes(searchTerm);
+        filteredModels = filteredModels.filter(m=> catMatches || m.toLowerCase().includes(searchTerm) || ownerOf(cat,m).toLowerCase().includes(searchTerm));
+      }
+      return [cat, filteredModels];
+    })
+    .filter(([cat, models])=> !hasActiveFilter || models.length>0);
 
-  if(entries.length===0){ wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบ Product/รุ่น/ผู้ดูแลที่ตรงกับคำค้นหา</p>`; return; }
+  if(entries.length===0){ wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบ Product/รุ่น/ผู้ดูแลที่ตรงกับตัวกรอง</p>`; return; }
 
   wrap.innerHTML = entries.map(([cat,models])=>{
     const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat) || DATA.pendingErrors.some(p=>p.category===cat);
@@ -3517,6 +3539,8 @@ function renderCatModelManage(){
   }));
 }
 $('product-table-search').addEventListener('input', renderCatModelManage);
+$('product-table-filter-owner').addEventListener('change', renderCatModelManage);
+$('product-table-filter-cat').addEventListener('change', renderCatModelManage);
 $('toggle-add-model-form-btn').addEventListener('click', ()=>{
   const el = $('add-model-form');
   el.style.display = el.style.display==='none' ? 'block' : 'none';
