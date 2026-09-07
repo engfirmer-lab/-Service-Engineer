@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.5
+  เวอร์ชันปัจจุบัน: 5.6
   อัปเดตล่าสุด: 5 กันยายน 2569 16:20 น. เวลาไทย
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.5</title>
+<title>Firmer Service Center — v5.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.6</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -690,7 +690,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.5 (อัปเดตล่าสุด 5 กันยายน 2569 19:00 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.6 (อัปเดตล่าสุด 5 กันยายน 2569 20:00 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -3086,12 +3086,22 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   if(!doclinkContext || !doclinkContext.existingId) return;
   if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
   const id = doclinkContext.existingId;
+  const doc = DATA.documents.find(d=>d.id===id);
+  const driveFileId = doc ? extractDriveFileId(doc.url) : null;
+  const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
   try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
   DATA.documents = DATA.documents.filter(d=>d.id!==id);
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
   renderAll();
   showToast('ลบลิงก์แล้ว');
+  if(deleteFileToo){
+    try{
+      const token = await ensureDriveAccess();
+      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+      showToast('✓ ลบไฟล์ใน Drive แล้ว');
+    }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
+  }
 });
 
 async function renderSupView(){
