@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.4
+  เวอร์ชันปัจจุบัน: 5.5
   อัปเดตล่าสุด: 5 กันยายน 2569 16:20 น. เวลาไทย
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.4</title>
+<title>Firmer Service Center — v5.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -690,7 +690,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.4 (อัปเดตล่าสุด 5 กันยายน 2569 18:00 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.5 (อัปเดตล่าสุด 5 กันยายน 2569 19:00 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1266,38 +1266,52 @@ function normalizeDriveLink(url){
   return trimmed; // ไม่ใช่ลิงก์ Drive หรือจับรูปแบบไม่ได้ — ปล่อยผ่านตามเดิม ไม่ยุ่ง
 }
 const _driveFolderCache = new Map(); // แคชโฟลเดอร์ที่เคยหา/สร้างไปแล้วในเซสชันนี้ — กันการค้นหาซ้ำๆ ทุกครั้งที่บันทึก (สาเหตุหลักที่บันทึกวิดีโอ/รูปช้า)
+const _driveFolderInFlight = new Map(); // เก็บ Promise ที่กำลังทำงานอยู่ — กัน Worker หลายตัวพร้อมกันหาโฟลเดอร์เดียวกันแล้วสร้างซ้ำ (race condition ตอนทำงานแบบ parallel)
 async function driveFindOrCreateFolder(name, parentId){
   const cacheKey = parentId+'::'+name;
   if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
-  const token = await ensureDriveAccess();
-  const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
-  const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
-  const data = await res.json();
-  if(data.files && data.files.length>0){ _driveFolderCache.set(cacheKey, data.files[0].id); return data.files[0].id; }
-  const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
-  });
-  if(!createRes.ok) throw new Error('สร้างโฟลเดอร์ Drive ไม่สำเร็จ ('+createRes.status+')');
-  const created = await createRes.json();
-  _driveFolderCache.set(cacheKey, created.id);
-  return created.id;
+  if(_driveFolderInFlight.has(cacheKey)) return _driveFolderInFlight.get(cacheKey); // มีคนกำลังหา/สร้างโฟลเดอร์นี้อยู่แล้ว รอผลลัพธ์เดียวกันแทนที่จะเริ่มค้นหาใหม่ซ้ำ
+  const promise = (async ()=>{
+    const token = await ensureDriveAccess();
+    const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
+    const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!res.ok) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+    const data = await res.json();
+    if(data.files && data.files.length>0){ _driveFolderCache.set(cacheKey, data.files[0].id); return data.files[0].id; }
+    const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
+    });
+    if(!createRes.ok) throw new Error('สร้างโฟลเดอร์ Drive ไม่สำเร็จ ('+createRes.status+')');
+    const created = await createRes.json();
+    _driveFolderCache.set(cacheKey, created.id);
+    return created.id;
+  })();
+  _driveFolderInFlight.set(cacheKey, promise);
+  try{ return await promise; }
+  finally{ _driveFolderInFlight.delete(cacheKey); }
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
+const _findFolderInFlight = new Map();
 async function findDriveFolder(name, parentId){
   const cacheKey = parentId+'::'+name;
   if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
-  const token = await ensureDriveAccess();
-  const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
-  const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok) return null;
-  const data = await res.json();
-  const foundId = (data.files && data.files.length>0) ? data.files[0].id : null;
-  if(foundId) _driveFolderCache.set(cacheKey, foundId); // แคชเฉพาะกรณีเจอจริง — ถ้าไม่เจอ (null) ไม่แคชไว้ เผื่อโฟลเดอร์ถูกสร้างขึ้นทีหลังในเซสชันเดียวกัน
-  return foundId;
+  if(_findFolderInFlight.has(cacheKey)) return _findFolderInFlight.get(cacheKey);
+  const promise = (async ()=>{
+    const token = await ensureDriveAccess();
+    const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
+    const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!res.ok) return null;
+    const data = await res.json();
+    const foundId = (data.files && data.files.length>0) ? data.files[0].id : null;
+    if(foundId) _driveFolderCache.set(cacheKey, foundId); // แคชเฉพาะกรณีเจอจริง — ถ้าไม่เจอ (null) ไม่แคชไว้ เผื่อโฟลเดอร์ถูกสร้างขึ้นทีหลังในเซสชันเดียวกัน
+    return foundId;
+  })();
+  _findFolderInFlight.set(cacheKey, promise);
+  try{ return await promise; }
+  finally{ _findFolderInFlight.delete(cacheKey); }
 }
 // ลบโฟลเดอร์ Drive ทั้งก้อนของ Error นี้ (รวมทุกวิธี/รูปภาพข้างใน) — เรียกหลังลบ Error ออกจากฐานข้อมูลสำเร็จแล้ว
 // ทำงานเบื้องหลังแบบไม่บล็อกการลบหลัก ถ้าล้มเหลวก็แค่เหลือไฟล์ค้าง ไม่กระทบข้อมูลหลักที่ลบไปแล้ว
@@ -2964,12 +2978,22 @@ function renderDocLinkListItems(){
     openDocLinkModal(category, model, docType, videoSubtype, b.getAttribute('data-editlink'));
   }));
   wrap.querySelectorAll('[data-dellink]').forEach(b=>b.addEventListener('click', async ()=>{
-    if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
     const id = b.getAttribute('data-dellink');
+    const doc = docs.find(d=>d.id===id);
+    if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
+    const driveFileId = doc ? extractDriveFileId(doc.url) : null;
+    const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
     try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
     DATA.documents = DATA.documents.filter(d=>d.id!==id);
     renderDocLinkListItems(); renderAll();
     showToast('ลบลิงก์แล้ว');
+    if(deleteFileToo){
+      try{
+        const token = await ensureDriveAccess();
+        await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+        showToast('✓ ลบไฟล์ใน Drive แล้ว');
+      }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
+    }
   }));
 }
 $('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
@@ -3851,6 +3875,7 @@ function techDocsHtml(){
       <li><b>Error โหลดแบบ Lazy:</b> ไม่ดึง Error ทั้งหมดตอน login อีกต่อไป — ดึงเฉพาะ Product ที่ถูกเลือกดู (ดูฟังก์ชัน ensureErrorsLoadedForCategory) เพื่อประหยัดโควต้า Firestore</li>
       <li><b>รูป/วิดีโอ/เอกสารที่อัปโหลด:</b> เก็บที่ Google Drive ไม่ใช่ Firestore — โฟลเดอร์ "Service Center" (DRIVE_ROOT_FOLDER_ID ใน index.html)</li>
       <li><b>Backup อัตโนมัติ:</b> GitHub Actions รันทุกชั่วโมง (ดู daily-backup.yml) แล้วให้ backup-script.js เช็ค meta/backupSchedule จาก Firestore เองว่าถึงเวลาจริงหรือยัง — ไม่ได้ตั้งเวลาตายตัวใน cron</li>
+      <li><b>Backup แบบประหยัดโควต้า:</b> ก่อนดึง Error ใหม่ทุกครั้ง สคริปต์จะเช็ค meta/categoryVersions เทียบกับ Backup รอบก่อน — Product ไหนไม่มีการแก้ไขเลย จะเอาข้อมูลจาก Backup รอบก่อนมาใช้ซ้ำแทนที่จะดึงจาก Firestore ใหม่ทั้งหมด</li>
       <li><b>Service Account (ใช้ใน backup-script.js):</b> ตั้งใจให้เป็น "อ่านอย่างเดียว" (Cloud Datastore Viewer) เพื่อความปลอดภัย — การอัปโหลด Backup เข้า Drive ใช้ OAuth ของ Gmail จริงแทน ไม่ใช่ Service Account</li>
     </ul>
 
