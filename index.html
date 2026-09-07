@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.6
+  เวอร์ชันปัจจุบัน: 5.8
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.6</title>
+<title>Firmer Service Center — v5.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.6</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.8</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -475,6 +475,11 @@
         <p class="panel-sub"><b>วางไฟล์เองใน Drive แล้ว?</b> กดปุ่มนี้เพื่อให้แอปไปสำรวจโฟลเดอร์แล้วสร้างลิงก์ให้อัตโนมัติ — จะได้เห็นในตาราง "เอกสารทั้งหมดที่ฉันดูแล" ด้านบนโดยไม่ต้องมากดใส่ลิงก์เองทีละไฟล์</p>
         <button class="btn btn-ghost btn-sm" id="sync-drive-docs-btn">🔄 ซิงค์ไฟล์จาก Google Drive</button>
         <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
+        <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+        <p class="panel-sub"><b>ลบไฟล์ใน Drive ตรงๆ ไปแล้ว?</b> ลิงก์ในระบบจะไม่หายอัตโนมัติ — กดปุ่มนี้เพื่อตรวจสอบว่าลิงก์ไหนชี้ไปไฟล์ที่ไม่มีอยู่แล้วบ้าง (ลิงก์เสีย) แล้วลบออกจากระบบให้</p>
+        <button class="btn btn-ghost btn-sm" id="check-dead-links-btn">🔍 ตรวจสอบลิงก์ที่เสีย</button>
+        <div id="dead-links-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
+        <div id="dead-links-result" style="margin-top:10px;"></div>
       </div>
     </div>
   </div>
@@ -690,7 +695,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.6 (อัปเดตล่าสุด 7 กันยายน 2569 15:47 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.8 (อัปเดตล่าสุด 7 กันยายน 2569 20:54 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1327,7 +1332,8 @@ async function deleteDriveFolderForError(err){
     const errorFolderName = err.errorCode ? `${err.errorCode} - ${err.symptom}` : err.symptom;
     const f5 = await findDriveFolder(errorFolderName, f4); if(!f5) return;
     const token = await ensureDriveAccess();
-    await fetch(`https://www.googleapis.com/drive/v3/files/${f5}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+    const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${f5}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+    if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status);
   }catch(e){
     console.error('ลบโฟลเดอร์ Drive ของ Error ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e);
   }finally{ hideLoadingOverlay(); }
@@ -1361,7 +1367,8 @@ async function deleteDriveFolderForModel(category, model, ownerName){
     const catFolderId = await findDriveFolder(category, ownerFolderId); if(!catFolderId) return;
     const modelFolderId = await findDriveFolder(model, catFolderId); if(!modelFolderId) return;
     const token = await ensureDriveAccess();
-    await fetch(`https://www.googleapis.com/drive/v3/files/${modelFolderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+    const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${modelFolderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+    if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status);
   }catch(e){ console.error('ลบโฟลเดอร์ Drive ของรุ่นนี้ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
 }
 
@@ -1469,6 +1476,54 @@ async function syncDocumentsFromDrive(){
   showToast(added>0 ? `✓ เพิ่มลิงก์เอกสารใหม่ ${added} รายการจาก Drive` : 'ไม่พบไฟล์ใหม่ใน Drive');
 }
 $('sync-drive-docs-btn').addEventListener('click', syncDocumentsFromDrive);
+
+// ตรวจสอบลิงก์เอกสารที่ชี้ไปไฟล์ที่ไม่มีอยู่แล้วใน Drive (ลิงก์เสีย) — เกิดขึ้นได้ถ้ามีคนลบไฟล์ใน Drive โดยตรงโดยไม่ผ่านแอป
+let _deadLinksFound = []; // เก็บผลลัพธ์ล่าสุดไว้ให้ปุ่ม "ลบทั้งหมด" ใช้ต่อ
+async function checkDeadDriveLinks(){
+  const statusEl = $('dead-links-status');
+  const resultEl = $('dead-links-result');
+  resultEl.innerHTML = '';
+  const myCats = myOwnedCategories();
+  const myDocs = DATA.documents.filter(d=> myCats.includes(d.category) && ownerOf(d.category,d.model)===currentSupIdentity);
+  const withFileId = myDocs.map(d=>({ doc:d, fileId: extractDriveFileId(d.url) })).filter(x=>x.fileId);
+  if(withFileId.length===0){ statusEl.textContent = 'ไม่มีลิงก์ไฟล์ Drive ที่ตรวจสอบได้ (อาจเป็นลิงก์ภายนอกทั้งหมด หรือยังไม่มีเอกสาร)'; return; }
+
+  let checked = 0;
+  const dead = [];
+  const token = await ensureDriveAccess();
+  await runWithConcurrency(withFileId, 6, async ({doc, fileId})=>{
+    try{
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,trashed`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(res.status===404) dead.push(doc);
+      else if(res.ok){ const data = await res.json(); if(data.trashed) dead.push(doc); } // อยู่ในถังขยะของ Drive ก็ถือว่าเสียเหมือนกัน เปิดดูไม่ได้จริง
+    }catch(e){ /* เช็คไม่ได้ก็ข้ามไป ไม่ถือว่าเสีย เผื่อแค่เน็ตกระตุกชั่วคราว */ }
+    checked++;
+    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${withFileId.length})`;
+  });
+
+  _deadLinksFound = dead;
+  if(dead.length===0){ statusEl.textContent = `✓ ตรวจสอบครบ ${withFileId.length} ลิงก์ ไม่พบลิงก์เสียเลย`; return; }
+  statusEl.textContent = `⚠ ตรวจสอบครบ ${withFileId.length} ลิงก์ — พบลิงก์เสีย ${dead.length} รายการ`;
+  resultEl.innerHTML = `
+    <div style="border:1px solid var(--red);border-radius:8px;padding:10px;">
+      ${dead.map(d=>`<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(d.title)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${d.docType==='video'?videoSubtypeLabel(d.videoSubtype):docTypeLabel(d.docType)}</span></div></div>`).join('')}
+      <button class="btn btn-primary btn-sm" id="delete-all-dead-links-btn" style="margin-top:10px;">🗑️ ลบลิงก์เสียทั้งหมด (${dead.length} รายการ)</button>
+    </div>
+  `;
+  $('delete-all-dead-links-btn').addEventListener('click', async ()=>{
+    if(!confirm(`ยืนยันการลบลิงก์เสียทั้งหมด ${_deadLinksFound.length} รายการ? (ไฟล์ใน Drive หายไปแล้วอยู่แล้ว ลบแค่ลิงก์ในระบบเท่านั้น)`)) return;
+    let deleted = 0;
+    for(const d of _deadLinksFound){
+      try{ await fsDeleteDocument(d.id); DATA.documents = DATA.documents.filter(x=>x.id!==d.id); deleted++; }catch(e){}
+    }
+    renderAll();
+    statusEl.textContent = `✓ ลบลิงก์เสียไปแล้ว ${deleted} รายการ`;
+    resultEl.innerHTML = '';
+    _deadLinksFound = [];
+    showToast(`✓ ลบลิงก์เสียแล้ว ${deleted} รายการ`);
+  });
+}
+$('check-dead-links-btn').addEventListener('click', checkDeadDriveLinks);
 
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
 async function driveUploadLargeFile(file, filename, parentId, onProgress){
@@ -2990,7 +3045,8 @@ function renderDocLinkListItems(){
     if(deleteFileToo){
       try{
         const token = await ensureDriveAccess();
-        await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+        const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+        if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
         showToast('✓ ลบไฟล์ใน Drive แล้ว');
       }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
     }
@@ -3098,7 +3154,8 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   if(deleteFileToo){
     try{
       const token = await ensureDriveAccess();
-      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+      const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+      if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
       showToast('✓ ลบไฟล์ใน Drive แล้ว');
     }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
   }
