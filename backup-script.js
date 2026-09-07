@@ -40,34 +40,54 @@ function docTypeLabel(key){
 async function main(schedule){
   console.log('เริ่มดึงข้อมูลจาก Firestore...');
 
-  const [errorsSnap, solutionsSnap, docsSnap, propSnap, pendSnap, catDoc, supDoc] = await Promise.all([
-    db.collection('errors').get(),
-    db.collectionGroup('solutions').get(),
+  const [docsSnap, propSnap, pendSnap, catDoc, catVerDoc, supDoc] = await Promise.all([
     db.collection('documents').get(),
     db.collection('proposals').get(),
     db.collection('pendingErrors').get(),
     db.doc('meta/categories').get(),
+    db.doc('meta/categoryVersions').get(),
     db.doc('meta/supProducts').get(),
   ]);
 
+  const categoriesData = catDoc.exists ? catDoc.data() : { categories: {}, owners: {} };
+  const categoryVersions = catVerDoc.exists ? catVerDoc.data() : {};
+  const allCategoryNames = Object.keys(categoriesData.categories || {});
+
+  // อ่าน Backup รอบก่อนหน้ามาเป็นฐานอ้างอิง — Product ไหนไม่มีการแก้ไขตั้งแต่ตอนนั้น จะเอาข้อมูลมาใช้ซ้ำแทนที่จะดึงจาก Firestore ใหม่ (ประหยัดโควต้ามาก)
+  let previousBackup = null;
+  try{ previousBackup = await readLastBackupData(); }
+  catch(e){ console.warn('อ่าน Backup รอบก่อนไม่สำเร็จ ถือว่าไม่มีฐานอ้างอิง จะดึงข้อมูล Error ใหม่ทั้งหมด:', e.message); }
+  const prevExportedAtMs = previousBackup && previousBackup.exportedAt ? new Date(previousBackup.exportedAt).getTime() : 0;
+
+  const changedCats = previousBackup ? allCategoryNames.filter(cat => (categoryVersions[cat]||0) > prevExportedAtMs) : allCategoryNames;
+  const unchangedCats = allCategoryNames.filter(cat => !changedCats.includes(cat));
+
   const errors = [];
-  const errorMap = {};
-  errorsSnap.forEach(d => {
-    const e = { id: d.id, ...d.data(), solutions: [] };
-    errors.push(e);
-    errorMap[d.id] = e;
-  });
-  solutionsSnap.forEach(d => {
-    const errorId = d.ref.parent.parent.id;
-    const parentError = errorMap[errorId];
-    if (parentError) parentError.solutions.push({ id: d.id, ...d.data() });
-  });
-  errors.forEach(e => e.solutions.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+  if(previousBackup && unchangedCats.length>0){
+    const reused = (previousBackup.errors||[]).filter(e=>unchangedCats.includes(e.category));
+    errors.push(...reused);
+    console.log(`ใช้ข้อมูลเดิมจาก Backup รอบก่อน ${reused.length} Error จาก ${unchangedCats.length} Product ที่ไม่มีการแก้ไข (ไม่ต้องดึงจาก Firestore ใหม่)`);
+  }
+
+  if(changedCats.length>0){
+    console.log(`ดึงข้อมูลใหม่จาก Firestore สำหรับ ${changedCats.length} Product ที่มีการแก้ไข: ${changedCats.join(', ')}`);
+    for(const cat of changedCats){
+      const errSnap = await db.collection('errors').where('category','==',cat).get();
+      for(const d of errSnap.docs){
+        const e = { id: d.id, ...d.data(), solutions: [] };
+        const solSnap = await db.collection('errors').doc(d.id).collection('solutions').get();
+        solSnap.forEach(sd => e.solutions.push({ id: sd.id, ...sd.data() }));
+        e.solutions.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        errors.push(e);
+      }
+    }
+  } else if(previousBackup) {
+    console.log('ไม่มี Product ไหนถูกแก้ไขเลยตั้งแต่ Backup รอบก่อน — ไม่ต้องดึง Error จาก Firestore เลยรอบนี้');
+  }
 
   const documents = []; docsSnap.forEach(d => documents.push({ id: d.id, ...d.data() }));
   const proposals = []; propSnap.forEach(d => proposals.push({ id: d.id, ...d.data() }));
   const pendingErrors = []; pendSnap.forEach(d => pendingErrors.push({ id: d.id, ...d.data() }));
-  const categoriesData = catDoc.exists ? catDoc.data() : { categories: {}, owners: {} };
   const supProductsData = supDoc.exists ? supDoc.data() : { names: [] };
 
   const backup = {
@@ -242,6 +262,30 @@ async function readLastBackupStatus(){
   if (statusSearch.data.files.length === 0) return null;
   const fileRes = await drive.files.get({ fileId: statusSearch.data.files[0].id, alt: 'media' });
   return fileRes.data;
+}
+
+// ----- อ่านเนื้อหา Backup JSON ล่าสุด (ไม่ใช่แค่สถานะ) จากโฟลเดอร์วันที่ล่าสุดใน Drive -----
+// ใช้เป็นฐานอ้างอิง — Product ไหนไม่มีการแก้ไขตั้งแต่ Backup รอบก่อน จะเอาข้อมูลจากตรงนี้มาใช้ซ้ำแทนที่จะดึงจาก Firestore ใหม่
+async function readLastBackupData(){
+  const folderRes = await drive.files.list({
+    q: `name='Backups' and mimeType='application/vnd.google-apps.folder' and '${DRIVE_FOLDER_ID}' in parents and trashed=false`,
+    fields: 'files(id)',
+  });
+  if (folderRes.data.files.length === 0) return null;
+  const backupsFolderId = folderRes.data.files[0].id;
+  const dateFoldersRes = await drive.files.list({
+    q: `'${backupsFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id,name)', orderBy: 'name desc', pageSize: 1,
+  });
+  if (dateFoldersRes.data.files.length === 0) return null;
+  const latestDateFolderId = dateFoldersRes.data.files[0].id;
+  const jsonFilesRes = await drive.files.list({
+    q: `'${latestDateFolderId}' in parents and name contains '.json' and trashed=false`,
+    fields: 'files(id,name)',
+  });
+  if (jsonFilesRes.data.files.length === 0) return null;
+  const contentRes = await drive.files.get({ fileId: jsonFilesRes.data.files[0].id, alt: 'media' });
+  return contentRes.data;
 }
 
 // ----- เช็คว่าถึงเวลาต้อง Backup จริงหรือยัง ตามการตั้งค่าที่ Super Admin ตั้งไว้ในแอป (meta/backupSchedule) -----
