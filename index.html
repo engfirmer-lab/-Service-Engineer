@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.3
+  เวอร์ชันปัจจุบัน: 5.4
   อัปเดตล่าสุด: 5 กันยายน 2569 16:20 น. เวลาไทย
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.3</title>
+<title>Firmer Service Center — v5.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.3</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.4</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -486,7 +486,7 @@
       <h3 id="doclink-list-title">เอกสาร</h3>
       <p id="doclink-list-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
       <div id="doclink-list-items"></div>
-      <button class="btn btn-primary btn-sm" id="doclink-list-add-btn" style="margin-top:14px;">+ เพิ่มลิงก์ใหม่</button>
+      <button class="btn btn-primary btn-sm" id="doclink-list-add-btn" style="margin-top:14px;">+ เพิ่มเอกสาร</button>
     </div>
   </div>
 
@@ -500,7 +500,7 @@
         <button class="btn btn-primary btn-sm" id="doclink-mode-link-btn" style="flex:1;">🔗 วางลิงก์</button>
         <button class="btn btn-ghost btn-sm" id="doclink-mode-upload-btn" style="flex:1;">⬆ อัปโหลดไฟล์</button>
       </div>
-      <div class="field-wrap"><label>ชื่อเอกสาร *</label><input type="text" id="doclink-title-input" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
+      <div class="field-wrap"><label id="doclink-title-label">ชื่อเอกสาร *</label><input type="text" id="doclink-title-input" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
       <div class="field-wrap" style="margin-top:10px;" id="doclink-url-field"><label>ลิงก์ *</label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
       <div class="field-wrap" style="margin-top:10px;display:none;" id="doclink-upload-field">
         <label>เลือกไฟล์ *</label>
@@ -690,7 +690,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.2 (อัปเดตล่าสุด 5 กันยายน 2569 16:20 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.4 (อัปเดตล่าสุด 5 กันยายน 2569 18:00 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -2938,9 +2938,11 @@ function renderSupDocTab(){ renderSupDocMatrix(); }
 let doclinkListContext = null;
 function openDocLinkListModal(category, model, docType, videoSubtype){
   doclinkListContext = { category, model, docType, videoSubtype };
-  const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-list-title').textContent = 'เอกสาร: ' + typeLabel;
+  const isVideo = docType==='video';
+  const typeLabel = isVideo ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+  $('doclink-list-title').textContent = (isVideo ? 'วีดีโอ: ' : 'เอกสาร: ') + typeLabel;
   $('doclink-list-sub').textContent = `${category} · ${model}`;
+  $('doclink-list-add-btn').textContent = isVideo ? '+ เพิ่มวีดีโอ' : '+ เพิ่มเอกสาร';
   renderDocLinkListItems();
   $('doclink-list-modal').classList.add('show');
 }
@@ -2993,8 +2995,10 @@ $('doclink-mode-upload-btn').addEventListener('click', ()=>setDoclinkMode('uploa
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
   doclinkContext = { category, model, docType, videoSubtype, existingId: existingId || null };
-  const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-modal-title').textContent = existing ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสาร';
+  const isVideo = docType==='video';
+  const typeLabel = isVideo ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+  $('doclink-modal-title').textContent = existing ? (isVideo?'แก้ไขวีดีโอ':'แก้ไขเอกสาร') : (isVideo?'เพิ่มวีดีโอ':'เพิ่มเอกสาร');
+  $('doclink-title-label').textContent = (isVideo ? 'ชื่อวีดีโอ' : 'ชื่อเอกสาร') + ' *';
   $('doclink-modal-sub').textContent = `${category} · ${model} · ${typeLabel}`;
   $('doclink-title-input').value = existing ? existing.title : '';
   $('doclink-url-input').value = existing ? (existing.url||'') : '';
@@ -3012,7 +3016,7 @@ $('doclink-cancel-btn').addEventListener('click', closeDocLinkModal);
 $('doclink-save-btn').addEventListener('click', async ()=>{
   if(!doclinkContext) return;
   const title = $('doclink-title-input').value.trim();
-  if(!title){ showToast('⚠ กรุณากรอกชื่อเอกสาร'); return; }
+  if(!title){ showToast(doclinkContext.docType==='video' ? '⚠ กรุณากรอกชื่อวีดีโอ' : '⚠ กรุณากรอกชื่อเอกสาร'); return; }
   const { category, model, docType, videoSubtype, existingId } = doclinkContext;
 
   let url;
