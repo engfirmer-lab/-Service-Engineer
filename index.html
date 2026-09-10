@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 5.9
+  เวอร์ชันปัจจุบัน: 6.0
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v5.9</title>
+<title>Firmer Service Center — v6.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 5.9</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -340,6 +340,7 @@
       <button data-tab="spare_part">🔧 Spare Part</button>
       <button data-tab="install_checklist">📋 Install Checklist</button>
       <button data-tab="pm_checklist">🗓️ PM Checklist</button>
+      <button data-tab="diagram">📐 Diagram</button>
       <button data-tab="video">🎬 Video</button>
     </div>
 
@@ -380,6 +381,10 @@
         <button data-vsub="training" class="active">🎓 Training</button>
         <button data-vsub="alignment">📐 Alignment</button>
         <button data-vsub="replace">🔄 Replace</button>
+      </div>
+      <div class="subtab-bar" id="eng-diagram-subtabs" style="display:none;margin-bottom:10px;">
+        <button data-vsub="fluidic" class="active">💧 Fluidic</button>
+        <button data-vsub="wiring">⚡ Wiring</button>
       </div>
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ Model..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
       <div class="filter-row">
@@ -691,7 +696,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 5.9 (อัปเดตล่าสุด 8 กันยายน 2569 07:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.0 (อัปเดตล่าสุด 10 กันยายน 2569 21:41 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -872,6 +877,7 @@ const DOC_TYPES = [
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
+  {key:'diagram', label:'Diagram', icon:'📐'},
   {key:'video', label:'Video', icon:'🎬'},
 ];
 const VIDEO_SUBTYPES = [
@@ -879,13 +885,26 @@ const VIDEO_SUBTYPES = [
   {key:'alignment', label:'Alignment', icon:'📐'},
   {key:'replace', label:'Replace', icon:'🔄'},
 ];
-function videoSubtypeLabel(key){ const d = VIDEO_SUBTYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
+const DIAGRAM_SUBTYPES = [
+  {key:'fluidic', label:'Fluidic', icon:'💧'},
+  {key:'wiring', label:'Wiring', icon:'⚡'},
+];
+// ประเภทเอกสารไหนมีประเภทย่อยบ้าง — เพิ่ม key ใหม่ตรงนี้ถ้าจะมีประเภทเอกสารที่แยกย่อยอีกในอนาคต ไม่ต้องไปแก้โค้ดจุดอื่น
+const SUBTYPES_MAP = { video: VIDEO_SUBTYPES, diagram: DIAGRAM_SUBTYPES };
+function docTypeHasSubtypes(docType){ return !!SUBTYPES_MAP[docType]; }
+function subtypesFor(docType){ return SUBTYPES_MAP[docType] || []; }
+// หมายเหตุ: ฟิลด์ที่เก็บค่าประเภทย่อยใน Firestore ยังใช้ชื่อ "videoSubtype" เหมือนเดิม (ไม่ทำ data migration) แต่ตอนนี้ใช้เก็บค่าประเภทย่อยของ "ทุก" ประเภทเอกสารที่มีประเภทย่อย ไม่ใช่แค่ video อีกต่อไป
+function subtypeLabel(docType, subtypeKey){ const list = subtypesFor(docType); const d = list.find(x=>x.key===subtypeKey); return d ? d.icon+' '+d.label : subtypeKey; }
+function videoSubtypeLabel(key){ const d = VIDEO_SUBTYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; } // เก็บไว้ให้ backward-compat กับจุดที่ยังเรียกชื่อนี้
 const COVERAGE_COLUMNS = [
-  ...DOC_TYPES.filter(t=>t.key!=='video'),
-  {key:'video_training', label:'Video Training', icon:'🎬'},
+  ...DOC_TYPES.filter(t=>!docTypeHasSubtypes(t.key)),
+  {key:'video_training', label:'Video Training', icon:'🎬', docType:'video', subtype:'training'},
+  {key:'diagram_fluidic', label:'Diagram Fluidic', icon:'📐', docType:'diagram', subtype:'fluidic'},
+  {key:'diagram_wiring', label:'Diagram Wiring', icon:'⚡', docType:'diagram', subtype:'wiring'},
 ];
 function hasCoverageDoc(colKey, category, model){
-  if(colKey==='video_training') return DATA.documents.some(d=>d.docType==='video' && d.videoSubtype==='training' && d.category===category && d.model===model);
+  const col = COVERAGE_COLUMNS.find(c=>c.key===colKey);
+  if(col && col.subtype) return DATA.documents.some(d=>d.docType===col.docType && d.videoSubtype===col.subtype && d.category===category && d.model===model);
   return DATA.documents.some(d=>d.docType===colKey && d.category===category && d.model===model);
 }
 function docTypeLabel(key){ const d = DOC_TYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
@@ -1397,7 +1416,7 @@ async function precreateDocumentFolders(){
   cats.forEach(cat=>{
     (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(model=>{
       DOC_TYPES.forEach(dt=>{
-        if(dt.key==='video'){ VIDEO_SUBTYPES.forEach(vs=>{ jobs.push({cat, model, label: videoSubtypeLabel(vs.key)}); }); }
+        if(docTypeHasSubtypes(dt.key)){ subtypesFor(dt.key).forEach(vs=>{ jobs.push({cat, model, label: subtypeLabel(dt.key, vs.key)}); }); }
         else{ jobs.push({cat, model, label: docTypeLabel(dt.key)}); }
       });
     });
@@ -1432,7 +1451,7 @@ async function syncAndCheckDriveDocuments(){
   cats.forEach(cat=>{
     (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(model=>{
       DOC_TYPES.forEach(dt=>{
-        if(dt.key==='video'){ VIDEO_SUBTYPES.forEach(vs=>{ jobs.push({cat, model, docType:'video', videoSubtype:vs.key, label: videoSubtypeLabel(vs.key)}); }); }
+        if(docTypeHasSubtypes(dt.key)){ subtypesFor(dt.key).forEach(vs=>{ jobs.push({cat, model, docType:dt.key, videoSubtype:vs.key, label: subtypeLabel(dt.key, vs.key)}); }); }
         else{ jobs.push({cat, model, docType:dt.key, label: docTypeLabel(dt.key)}); }
       });
     });
@@ -1492,7 +1511,7 @@ async function syncAndCheckDriveDocuments(){
     resultEl.innerHTML = `
       <div style="border:1px solid var(--red);border-radius:8px;padding:10px;">
         <p style="font-size:12px;color:var(--red);margin:0 0 8px;font-weight:600;">⚠ พบลิงก์เสีย ${dead.length} รายการ</p>
-        ${dead.map(d=>`<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(d.title)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${d.docType==='video'?videoSubtypeLabel(d.videoSubtype):docTypeLabel(d.docType)}</span></div></div>`).join('')}
+        ${dead.map(d=>`<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(d.title)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${docTypeHasSubtypes(d.docType)?subtypeLabel(d.docType,d.videoSubtype):docTypeLabel(d.docType)}</span></div></div>`).join('')}
         <button class="btn btn-primary btn-sm" id="delete-all-dead-links-btn" style="margin-top:10px;">🗑️ ลบลิงก์เสียทั้งหมด (${dead.length} รายการ)</button>
       </div>
     `;
@@ -1818,7 +1837,7 @@ function renderAll(){
 }
 
 /* ===================== ENGINEER SUB-TABS ===================== */
-let engVideoSubtype = 'training';
+let engVideoSubtype = 'training'; // ใช้ร่วมกันสำหรับทุกประเภทเอกสารที่มีประเภทย่อย (video, diagram, ...) — เก็บค่าของแท็บที่กำลังเปิดอยู่ตอนนั้น
 document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
@@ -1827,13 +1846,20 @@ document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
     else{
       $('eng-tab-trbl').style.display='none'; $('eng-tab-docs').style.display='block'; engDocTypeActive = engActiveTab;
       $('eng-video-subtabs').style.display = engActiveTab==='video' ? 'flex' : 'none';
+      $('eng-diagram-subtabs').style.display = engActiveTab==='diagram' ? 'flex' : 'none';
+      if(docTypeHasSubtypes(engActiveTab)){
+        const firstSubBar = engActiveTab==='video' ? $('eng-video-subtabs') : $('eng-diagram-subtabs');
+        firstSubBar.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active', i===0));
+        engVideoSubtype = subtypesFor(engActiveTab)[0].key;
+      }
       renderDocFilterEng(); renderEngDocResults();
     }
   });
 });
-document.querySelectorAll('#eng-video-subtabs button').forEach(btn=>{
+document.querySelectorAll('#eng-video-subtabs button, #eng-diagram-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('#eng-video-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    const bar = btn.closest('.subtab-bar');
+    bar.querySelectorAll('button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
     engVideoSubtype = btn.getAttribute('data-vsub');
     renderEngDocResults();
   });
@@ -2458,7 +2484,7 @@ $('doc-clear-search').addEventListener('click', ()=>{ $('doc-search-input').valu
 function docCard(d){
   const typeInfo = DOC_TYPES.find(t=>t.key===d.docType);
   const dateStr = new Date(d.uploadedAt).toLocaleDateString('th-TH', {timeZone:'Asia/Bangkok'});
-  const subtypeTag = d.docType==='video' && d.videoSubtype ? ` · ${videoSubtypeLabel(d.videoSubtype)}` : '';
+  const subtypeTag = docTypeHasSubtypes(d.docType) && d.videoSubtype ? ` · ${subtypeLabel(d.docType, d.videoSubtype)}` : '';
   return `<div class="doc-card">
     <div class="doc-main"><div class="doc-icon">${typeInfo?typeInfo.icon:'📄'}</div>
       <div><div class="doc-title">${escapeHtml(d.title)}</div><div class="doc-meta">${escapeHtml(d.category)} · ${escapeHtml(d.model)}${subtypeTag} · อัปโหลด ${dateStr}${d.method==='direct'?' · ไฟล์: '+escapeHtml(d.fileName||''):''}</div></div>
@@ -2474,7 +2500,7 @@ function bindDocOpenButtons(){
 }
 function renderEngDocResults(){
   const list = $('doc-results-list');
-  const labelForCount = engDocTypeActive==='video' ? `🎬 Video - ${videoSubtypeLabel(engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
+  const labelForCount = docTypeHasSubtypes(engDocTypeActive) ? `${docTypeLabel(engDocTypeActive)} - ${subtypeLabel(engDocTypeActive, engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
   const hasSearchOrFilter = docQuery.trim()!=='' || docFilterCategory!=='all' || docFilterModel!=='all';
   if(!hasSearchOrFilter){
     $('doc-result-count').textContent = '';
@@ -2482,7 +2508,7 @@ function renderEngDocResults(){
     return;
   }
   let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
-  if(engDocTypeActive==='video') filtered = filtered.filter(d=>d.videoSubtype===engVideoSubtype);
+  if(docTypeHasSubtypes(engDocTypeActive)) filtered = filtered.filter(d=>d.videoSubtype===engVideoSubtype);
   if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
   if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
   if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
@@ -2956,13 +2982,14 @@ async function rejectProposal(pid){
 
 /* ===================== SUP PRODUCT: DOCUMENTS (ตารางเดียว เห็นทุกรุ่น กดใส่ลิงก์ตรงช่อง) ===================== */
 const MATRIX_COLUMNS = [
-  ...DOC_TYPES.filter(t=>t.key!=='video'),
-  {key:'video', videoSubtype:'training', label:'Video-Training', icon:'🎬'},
-  {key:'video', videoSubtype:'alignment', label:'Video-Alignment', icon:'🎬'},
-  {key:'video', videoSubtype:'replace', label:'Video-Replace', icon:'🎬'},
+  ...DOC_TYPES.filter(t=>!docTypeHasSubtypes(t.key)),
+  ...Object.entries(SUBTYPES_MAP).flatMap(([docType, subs])=>{
+    const dt = DOC_TYPES.find(d=>d.key===docType);
+    return subs.map(s=>({key:docType, videoSubtype:s.key, label:`${dt.label}-${s.label}`, icon:dt.icon}));
+  }),
 ];
 function findMatrixDocs(category, model, docType, videoSubtype){
-  return DATA.documents.filter(d=>d.category===category && d.model===model && d.docType===docType && (docType!=='video' || d.videoSubtype===videoSubtype));
+  return DATA.documents.filter(d=>d.category===category && d.model===model && d.docType===docType && (!docTypeHasSubtypes(docType) || d.videoSubtype===videoSubtype));
 }
 function renderSupDocMatrix(){
   const models = [];
@@ -2994,11 +3021,12 @@ function renderSupDocTab(){ renderSupDocMatrix(); }
 let doclinkListContext = null;
 function openDocLinkListModal(category, model, docType, videoSubtype){
   doclinkListContext = { category, model, docType, videoSubtype };
-  const isVideo = docType==='video';
-  const typeLabel = isVideo ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-list-title').textContent = (isVideo ? 'วีดีโอ: ' : 'เอกสาร: ') + typeLabel;
+  const typeLabel = docTypeHasSubtypes(docType) ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
+  const prefixMap = { video:'วีดีโอ: ', diagram:'แผนภาพ: ' };
+  const addBtnMap = { video:'+ เพิ่มวีดีโอ', diagram:'+ เพิ่มแผนภาพ' };
+  $('doclink-list-title').textContent = (prefixMap[docType] || 'เอกสาร: ') + typeLabel;
   $('doclink-list-sub').textContent = `${category} · ${model}`;
-  $('doclink-list-add-btn').textContent = isVideo ? '+ เพิ่มวีดีโอ' : '+ เพิ่มเอกสาร';
+  $('doclink-list-add-btn').textContent = addBtnMap[docType] || '+ เพิ่มเอกสาร';
   renderDocLinkListItems();
   $('doclink-list-modal').classList.add('show');
 }
@@ -3062,10 +3090,12 @@ $('doclink-mode-upload-btn').addEventListener('click', ()=>setDoclinkMode('uploa
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
   doclinkContext = { category, model, docType, videoSubtype, existingId: existingId || null };
-  const isVideo = docType==='video';
-  const typeLabel = isVideo ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
-  $('doclink-modal-title').textContent = existing ? (isVideo?'แก้ไขวีดีโอ':'แก้ไขเอกสาร') : (isVideo?'เพิ่มวีดีโอ':'เพิ่มเอกสาร');
-  $('doclink-title-label').textContent = (isVideo ? 'ชื่อวีดีโอ' : 'ชื่อเอกสาร') + ' *';
+  const hasSub = docTypeHasSubtypes(docType);
+  const typeLabel = hasSub ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
+  const nounMap = { video:'วีดีโอ', diagram:'แผนภาพ' }; // ใช้คำเรียกที่เหมาะกับแต่ละประเภท แทนคำว่า "เอกสาร" แบบรวมๆ กันสับสน
+  const noun = nounMap[docType] || 'เอกสาร';
+  $('doclink-modal-title').textContent = (existing ? 'แก้ไข' : 'เพิ่ม') + noun;
+  $('doclink-title-label').textContent = `ชื่อ${noun} *`;
   $('doclink-modal-sub').textContent = `${category} · ${model} · ${typeLabel}`;
   $('doclink-title-input').value = existing ? existing.title : '';
   $('doclink-url-input').value = existing ? (existing.url||'') : '';
@@ -3083,7 +3113,7 @@ $('doclink-cancel-btn').addEventListener('click', closeDocLinkModal);
 $('doclink-save-btn').addEventListener('click', async ()=>{
   if(!doclinkContext) return;
   const title = $('doclink-title-input').value.trim();
-  if(!title){ showToast(doclinkContext.docType==='video' ? '⚠ กรุณากรอกชื่อวีดีโอ' : '⚠ กรุณากรอกชื่อเอกสาร'); return; }
+  if(!title){ const nounMap2 = { video:'วีดีโอ', diagram:'แผนภาพ' }; showToast(`⚠ กรุณากรอกชื่อ${nounMap2[doclinkContext.docType]||'เอกสาร'}`); return; }
   const { category, model, docType, videoSubtype, existingId } = doclinkContext;
 
   let url;
@@ -3096,7 +3126,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
     if(!file){ showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลด'); return; }
     try{
       $('doclink-upload-progress-wrap').style.display = 'block';
-      const typeLabel = docType==='video' ? videoSubtypeLabel(videoSubtype) : docTypeLabel(docType);
+      const typeLabel = docTypeHasSubtypes(docType) ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
       showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
       let folderId;
       try{ folderId = await ensureDocumentFolderPath(category, model, typeLabel); }
@@ -3115,7 +3145,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
       if(doc){ doc.title = title; doc.url = url; }
     } else {
       const fields = { docType, category, model, title, method:'link', url, uploadedAt: Date.now() };
-      if(docType==='video') fields.videoSubtype = videoSubtype;
+      if(docTypeHasSubtypes(docType)) fields.videoSubtype = videoSubtype;
       const newId = await fsAddDocument(fields);
       DATA.documents.push({ id:newId, ...fields });
     }
