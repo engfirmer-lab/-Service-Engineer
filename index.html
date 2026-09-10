@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 6.0
+  เวอร์ชันปัจจุบัน: 6.1
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v6.0</title>
+<title>Firmer Service Center — v6.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,9 +18,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, getCountFromServer };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.0</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.1</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -688,6 +688,13 @@
       <button class="btn btn-ghost btn-sm" id="tech-docs-toggle-btn">แสดง/ซ่อนรายละเอียด</button>
       <div id="tech-docs-content" style="display:none;margin-top:14px;font-size:12.5px;line-height:1.8;"></div>
     </div>
+    <div class="panel-block" id="delete-test-data-panel" style="display:none;border:1px solid var(--red);">
+      <h2 style="color:var(--red);">⚠️ ลบข้อมูลทดสอบ (isTestData: true)</h2>
+      <p class="panel-sub">ลบเฉพาะรายการที่มีฟิลด์ <span class="mono">isTestData: true</span> เท่านั้น — ไม่แตะข้อมูลจริงเลย ปลอดภัยตามที่ออกแบบไว้ แต่การลบย้อนกลับไม่ได้ เห็นเฉพาะ Super Admin เท่านั้น</p>
+      <p class="panel-sub">จำกัดไม่เกิน 8,000 รายการต่อคอลเลกชันต่อรอบ เผื่อโควต้าฟรีของ Firestore ไว้ให้ทีมใช้งานแอปตามปกติด้วย — ถ้ามีเหลือมากกว่านี้ กดซ้ำได้อีกวันถัดไป (หลังโควต้ารีเซ็ต) ปลอดภัย ไม่ซ้ำซ้อน</p>
+      <button class="btn btn-primary btn-sm" id="delete-test-data-btn" style="background:var(--red);">🗑️ ลบข้อมูลทดสอบ</button>
+      <div id="delete-test-data-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;white-space:pre-line;"></div>
+    </div>
     <div class="panel-block">
       <h2>การใช้งานพื้นที่</h2>
       <h3 style="font-size:13px;margin-bottom:6px;">Firestore (ฐานข้อมูลหลัก)</h3>
@@ -696,7 +703,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.0 (อัปเดตล่าสุด 10 กันยายน 2569 21:41 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.1 (อัปเดตล่าสุด 11 กันยายน 2569 01:55 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -3925,8 +3932,70 @@ async function handleBackupExcel(statusElId){
 function updateExportLogPanelVisibility(){
   $('export-log-panel').style.display = isSuperAdmin() ? 'block' : 'none';
   $('tech-docs-panel').style.display = isSuperAdmin() ? 'block' : 'none';
+  $('delete-test-data-panel').style.display = isSuperAdmin() ? 'block' : 'none';
 }
 
+/* ===================== ลบข้อมูลทดสอบ (isTestData: true) — Super Admin เท่านั้น ===================== */
+// ใช้ตรรกะเดียวกับ clear-test-data.js: จำกัดจำนวนต่อรอบ เผื่อโควต้าฟรีไว้ให้ทีมใช้งานแอปตามปกติ กดซ้ำได้ปลอดภัยถ้ามีเหลือ
+const DELETE_TEST_DATA_MAX_PER_RUN = 8000;
+async function batchDeleteDocs(sdk, docsRefs){
+  let batch = sdk.writeBatch(db);
+  let opCount = 0, total = 0;
+  for(const ref of docsRefs){
+    batch.delete(ref);
+    opCount++; total++;
+    if(opCount>=400){ await batch.commit(); batch = sdk.writeBatch(db); opCount=0; }
+  }
+  if(opCount>0) await batch.commit();
+  return total;
+}
+async function deleteTestDataFromApp(){
+  if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่ลบได้'); return; }
+  if(!confirm('ยืนยันการลบข้อมูลทดสอบ (isTestData: true)? การลบนี้ย้อนกลับไม่ได้ — จำกัดไม่เกิน 8,000 รายการต่อคอลเลกชันต่อรอบ')) return;
+  const statusEl = $('delete-test-data-status');
+  statusEl.textContent = 'กำลังค้นหาและลบข้อมูลทดสอบ...';
+  showLoadingOverlay('กำลังลบข้อมูลทดสอบ...');
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+
+    statusEl.textContent = 'กำลังลบ solutions...';
+    const solQ = sdk.query(sdk.collectionGroup(db,'solutions'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
+    const solSnap = await sdk.getDocs(solQ);
+    const solCount = solSnap.empty ? 0 : await batchDeleteDocs(sdk, solSnap.docs.map(d=>d.ref));
+    statusEl.textContent = `solutions: ลบไปแล้ว ${solCount} รายการ (รอบนี้)\n`;
+
+    statusEl.textContent += 'กำลังลบ errors...';
+    const errQ = sdk.query(sdk.collection(db,'errors'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
+    const errSnap = await sdk.getDocs(errQ);
+    const errCount = errSnap.empty ? 0 : await batchDeleteDocs(sdk, errSnap.docs.map(d=>d.ref));
+    statusEl.textContent += ` ลบไปแล้ว ${errCount} รายการ (รอบนี้)\n`;
+
+    statusEl.textContent += 'กำลังลบ documents...';
+    const docQ = sdk.query(sdk.collection(db,'documents'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
+    const docSnap = await sdk.getDocs(docQ);
+    const docCount = docSnap.empty ? 0 : await batchDeleteDocs(sdk, docSnap.docs.map(d=>d.ref));
+    statusEl.textContent += ` ลบไปแล้ว ${docCount} รายการ (รอบนี้)\n`;
+
+    const totalThisRun = solCount + errCount + docCount;
+    let summary = `\n✓ ลบไปแล้วทั้งหมด ${totalThisRun} รายการในรอบนี้`;
+    if(solCount>=DELETE_TEST_DATA_MAX_PER_RUN || errCount>=DELETE_TEST_DATA_MAX_PER_RUN || docCount>=DELETE_TEST_DATA_MAX_PER_RUN){
+      summary += `\n⚠️ อาจมีข้อมูลทดสอบเหลืออยู่อีก (ถึงขีดจำกัดต่อรอบแล้ว) — รอโควต้ารีเซ็ต (บ่าย 2-3 โมงวันถัดไปเวลาไทย) แล้วกดปุ่มนี้ซ้ำได้เลย ไม่ต้องกังวลเรื่องลบซ้ำ`;
+    } else {
+      summary += `\n✓ ลบข้อมูลทดสอบครบทั้งหมดแล้ว ไม่ต้องกดซ้ำอีก`;
+    }
+    statusEl.textContent += summary;
+    fsWriteLog(`ลบข้อมูลทดสอบผ่านแอป (${totalThisRun} รายการ)`);
+    showToast(`✓ ลบข้อมูลทดสอบแล้ว ${totalThisRun} รายการ`);
+  }catch(e){
+    statusEl.textContent += `\n⚠ เกิดข้อผิดพลาด: ${e.message}`;
+    if(String(e.message||'').toLowerCase().includes('quota') || String(e.code||'').includes('resource-exhausted')){
+      statusEl.textContent += `\nดูเหมือนโควต้า Firestore หมดพอดีระหว่างลบ — ข้อมูลที่ลบไปแล้วก่อนหน้านี้ในรอบนี้ยังคงลบสำเร็จอยู่ รอโควต้ารีเซ็ตแล้วกดปุ่มนี้ซ้ำได้เลย`;
+    }
+    showToast('⚠ ลบไม่สำเร็จบางส่วน: '+e.message);
+  }finally{ hideLoadingOverlay(); }
+}
+$('delete-test-data-btn').addEventListener('click', deleteTestDataFromApp);
 /* ===================== เอกสารทางเทคนิค — แก้ไขข้อความตรงนี้เมื่อมีการเปลี่ยนแปลงโครงสร้างระบบ/ไฟล์/Deploy ===================== */
 function techDocsHtml(){
   return `
