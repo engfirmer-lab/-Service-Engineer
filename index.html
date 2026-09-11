@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 6.3
+  เวอร์ชันปัจจุบัน: 6.4
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v6.3</title>
+<title>Firmer Service Center — v6.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.3</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.4</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -703,7 +703,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.3 (อัปเดตล่าสุด 11 กันยายน 2569 09:11 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.4 (อัปเดตล่าสุด 11 กันยายน 2569 20:36 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -3127,7 +3127,7 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   $('doclink-delete-btn').style.display = existing ? 'inline-block' : 'none';
   const saveBtn = $('doclink-save-btn');
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
-  setDoclinkMode('link');
+  setDoclinkMode(existing ? 'link' : 'upload'); // เอกสารใหม่ → เปิดโหมดอัปโหลดไฟล์เป็นค่าเริ่มต้น / แก้ไขของเดิม → เปิดโหมดลิงก์ก่อน จะได้เห็นลิงก์เดิมทันที
   $('doclink-modal').classList.add('show');
   setTimeout(()=>$('doclink-title-input').focus(), 50);
 }
