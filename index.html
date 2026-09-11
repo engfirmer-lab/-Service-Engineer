@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 6.1
+  เวอร์ชันปัจจุบัน: 6.3
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v6.1</title>
+<title>Firmer Service Center — v6.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.1</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.3</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -703,7 +703,7 @@
       <div id="usage-result" style="margin-top:10px;"></div>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.1 (อัปเดตล่าสุด 11 กันยายน 2569 01:55 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.3 (อัปเดตล่าสุด 11 กันยายน 2569 09:11 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -2140,7 +2140,7 @@ function bindFeedbackButtons(root){
   root.querySelectorAll('[data-errpropose]').forEach(btn=>{
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
-      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); $('down-modal').classList.add('show'); }); });
+      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); const dbtn=$('down-modal-submit'); dbtn.disabled=false; dbtn.style.opacity=''; dbtn.style.cursor=''; $('down-modal').classList.add('show'); }); });
   });
 }
 async function submitUp(solId){
@@ -2181,23 +2181,27 @@ function renderDownModalVideos(){
   wrap.querySelectorAll('[data-dm-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalVideos.splice(parseInt(btn.getAttribute('data-dm-rmvid')),1); renderDownModalVideos(); }));
 }
 $('down-modal-submit').addEventListener('click', async ()=>{
+  const btn = $('down-modal-submit');
+  if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/ส่งอยู่
   const desc = $('down-modal-desc').value.trim();
   if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
   const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
+  btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   let uploadedImages = []; let uploadedVideos = [];
   try{
     if(parentErr){
       uploadedImages = await resolveImagesForUpload(downModalImages, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
       uploadedVideos = await resolveVideosForUpload(downModalVideos, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
     }
-  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
   let newId;
-  try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   DATA.proposals.push({ id:newId, ...fields });
   myVotes['down:'+downModalErrorId] = true;
+  btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
   if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
   showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
@@ -2547,6 +2551,7 @@ function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
   engEditingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}];
   renderEngSolutionsEditor();
+  const ebtn=$('eng-save-error-btn'); ebtn.disabled=false; ebtn.style.opacity=''; ebtn.style.cursor='';
 }
 function renderEngSolutionsEditor(){
   const wrap = $('eng-solutions-editor');
@@ -2583,23 +2588,27 @@ function renderEngSolutionsEditor(){
 $('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
 
 $('eng-save-error-btn').addEventListener('click', async ()=>{
+  const btn = $('eng-save-error-btn');
+  if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่
   const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
   const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
   DATA.pendingErrors = DATA.pendingErrors || [];
   const errorCode = $('eng-f-code').value.trim();
+  btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   try{
     for(let i=0;i<validSolutions.length;i++){
       validSolutions[i].images = await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i);
       validSolutions[i].videos = await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i);
     }
-  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
   let newId;
-  try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); return; }
+  try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   DATA.pendingErrors.push({ id:newId, ...fields });
   await flushPendingDriveDeletions();
+  btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
@@ -2717,14 +2726,18 @@ function resetErrorForm(){
   renderSolutionsEditor();
   $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
-  $('save-error-btn').textContent = 'บันทึก Error';
+  const sbtn = $('save-error-btn'); sbtn.disabled=false; sbtn.style.opacity=''; sbtn.style.cursor='';
+  sbtn.textContent = 'บันทึก Error';
 }
 $('save-error-btn').addEventListener('click', async ()=>{
+  const btn = $('save-error-btn');
+  if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่ (สาเหตุที่เคยทำให้ได้ไฟล์ซ้ำ)
   const category=$('f-category').value, model=$('f-model').value, symptom=$('f-symptom').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
   const validSolutions = editingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
   const errorCode = $('f-code').value.trim();
+  btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
 
   if(reviewingPendingErrorId){
     const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
@@ -2734,8 +2747,9 @@ $('save-error-btn').addEventListener('click', async ()=>{
       await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
-    }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
     await flushPendingDriveDeletions();
+    btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
     resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
     renderAll();
     showToast('✓ แก้ไขและอนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
@@ -2754,8 +2768,9 @@ $('save-error-btn').addEventListener('click', async ()=>{
       await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
     }
-  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   await flushPendingDriveDeletions();
+  btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
   resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
@@ -3110,6 +3125,8 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   $('doclink-upload-progress-wrap').style.display = 'none';
   $('doclink-upload-progress-bar').style.width = '0%';
   $('doclink-delete-btn').style.display = existing ? 'inline-block' : 'none';
+  const saveBtn = $('doclink-save-btn');
+  saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   setDoclinkMode('link');
   $('doclink-modal').classList.add('show');
   setTimeout(()=>$('doclink-title-input').focus(), 50);
@@ -3119,18 +3136,21 @@ $('doclink-modal-close').addEventListener('click', closeDocLinkModal);
 $('doclink-cancel-btn').addEventListener('click', closeDocLinkModal);
 $('doclink-save-btn').addEventListener('click', async ()=>{
   if(!doclinkContext) return;
+  const saveBtn = $('doclink-save-btn');
+  if(saveBtn.disabled) return; // กันกดซ้ำระหว่างกำลังบันทึกอยู่ (สาเหตุที่เคยทำให้ได้ไฟล์ซ้ำ 2 รูป)
   const title = $('doclink-title-input').value.trim();
   if(!title){ const nounMap2 = { video:'วีดีโอ', diagram:'แผนภาพ' }; showToast(`⚠ กรุณากรอกชื่อ${nounMap2[doclinkContext.docType]||'เอกสาร'}`); return; }
   const { category, model, docType, videoSubtype, existingId } = doclinkContext;
+  saveBtn.disabled = true; saveBtn.style.opacity = '.5'; saveBtn.style.cursor = 'not-allowed';
 
   let url;
   if(doclinkMode==='link'){
     const rawUrl = $('doclink-url-input').value.trim();
-    if(!rawUrl){ showToast('⚠ กรุณากรอกลิงก์'); return; }
+    if(!rawUrl){ showToast('⚠ กรุณากรอกลิงก์'); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
     url = normalizeDriveLink(rawUrl);
   } else {
     const file = $('doclink-file-input').files[0];
-    if(!file){ showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลด'); return; }
+    if(!file){ showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลด'); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
     try{
       $('doclink-upload-progress-wrap').style.display = 'block';
       const typeLabel = docTypeHasSubtypes(docType) ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
@@ -3142,7 +3162,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
         $('doclink-upload-progress-bar').style.width = pct+'%';
         $('doclink-upload-progress-text').textContent = `กำลังอัปโหลด... ${pct}%`;
       });
-    }catch(e){ showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); return; }
+    }catch(e){ showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
   try{
@@ -3156,7 +3176,8 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
       const newId = await fsAddDocument(fields);
       DATA.documents.push({ id:newId, ...fields });
     }
-  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
+  saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
   renderAll();
