@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 6.4
+  เวอร์ชันปัจจุบัน: 7.0
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v6.4</title>
+<title>Firmer Service Center — v7.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 6.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.0</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -368,10 +368,12 @@
       </div>
 
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
+      <label style="font-size:11px;color:var(--text-faint);display:block;margin:8px 0 4px;">ตัวกรอง</label>
       <div class="filter-row">
         <select id="filter-category"><option value="all">Product: All</option></select>
         <select id="filter-model"><option value="all">Model: All</option></select>
       </div>
+      <button class="btn btn-primary btn-sm" id="search-submit-btn" style="margin-top:8px;width:100%;">🔍 ค้นหา</button>
       <div class="result-count" id="result-count"></div>
       <div id="results-list"></div>
     </div>
@@ -387,10 +389,12 @@
         <button data-vsub="wiring">⚡ Wiring</button>
       </div>
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="doc-search-input" type="text" placeholder="ค้นหาชื่อไฟล์ Model..."><button class="clear-btn" id="doc-clear-search">✕</button></div></div>
+      <label style="font-size:11px;color:var(--text-faint);display:block;margin:8px 0 4px;">ตัวกรอง</label>
       <div class="filter-row">
         <select id="doc-filter-category"><option value="all">Product: All</option></select>
         <select id="doc-filter-model"><option value="all">Model: All</option></select>
       </div>
+      <button class="btn btn-primary btn-sm" id="doc-search-submit-btn" style="margin-top:8px;width:100%;">🔍 ค้นหา</button>
       <div class="result-count" id="doc-result-count"></div>
       <div id="doc-results-list"></div>
     </div>
@@ -412,6 +416,12 @@
 
     <div id="sup-tab-trbl">
       <div class="stat-cards" id="sup-stats"></div>
+      <div class="panel-block">
+        <h2>สรุปจำนวน Error แต่ละรุ่นที่ดูแล</h2>
+        <p class="panel-sub">จำนวน Error ที่กรอกไว้แล้ว แยกตามรุ่น — กดเช็คเองเพื่อประหยัดโควต้า (ใช้ข้อมูลที่เคยโหลดไว้แล้วถ้ามี ไม่ต้องดึงซ้ำ)</p>
+        <button class="btn btn-ghost btn-sm" id="check-error-count-btn">📊 เช็คจำนวน Error แต่ละรุ่น</button>
+        <div id="error-count-summary" style="margin-top:10px;"></div>
+      </div>
       <div class="panel-block">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div><h2 id="sup-form-heading" style="margin-bottom:2px;">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h2><p class="panel-sub" id="sup-form-sub" style="margin-bottom:0;">กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข</p></div>
@@ -447,6 +457,7 @@
         <h2>ค้นหา / จัดการ Error ของฉัน</h2>
         <p class="panel-sub">ค้นหาและกรองเหมือนหน้า Engineer เพื่อหา Error ที่ต้องการแก้ไข</p>
         <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
+        <label style="font-size:11px;color:var(--text-faint);display:block;margin:8px 0 4px;">ตัวกรอง</label>
         <div class="filter-row" style="flex-direction:column;align-items:stretch;gap:8px;">
           <div style="position:relative;">
             <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">Product: All ▾</button>
@@ -457,6 +468,7 @@
             <div id="sup-filter-model-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
           </div>
         </div>
+        <button class="btn btn-primary btn-sm" id="sup-search-submit-btn" style="margin-top:8px;width:100%;">🔍 ค้นหา</button>
         <div class="result-count" id="sup-result-count"></div>
         <div id="sup-results-list"></div>
       </div>
@@ -611,11 +623,15 @@
     <div class="panel-block">
       <h2>ข้อมูล Troubleshoot</h2>
       <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — Manager ดูแล้วตีความเอง</p>
-      <table id="mgr-table"></table>
+      <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+      <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
+      <div style="overflow-x:auto;"><table id="mgr-table"></table></div>
     </div>
     <div class="panel-block">
       <h2>ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
       <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
+      <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+      <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
       <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
     </div>
   </div>
@@ -688,22 +704,13 @@
       <button class="btn btn-ghost btn-sm" id="tech-docs-toggle-btn">แสดง/ซ่อนรายละเอียด</button>
       <div id="tech-docs-content" style="display:none;margin-top:14px;font-size:12.5px;line-height:1.8;"></div>
     </div>
-    <div class="panel-block" id="delete-test-data-panel" style="display:none;border:1px solid var(--red);">
-      <h2 style="color:var(--red);">⚠️ ลบข้อมูลทดสอบ (isTestData: true)</h2>
-      <p class="panel-sub">ลบเฉพาะรายการที่มีฟิลด์ <span class="mono">isTestData: true</span> เท่านั้น — ไม่แตะข้อมูลจริงเลย ปลอดภัยตามที่ออกแบบไว้ แต่การลบย้อนกลับไม่ได้ เห็นเฉพาะ Super Admin เท่านั้น</p>
-      <p class="panel-sub">จำกัดไม่เกิน 8,000 รายการต่อคอลเลกชันต่อรอบ เผื่อโควต้าฟรีของ Firestore ไว้ให้ทีมใช้งานแอปตามปกติด้วย — ถ้ามีเหลือมากกว่านี้ กดซ้ำได้อีกวันถัดไป (หลังโควต้ารีเซ็ต) ปลอดภัย ไม่ซ้ำซ้อน</p>
-      <button class="btn btn-primary btn-sm" id="delete-test-data-btn" style="background:var(--red);">🗑️ ลบข้อมูลทดสอบ</button>
-      <div id="delete-test-data-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;white-space:pre-line;"></div>
-    </div>
     <div class="panel-block">
-      <h2>การใช้งานพื้นที่</h2>
-      <h3 style="font-size:13px;margin-bottom:6px;">Firestore (ฐานข้อมูลหลัก)</h3>
-      <p class="panel-sub">⚠️ ตัวเลขนี้เป็นการ<strong>ประมาณการ</strong>จากจำนวน/ขนาดข้อมูลในระบบตอนนี้เท่านั้น ไม่ใช่ตัวเลขจริงจาก Google 100% — ดูตัวเลขที่แม่นยำได้ที่ Firebase Console เท่านั้น — กดเช็คเองเพื่อประหยัดโควต้า (ใช้เล็กน้อยทุกครั้งที่เช็ค)</p>
-      <button class="btn btn-ghost btn-sm" id="check-firestore-usage-btn">🔍 เช็คการใช้งาน Firestore</button>
-      <div id="usage-result" style="margin-top:10px;"></div>
+      <h2>Google Drive Database</h2>
+      <p class="panel-sub">เข้าไปดูไฟล์เอกสาร/รูป/วิดีโอ/Backup ทั้งหมดที่เก็บไว้จริงใน Google Drive ได้โดยตรง</p>
+      <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 6.4 (อัปเดตล่าสุด 11 กันยายน 2569 20:36 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.0 (อัปเดตล่าสุด 13 กันยายน 2569 11:25 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1883,9 +1890,11 @@ function updateModelFilter(){
   $('filter-model').innerHTML = `<option value="all">Model: All</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('filter-model').disabled = filterCategory==='all'; $('filter-model').value='all'; filterModel='all';
 }
-$('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); renderTechResults(); });
-$('filter-model').addEventListener('change', e=>{ filterModel=e.target.value; renderTechResults(); });
-$('search-input').addEventListener('input', e=>{ currentQuery=e.target.value; renderTechResults(); });
+$('filter-category').addEventListener('change', e=>{ filterCategory=e.target.value; updateModelFilter(); }); // แค่เก็บค่าไว้ก่อน ไม่ดึงข้อมูลทันที รอกดปุ่มค้นหา
+$('filter-model').addEventListener('change', e=>{ filterModel=e.target.value; });
+$('search-input').addEventListener('input', e=>{ currentQuery=e.target.value; }); // พิมพ์เก็บค่าไว้เฉยๆ ไม่ค้นหาทันทีทุกตัวอักษร (ประหยัดการดึงข้อมูล)
+$('search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderTechResults(); });
+$('search-submit-btn').addEventListener('click', renderTechResults);
 $('clear-search').addEventListener('click', ()=>{ $('search-input').value=''; currentQuery=''; renderTechResults(); });
 
 function matchesQuery(e,q){ if(!q) return true; const hay=[e.category,e.model,e.errorCode,e.symptom].join(' ').toLowerCase(); return hay.includes(q.toLowerCase()); }
@@ -2487,9 +2496,11 @@ function updateDocModelFilterEng(){
   $('doc-filter-model').innerHTML = `<option value="all">Model: All</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
 }
-$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
-$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; renderEngDocResults(); });
-$('doc-search-input').addEventListener('input', e=>{ docQuery=e.target.value; renderEngDocResults(); });
+$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); });
+$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; });
+$('doc-search-input').addEventListener('input', e=>{ docQuery=e.target.value; });
+$('doc-search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderEngDocResults(); });
+$('doc-search-submit-btn').addEventListener('click', renderEngDocResults);
 $('doc-clear-search').addEventListener('click', ()=>{ $('doc-search-input').value=''; docQuery=''; renderEngDocResults(); });
 
 function docCard(d){
@@ -2641,6 +2652,27 @@ function renderSupIdentityOptions(){
 function myOwnedCategories(){
   return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity)).sort(naturalSort);
 }
+async function checkErrorCountSummary(){
+  const statusEl = $('error-count-summary');
+  const cats = myOwnedCategories();
+  const myModels = [];
+  cats.forEach(cat=> (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(m=> myModels.push({cat, model:m})));
+  if(myModels.length===0){ statusEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรุ่นที่คุณดูแลอยู่</p>`; return; }
+  statusEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังโหลดข้อมูล...</p>`;
+  for(const cat of cats){ await ensureErrorsLoadedForCategory(cat); } // ใช้แคชเดิมถ้าเคยโหลดแล้ว ไม่เสียโควต้าซ้ำ
+  const grouped = {};
+  myModels.forEach(({cat,model})=>{ (grouped[cat]=grouped[cat]||[]).push(model); });
+  statusEl.innerHTML = Object.entries(grouped).map(([cat,models])=>`
+    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;">
+      <div style="background:var(--panel-alt);padding:8px 10px;font-size:12.5px;font-weight:500;">${escapeHtml(cat)}</div>
+      ${models.map(m=>{
+        const count = DATA.errors.filter(e=>e.category===cat && e.model===m).length;
+        return `<div style="display:flex;justify-content:space-between;padding:7px 10px;border-top:1px solid var(--border);font-size:12.5px;"><span>${escapeHtml(m)}</span><span class="mono" style="color:var(--text-faint);">${count} Error</span></div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+$('check-error-count-btn').addEventListener('click', checkErrorCountSummary);
 function populateSupSelectors(){
   const cats = myOwnedCategories();
   $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
@@ -2894,7 +2926,9 @@ $('sup-filter-model-btn').addEventListener('click', (ev)=>{ ev.stopPropagation()
 $('sup-filter-cat-panel').addEventListener('click', (ev)=> ev.stopPropagation());
 $('sup-filter-model-panel').addEventListener('click', (ev)=> ev.stopPropagation());
 document.addEventListener('click', ()=>{ $('sup-filter-cat-panel').style.display='none'; $('sup-filter-model-panel').style.display='none'; });
-$('sup-search-input').addEventListener('input', e=>{ supQuery=e.target.value; renderSupSearchResults(); });
+$('sup-search-input').addEventListener('input', e=>{ supQuery=e.target.value; });
+$('sup-search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderSupSearchResults(); });
+$('sup-search-submit-btn').addEventListener('click', renderSupSearchResults);
 $('sup-clear-search').addEventListener('click', ()=>{ $('sup-search-input').value=''; supQuery=''; renderSupSearchResults(); });
 
 function renderSupSearchResults(){
@@ -3015,7 +3049,7 @@ function findMatrixDocs(category, model, docType, videoSubtype){
 }
 function renderSupDocMatrix(){
   const models = [];
-  Object.entries(DATA.categories).forEach(([cat,ms])=>{ ms.forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) models.push({category:cat, model:m}); }); });
+  Object.entries(DATA.categories).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,ms])=>{ [...ms].sort(naturalSort).forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) models.push({category:cat, model:m}); }); });
   const table = $('sup-doc-matrix');
   if(models.length===0){ table.innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">ยังไม่มีรุ่นที่คุณดูแล</td></tr></tbody>`; return; }
   let html = `<thead><tr><th>Product</th><th>Model</th>${MATRIX_COLUMNS.map(c=>`<th>${c.icon} ${c.label}</th>`).join('')}</tr></thead><tbody>`;
@@ -3331,18 +3365,30 @@ function renderUnifiedPermissionList(){
   }
 
   const list = $('perm-user-list');
+  const editorExpanded = expandedPermTiers.has('editor');
+  const approvedExpanded = expandedPermTiers.has('approved');
   list.innerHTML = `
     <h3 style="font-size:13px;margin:0 0 8px;color:var(--amber);">⭐ Super Admin (1 คน)</h3>
     <div class="admin-row">
       <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(SUPER_ADMIN_EMAIL)}</span><span class="mono" style="font-size:10.5px;color:var(--amber);">แก้ไม่ได้ — ตายตัวในโค้ด</span></div>
     </div>
 
-    <h3 style="font-size:13px;margin:20px 0 8px;color:var(--green);">🔧 แก้ไขข้อมูล (Editor) — ${editors.length} คน</h3>
-    ${editors.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : editors.map(email=>userRowHtml(email,'editor')).join('')}
+    <h3 data-toggleperm="editor" style="font-size:13px;margin:20px 0 8px;color:var(--green);cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:11px;color:var(--text-faint);">${editorExpanded?'▲':'▼'}</span> 🔧 แก้ไขข้อมูล (Editor) — ${editors.length} คน
+    </h3>
+    ${editorExpanded ? (editors.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : editors.map(email=>userRowHtml(email,'editor')).join('')) : ''}
 
-    <h3 style="font-size:13px;margin:20px 0 8px;color:var(--text-dim);">👤 ผู้ใช้ทั่วไป — ${approved.length} คน</h3>
-    ${approved.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : approved.map(email=>userRowHtml(email,'approved')).join('')}
+    <h3 data-toggleperm="approved" style="font-size:13px;margin:20px 0 8px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:11px;color:var(--text-faint);">${approvedExpanded?'▲':'▼'}</span> 👤 ผู้ใช้ทั่วไป — ${approved.length} คน
+    </h3>
+    ${approvedExpanded ? (approved.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : approved.map(email=>userRowHtml(email,'approved')).join('')) : ''}
   `;
+
+  list.querySelectorAll('[data-toggleperm]').forEach(el=>el.addEventListener('click', ()=>{
+    const tier = el.getAttribute('data-toggleperm');
+    if(expandedPermTiers.has(tier)) expandedPermTiers.delete(tier); else expandedPermTiers.add(tier);
+    renderUnifiedPermissionList();
+  }));
 
   list.querySelectorAll('[data-permrole]').forEach(sel=>sel.addEventListener('change', async ()=>{
     if(!isSuperAdmin()) return;
@@ -3487,6 +3533,8 @@ function toggleNewCatInput(){
 $('new-model-cat').addEventListener('change', toggleNewCatInput);
 // ===================== คิวติดตามการย้ายโฟลเดอร์ Drive ที่ยังไม่สำเร็จ — ถือว่า "ยังไม่เสร็จงาน" จนกว่าจะย้ายโฟลเดอร์จริงสำเร็จ ต้องกดลองใหม่เอง =====================
 let pendingDriveMoves = []; // { category, model, oldOwner, newOwner }
+let expandedProductCats = new Set(); // ประเภทไหนกางแสดงรุ่นย่อยอยู่บ้าง — เริ่มต้นพับไว้หมดทุกอัน
+let expandedPermTiers = new Set(); // สิทธิ์ระดับไหนกางแสดงรายชื่ออยู่บ้าง — เริ่มต้นพับไว้หมดทุกอัน
 let _deadLinksFound = []; // เก็บผลลัพธ์ลิงก์เสียล่าสุดไว้ให้ปุ่ม "ลบทั้งหมด" ใช้ต่อ
 async function attemptDriveMove(category, model, oldOwner, newOwner){
   try{
@@ -3543,9 +3591,10 @@ function renderCatModelManage(){
   const hasActiveFilter = !!(searchTerm || ownerFilter || catFilter);
 
   const entries = Object.entries(DATA.categories)
+    .sort(([a],[b])=>naturalSort(a,b)) // เรียงตามชื่อเสมอ กันปัญหาลำดับสลับตำแหน่งหลังเปลี่ยนชื่อประเภท (rename = ลบคีย์เก่าแล้วสร้างใหม่ ทำให้ลำดับใน object เปลี่ยนถ้าไม่เรียงเอง)
     .filter(([cat])=> !catFilter || cat===catFilter)
     .map(([cat,models])=>{
-      let filteredModels = models;
+      let filteredModels = [...models].sort(naturalSort); // เรียงรุ่นตามชื่อเสมอเช่นกัน
       if(ownerFilter) filteredModels = filteredModels.filter(m=> ownerOf(cat,m)===ownerFilter); // กรองตามผู้ดูแล — เจอเฉพาะรุ่นที่คนนี้ดูแลจริงเท่านั้น
       if(searchTerm){
         const catMatches = cat.toLowerCase().includes(searchTerm);
@@ -3561,6 +3610,7 @@ function renderCatModelManage(){
     const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat) || DATA.pendingErrors.some(p=>p.category===cat);
     const isEditingCat = editingCatName===cat;
     const allModels = DATA.categories[cat]||[]; // ใช้จำนวนเต็มของประเภทนี้ ไม่ใช่จำนวนที่กรองแล้ว
+    const isExpanded = hasActiveFilter || expandedProductCats.has(cat); // กำลังค้นหาอยู่ → กางให้เห็นผลลัพธ์เลย ไม่ต้องกดเอง
     return `<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:10px;">
       <div style="background:var(--panel-alt);padding:8px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;">
         ${isEditingCat ? `
@@ -3570,14 +3620,17 @@ function renderCatModelManage(){
             <button class="btn btn-ghost btn-sm" data-cancelcatname="1">ยกเลิก</button>
           </div>
         ` : `
-          <span style="font-size:13px;font-weight:500;">${escapeHtml(cat)} <span class="mono" style="font-size:10.5px;color:var(--text-faint);font-weight:400;">(${allModels.length} รุ่น)</span></span>
+          <span data-togglecat="${escapeHtml(cat)}" style="flex:1;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;">
+            <span style="font-size:11px;color:var(--text-faint);">${isExpanded?'▲':'▼'}</span>
+            ${escapeHtml(cat)} <span class="mono" style="font-size:10.5px;color:var(--text-faint);font-weight:400;">(${allModels.length} รุ่น)</span>
+          </span>
           <div style="display:flex;gap:4px;">
             <button class="icon-btn btn-sm" data-editcatname="${escapeHtml(cat)}">แก้ไขชื่อ</button>
             <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
           </div>
         `}
       </div>
-      ${models.map(m=>{
+      ${isExpanded ? (models.map(m=>{
         const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m) || DATA.pendingErrors.some(p=>p.category===cat && p.model===m);
         const key = cat+'|'+m;
         const isEditingModel = editingModelKey===key;
@@ -3594,7 +3647,7 @@ function renderCatModelManage(){
             <button data-delmodel="${escapeHtml(key)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'var(--text-faint)':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};font-size:15px;">✕</button>
           `}
         </div>`;
-      }).join('') || `<p style="font-size:12px;color:var(--text-faint);padding:10px;">ยังไม่มีรุ่นในประเภทนี้</p>`}
+      }).join('') || `<p style="font-size:12px;color:var(--text-faint);padding:10px;">ยังไม่มีรุ่นในประเภทนี้</p>`) : ''}
     </div>`;
   }).join('');
 
@@ -3651,6 +3704,13 @@ function renderCatModelManage(){
       finally{ hideLoadingOverlay(); }
     }
   }); });
+
+  // พับ/กางแสดงรุ่นย่อยของแต่ละประเภท
+  wrap.querySelectorAll('[data-togglecat]').forEach(el=>el.addEventListener('click', ()=>{
+    const cat = el.getAttribute('data-togglecat');
+    if(expandedProductCats.has(cat)) expandedProductCats.delete(cat); else expandedProductCats.add(cat);
+    renderCatModelManage();
+  }));
 
   // แก้ไขชื่อประเภท — เปิด/ปิดช่องแก้ไข
   wrap.querySelectorAll('[data-editcatname]').forEach(b=>b.addEventListener('click', ()=>{ editingCatName=b.getAttribute('data-editcatname'); editingModelKey=null; renderCatModelManage(); }));
@@ -3793,6 +3853,24 @@ $('add-model-btn').addEventListener('click', async ()=>{
 });
 
 /* ===================== MANAGER VIEW ===================== */
+const MGR_TABLE_COLS = ['Sup Product','Error ที่กรอก','เปิดดูรวม','👍 สะสม','ข้อเสนอที่ถูกรับ','แจ้งแก้ไม่ได้ (ค้างอยู่)'];
+function getMgrHiddenCols(key){ try{ return JSON.parse(localStorage.getItem('mgr_hidden_cols_'+key)||'[]'); }catch(e){ return []; } }
+function setMgrHiddenCols(key, arr){ try{ localStorage.setItem('mgr_hidden_cols_'+key, JSON.stringify(arr)); }catch(e){} }
+function renderMgrColsPanel(panelId, key, colNames, onChange){
+  const hidden = new Set(getMgrHiddenCols(key));
+  const panel = $(panelId);
+  panel.innerHTML = colNames.map((name,i)=>`<label style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 0;font-size:12px;cursor:pointer;"><input type="checkbox" data-colidx="${i}" ${hidden.has(i)?'':'checked'}> ${escapeHtml(name)}</label>`).join('');
+  panel.querySelectorAll('[data-colidx]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const idx = parseInt(cb.getAttribute('data-colidx'),10);
+    const h = new Set(getMgrHiddenCols(key));
+    if(cb.checked) h.delete(idx); else h.add(idx);
+    setMgrHiddenCols(key, [...h]);
+    onChange();
+  }));
+}
+$('mgr-table-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-table-cols-panel'); p.style.display = p.style.display==='none'?'block':'none'; });
+$('mgr-doc-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-doc-cols-panel'); p.style.display = p.style.display==='none'?'block':'none'; });
+
 function renderMgrView(){
   const rows = SUP_PRODUCTS.map(name=>{
     const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
@@ -3802,24 +3880,40 @@ function renderMgrView(){
     const views = mine.reduce((a,e)=>a+(e.viewCount||0),0);
     return {name, count:mine.length, views, totalUps, acceptedCount, pendingTotal};
   });
-  let html = `<thead><tr><th>Sup Product</th><th>Error ที่กรอก</th><th>เปิดดูรวม</th><th>👍 สะสม</th><th>ข้อเสนอที่ถูกรับ</th><th>แจ้งแก้ไม่ได้ (ค้างอยู่)</th></tr></thead><tbody>`;
+  const hiddenMain = new Set(getMgrHiddenCols('main'));
+  const allMainCells = (r)=>[escapeHtml(r.name), r.count, r.views, r.totalUps, r.acceptedCount, r.pendingTotal];
+  const mainStyles = ['','','','color:var(--green);','color:var(--amber);',(r)=>`color:${r.pendingTotal>0?'var(--red)':'var(--text-faint)'};`];
+  let html = `<thead><tr>${MGR_TABLE_COLS.map((c,i)=>hiddenMain.has(i)?'':`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
   rows.forEach(r=>{
-    html += `<tr><td><strong>${escapeHtml(r.name)}</strong></td><td class="mono">${r.count}</td><td class="mono">${r.views}</td><td class="mono" style="color:var(--green);">${r.totalUps}</td><td class="mono" style="color:var(--amber);">${r.acceptedCount}</td><td class="mono" style="color:${r.pendingTotal>0?'var(--red)':'var(--text-faint)'};">${r.pendingTotal}</td></tr>`;
+    const cells = allMainCells(r);
+    html += '<tr>' + cells.map((val,i)=>{
+      if(hiddenMain.has(i)) return '';
+      const cls = i===0 ? '' : 'class="mono"';
+      const style = i===0 ? '' : (typeof mainStyles[i]==='function' ? `style="${mainStyles[i](r)}"` : (mainStyles[i]?`style="${mainStyles[i]}"`:''));
+      return `<td ${cls} ${style}>${i===0?`<strong>${val}</strong>`:val}</td>`;
+    }).join('') + '</tr>';
   });
   html += `</tbody>`;
   $('mgr-table').innerHTML = html;
+  renderMgrColsPanel('mgr-table-cols-panel', 'main', MGR_TABLE_COLS, renderMgrView);
 
   /* document summary per person, broken down by doc type as fraction */
   function allModelsOwnedBy(sp){
     const list = [];
-    Object.entries(DATA.categories).forEach(([cat,models])=>{ models.forEach(m=>{ if(ownerOf(cat,m)===sp) list.push({category:cat, model:m}); }); });
+    Object.entries(DATA.categories).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,models])=>{ [...models].sort(naturalSort).forEach(m=>{ if(ownerOf(cat,m)===sp) list.push({category:cat, model:m}); }); });
     return list;
   }
-  let dhtml = `<thead><tr><th>Sup Product</th><th>จำนวนรุ่นที่ดูแล</th>${COVERAGE_COLUMNS.map(t=>`<th>${t.icon} ${t.label}</th>`).join('')}</tr></thead><tbody>`;
+  const docColNames = ['Sup Product','จำนวนรุ่นที่ดูแล', ...COVERAGE_COLUMNS.map(t=>`${t.icon} ${t.label}`)];
+  const hiddenDoc = new Set(getMgrHiddenCols('doc'));
+  let dhtml = `<thead><tr>${docColNames.map((c,i)=>hiddenDoc.has(i)?'':`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
   SUP_PRODUCTS.forEach(sp=>{
     const models = allModelsOwnedBy(sp);
-    dhtml += `<tr><td><strong>${escapeHtml(sp)}</strong></td><td class="mono">${models.length}</td>`;
-    COVERAGE_COLUMNS.forEach(t=>{
+    dhtml += '<tr>';
+    if(!hiddenDoc.has(0)) dhtml += `<td><strong>${escapeHtml(sp)}</strong></td>`;
+    if(!hiddenDoc.has(1)) dhtml += `<td class="mono">${models.length}</td>`;
+    COVERAGE_COLUMNS.forEach((t,ci)=>{
+      const colIdx = ci+2;
+      if(hiddenDoc.has(colIdx)) return;
       const have = models.filter(({category,model})=>hasCoverageDoc(t.key, category, model)).length;
       const total = models.length;
       const color = total===0 ? 'var(--text-faint)' : (have===total ? 'var(--green)' : (have===0 ? 'var(--red)' : 'var(--amber)'));
@@ -3829,6 +3923,7 @@ function renderMgrView(){
   });
   dhtml += `</tbody>`;
   $('mgr-doc-summary').innerHTML = dhtml;
+  renderMgrColsPanel('mgr-doc-cols-panel', 'doc', docColNames, renderMgrView);
 }
 
 /* ===================== BACKUP / EXPORT ===================== */
@@ -3953,70 +4048,8 @@ async function handleBackupExcel(statusElId){
 function updateExportLogPanelVisibility(){
   $('export-log-panel').style.display = isSuperAdmin() ? 'block' : 'none';
   $('tech-docs-panel').style.display = isSuperAdmin() ? 'block' : 'none';
-  $('delete-test-data-panel').style.display = isSuperAdmin() ? 'block' : 'none';
 }
 
-/* ===================== ลบข้อมูลทดสอบ (isTestData: true) — Super Admin เท่านั้น ===================== */
-// ใช้ตรรกะเดียวกับ clear-test-data.js: จำกัดจำนวนต่อรอบ เผื่อโควต้าฟรีไว้ให้ทีมใช้งานแอปตามปกติ กดซ้ำได้ปลอดภัยถ้ามีเหลือ
-const DELETE_TEST_DATA_MAX_PER_RUN = 8000;
-async function batchDeleteDocs(sdk, docsRefs){
-  let batch = sdk.writeBatch(db);
-  let opCount = 0, total = 0;
-  for(const ref of docsRefs){
-    batch.delete(ref);
-    opCount++; total++;
-    if(opCount>=400){ await batch.commit(); batch = sdk.writeBatch(db); opCount=0; }
-  }
-  if(opCount>0) await batch.commit();
-  return total;
-}
-async function deleteTestDataFromApp(){
-  if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่ลบได้'); return; }
-  if(!confirm('ยืนยันการลบข้อมูลทดสอบ (isTestData: true)? การลบนี้ย้อนกลับไม่ได้ — จำกัดไม่เกิน 8,000 รายการต่อคอลเลกชันต่อรอบ')) return;
-  const statusEl = $('delete-test-data-status');
-  statusEl.textContent = 'กำลังค้นหาและลบข้อมูลทดสอบ...';
-  showLoadingOverlay('กำลังลบข้อมูลทดสอบ...');
-  try{
-    await initFirebase();
-    const sdk = window._firebaseSdk;
-
-    statusEl.textContent = 'กำลังลบ solutions...';
-    const solQ = sdk.query(sdk.collectionGroup(db,'solutions'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
-    const solSnap = await sdk.getDocs(solQ);
-    const solCount = solSnap.empty ? 0 : await batchDeleteDocs(sdk, solSnap.docs.map(d=>d.ref));
-    statusEl.textContent = `solutions: ลบไปแล้ว ${solCount} รายการ (รอบนี้)\n`;
-
-    statusEl.textContent += 'กำลังลบ errors...';
-    const errQ = sdk.query(sdk.collection(db,'errors'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
-    const errSnap = await sdk.getDocs(errQ);
-    const errCount = errSnap.empty ? 0 : await batchDeleteDocs(sdk, errSnap.docs.map(d=>d.ref));
-    statusEl.textContent += ` ลบไปแล้ว ${errCount} รายการ (รอบนี้)\n`;
-
-    statusEl.textContent += 'กำลังลบ documents...';
-    const docQ = sdk.query(sdk.collection(db,'documents'), sdk.where('isTestData','==',true), sdk.limit(DELETE_TEST_DATA_MAX_PER_RUN));
-    const docSnap = await sdk.getDocs(docQ);
-    const docCount = docSnap.empty ? 0 : await batchDeleteDocs(sdk, docSnap.docs.map(d=>d.ref));
-    statusEl.textContent += ` ลบไปแล้ว ${docCount} รายการ (รอบนี้)\n`;
-
-    const totalThisRun = solCount + errCount + docCount;
-    let summary = `\n✓ ลบไปแล้วทั้งหมด ${totalThisRun} รายการในรอบนี้`;
-    if(solCount>=DELETE_TEST_DATA_MAX_PER_RUN || errCount>=DELETE_TEST_DATA_MAX_PER_RUN || docCount>=DELETE_TEST_DATA_MAX_PER_RUN){
-      summary += `\n⚠️ อาจมีข้อมูลทดสอบเหลืออยู่อีก (ถึงขีดจำกัดต่อรอบแล้ว) — รอโควต้ารีเซ็ต (บ่าย 2-3 โมงวันถัดไปเวลาไทย) แล้วกดปุ่มนี้ซ้ำได้เลย ไม่ต้องกังวลเรื่องลบซ้ำ`;
-    } else {
-      summary += `\n✓ ลบข้อมูลทดสอบครบทั้งหมดแล้ว ไม่ต้องกดซ้ำอีก`;
-    }
-    statusEl.textContent += summary;
-    fsWriteLog(`ลบข้อมูลทดสอบผ่านแอป (${totalThisRun} รายการ)`);
-    showToast(`✓ ลบข้อมูลทดสอบแล้ว ${totalThisRun} รายการ`);
-  }catch(e){
-    statusEl.textContent += `\n⚠ เกิดข้อผิดพลาด: ${e.message}`;
-    if(String(e.message||'').toLowerCase().includes('quota') || String(e.code||'').includes('resource-exhausted')){
-      statusEl.textContent += `\nดูเหมือนโควต้า Firestore หมดพอดีระหว่างลบ — ข้อมูลที่ลบไปแล้วก่อนหน้านี้ในรอบนี้ยังคงลบสำเร็จอยู่ รอโควต้ารีเซ็ตแล้วกดปุ่มนี้ซ้ำได้เลย`;
-    }
-    showToast('⚠ ลบไม่สำเร็จบางส่วน: '+e.message);
-  }finally{ hideLoadingOverlay(); }
-}
-$('delete-test-data-btn').addEventListener('click', deleteTestDataFromApp);
 /* ===================== เอกสารทางเทคนิค — แก้ไขข้อความตรงนี้เมื่อมีการเปลี่ยนแปลงโครงสร้างระบบ/ไฟล์/Deploy ===================== */
 function techDocsHtml(){
   return `
@@ -4223,43 +4256,6 @@ async function handleBackupToDriveNow(statusElId){
 $('backup-json-btn').addEventListener('click', ()=>handleBackupJson('backup-status'));
 $('backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('backup-status'));
 $('backup-drive-now-btn').addEventListener('click', ()=>handleBackupToDriveNow('backup-status'));
-
-/* ===================== ประมาณการใช้งานพื้นที่ Firestore (นับจริงแบบเร็ว ไม่โหลดข้อมูลเต็ม) ===================== */
-async function checkStorageUsage(){
-  const resultEl = $('usage-result');
-  resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังตรวจสอบ...</p>`;
-  try{
-    await initFirebase(); const sdk = window._firebaseSdk;
-    const [errCount, solCount, docCount, propCount, pendCount] = await Promise.all([
-      sdk.getCountFromServer(sdk.collection(db,'errors')),
-      sdk.getCountFromServer(sdk.collectionGroup(db,'solutions')),
-      sdk.getCountFromServer(sdk.collection(db,'documents')),
-      sdk.getCountFromServer(sdk.collection(db,'proposals')),
-      sdk.getCountFromServer(sdk.collection(db,'pendingErrors')),
-    ]);
-    let logCount = 0;
-    try{ const logSnap = await sdk.getCountFromServer(sdk.collection(db,'activityLogs')); logCount = logSnap.data().count; }
-    catch(e){ /* ไม่ใช่ Super Admin อ่าน Log ไม่ได้ตาม Rules — ข้ามไปเฉยๆ ไม่กระทบตัวเลขอื่น */ }
-    const errN = errCount.data().count, solN = solCount.data().count, docN = docCount.data().count, propN = propCount.data().count, pendN = pendCount.data().count;
-    const totalDocsCount = errN + solN + docN + propN + pendN + logCount;
-    const AVG_BYTES_PER_DOC = 300; // ค่าเฉลี่ยคร่าวๆ จากขนาดจริงที่เคยวัดไว้ก่อนหน้า — ใช้ประมาณการเร็วๆ แทนการโหลดข้อมูลเต็มมาวัด
-    const estSizeBytes = totalDocsCount * AVG_BYTES_PER_DOC;
-    const sizeMB = (estSizeBytes/1024/1024).toFixed(2);
-    const FREE_STORAGE_GB = 1; // โควต้าฟรี Firestore มาตรฐาน
-    const pctUsed = ((estSizeBytes/1024/1024/1024) / FREE_STORAGE_GB * 100).toFixed(3);
-    resultEl.innerHTML = `
-      <div class="meta-grid">
-        <div class="meta-item"><div class="k">จำนวนเอกสารทั้งหมด</div><div class="v">${totalDocsCount.toLocaleString()} รายการ</div></div>
-        <div class="meta-item"><div class="k">แยกเป็น Error / วิธีแก้ไข</div><div class="v">${errN.toLocaleString()} / ${solN.toLocaleString()}</div></div>
-        <div class="meta-item"><div class="k">Log การใช้งาน</div><div class="v">${logCount.toLocaleString()} รายการ</div></div>
-        <div class="meta-item"><div class="k">ขนาดข้อมูลโดยประมาณ (รวม Log)</div><div class="v">~${sizeMB} MB</div></div>
-        <div class="meta-item"><div class="k">เทียบกับโควต้าฟรี Firestore (1 GB)</div><div class="v">ประมาณ ${pctUsed}%</div></div>
-      </div>
-      <p style="font-size:11px;color:var(--text-faint);margin-top:10px;">* จำนวนรายการเป็นตัวเลขจริง (นับสดจาก Firestore) แต่ขนาด MB เป็นการประมาณการคร่าวๆ เพื่อความรวดเร็ว (ไม่ได้โหลดข้อมูลเต็มมาวัดจริง) ดูค่าที่แม่นยำได้ที่ <a href="https://console.firebase.google.com" target="_blank" rel="noopener">Firebase Console → Usage</a></p>
-    `;
-  }catch(e){ resultEl.innerHTML = `<p style="font-size:12.5px;color:var(--red);">⚠ ตรวจสอบไม่สำเร็จ: ${escapeHtml(e.message)}</p>`; }
-}
-$('check-firestore-usage-btn').addEventListener('click', checkStorageUsage);
 
 /* ===================== THEME TOGGLE (default: light) ===================== */
 $('theme-toggle-btn').addEventListener('click', ()=>{
