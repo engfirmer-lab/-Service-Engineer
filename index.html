@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.0
+  เวอร์ชันปัจจุบัน: 7.1
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.0</title>
+<title>Firmer Service Center — v7.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.0</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.1</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -417,20 +417,22 @@
     <div id="sup-tab-trbl">
       <div class="stat-cards" id="sup-stats"></div>
       <div class="panel-block">
-        <h2>สรุปจำนวน Error แต่ละรุ่นที่ดูแล</h2>
-        <p class="panel-sub">จำนวน Error ที่กรอกไว้แล้ว แยกตามรุ่น — กดเช็คเองเพื่อประหยัดโควต้า (ใช้ข้อมูลที่เคยโหลดไว้แล้วถ้ามี ไม่ต้องดึงซ้ำ)</p>
-        <button class="btn btn-ghost btn-sm" id="check-error-count-btn">📊 เช็คจำนวน Error แต่ละรุ่น</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:6px;">
+          <h2 style="margin-bottom:0;">สรุปจำนวน Error แต่ละรุ่นที่ดูแล</h2>
+          <button class="btn btn-ghost btn-sm" id="export-my-errors-btn">📤 Export Error ทั้งหมดของฉัน</button>
+        </div>
+        <p class="panel-sub">จำนวน Error ที่กรอกไว้แล้ว แยกตามรุ่น — กด "+ เพิ่ม Error" ที่รุ่นไหนก็เพิ่ม Error ให้รุ่นนั้นได้เลย หรือกด "ดูทั้งหมด" เพื่อดู/แก้ไข Error ที่มีอยู่</p>
         <div id="error-count-summary" style="margin-top:10px;"></div>
       </div>
-      <div class="panel-block">
+      <div class="panel-block" id="add-error-panel" style="display:none;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div><h2 id="sup-form-heading" style="margin-bottom:2px;">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h2><p class="panel-sub" id="sup-form-sub" style="margin-bottom:0;">กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข</p></div>
-          <button class="btn btn-primary btn-sm" id="toggle-add-error-btn">+ เพิ่ม Error ใหม่</button>
+          <div><h2 id="sup-form-heading" style="margin-bottom:2px;">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h2><p class="panel-sub" id="sup-form-sub" style="margin-bottom:0;">กรอกข้อมูล Error พร้อมวิธีแก้ไข</p></div>
+          <button class="btn btn-ghost btn-sm" id="cancel-error-top-btn">✕ ปิด</button>
         </div>
-        <div id="add-error-form" style="display:none;margin-top:16px;">
+        <div id="add-error-form" style="display:block;margin-top:16px;">
           <div class="form-grid two">
-            <div class="field-wrap"><label>Product *</label><select id="f-category"></select></div>
-            <div class="field-wrap"><label>Model *</label><select id="f-model"></select></div>
+            <div class="field-wrap" id="f-category-field"><label>Product *</label><select id="f-category"></select></div>
+            <div class="field-wrap" id="f-model-field"><label>Model *</label><select id="f-model"></select></div>
             <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
             <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
           </div>
@@ -452,25 +454,6 @@
         <h2>ข้อเสนอวิธีแก้ใหม่รอตรวจสอบ <span class="badge-count" id="proposal-count">0</span></h2>
         <p class="panel-sub">มาจาก Engineer ที่กด "ลองทุกวิธีแล้วไม่ได้ผล" แล้วบอกวิธีที่ใช้แก้จริง</p>
         <div id="proposals-list"></div>
-      </div>
-      <div class="panel-block">
-        <h2>ค้นหา / จัดการ Error ของฉัน</h2>
-        <p class="panel-sub">ค้นหาและกรองเหมือนหน้า Engineer เพื่อหา Error ที่ต้องการแก้ไข</p>
-        <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="sup-search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="sup-clear-search">✕</button></div></div>
-        <label style="font-size:11px;color:var(--text-faint);display:block;margin:8px 0 4px;">ตัวกรอง</label>
-        <div class="filter-row" style="flex-direction:column;align-items:stretch;gap:8px;">
-          <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-cat-btn" style="width:100%;text-align:left;">Product: All ▾</button>
-            <div id="sup-filter-cat-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
-          </div>
-          <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sup-filter-model-btn" style="width:100%;text-align:left;">Model: All ▾</button>
-            <div id="sup-filter-model-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:4px;max-height:200px;overflow-y:auto;background:var(--panel);position:absolute;z-index:30;width:100%;box-shadow:0 4px 12px rgba(0,0,0,.1);"></div>
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" id="sup-search-submit-btn" style="margin-top:8px;width:100%;">🔍 ค้นหา</button>
-        <div class="result-count" id="sup-result-count"></div>
-        <div id="sup-results-list"></div>
       </div>
     </div>
 
@@ -505,6 +488,16 @@
       <p id="doclink-list-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
       <div id="doclink-list-items"></div>
       <button class="btn btn-primary btn-sm" id="doclink-list-add-btn" style="margin-top:14px;">+ เพิ่มเอกสาร</button>
+    </div>
+  </div>
+
+  <!-- Modal ดู Error ทั้งหมดของ 1 รุ่น -->
+  <div class="modal-overlay" id="model-errors-modal">
+    <div class="modal" style="max-width:560px;">
+      <button class="modal-close-x" id="model-errors-close">✕</button>
+      <h3 id="model-errors-title">Error ทั้งหมด</h3>
+      <p id="model-errors-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
+      <div id="model-errors-list"></div>
     </div>
   </div>
 
@@ -710,7 +703,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.0 (อัปเดตล่าสุด 13 กันยายน 2569 11:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.1 (อัปเดตล่าสุด 14 กันยายน 2569 05:19 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -912,9 +905,10 @@ function subtypeLabel(docType, subtypeKey){ const list = subtypesFor(docType); c
 function videoSubtypeLabel(key){ const d = VIDEO_SUBTYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; } // เก็บไว้ให้ backward-compat กับจุดที่ยังเรียกชื่อนี้
 const COVERAGE_COLUMNS = [
   ...DOC_TYPES.filter(t=>!docTypeHasSubtypes(t.key)),
-  {key:'video_training', label:'Video Training', icon:'🎬', docType:'video', subtype:'training'},
-  {key:'diagram_fluidic', label:'Diagram Fluidic', icon:'📐', docType:'diagram', subtype:'fluidic'},
-  {key:'diagram_wiring', label:'Diagram Wiring', icon:'⚡', docType:'diagram', subtype:'wiring'},
+  ...Object.entries(SUBTYPES_MAP).flatMap(([docType, subs])=>{
+    const dt = DOC_TYPES.find(d=>d.key===docType);
+    return subs.map(s=>({key:`${docType}_${s.key}`, label:`${dt.label}-${s.label}`, icon:dt.icon, docType, subtype:s.key}));
+  }),
 ];
 function hasCoverageDoc(colKey, category, model){
   const col = COVERAGE_COLUMNS.find(c=>c.key===colKey);
@@ -962,7 +956,6 @@ let supActiveTab = 'trbl';
 let engDocTypeActive = 'service_manual';
 
 let currentQuery=''; let filterCategory='all'; let filterModel='all';
-let supQuery=''; let supFilterCategories=new Set(); let supFilterModels=new Set();
 let docQuery=''; let docFilterCategory='all'; let docFilterModel='all';
 
 let editingErrorId = null;
@@ -1959,7 +1952,7 @@ async function openErrorDetail(errorId){
   err.viewCount = (err.viewCount||0)+1;
   fsIncrementView(errorId).catch(()=>{});
   if(currentMode==='eng') renderTechResults();
-  if(currentMode==='sup') renderSupSearchResults();
+  if(currentMode==='sup') renderErrorCountSummary();
   await loadSolutionsFor(errorId);
   if(openErrorDetailId===errorId) renderErrorDetailPanel();
 }
@@ -2171,7 +2164,7 @@ async function submitUp(solId){
     try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
     showToast('✓ บันทึก feedback แล้วในชื่อ '+myUserName);
   }
-  renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId) renderErrorDetailPanel();
 }
 
@@ -2211,7 +2204,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   DATA.proposals.push({ id:newId, ...fields });
   myVotes['down:'+downModalErrorId] = true;
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
-  $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderSupSearchResults();
+  $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
   showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
 });
@@ -2637,12 +2630,7 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
   });
 });
 
-$('toggle-add-error-btn').addEventListener('click', ()=>{
-  const form = $('add-error-form'); const showing = form.style.display==='block';
-  form.style.display = showing ? 'none':'block'; $('toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
-  if(!showing){ clearPendingDriveDeletions(); resetErrorForm(); }
-});
-$('cancel-error-btn').addEventListener('click', ()=>{ clearPendingDriveDeletions(); resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+$('cancel-error-btn').addEventListener('click', closeAddErrorPanel);
 
 function renderSupIdentityOptions(){
   $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
@@ -2652,14 +2640,12 @@ function renderSupIdentityOptions(){
 function myOwnedCategories(){
   return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity)).sort(naturalSort);
 }
-async function checkErrorCountSummary(){
+function renderErrorCountSummary(){
   const statusEl = $('error-count-summary');
   const cats = myOwnedCategories();
   const myModels = [];
   cats.forEach(cat=> (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).forEach(m=> myModels.push({cat, model:m})));
   if(myModels.length===0){ statusEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรุ่นที่คุณดูแลอยู่</p>`; return; }
-  statusEl.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังโหลดข้อมูล...</p>`;
-  for(const cat of cats){ await ensureErrorsLoadedForCategory(cat); } // ใช้แคชเดิมถ้าเคยโหลดแล้ว ไม่เสียโควต้าซ้ำ
   const grouped = {};
   myModels.forEach(({cat,model})=>{ (grouped[cat]=grouped[cat]||[]).push(model); });
   statusEl.innerHTML = Object.entries(grouped).map(([cat,models])=>`
@@ -2667,12 +2653,74 @@ async function checkErrorCountSummary(){
       <div style="background:var(--panel-alt);padding:8px 10px;font-size:12.5px;font-weight:500;">${escapeHtml(cat)}</div>
       ${models.map(m=>{
         const count = DATA.errors.filter(e=>e.category===cat && e.model===m).length;
-        return `<div style="display:flex;justify-content:space-between;padding:7px 10px;border-top:1px solid var(--border);font-size:12.5px;"><span>${escapeHtml(m)}</span><span class="mono" style="color:var(--text-faint);">${count} Error</span></div>`;
+        return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-top:1px solid var(--border);font-size:12.5px;flex-wrap:wrap;">
+          <span style="flex:1;min-width:80px;">${escapeHtml(m)} <span class="mono" style="color:var(--text-faint);">(${count})</span></span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" data-viewmodelerrors="${escapeHtml(cat)}|${escapeHtml(m)}" ${count===0?'disabled style="opacity:.35;cursor:not-allowed;"':''}>ดูทั้งหมด</button>
+            <button class="btn btn-primary btn-sm" data-addformodel="${escapeHtml(cat)}|${escapeHtml(m)}">+ เพิ่ม Error</button>
+          </div>
+        </div>`;
       }).join('')}
     </div>
   `).join('');
+  statusEl.querySelectorAll('[data-addformodel]').forEach(b=>b.addEventListener('click', ()=>{
+    const [cat,model] = b.getAttribute('data-addformodel').split('|');
+    openAddErrorForModel(cat, model);
+  }));
+  statusEl.querySelectorAll('[data-viewmodelerrors]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', ()=>{
+    const [cat,model] = b.getAttribute('data-viewmodelerrors').split('|');
+    openModelErrorsModal(cat, model);
+  }); });
 }
-$('check-error-count-btn').addEventListener('click', checkErrorCountSummary);
+function openAddErrorForModel(category, model){
+  clearPendingDriveDeletions(); resetErrorForm();
+  $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
+  $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
+  $('add-error-panel').style.display='block';
+  $('add-error-panel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function closeAddErrorPanel(){
+  clearPendingDriveDeletions(); resetErrorForm();
+  $('add-error-panel').style.display='none';
+  $('f-category-field').style.display=''; $('f-model-field').style.display='';
+}
+$('cancel-error-top-btn').addEventListener('click', closeAddErrorPanel);
+async function openModelErrorsModal(category, model){
+  $('model-errors-title').textContent = `${category} · ${model}`;
+  $('model-errors-sub').textContent = 'Error ทั้งหมดของรุ่นนี้ — กดเพื่อดู/แก้ไข';
+  const list = $('model-errors-list');
+  list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังโหลด...</p>`;
+  $('model-errors-modal').classList.add('show');
+  await ensureErrorsLoadedForCategory(category);
+  const errs = DATA.errors.filter(e=>e.category===category && e.model===model);
+  if(errs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มี Error สำหรับรุ่นนี้</p>`; return; }
+  list.innerHTML = errs.map(e=>renderErrorCard(e,true)).join('');
+  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=>{ $('model-errors-modal').classList.remove('show'); openErrorDetail(h.closest('.card').getAttribute('data-id')); }); });
+  list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); $('model-errors-modal').classList.remove('show'); startEditError(b.getAttribute('data-edit')); }));
+  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ev=>{ ev.stopPropagation(); await deleteError(b.getAttribute('data-del')); openModelErrorsModal(category, model); }));
+}
+$('model-errors-close').addEventListener('click', ()=> $('model-errors-modal').classList.remove('show'));
+async function exportMyErrorsExcel(){
+  const mine = myErrors();
+  if(mine.length===0){ showToast('ยังไม่มี Error ของคุณให้ Export'); return; }
+  const rows = [];
+  mine.forEach(e=>{
+    if((e.solutions||[]).length===0){
+      rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'' });
+    } else {
+      e.solutions.forEach((s,idx)=>{
+        rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'' });
+      });
+    }
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Errors');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  XLSX.writeFile(wb, `errors-${currentSupIdentity}-${stamp}.xlsx`);
+  fsWriteLog(`Export Error ของตัวเอง (${currentSupIdentity}) เป็น Excel`);
+  showToast('✓ Export แล้ว');
+}
+$('export-my-errors-btn').addEventListener('click', exportMyErrorsExcel);
 function populateSupSelectors(){
   const cats = myOwnedCategories();
   $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
@@ -2782,8 +2830,8 @@ $('save-error-btn').addEventListener('click', async ()=>{
     }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
     await flushPendingDriveDeletions();
     btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
-    resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
-    renderAll();
+    closeAddErrorPanel();
+    renderAll(); renderErrorCountSummary();
     showToast('✓ แก้ไขและอนุมัติแล้ว — Engineer จะเห็นผลใน 🔔');
     return;
   }
@@ -2804,8 +2852,8 @@ $('save-error-btn').addEventListener('click', async ()=>{
   await flushPendingDriveDeletions();
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
-  resetErrorForm(); $('add-error-form').style.display='none'; $('toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
-  renderAll();
+  closeAddErrorPanel();
+  renderAll(); renderErrorCountSummary();
 });
 
 async function startEditError(id){
@@ -2813,7 +2861,8 @@ async function startEditError(id){
   clearPendingDriveDeletions();
   await loadSolutionsFor(id);
   editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
-  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('f-category-field').style.display=''; $('f-model-field').style.display=''; // แก้ไข Error เดิม ยังเปลี่ยนประเภท/รุ่นได้ตามปกติ เผื่อจัดหมวดผิด
+  $('add-error-panel').style.display='block';
   $('sup-form-heading').innerHTML = 'แก้ไข Error <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'แก้ไขข้อมูล Error ที่มีอยู่แล้ว';
   $('save-error-btn').textContent = 'บันทึกการแก้ไข';
@@ -2859,7 +2908,8 @@ function startReviewPendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
   clearPendingDriveDeletions();
   editingErrorId = null; reviewingPendingErrorId = id;
-  $('add-error-form').style.display='block'; $('toggle-add-error-btn').textContent='ซ่อนฟอร์ม';
+  $('f-category-field').style.display=''; $('f-model-field').style.display=''; // ให้แก้ประเภท/รุ่นได้ เผื่อ Engineer เลือกผิด
+  $('add-error-panel').style.display='block';
   $('sup-form-heading').innerHTML = 'แก้ไขก่อนอนุมัติ <span class="tag">จาก '+escapeHtml(pe.submitterName||'Engineer')+'</span>';
   $('sup-form-sub').textContent = 'ปรับแก้เนื้อหาได้ก่อนกด "อนุมัติ" ด้านล่าง — Engineer จะเห็นผลใน 🔔';
   $('save-error-btn').textContent = 'อนุมัติ Error นี้';
@@ -2890,61 +2940,6 @@ async function rejectPendingError(id){
   pe.status='rejected'; pe.rejectionReason=reason; pe.reviewedAt=Date.now();
   renderAll();
   showToast('ปฏิเสธแล้ว — Engineer จะเห็นผลใน 🔔');
-}
-
-function renderSupFilters(){
-  const cats = myOwnedCategories();
-  const catPanel = $('sup-filter-cat-panel');
-  catPanel.innerHTML = cats.map(c=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fcat="${escapeHtml(c)}" ${supFilterCategories.has(c)?'checked':''}> ${escapeHtml(c)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีประเภทให้เลือก</p>`;
-  catPanel.querySelectorAll('[data-fcat]').forEach(cb=>cb.addEventListener('change', ()=>{
-    const c = cb.getAttribute('data-fcat');
-    if(cb.checked) supFilterCategories.add(c); else supFilterCategories.delete(c);
-    updateSupModelFilterOptions(); updateSupFilterLabels(); renderSupSearchResults();
-  }));
-  updateSupModelFilterOptions();
-  updateSupFilterLabels();
-}
-function updateSupModelFilterOptions(){
-  const cats = myOwnedCategories();
-  const relevant = supFilterCategories.size>0 ? [...supFilterCategories] : cats;
-  const models = [...new Set(relevant.flatMap(c=>(DATA.categories[c]||[]).filter(m=>ownerOf(c,m)===currentSupIdentity)))].sort(naturalSort);
-  [...supFilterModels].forEach(m=>{ if(!models.includes(m)) supFilterModels.delete(m); });
-  const panel = $('sup-filter-model-panel');
-  panel.innerHTML = models.map(m=>`<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:12.5px;cursor:pointer;"><input type="checkbox" data-fmodel="${escapeHtml(m)}" ${supFilterModels.has(m)?'checked':''}> ${escapeHtml(m)}</label>`).join('') || `<p style="font-size:12px;color:var(--text-faint);">ไม่มีรุ่นให้เลือก</p>`;
-  panel.querySelectorAll('[data-fmodel]').forEach(cb=>cb.addEventListener('change', ()=>{
-    const m = cb.getAttribute('data-fmodel');
-    if(cb.checked) supFilterModels.add(m); else supFilterModels.delete(m);
-    updateSupFilterLabels(); renderSupSearchResults();
-  }));
-}
-function updateSupFilterLabels(){
-  $('sup-filter-cat-btn').textContent = (supFilterCategories.size===0 ? 'Product: All' : `Product: เลือกแล้ว ${supFilterCategories.size} รายการ`) + ' ▾';
-  $('sup-filter-model-btn').textContent = (supFilterModels.size===0 ? 'Model: All' : `Model: เลือกแล้ว ${supFilterModels.size} รายการ`) + ' ▾';
-}
-$('sup-filter-cat-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-cat-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-model-panel').style.display='none'; });
-$('sup-filter-model-btn').addEventListener('click', (ev)=>{ ev.stopPropagation(); const p=$('sup-filter-model-panel'); p.style.display = p.style.display==='none'?'block':'none'; $('sup-filter-cat-panel').style.display='none'; });
-$('sup-filter-cat-panel').addEventListener('click', (ev)=> ev.stopPropagation());
-$('sup-filter-model-panel').addEventListener('click', (ev)=> ev.stopPropagation());
-document.addEventListener('click', ()=>{ $('sup-filter-cat-panel').style.display='none'; $('sup-filter-model-panel').style.display='none'; });
-$('sup-search-input').addEventListener('input', e=>{ supQuery=e.target.value; });
-$('sup-search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderSupSearchResults(); });
-$('sup-search-submit-btn').addEventListener('click', renderSupSearchResults);
-$('sup-clear-search').addEventListener('click', ()=>{ $('sup-search-input').value=''; supQuery=''; renderSupSearchResults(); });
-
-function renderSupSearchResults(){
-  const list = $('sup-results-list'); const mine = myErrors();
-  if(mine.length===0){ $('sup-result-count').textContent=''; list.innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>ยังไม่มี Error ของคุณ</h3><p>เพิ่มรายการแรกด้วยฟอร์มด้านบน</p></div>`; return; }
-  const hasSearchOrFilter = supQuery.trim()!=='' || supFilterCategories.size>0 || supFilterModels.size>0;
-  if(!hasSearchOrFilter){ $('sup-result-count').textContent = `${currentSupIdentity} · ทั้งหมด ${mine.length} รายการ`; list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error ของคุณ (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`; return; }
-  let filtered = mine.filter(e=>matchesQuery(e,supQuery));
-  if(supFilterCategories.size>0) filtered = filtered.filter(e=>supFilterCategories.has(e.category));
-  if(supFilterModels.size>0) filtered = filtered.filter(e=>supFilterModels.has(e.model));
-  $('sup-result-count').textContent = `${currentSupIdentity} · พบ ${filtered.length} จากทั้งหมด ${mine.length} รายการ`;
-  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
-  list.innerHTML = filtered.map(e=>renderErrorCard(e,true)).join('');
-  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=> openErrorDetail(h.closest('.card').getAttribute('data-id'))); });
-  list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); startEditError(b.getAttribute('data-edit')); }));
-  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); deleteError(b.getAttribute('data-del')); }));
 }
 
 let editingProposalId = null;
@@ -3241,14 +3236,14 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
 });
 
 async function renderSupView(){
-  populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors(); renderSupFilters();
+  populateSupSelectors(); renderSupStats(); renderSolutionsEditor(); renderPendingErrors();
   const owned = myOwnedCategories();
   const notYetLoaded = owned.filter(c=>!loadedErrorCategories.has(c));
   if(notYetLoaded.length>0){
-    $('sup-results-list').innerHTML = `<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลดข้อมูล...</h3></div>`;
+    $('error-count-summary').innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล...</p>`;
     for(const cat of notYetLoaded){ await ensureErrorsLoadedForCategory(cat); }
   }
-  renderProposals(); renderSupSearchResults();
+  renderProposals(); renderErrorCountSummary();
   if(supActiveTab==='docs') renderSupDocTab();
 }
 
@@ -3607,7 +3602,6 @@ function renderCatModelManage(){
   if(entries.length===0){ wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบ Product/รุ่น/ผู้ดูแลที่ตรงกับตัวกรอง</p>`; return; }
 
   wrap.innerHTML = entries.map(([cat,models])=>{
-    const catInUse = DATA.errors.some(e=>e.category===cat) || DATA.documents.some(d=>d.category===cat) || DATA.pendingErrors.some(p=>p.category===cat);
     const isEditingCat = editingCatName===cat;
     const allModels = DATA.categories[cat]||[]; // ใช้จำนวนเต็มของประเภทนี้ ไม่ใช่จำนวนที่กรองแล้ว
     const isExpanded = hasActiveFilter || expandedProductCats.has(cat); // กำลังค้นหาอยู่ → กางให้เห็นผลลัพธ์เลย ไม่ต้องกดเอง
@@ -3626,12 +3620,11 @@ function renderCatModelManage(){
           </span>
           <div style="display:flex;gap:4px;">
             <button class="icon-btn btn-sm" data-editcatname="${escapeHtml(cat)}">แก้ไขชื่อ</button>
-            <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" ${catInUse?'disabled title="มี Error/เอกสารผูกอยู่ ลบไม่ได้"':''} style="${catInUse?'opacity:.35;cursor:not-allowed;':''}">ลบประเภท</button>
+            <button class="icon-btn danger btn-sm" data-delcat="${escapeHtml(cat)}" title="ระบบจะเช็คข้อมูลจริงจากเซิร์ฟเวอร์อีกครั้งก่อนลบเสมอ">ลบประเภท</button>
           </div>
         `}
       </div>
       ${isExpanded ? (models.map(m=>{
-        const modelInUse = DATA.errors.some(e=>e.category===cat && e.model===m) || DATA.documents.some(d=>d.category===cat && d.model===m) || DATA.pendingErrors.some(p=>p.category===cat && p.model===m);
         const key = cat+'|'+m;
         const isEditingModel = editingModelKey===key;
         const currentOwner = ownerOf(cat,m);
@@ -3644,7 +3637,7 @@ function renderCatModelManage(){
           ` : `
             <span data-editmodelname="${escapeHtml(key)}" style="flex:1;min-width:100px;font-size:12.5px;cursor:pointer;" title="คลิกเพื่อแก้ไขชื่อรุ่น">${escapeHtml(m)}</span>
             <select class="model-owner-select" data-modelownerselect="${escapeHtml(key)}" style="font-size:11.5px;max-width:160px;${noOwnerYet?'border-color:var(--amber);color:var(--amber);':''}">${ownerSelectOptions(currentOwner==='ยังไม่มีผู้ดูแล'?NO_OWNER:currentOwner, false)}</select>
-            <button data-delmodel="${escapeHtml(key)}" ${modelInUse?'disabled title="มีข้อมูลผูกอยู่"':''} style="background:none;border:none;color:${modelInUse?'var(--text-faint)':'var(--red)'};cursor:${modelInUse?'not-allowed':'pointer'};font-size:15px;">✕</button>
+            <button data-delmodel="${escapeHtml(key)}" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;" title="ระบบจะเช็คข้อมูลจริงจากเซิร์ฟเวอร์อีกครั้งก่อนลบเสมอ">✕</button>
           `}
         </div>`;
       }).join('') || `<p style="font-size:12px;color:var(--text-faint);padding:10px;">ยังไม่มีรุ่นในประเภทนี้</p>`) : ''}
@@ -3671,8 +3664,23 @@ function renderCatModelManage(){
   }));
 
   // ลบประเภท
-  wrap.querySelectorAll('[data-delcat]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
-    const cat=b.getAttribute('data-delcat'); if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
+  wrap.querySelectorAll('[data-delcat]').forEach(b=>b.addEventListener('click', async ()=>{
+    const cat=b.getAttribute('data-delcat');
+    const originalLabel = b.textContent;
+    b.disabled = true; b.textContent = 'กำลังเช็ค...';
+    let total;
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      const [errCount, docCount, pendCount] = await Promise.all([
+        sdk.getCountFromServer(sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',cat))),
+        sdk.getCountFromServer(sdk.query(sdk.collection(db,'documents'), sdk.where('category','==',cat))),
+        sdk.getCountFromServer(sdk.query(sdk.collection(db,'pendingErrors'), sdk.where('category','==',cat))),
+      ]);
+      total = errCount.data().count + docCount.data().count + pendCount.data().count;
+    }catch(e){ showToast('⚠ เช็คข้อมูลไม่สำเร็จ: '+e.message); b.disabled=false; b.textContent=originalLabel; return; }
+    b.disabled = false; b.textContent = originalLabel;
+    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
+    if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
     const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของประเภทนี้ทั้งหมดด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
     const modelsWithOwners = (DATA.categories[cat]||[]).map(m=>({ model:m, owner: ownerOf(cat,m) })); // เก็บไว้ก่อนลบข้อมูลจริง เพราะ ownerOf ต้องใช้ DATA.categories/owners ที่ยังไม่ถูกลบ
     (DATA.categories[cat]||[]).forEach(m=>{ delete DATA.owners.modelOverrides[cat+'|'+m]; });
@@ -3686,11 +3694,27 @@ function renderCatModelManage(){
       catch(e){ showToast('⚠ ลบบางโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
       finally{ hideLoadingOverlay(); }
     }
-  }); });
+  }));
 
   // ลบรุ่น
-  wrap.querySelectorAll('[data-delmodel]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', async ()=>{
-    const [cat,model]=b.getAttribute('data-delmodel').split('|'); if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
+  wrap.querySelectorAll('[data-delmodel]').forEach(b=>b.addEventListener('click', async ()=>{
+    const [cat,model]=b.getAttribute('data-delmodel').split('|');
+    b.disabled = true;
+    let total;
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      // เช็คแบบไม่ต้องใช้ composite index (category+model) — ดึงเฉพาะ category แล้วกรอง model เอง เร็วกว่าและไม่ต้องพึ่ง index ที่อาจยังไม่ได้สร้างไว้
+      const [errSnap, docSnap, pendSnap] = await Promise.all([
+        sdk.getDocs(sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',cat))),
+        sdk.getDocs(sdk.query(sdk.collection(db,'documents'), sdk.where('category','==',cat))),
+        sdk.getDocs(sdk.query(sdk.collection(db,'pendingErrors'), sdk.where('category','==',cat))),
+      ]);
+      let c=0; errSnap.forEach(d=>{ if(d.data().model===model) c++; }); docSnap.forEach(d=>{ if(d.data().model===model) c++; }); pendSnap.forEach(d=>{ if(d.data().model===model) c++; });
+      total = c;
+    }catch(e){ showToast('⚠ เช็คข้อมูลไม่สำเร็จ: '+e.message); b.disabled=false; return; }
+    b.disabled = false;
+    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
+    if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
     const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของรุ่นนี้ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
     const owner = ownerOf(cat, model); // เก็บไว้ก่อนลบข้อมูลจริง
     DATA.categories[cat]=DATA.categories[cat].filter(m=>m!==model); delete DATA.owners.modelOverrides[cat+'|'+model];
@@ -3703,7 +3727,7 @@ function renderCatModelManage(){
       catch(e){ showToast('⚠ ลบโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
       finally{ hideLoadingOverlay(); }
     }
-  }); });
+  }));
 
   // พับ/กางแสดงรุ่นย่อยของแต่ละประเภท
   wrap.querySelectorAll('[data-togglecat]').forEach(el=>el.addEventListener('click', ()=>{
