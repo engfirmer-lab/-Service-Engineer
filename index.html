@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.4
+  เวอร์ชันปัจจุบัน: 7.5
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.4</title>
+<title>Firmer Service Center — v7.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.4</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.5</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -424,27 +424,7 @@
         <p class="panel-sub">จำนวน Error ที่กรอกไว้แล้ว แยกตามรุ่น — กด "+ เพิ่ม Error" ที่รุ่นไหนก็เพิ่ม Error ให้รุ่นนั้นได้เลย หรือกด "ดูทั้งหมด" เพื่อดู/แก้ไข Error ที่มีอยู่</p>
         <div id="error-count-summary" style="margin-top:10px;"></div>
       </div>
-      <div class="panel-block" id="add-error-panel" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div><h2 id="sup-form-heading" style="margin-bottom:2px;">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h2><p class="panel-sub" id="sup-form-sub" style="margin-bottom:0;">กรอกข้อมูล Error พร้อมวิธีแก้ไข</p></div>
-          <button class="btn btn-ghost btn-sm" id="cancel-error-top-btn">✕ ปิด</button>
-        </div>
-        <div id="add-error-form" style="display:block;margin-top:16px;">
-          <div class="form-grid two">
-            <div class="field-wrap" id="f-category-field"><label>Product *</label><select id="f-category"></select></div>
-            <div class="field-wrap" id="f-model-field"><label>Model *</label><select id="f-model"></select></div>
-            <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
-            <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
-          </div>
-          <div id="solutions-editor" style="margin-top:16px;"></div>
-          <button class="btn btn-ghost btn-sm" id="add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
-          <div class="form-actions" style="display:flex;gap:10px;margin-top:18px;align-items:center;">
-            <button class="btn btn-primary" id="save-error-btn">บันทึก Error</button>
-            <button class="btn btn-ghost" id="cancel-error-btn">ยกเลิก</button>
-            <span class="mono" id="save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;">✓ บันทึกแล้ว</span>
-          </div>
-        </div>
-      </div>
+      <!-- ฟอร์มเพิ่ม/แก้ไข Error ย้ายไปเป็น Modal แล้ว (ดูด้านล่างสุดของไฟล์ ใกล้ๆ modal อื่นๆ) -->
       <div class="panel-block">
         <h2>Error ใหม่จาก Engineer รอตรวจสอบ <span class="badge-count" id="pending-error-count">0</span></h2>
         <p class="panel-sub">Engineer ส่งเข้ามาโดยตรง — ยังไม่เผยแพร่จนกว่าคุณจะอนุมัติ (แก้ไขก่อนอนุมัติได้)</p>
@@ -503,6 +483,30 @@
         <button class="btn btn-ghost btn-sm" id="model-errors-showall-btn" style="flex:1;">แสดงทั้งหมด</button>
       </div>
       <div id="model-errors-list"></div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่ม/แก้ไข Error (Sup Product) -->
+  <div class="modal-overlay" id="add-error-modal">
+    <div class="modal" style="max-width:560px;">
+      <button class="modal-close-x" id="cancel-error-top-btn">✕</button>
+      <h3 id="sup-form-heading">เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span></h3>
+      <p class="panel-sub" id="sup-form-sub" style="margin-bottom:14px;">กรอกข้อมูล Error พร้อมวิธีแก้ไข</p>
+      <div id="add-error-form">
+        <div class="form-grid two">
+          <div class="field-wrap" id="f-category-field"><label>Product *</label><select id="f-category"></select></div>
+          <div class="field-wrap" id="f-model-field"><label>Model *</label><select id="f-model"></select></div>
+          <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
+          <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+        </div>
+        <div id="solutions-editor" style="margin-top:16px;"></div>
+        <button class="btn btn-ghost btn-sm" id="add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
+        <div class="form-actions" style="display:flex;gap:10px;margin-top:18px;align-items:center;">
+          <button class="btn btn-primary" id="save-error-btn">บันทึก Error</button>
+          <button class="btn btn-ghost" id="cancel-error-btn">ยกเลิก</button>
+          <span class="mono" id="save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;">✓ บันทึกแล้ว</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -708,7 +712,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.4 (อัปเดตล่าสุด 14 กันยายน 2569 18:43 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.5 (อัปเดตล่าสุด 14 กันยายน 2569 19:06 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -2701,12 +2705,11 @@ function openAddErrorForModel(category, model){
   clearPendingDriveDeletions(); resetErrorForm();
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
-  $('add-error-panel').style.display='block';
-  $('add-error-panel').scrollIntoView({behavior:'smooth', block:'start'});
+  $('add-error-modal').classList.add('show');
 }
 function closeAddErrorPanel(){
   clearPendingDriveDeletions(); resetErrorForm();
-  $('add-error-panel').style.display='none';
+  $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
 $('cancel-error-top-btn').addEventListener('click', closeAddErrorPanel);
@@ -2909,14 +2912,14 @@ async function startEditError(id){
   await loadSolutionsFor(id);
   editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
   $('f-category-field').style.display=''; $('f-model-field').style.display=''; // แก้ไข Error เดิม ยังเปลี่ยนประเภท/รุ่นได้ตามปกติ เผื่อจัดหมวดผิด
-  $('add-error-panel').style.display='block';
+  $('add-error-modal').classList.add('show');
   $('sup-form-heading').innerHTML = 'แก้ไข Error <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'แก้ไขข้อมูล Error ที่มีอยู่แล้ว';
   $('save-error-btn').textContent = 'บันทึกการแก้ไข';
   $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
   editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
-  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+  renderSolutionsEditor();
 }
 async function deleteError(id){
   if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
@@ -2956,14 +2959,14 @@ function startReviewPendingError(id){
   clearPendingDriveDeletions();
   editingErrorId = null; reviewingPendingErrorId = id;
   $('f-category-field').style.display=''; $('f-model-field').style.display=''; // ให้แก้ประเภท/รุ่นได้ เผื่อ Engineer เลือกผิด
-  $('add-error-panel').style.display='block';
+  $('add-error-modal').classList.add('show');
   $('sup-form-heading').innerHTML = 'แก้ไขก่อนอนุมัติ <span class="tag">จาก '+escapeHtml(pe.submitterName||'Engineer')+'</span>';
   $('sup-form-sub').textContent = 'ปรับแก้เนื้อหาได้ก่อนกด "อนุมัติ" ด้านล่าง — Engineer จะเห็นผลใน 🔔';
   $('save-error-btn').textContent = 'อนุมัติ Error นี้';
   $('f-category').value = pe.category; updateModelSelect(); $('f-model').value = pe.model;
   $('f-code').value = pe.errorCode||''; $('f-symptom').value = pe.symptom;
   editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
-  renderSolutionsEditor(); window.scrollTo({top:0,behavior:'smooth'});
+  renderSolutionsEditor();
 }
 async function quickApprovePendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
