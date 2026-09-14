@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.1
+  เวอร์ชันปัจจุบัน: 7.2
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.1</title>
+<title>Firmer Service Center — v7.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.1</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.2</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -496,7 +496,12 @@
     <div class="modal" style="max-width:560px;">
       <button class="modal-close-x" id="model-errors-close">✕</button>
       <h3 id="model-errors-title">Error ทั้งหมด</h3>
-      <p id="model-errors-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
+      <p id="model-errors-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:10px;"></p>
+      <div class="console" style="margin-bottom:8px;"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="model-errors-search-input" type="text" placeholder="ค้นหา error code, อาการ..."><button class="clear-btn" id="model-errors-clear-search">✕</button></div></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn btn-primary btn-sm" id="model-errors-search-btn" style="flex:1;">🔍 ค้นหา</button>
+        <button class="btn btn-ghost btn-sm" id="model-errors-showall-btn" style="flex:1;">แสดงทั้งหมด</button>
+      </div>
       <div id="model-errors-list"></div>
     </div>
   </div>
@@ -703,7 +708,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.1 (อัปเดตล่าสุด 14 กันยายน 2569 05:19 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.2 (อัปเดตล่าสุด 14 กันยายน 2569 05:33 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -2685,20 +2690,41 @@ function closeAddErrorPanel(){
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
 $('cancel-error-top-btn').addEventListener('click', closeAddErrorPanel);
+let modelErrorsContext = null; // { category, model } — เก็บไว้ให้ปุ่มค้นหา/แสดงทั้งหมดใช้ต่อ
+let modelErrorsQuery = '';
 async function openModelErrorsModal(category, model){
+  modelErrorsContext = { category, model };
+  modelErrorsQuery = '';
+  $('model-errors-search-input').value = '';
   $('model-errors-title').textContent = `${category} · ${model}`;
-  $('model-errors-sub').textContent = 'Error ทั้งหมดของรุ่นนี้ — กดเพื่อดู/แก้ไข';
+  $('model-errors-sub').textContent = 'เรียงตาม Error Code ตามลำดับตัวอักษร/ตัวเลข';
   const list = $('model-errors-list');
   list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">กำลังโหลด...</p>`;
   $('model-errors-modal').classList.add('show');
   await ensureErrorsLoadedForCategory(category);
-  const errs = DATA.errors.filter(e=>e.category===category && e.model===model);
+  renderModelErrorsList();
+}
+function renderModelErrorsList(){
+  if(!modelErrorsContext) return;
+  const { category, model } = modelErrorsContext;
+  const list = $('model-errors-list');
+  let errs = DATA.errors.filter(e=>e.category===category && e.model===model);
   if(errs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มี Error สำหรับรุ่นนี้</p>`; return; }
+  errs = errs.slice().sort((a,b)=> naturalSort(a.errorCode||a.symptom||'', b.errorCode||b.symptom||'')); // เรียงตาม Error Code (ถ้าไม่มีใช้อาการแทน) ให้หาง่ายและลำดับคงที่ ไม่สลับไปมา
+  if(modelErrorsQuery.trim()){
+    errs = errs.filter(e=>matchesQuery(e, modelErrorsQuery));
+    if(errs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบผลลัพธ์ที่ตรงกับ "${escapeHtml(modelErrorsQuery)}"</p>`; return; }
+  }
   list.innerHTML = errs.map(e=>renderErrorCard(e,true)).join('');
   list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=>{ $('model-errors-modal').classList.remove('show'); openErrorDetail(h.closest('.card').getAttribute('data-id')); }); });
   list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); $('model-errors-modal').classList.remove('show'); startEditError(b.getAttribute('data-edit')); }));
-  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ev=>{ ev.stopPropagation(); await deleteError(b.getAttribute('data-del')); openModelErrorsModal(category, model); }));
+  list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ev=>{ ev.stopPropagation(); await deleteError(b.getAttribute('data-del')); renderModelErrorsList(); }));
 }
+$('model-errors-search-input').addEventListener('input', e=>{ modelErrorsQuery = e.target.value; });
+$('model-errors-search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderModelErrorsList(); });
+$('model-errors-search-btn').addEventListener('click', renderModelErrorsList);
+$('model-errors-showall-btn').addEventListener('click', ()=>{ modelErrorsQuery=''; $('model-errors-search-input').value=''; renderModelErrorsList(); });
+$('model-errors-clear-search').addEventListener('click', ()=>{ modelErrorsQuery=''; $('model-errors-search-input').value=''; renderModelErrorsList(); });
 $('model-errors-close').addEventListener('click', ()=> $('model-errors-modal').classList.remove('show'));
 async function exportMyErrorsExcel(){
   const mine = myErrors();
