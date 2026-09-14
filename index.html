@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.2
+  เวอร์ชันปัจจุบัน: 7.3
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.2</title>
+<title>Firmer Service Center — v7.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.2</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.3</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -708,7 +708,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.2 (อัปเดตล่าสุด 14 กันยายน 2569 05:33 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.3 (อัปเดตล่าสุด 14 กันยายน 2569 14:25 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1985,7 +1985,7 @@ const MANUAL_TOPICS = [
       <li><b>จัดการ Product</b> — จัดการรายชื่อ Sup Product, ผู้รับผิดชอบแต่ละประเภท/รุ่นเครื่อง</li>
       <li><b>จัดการสิทธิ์</b> — อนุมัติผู้ใช้งานใหม่, กำหนดว่าใครแก้ไขข้อมูลได้บ้าง</li>
       <li><b>Manager</b> — ดู Dashboard สรุปภาพรวมผลงานของทีม</li>
-      <li><b>Export/Backup</b> — สำรองข้อมูล, ตั้งค่า Backup อัตโนมัติ, ดูการใช้พื้นที่</li>
+      <li><b>Export/Backup</b> — สำรองข้อมูล, ตั้งค่า Backup อัตโนมัติ, เข้า Google Drive Database</li>
     </ul>
   `},
   { id:'login', icon:'🔑', title:'เข้าสู่ระบบ', img:'login', body:`
@@ -1994,7 +1994,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub">ระบบจะจำสถานะการเข้าสู่ระบบไว้ในเครื่อง ไม่ต้อง Sign in ใหม่ทุกครั้งที่เปิดเว็บ</p>
   `},
   { id:'engineer', icon:'🔧', title:'Engineer', img:'engineer', body:`
-    <p class="panel-sub"><b>ค้นหาวิธีแก้ไข:</b> เลือกแท็บเอกสาร (Troubleshooting/Service Manual/Spare Part/ฯลฯ) แล้วพิมพ์คำค้นหาหรือเลือกตัวกรอง Product/Model — ผลลัพธ์ซ่อนไว้จนกว่าจะค้นหา/กรอง กันรกหน้าจอ</p>
+    <p class="panel-sub"><b>ค้นหาวิธีแก้ไข:</b> เลือกแท็บเอกสาร (Troubleshooting/Service Manual/Spare Part/Diagram/Video/ฯลฯ) พิมพ์คำค้นหาและ/หรือเลือก "ตัวกรอง" Product/Model แล้วกดปุ่ม "🔍 ค้นหา" (หรือกด Enter) — ไม่ค้นหาอัตโนมัติระหว่างพิมพ์ เพื่อประหยัดการดึงข้อมูล</p>
     <p class="panel-sub"><b>ดูรายละเอียด Error:</b> กดที่การ์ด Error เพื่อดูวิธีแก้ไขทั้งหมดแบบเต็มจอ พร้อมรูป/วิดีโอ อุปกรณ์ อะไหล่ เวลาโดยประมาณ และปุ่มโหวต "แก้ได้จริง"</p>
     <p class="panel-sub"><b>เสนอวิธีแก้ไขใหม่:</b> ถ้าลองทุกวิธีแล้วไม่หาย กดปุ่ม "เสนอวิธีการให้ Sup Product พิจารณา" แนบรูป/วิดีโอได้ ส่งแล้วรอ Sup Product ตรวจสอบ</p>
     <p class="panel-sub"><b>ส่ง Error ใหม่:</b> กด "+ เพิ่ม Error ใหม่" กรอกรายละเอียดพร้อมวิธีแก้ไขอย่างน้อย 1 วิธี ส่งเข้าคิวให้ตรวจสอบก่อนเผยแพร่</p>
@@ -2002,28 +2002,38 @@ const MANUAL_TOPICS = [
   `},
   { id:'sup', icon:'🛠️', title:'Sup Product', img:'sup', body:`
     <p class="panel-sub"><b>เลือกตัวเอง:</b> เลือกชื่อจาก dropdown "คุณคือ:" ก่อนเริ่มใช้งาน ตัวเลขสรุปและรายการต่างๆ จะกรองตามคนที่เลือก</p>
-    <p class="panel-sub"><b>เพิ่ม/แก้ไข Error:</b> กด "+ เพิ่ม Error ใหม่" กรอก Error พร้อมวิธีแก้ไข แนบรูป/วิดีโอได้ เพิ่มได้หลายวิธีในหนึ่ง Error</p>
-    <p class="panel-sub"><b>ตรวจสอบ Error ใหม่จาก Engineer:</b> กด "แก้ไขก่อนอนุมัติ" เพื่อปรับก่อน, "อนุมัติทันที" เพื่อเผยแพร่เลย หรือ "ปฏิเสธ" พร้อมเหตุผล</p>
-    <p class="panel-sub"><b>ตรวจสอบข้อเสนอวิธีแก้ไข:</b> กด "รับเป็นวิธีแก้ไขทางการ" เพื่อเพิ่มเป็นวิธีจริง, "แก้ไข" เพื่อปรับเนื้อหาก่อนรับ หรือ "ไม่รับ"</p>
-    <p class="panel-sub"><b>จัดการเอกสาร (Document Matrix):</b> สลับแท็บ "จัดการเอกสาร" ดูตารางสรุปว่ารุ่นไหนมีเอกสารครบ/ขาดอะไรบ้าง เพิ่ม/แก้ไขลิงก์หรืออัปโหลดไฟล์ได้โดยตรง</p>
+    <p class="panel-sub"><b>สรุปจำนวน Error แต่ละรุ่นที่ดูแล:</b> แสดงอัตโนมัติทันทีที่เข้าหน้านี้ (ไม่ต้องกดเช็ค) แยกตามประเภท/รุ่น พร้อมจำนวน Error ที่มีอยู่แล้ว</p>
+    <p class="panel-sub"><b>+ เพิ่ม Error:</b> กดที่รุ่นไหนในสรุปจำนวน ก็เพิ่ม Error ให้รุ่นนั้นได้เลย — ไม่ต้องเลือกประเภท/รุ่นเอง ระบบล็อกให้อัตโนมัติตามรุ่นที่กด</p>
+    <p class="panel-sub"><b>ดูทั้งหมด:</b> กดที่รุ่นไหนที่มี Error แล้ว จะเปิดหน้าต่างแสดง Error ทั้งหมดของรุ่นนั้น (เรียงตาม Error Code) มีช่องค้นหาในตัว พิมพ์แล้วกด "🔍 ค้นหา" หรือกด "แสดงทั้งหมด" — แก้ไข/ลบ Error ได้จากในนี้เลย</p>
+    <p class="panel-sub"><b>Export Error ทั้งหมดของฉัน:</b> กดปุ่มนี้บนสุดของสรุปจำนวน เพื่อดาวน์โหลด Error ทั้งหมดที่ตัวเองดูแลเป็นไฟล์ Excel</p>
+    <p class="panel-sub"><b>ตรวจสอบ Error ใหม่จาก Engineer:</b> กด "อนุมัติวิธีการ" เพื่อเผยแพร่เลย, "ไม่อนุมัติ" พร้อมเหตุผล, หรือ "ตรวจสอบ/แก้ไข" เพื่อปรับก่อนอนุมัติ</p>
+    <p class="panel-sub"><b>ตรวจสอบข้อเสนอวิธีแก้ไข:</b> กด "อนุมัติวิธีการ" เพื่อรับเป็นวิธีแก้ไขทางการ, "ไม่อนุมัติ", หรือ "ตรวจสอบ/แก้ไข" เพื่อปรับเนื้อหาก่อนรับ</p>
+    <p class="panel-sub"><b>จัดการเอกสาร (Document Matrix):</b> สลับแท็บ "จัดการเอกสาร" ดูตารางสรุปว่ารุ่นไหนมีเอกสารครบ/ขาดอะไรบ้าง (รวม Diagram ด้วย) เพิ่ม/แก้ไขลิงก์หรืออัปโหลดไฟล์ได้โดยตรง — เอกสารใหม่เปิดโหมดอัปโหลดไฟล์เป็นค่าเริ่มต้น</p>
     <p class="panel-sub"><b>Google Drive Database:</b> ในแท็บ "จัดการเอกสาร" เช่นกัน — กด "สร้าง Folder ทั้งหมดบน Google Drive" เพื่อสร้างโฟลเดอร์ล่วงหน้าทุกรุ่นที่ดูแลอยู่ (ยังไม่มีไฟล์) เผื่อจะเอาไฟล์ไปวางเองใน Drive ทีหลัง หรือกด "เปิด Google Drive ที่เก็บ Database" เพื่อเข้าไปดูไฟล์จริงได้เลย</p>
     <p class="panel-sub"><b>อัปโหลดไฟล์ได้ 2 ทาง:</b> (1) ผ่านปุ่มอัปโหลดในแอปโดยตรง หรือ (2) ลากไฟล์ไปวางเองในโฟลเดอร์ที่สร้างไว้ใน Google Drive แล้วกลับมากด "🔄 ซิงค์ + ตรวจสอบลิงก์เสีย" ในหน้า "จัดการเอกสาร" — แอปจะสำรวจโฟลเดอร์ครั้งเดียว สร้างลิงก์ไฟล์ใหม่ให้อัตโนมัติ พร้อมแจ้งด้วยว่าลิงก์ไหนไฟล์หายไปแล้ว (เช่น ถ้ามีคนลบไฟล์ใน Drive ตรงๆ) ไม่ต้องมากดใส่ลิงก์เองทีละไฟล์</p>
   `},
   { id:'owner', icon:'🗂️', title:'จัดการ Product', img:'owner', body:`
-    <p class="panel-sub">สำหรับ Editor เท่านั้น — เพิ่ม/ลบชื่อคนในทีม Sup Product (ลบไม่ได้ถ้ายังมีรุ่นผูกอยู่), ดูสรุปว่าใครดูแลอะไรบ้างและย้ายความรับผิดชอบได้, เพิ่มประเภท/รุ่นเครื่องใหม่</p>
+    <p class="panel-sub"><b>จัดการรายชื่อ Sup Product:</b> เพิ่ม/ลบชื่อคนในทีม (ลบไม่ได้ถ้ายังมี Product/รุ่นผูกอยู่ — ต้องย้ายงานออกก่อน)</p>
+    <p class="panel-sub"><b>จัดการ Product ทั้งหมด:</b> สำหรับ Editor เท่านั้น — แต่ละแถวคือ 1 รุ่น จัดกลุ่มตามประเภท พับไว้เป็นค่าเริ่มต้น กดลูกศร ▼ ที่ชื่อประเภทเพื่อกางดูรุ่นย่อย (กดซ้ำเพื่อพับกลับ)</p>
+    <p class="panel-sub"><b>ค้นหา/กรอง:</b> พิมพ์ค้นหาชื่อประเภท/รุ่น/ผู้ดูแล หรือเลือกตัวกรองผู้ดูแล/ประเภทได้ — ประเภทที่ตรงกับคำค้นหาจะกางให้อัตโนมัติ</p>
+    <p class="panel-sub"><b>เปลี่ยนผู้ดูแล:</b> เลือกจาก Dropdown ที่แต่ละแถว เปลี่ยนทันทีไม่ต้องกดยืนยันแยก — โฟลเดอร์ Google Drive จะย้ายตามไปให้อัตโนมัติด้วย</p>
+    <p class="panel-sub"><b>ลบประเภท/รุ่น:</b> ระบบจะเช็คข้อมูลจริงจากเซิร์ฟเวอร์ก่อนลบเสมอ (ไม่ใช้ข้อมูลเก่าที่แคชไว้) กันเผลอลบทั้งที่ยังมี Error/เอกสารผูกอยู่จริง — มีถามด้วยว่าจะลบโฟลเดอร์ใน Google Drive พร้อมกันไหม</p>
+    <p class="panel-sub"><b>+ เพิ่ม Product/Model:</b> กดปุ่มมุมขวาบนเพื่อเปิดฟอร์มเพิ่มประเภท/รุ่นใหม่</p>
   `},
   { id:'access', icon:'🔐', title:'จัดการสิทธิ์', img:'access', body:`
     <p class="panel-sub"><b>ระดับสิทธิ์:</b> ผู้ใช้ทั่วไป (ดู/โหวต/ส่ง Error ใหม่ได้ แก้ไขไม่ได้) และ แก้ไขข้อมูล/Editor (ทำได้ทุกอย่างของผู้ใช้ทั่วไป บวกแก้ไข/ลบข้อมูลได้ด้วย)</p>
+    <p class="panel-sub"><b>พับ/กางรายชื่อ:</b> แต่ละระดับสิทธิ์พับไว้เป็นค่าเริ่มต้น กดลูกศร ▼ ข้างหัวข้อ (เช่น "แก้ไขข้อมูล (Editor)") เพื่อกางดูรายชื่อ กดซ้ำเพื่อพับกลับ</p>
     <p class="panel-sub"><b>Super Admin</b> เท่านั้นที่โยกย้ายสิทธิ์คนอื่นได้ และเห็น/อนุมัติคำขอสิทธิ์เข้าถึงใหม่</p>
   `},
   { id:'mgr', icon:'📊', title:'Manager', img:'mgr', body:`
     <p class="panel-sub">Dashboard สรุปภาพรวมผลงานของ Sup Product ทุกคนในที่เดียว ใช้ติดตามโดยไม่ต้องเข้าไปเช็คทีละคน</p>
+    <p class="panel-sub"><b>เลือกคอลัมน์ที่แสดง:</b> กดปุ่ม "🎛️ เลือกคอลัมน์ที่แสดง" เหนือแต่ละตาราง เพื่อซ่อน/แสดงคอลัมน์ที่ไม่ต้องการดู — จำค่าไว้ในเครื่อง/เบราว์เซอร์ที่ใช้อยู่ (ถ้าเปลี่ยนเครื่องต้องตั้งใหม่)</p>
   `},
   { id:'backup', icon:'💾', title:'Export/Backup', img:'backup', body:`
     <p class="panel-sub"><b>ตั้งค่า Backup อัตโนมัติ</b> (Super Admin เท่านั้น): เปิด/ปิด, ตั้งเวลา, ความถี่ (ทุกวัน/2วัน/3วัน/สัปดาห์), จำนวนวันเก็บไฟล์เก่าก่อนลบอัตโนมัติ</p>
     <p class="panel-sub"><b>สำรองข้อมูลด้วยตัวเอง:</b> ดาวน์โหลด JSON/Excel หรือกด "Backup เข้า Google Drive ทันที"</p>
     <p class="panel-sub"><b>Export ประวัติการใช้งาน (Log):</b> Super Admin เท่านั้น — ดาวน์โหลดเป็น Excel</p>
-    <p class="panel-sub"><b>การใช้งานพื้นที่:</b> เช็คจำนวนข้อมูลใน Firestore ได้ (กดเช็คเองเพื่อประหยัดโควต้า)</p>
+    <p class="panel-sub"><b>Google Drive Database:</b> กดลิงก์เข้าไปดูไฟล์ทั้งหมดที่เก็บไว้จริงใน Google Drive ได้โดยตรง</p>
   `},
   { id:'superadmin', icon:'⭐', title:'สำหรับ Super Admin โดยเฉพาะ', superAdminOnly:true, body:`
     <p class="panel-sub">รวมทุกฟังก์ชันที่ทำได้เฉพาะบัญชี Super Admin เท่านั้น (engfirmer@gmail.com) — คนเดียวในระบบที่มีสิทธิ์เหล่านี้ กระจายอยู่ในหลายหน้า สรุปรวมไว้ที่นี่ให้เห็นภาพครบ</p>
