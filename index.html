@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.3
+  เวอร์ชันปัจจุบัน: 7.4
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.3</title>
+<title>Firmer Service Center — v7.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.3</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.4</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -708,7 +708,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.3 (อัปเดตล่าสุด 14 กันยายน 2569 14:25 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.4 (อัปเดตล่าสุด 14 กันยายน 2569 18:43 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1954,14 +1954,23 @@ async function openErrorDetail(errorId){
   $('error-detail-content').innerHTML = `<div class="empty"><div class="empty-icon">···</div><h3>กำลังโหลด...</h3></div>`;
   $('error-detail-panel').classList.add('show');
   window.scrollTo({top:0});
-  err.viewCount = (err.viewCount||0)+1;
-  fsIncrementView(errorId).catch(()=>{});
+  if(currentMode!=='sup'){ // Sup Product เปิดดูเพื่อตรวจสอบ ไม่ใช่ค้นหาหน้างานจริง ไม่นับเป็นยอดเปิดดู
+    err.viewCount = (err.viewCount||0)+1;
+    fsIncrementView(errorId).catch(()=>{});
+  }
   if(currentMode==='eng') renderTechResults();
   if(currentMode==='sup') renderErrorCountSummary();
   await loadSolutionsFor(errorId);
   if(openErrorDetailId===errorId) renderErrorDetailPanel();
 }
-function closeErrorDetail(){ $('error-detail-panel').classList.remove('show'); openErrorDetailId = null; }
+function closeErrorDetail(){
+  $('error-detail-panel').classList.remove('show'); openErrorDetailId = null;
+  if(errorDetailReturnTo){ // ถ้าเปิดมาจากหน้าต่าง "ดูทั้งหมด" ของ Sup Product ให้ย้อนกลับไปหน้านั้นแทนที่จะปิดหมดเลย
+    errorDetailReturnTo = null;
+    $('model-errors-modal').classList.add('show');
+    renderModelErrorsList();
+  }
+}
 
 /* ===================== คู่มือการใช้งานในแอป — แก้ไขข้อความตรงนี้เมื่อมีการเปลี่ยนแปลงฟังก์ชันใดๆ ===================== */
 const MANUAL_IMG = {
@@ -2145,7 +2154,8 @@ function renderSolutionCard(err, s, idx){
       <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(s.time||'-')}</div></div>
     </div>
     <div class="fb-row">
-      <button class="fb-btn up ${upLocked?'sel':''}" data-sol="${s.id}" title="${upLocked?'แตะอีกครั้งเพื่อยกเลิก':''}">${upLocked?'✓ คุณกดแล้ว (แตะเพื่อยกเลิก)':'👍 แก้ได้จริง'} (${up.length})</button>
+      ${currentMode==='sup' ? '' : `<button class="fb-btn up ${upLocked?'sel':''}" data-sol="${s.id}" title="${upLocked?'แตะอีกครั้งเพื่อยกเลิก':''}">${upLocked?'✓ คุณกดแล้ว (แตะเพื่อยกเลิก)':'👍 แก้ได้จริง'} (${up.length})</button>`}
+      ${currentMode==='sup' && up.length>0 ? `<span class="mono" style="font-size:11px;color:var(--text-faint);">👍 ${up.length}</span>` : ''}
       ${names.length?`<div class="fb-names">${escapeHtml(nameSummary(names))}</div>`:''}
     </div>
   </div>`;
@@ -2701,6 +2711,7 @@ function closeAddErrorPanel(){
 }
 $('cancel-error-top-btn').addEventListener('click', closeAddErrorPanel);
 let modelErrorsContext = null; // { category, model } — เก็บไว้ให้ปุ่มค้นหา/แสดงทั้งหมดใช้ต่อ
+let errorDetailReturnTo = null; // true ถ้าเปิด Error Detail มาจากหน้าต่าง "ดูทั้งหมด" — กดย้อนกลับแล้วต้องกลับไปหน้านั้น ไม่ใช่ปิดหมดเลย
 let modelErrorsQuery = '';
 async function openModelErrorsModal(category, model){
   modelErrorsContext = { category, model };
@@ -2726,7 +2737,7 @@ function renderModelErrorsList(){
     if(errs.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ไม่พบผลลัพธ์ที่ตรงกับ "${escapeHtml(modelErrorsQuery)}"</p>`; return; }
   }
   list.innerHTML = errs.map(e=>renderErrorCard(e,true)).join('');
-  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=>{ $('model-errors-modal').classList.remove('show'); openErrorDetail(h.closest('.card').getAttribute('data-id')); }); });
+  list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=>{ $('model-errors-modal').classList.remove('show'); errorDetailReturnTo = true; openErrorDetail(h.closest('.card').getAttribute('data-id')); }); });
   list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); $('model-errors-modal').classList.remove('show'); startEditError(b.getAttribute('data-edit')); }));
   list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ev=>{ ev.stopPropagation(); await deleteError(b.getAttribute('data-del')); renderModelErrorsList(); }));
 }
