@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.6
+  เวอร์ชันปัจจุบัน: 7.8
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.6</title>
+<title>Firmer Service Center — v7.8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.6</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.8</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -712,7 +712,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.6 (อัปเดตล่าสุด 15 กันยายน 2569 07:07 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.8 (อัปเดตล่าสุด 15 กันยายน 2569 12:28 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1210,32 +1210,30 @@ async function fsBatchUpdateField(collectionName, docIds, fields){ showLoadingOv
 
 /* ===================== IMAGE COMPRESSION ===================== */
 /* ===================== ลบไฟล์ Drive จริงเมื่อลบรูป+บันทึก (ไม่ลบทันทีตอนกด ✕ กันลบผิดพลาดกู้คืนไม่ได้) ===================== */
-let pendingDriveDeletions = [];
 function extractDriveFileId(url){
   if(typeof url !== 'string') return null;
   const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
   return m ? m[1] : null;
-}
-function markImageForDeferredDeletion(img){
-  const fileId = extractDriveFileId(img);
-  if(fileId) pendingDriveDeletions.push(fileId);
 }
 async function driveDeleteFile(fileId){
   const token = await ensureDriveAccess();
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
   if(!res.ok && res.status!==404) throw new Error('ลบไฟล์ Drive ไม่สำเร็จ ('+res.status+')');
 }
-async function flushPendingDriveDeletions(){
-  if(pendingDriveDeletions.length===0) return;
-  const toDelete = pendingDriveDeletions; pendingDriveDeletions = [];
-  showLoadingOverlay('กำลังลบไฟล์เก่า...');
+// ยืนยัน + ลบไฟล์ที่อัปโหลดขึ้น Google Drive แล้วทันที — ลบสำเร็จจริงค่อยเอาออกจากฟอร์ม กันไฟล์ตกค้างเงียบๆ แบบที่เคยเจอ
+// ใช้กับทุกจุดที่ลบไฟล์ที่อัปโหลดขึ้น Drive แล้ว (รูป/วิดีโอในวิธีแก้ไข, เอกสาร) — ยังไม่เคยอัปโหลด (แค่ preview ในเครื่อง) เอาออกได้เลยไม่ต้องถาม
+async function confirmAndRemoveMedia(item, onRemoved){
+  const fileId = extractDriveFileId(item);
+  if(!fileId){ onRemoved(); return; } // ยังไม่เคยอัปโหลดขึ้น Drive จริง (แค่ preview ในเครื่อง) ไม่ต้องลบอะไร เอาออกจากฟอร์มได้เลย
+  if(!confirm('ยืนยันการลบไฟล์นี้?\n\nไฟล์จะถูกลบออกจาก Google Drive ทันที ข้อมูลจะหายไปถาวร กู้คืนไม่ได้ — ต้องอัปโหลดไฟล์ใหม่เท่านั้น')) return;
+  showLoadingOverlay('กำลังลบไฟล์...');
   try{
-    for(const fileId of toDelete){
-      try{ await driveDeleteFile(fileId); }catch(e){ console.error('ลบไฟล์ Drive ไม่สำเร็จ:', fileId, e); }
-    }
+    await driveDeleteFile(fileId);
+    onRemoved();
+  }catch(e){
+    showToast('⚠ ลบไฟล์ไม่สำเร็จ: '+e.message+' — ไฟล์ยังอยู่เหมือนเดิม ลองกดลบใหม่อีกครั้งได้');
   }finally{ hideLoadingOverlay(); }
 }
-function clearPendingDriveDeletions(){ pendingDriveDeletions = []; } // กด "ยกเลิก" — ไม่ลบอะไรจริง ไฟล์ยังอยู่ครบ
 
 function compressImage(file){
   return new Promise((resolve,reject)=>{
@@ -2578,10 +2576,10 @@ $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
   ensureSignedIn(()=>{
     const form = $('eng-add-error-form'); const showing = form.style.display==='block';
     form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
-    if(!showing){ clearPendingDriveDeletions(); resetEngErrorForm(); }
+    if(!showing){ resetEngErrorForm(); }
   });
 });
-$('eng-cancel-error-btn').addEventListener('click', ()=>{ clearPendingDriveDeletions(); resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
+$('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
 
 function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
@@ -2617,9 +2615,9 @@ function renderEngSolutionsEditor(){
   wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); }); });
-  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.images[parseInt(idx)]); sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
-  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.videos[parseInt(idx)]); sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
 }
 $('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
 
@@ -2643,7 +2641,6 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   let newId;
   try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   DATA.pendingErrors.push({ id:newId, ...fields });
-  await flushPendingDriveDeletions();
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
@@ -2705,13 +2702,13 @@ function renderErrorCountSummary(){
   }); });
 }
 function openAddErrorForModel(category, model){
-  clearPendingDriveDeletions(); resetErrorForm();
+  resetErrorForm();
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
 }
 function closeAddErrorPanel(){
-  clearPendingDriveDeletions(); resetErrorForm();
+  resetErrorForm();
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
@@ -2826,9 +2823,9 @@ function renderSolutionsEditor(){
   wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); }); });
-  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.images[parseInt(idx)]); sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
-  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); markImageForDeferredDeletion(sol.videos[parseInt(idx)]); sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }));
+  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
 }
 $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
 
@@ -2881,7 +2878,6 @@ $('save-error-btn').addEventListener('click', async ()=>{
       if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
     }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-    await flushPendingDriveDeletions();
     btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
     closeAddErrorPanel();
     renderAll(); renderErrorCountSummary();
@@ -2902,7 +2898,6 @@ $('save-error-btn').addEventListener('click', async ()=>{
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
     }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  await flushPendingDriveDeletions();
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
   closeAddErrorPanel();
@@ -2911,7 +2906,6 @@ $('save-error-btn').addEventListener('click', async ()=>{
 
 async function startEditError(id){
   const err = DATA.errors.find(e=>e.id===id); if(!err) return;
-  clearPendingDriveDeletions();
   await loadSolutionsFor(id);
   editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
   $('f-category-field').style.display=''; $('f-model-field').style.display=''; // แก้ไข Error เดิม ยังเปลี่ยนประเภท/รุ่นได้ตามปกติ เผื่อจัดหมวดผิด
@@ -2959,7 +2953,6 @@ function renderPendingErrors(){
 }
 function startReviewPendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
-  clearPendingDriveDeletions();
   editingErrorId = null; reviewingPendingErrorId = id;
   $('f-category-field').style.display=''; $('f-model-field').style.display=''; // ให้แก้ประเภท/รุ่นได้ เผื่อ Engineer เลือกผิด
   $('add-error-modal').classList.add('show');
@@ -3154,21 +3147,22 @@ function renderDocLinkListItems(){
   wrap.querySelectorAll('[data-dellink]').forEach(b=>b.addEventListener('click', async ()=>{
     const id = b.getAttribute('data-dellink');
     const doc = docs.find(d=>d.id===id);
-    if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
     const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-    const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
-    try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
-    DATA.documents = DATA.documents.filter(d=>d.id!==id);
-    renderDocLinkListItems(); renderAll();
-    showToast('ลบลิงก์แล้ว');
+    const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\nไฟล์จะถูกลบออกจาก Google Drive ทันที ข้อมูลจะหายไปถาวร กู้คืนไม่ได้ — ต้องอัปโหลดไฟล์ใหม่เท่านั้น\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
+    if(!deleteFileToo && !confirm('ยืนยันการลบลิงก์นี้?')) return;
     if(deleteFileToo){
+      showLoadingOverlay('กำลังลบไฟล์...');
       try{
         const token = await ensureDriveAccess();
         const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-        if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
-        showToast('✓ ลบไฟล์ใน Drive แล้ว');
-      }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
+        if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
+      }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไฟล์ไม่สำเร็จ: '+e.message+' — ลิงก์ในระบบยังอยู่เหมือนเดิม ลองกดลบใหม่อีกครั้งได้'); return; }
+      hideLoadingOverlay();
     }
+    try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบลิงก์ไม่สำเร็จ: '+e.message+(deleteFileToo?' (ไฟล์ใน Drive ถูกลบไปแล้ว แต่ลิงก์ในระบบยังลบไม่สำเร็จ ลองกดลบใหม่อีกครั้งได้)':'')); return; }
+    DATA.documents = DATA.documents.filter(d=>d.id!==id);
+    renderDocLinkListItems(); renderAll();
+    showToast(deleteFileToo ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว');
   }));
 }
 $('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
@@ -3267,25 +3261,26 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
 });
 $('doclink-delete-btn').addEventListener('click', async ()=>{
   if(!doclinkContext || !doclinkContext.existingId) return;
-  if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
   const id = doclinkContext.existingId;
   const doc = DATA.documents.find(d=>d.id===id);
   const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-  const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
-  try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+  const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\nไฟล์จะถูกลบออกจาก Google Drive ทันที ข้อมูลจะหายไปถาวร กู้คืนไม่ได้ — ต้องอัปโหลดไฟล์ใหม่เท่านั้น\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
+  if(!deleteFileToo && !confirm('ยืนยันการลบลิงก์นี้?')) return;
+  if(deleteFileToo){
+    showLoadingOverlay('กำลังลบไฟล์...');
+    try{
+      const token = await ensureDriveAccess();
+      const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+      if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
+    }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไฟล์ไม่สำเร็จ: '+e.message+' — ลิงก์ในระบบยังอยู่เหมือนเดิม ลองกดลบใหม่อีกครั้งได้'); return; }
+    hideLoadingOverlay();
+  }
+  try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบลิงก์ไม่สำเร็จ: '+e.message+(deleteFileToo?' (ไฟล์ใน Drive ถูกลบไปแล้ว แต่ลิงก์ในระบบยังลบไม่สำเร็จ ลองกดลบใหม่อีกครั้งได้)':'')); return; }
   DATA.documents = DATA.documents.filter(d=>d.id!==id);
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
   renderAll();
-  showToast('ลบลิงก์แล้ว');
-  if(deleteFileToo){
-    try{
-      const token = await ensureDriveAccess();
-      const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-      if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
-      showToast('✓ ลบไฟล์ใน Drive แล้ว');
-    }catch(e){ showToast('⚠ ลบไฟล์ใน Drive ไม่สำเร็จ: '+e.message); }
-  }
+  showToast(deleteFileToo ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว');
 });
 
 async function renderSupView(){
