@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.5
+  เวอร์ชันปัจจุบัน: 7.6
   อัปเดตล่าสุด: 7 กันยายน 2569 15:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.5</title>
+<title>Firmer Service Center — v7.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -298,7 +298,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.5</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.6</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -712,7 +712,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.5 (อัปเดตล่าสุด 14 กันยายน 2569 19:06 น. เวลาไทย)</div>
+  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.6 (อัปเดตล่าสุด 15 กันยายน 2569 07:07 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -829,6 +829,9 @@ function showLoadingOverlay(text){
   $('global-loading-text').textContent = text || 'กำลังบันทึก...';
   $('global-loading-overlay').classList.add('show');
 }
+// อัปเดตแค่ข้อความบน Overlay โดยไม่แตะตัวนับ _loadingCount — ใช้กับ callback ที่ถูกเรียกซ้ำหลายครั้งระหว่างทำงาน (เช่น progress % ตอนอัปโหลดไฟล์)
+// ถ้าใช้ showLoadingOverlay() แทนตรงนี้ ตัวนับจะเพิ่มขึ้นทุกครั้งที่ progress ขยับ แต่ตอนจบมี hideLoadingOverlay() แค่ครั้งเดียว ทำให้ Overlay ค้างไม่หายอีกเลย
+function updateLoadingOverlayText(text){ $('global-loading-text').textContent = text; }
 function hideLoadingOverlay(){
   _loadingCount = Math.max(0, _loadingCount-1);
   if(_loadingCount===0) $('global-loading-overlay').classList.remove('show');
@@ -1645,7 +1648,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
     const resolved = [];
     for(const v of videos){
       if(typeof v==='string'){ resolved.push(v); continue; }
-      const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ showLoadingOverlay(`กำลังอัปโหลดวิดีโอ... ${pct}%`); });
+      const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดวิดีโอ... ${pct}%`); });
       resolved.push(url);
     }
     return resolved;
