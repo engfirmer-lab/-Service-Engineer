@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.15
-  อัปเดตล่าสุด: 16 กันยายน 2569 21:37 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.17
+  อัปเดตล่าสุด: 16 กันยายน 2569 22:22 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.15</title>
+<title>Firmer Service Center — v7.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -52,9 +52,9 @@
   .brand-logo{height:34px;width:auto;flex-shrink:0;object-fit:contain;}
   .brand-text h1{font-size:14px;font-weight:600;}
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
-  /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ปักหัวตาราง (แถวบน) ให้ติดจอตอนเลื่อนลง ไม่ให้หลุดหายจนไม่รู้ว่าคอลัมน์ไหนคือประเภทเอกสารอะไร
-     ชนกับ header หลักของแอปที่ sticky top:0 อยู่แล้ว เลยต้องเว้น top ให้เท่าความสูง header (~64px) ไม่งั้นจะซ้อนทับกัน */
-  #sup-doc-matrix thead th{ position:sticky; top:64px; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
+  /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ทำให้กล่องตารางเป็นกรอบเลื่อนของตัวเอง (สูงไม่เกิน 65% ของจอ) แล้วปักหัวตารางให้ติดอยู่กับที่ภายในกรอบนี้เสมอ
+     (รอบก่อนลองให้หัวตารางติดกับการเลื่อนทั้งหน้าแทน แต่ overflow-x:auto ของกล่องห่อ ทำให้เบราว์เซอร์บังคับปิดการ sticky ข้ามกล่องไปหาหน้าเว็บไม่ได้ — วิธีนี้แก้ตรงจุด) */
+  #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
   .mode-toggle::-webkit-scrollbar{display:none;}
   .mode-toggle-track{display:none;height:3px;background:var(--border);border-radius:999px;margin-top:5px;position:relative;overflow:hidden;}
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.15</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.17</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -449,7 +449,7 @@
       <div class="panel-block">
         <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
         <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
-        <div style="overflow-x:auto;overflow-y:visible;"><table id="sup-doc-matrix"></table></div>
+        <div style="overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:8px;"><table id="sup-doc-matrix"></table></div>
       </div>
       <div class="panel-block">
         <h2>Google Drive Database</h2>
@@ -720,7 +720,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.15 (อัปเดตล่าสุด 16 กันยายน 2569 21:37 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.17 (อัปเดตล่าสุด 16 กันยายน 2569 22:22 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -776,8 +776,8 @@
     <p>ช่วยกรอกวิธีที่ใช้แก้ปัญหานี้ได้จริง (จำเป็นต้องกรอกอย่างน้อยคำอธิบาย)</p>
     <div class="field-wrap"><label>คำอธิบายขั้นตอนที่แก้ได้จริง *</label><textarea id="down-modal-desc" placeholder="อธิบายวิธีที่ใช้แก้จริง..."></textarea></div>
     <div class="form-grid two" style="margin-top:8px;">
-      <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" id="down-modal-tools" placeholder="เช่น ไขควงแฉก"></div>
-      <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" id="down-modal-parts" placeholder="เช่น sensor SP-220"></div>
+      <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><div id="down-modal-tools-wrap"></div></div>
+      <div class="field-wrap"><label>อะไหล่ที่ใช้</label><div id="down-modal-parts-wrap"></div></div>
       <div class="field-wrap full"><label>เวลาโดยประมาณ</label><input type="text" id="down-modal-time" placeholder="เช่น 30 นาที"></div>
     </div>
     <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label><div class="img-upload-row" id="down-modal-imgrow"><label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label></div></div>
@@ -826,8 +826,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.15";
-const APP_UPDATED_AT = "16 กันยายน 2569 21:37 น. เวลาไทย";
+const APP_VERSION = "7.17";
+const APP_UPDATED_AT = "16 กันยายน 2569 22:22 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -995,6 +995,13 @@ let editingSolutions = [];
 let downModalErrorId = null;
 let downModalImages = [];
 let downModalVideos = [];
+let downModalItems = { tools:[''], parts:[''] }; // อุปกรณ์/อะไหล่ที่ใช้ — เก็บเป็นลิสต์ เพิ่ม/ลบได้ทีละรายการ
+function renderDownModalLists(){
+  $('down-modal-tools-wrap').innerHTML = renderItemListRows(downModalItems.tools, 'downmodal', 'tools');
+  $('down-modal-parts-wrap').innerHTML = renderItemListRows(downModalItems.parts, 'downmodal', 'parts');
+  wireItemListEvents($('down-modal-tools-wrap'), ()=>downModalItems, renderDownModalLists);
+  wireItemListEvents($('down-modal-parts-wrap'), ()=>downModalItems, renderDownModalLists);
+}
 
 let myGoogleId = null;
 let myUserName = null;
@@ -1011,6 +1018,53 @@ let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไ
 const $ = id => document.getElementById(id);
 function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// อุปกรณ์/อะไหล่ที่ใช้ในแต่ละวิธีแก้ — เดิมเป็นข้อความยัดรวมบรรทัดเดียว เปลี่ยนเป็น array เพิ่ม/ลบได้ทีละรายการ แสดงเป็นลิสต์แยกบรรทัดอ่านง่ายกว่า
+// toItemList แปลงข้อมูลเก่า (string เดี่ยว คั่นด้วย , หรือ ;) เป็น array อัตโนมัติ ไม่กระทบข้อมูลเดิมที่มีอยู่แล้วใน Firestore
+function toItemList(val){
+  if(Array.isArray(val)) return val;
+  if(typeof val==='string' && val.trim()) return val.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
+  return [];
+}
+function renderItemListRows(items, sid, field){
+  const list = (items && items.length) ? items : [''];
+  return list.map((v,i)=>`
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input type="text" data-listfield="${field}" data-sid="${sid}" data-idx="${i}" value="${escapeHtml(v)}" style="flex:1;">
+      <button type="button" data-listrm="${field}:${sid}:${i}" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px;">✕</button>
+    </div>`).join('') + `<button type="button" data-listadd="${field}:${sid}" class="btn btn-ghost btn-sm" style="margin-top:2px;">+ เพิ่มรายการ</button>`;
+}
+// ผูก event ให้แถวเพิ่ม/ลบ/แก้ไขในลิสต์ทำงาน — findSol คืนอ็อบเจกต์ solution ที่ id ตรงกับ sid ที่กด, renderFn คือฟังก์ชัน re-render ฟอร์มนั้นๆ ใหม่หลังเพิ่ม/ลบแถว
+function wireItemListEvents(wrap, findSol, renderFn){
+  wrap.querySelectorAll('[data-listfield]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const sid = el.getAttribute('data-sid'), field = el.getAttribute('data-listfield'), idx = +el.getAttribute('data-idx');
+      const sol = findSol(sid);
+      if(sol){ if(!Array.isArray(sol[field])) sol[field]=toItemList(sol[field]); sol[field][idx]=el.value; }
+    });
+  });
+  wrap.querySelectorAll('[data-listadd]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const [field, sid] = el.getAttribute('data-listadd').split(':');
+      const sol = findSol(sid);
+      if(sol){ if(!Array.isArray(sol[field])) sol[field]=toItemList(sol[field]); sol[field].push(''); renderFn(); }
+    });
+  });
+  wrap.querySelectorAll('[data-listrm]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const parts = el.getAttribute('data-listrm').split(':'); const field=parts[0], sid=parts[1], idx=+parts[2];
+      const sol = findSol(sid);
+      if(sol){ sol[field].splice(idx,1); if(sol[field].length===0) sol[field]=['']; renderFn(); }
+    });
+  });
+}
+// แสดงผลลิสต์แบบอ่านอย่างเดียว (ใน solution detail / proposal detail) — คั่นด้วยจุด ทีละบรรทัด
+function renderItemListView(val){
+  const list = toItemList(val);
+  if(list.length===0) return '-';
+  if(list.length===1) return escapeHtml(list[0]);
+  return '<ul style="margin:0;padding-left:18px;">' + list.map(v=>`<li>${escapeHtml(v)}</li>`).join('') + '</ul>';
+}
 // เรียงตามตัวอักษร + ตัวเลขในตัว (เช่น "รุ่น 2" มาก่อน "รุ่น 10") ใช้กับตัวกรอง/dropdown ประเภทและรุ่นเครื่องทุกจุด
 function naturalSort(a, b){ return String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}); }
 function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
@@ -2250,8 +2304,8 @@ function renderSolutionCard(err, s, idx){
     ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${imgSrcOf(img)}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
     <div class="meta-grid">
-      <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(s.tools||'-')}</div></div>
-      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(s.parts||'-')}</div></div>
+      <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(s.tools)}</div></div>
+      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderItemListView(s.parts)}</div></div>
       <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(s.time||'-')}</div></div>
     </div>
     <div class="fb-row">
@@ -2268,7 +2322,7 @@ function bindFeedbackButtons(root){
   root.querySelectorAll('[data-errpropose]').forEach(btn=>{
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
-      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; $('down-modal-tools').value=''; $('down-modal-parts').value=''; $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); const dbtn=$('down-modal-submit'); dbtn.disabled=false; dbtn.style.opacity=''; dbtn.style.cursor=''; $('down-modal').classList.add('show'); }); });
+      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; downModalItems={tools:[''],parts:['']}; renderDownModalLists(); $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); const dbtn=$('down-modal-submit'); dbtn.disabled=false; dbtn.style.opacity=''; dbtn.style.cursor=''; $('down-modal').classList.add('show'); }); });
   });
 }
 async function submitUp(solId){
@@ -2323,7 +2377,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
       uploadedVideos = await resolveVideosForUpload(downModalVideos, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
     }
   }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  const fields = { errorId:downModalErrorId, desc, tools:$('down-modal-tools').value.trim(), parts:$('down-modal-parts').value.trim(), time:$('down-modal-time').value.trim(), images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
+  const fields = { errorId:downModalErrorId, desc, tools:toItemList(downModalItems.tools), parts:toItemList(downModalItems.parts), time:$('down-modal-time').value.trim(), images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
   let newId;
   try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
@@ -2679,7 +2733,7 @@ $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $
 
 function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
-  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}];
+  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderEngSolutionsEditor();
   const ebtn=$('eng-save-error-btn'); ebtn.disabled=false; ebtn.style.opacity=''; ebtn.style.cursor='';
 }
@@ -2691,8 +2745,8 @@ function renderEngSolutionsEditor(){
       ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
       <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
-        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
-        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
@@ -2708,14 +2762,15 @@ function renderEngSolutionsEditor(){
         </div>
       </div>
     </div>`).join('');
-  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('textarea[data-field],input[data-field]:not([data-listfield])').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=engEditingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wireItemListEvents(wrap, sid=>engEditingSolutions.find(s=>s.id===sid), renderEngSolutionsEditor);
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
 }
-$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderEngSolutionsEditor(); });
+$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderEngSolutionsEditor(); });
 
 $('eng-save-error-btn').addEventListener('click', async ()=>{
   const btn = $('eng-save-error-btn');
@@ -2855,7 +2910,7 @@ async function exportMyErrorsExcel(){
       rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'' });
     } else {
       e.solutions.forEach((s,idx)=>{
-        rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'' });
+        rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:toItemList(s.parts).join(', '), เวลาโดยประมาณ:s.time||'' });
       });
     }
   });
@@ -2899,8 +2954,8 @@ function renderSolutionsEditor(){
       ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
       <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
-        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" data-field="tools" data-sid="${s.id}" value="${escapeHtml(s.tools)}"></div>
-        <div class="field-wrap"><label>อะไหล่ที่ใช้</label><input type="text" data-field="parts" data-sid="${s.id}" value="${escapeHtml(s.parts)}"></div>
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
@@ -2916,14 +2971,15 @@ function renderSolutionsEditor(){
         </div>
       </div>
     </div>`).join('');
-  wrap.querySelectorAll('textarea,input[data-field]').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wrap.querySelectorAll('textarea[data-field],input[data-field]:not([data-listfield])').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=editingSolutions.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wireItemListEvents(wrap, sid=>editingSolutions.find(s=>s.id===sid), renderSolutionsEditor);
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
 }
-$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}); renderSolutionsEditor(); });
+$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderSolutionsEditor(); });
 
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
@@ -2941,14 +2997,14 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
     const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
-    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:s.tools||'', parts:s.parts||'', time:s.time||'', order:i, feedback:s.feedback||[] });
+    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, feedback:s.feedback||[] });
   }
 }
 
 function resetErrorForm(){
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
   $('f-code').value=''; $('f-symptom').value='';
-  editingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:'', parts:'', time:''}];
+  editingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderSolutionsEditor();
   $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
@@ -3085,6 +3141,7 @@ async function rejectPendingError(id){
 }
 
 let editingProposalId = null;
+let editingProposalDraft = { tools:[''], parts:[''] }; // แก้ในสำเนาชั่วคราวก่อน กด "ยกเลิก" แล้วข้อมูลจริงจะไม่ถูกแก้ไปก่อนบันทึก
 function renderProposals(){
   const pending = (DATA.proposals||[]).filter(p=>p.status==='pending').filter(p=>{ const err=DATA.errors.find(e=>e.id===p.errorId); return err && ownerOf(err.category,err.model)===currentSupIdentity; });
   $('proposal-count').textContent = pending.length;
@@ -3099,8 +3156,8 @@ function renderProposals(){
         ${metaLine}
         <div class="field-wrap"><label>คำอธิบายขั้นตอน *</label><textarea id="prop-edit-desc-${p.id}" rows="3">${escapeHtml(p.desc)}</textarea></div>
         <div class="meta-grid" style="margin-top:8px;">
-          <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><input type="text" id="prop-edit-tools-${p.id}" value="${escapeHtml(p.tools||'')}"></div>
-          <div class="field-wrap"><label>อะไหล่</label><input type="text" id="prop-edit-parts-${p.id}" value="${escapeHtml(p.parts||'')}"></div>
+          <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(editingProposalDraft.tools, 'propedit', 'tools')}</div>
+          <div class="field-wrap"><label>อะไหล่</label>${renderItemListRows(editingProposalDraft.parts, 'propedit', 'parts')}</div>
           <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" id="prop-edit-time-${p.id}" value="${escapeHtml(p.time||'')}"></div>
         </div>
         ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
@@ -3117,8 +3174,8 @@ function renderProposals(){
       ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
       ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin-bottom:10px;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
-        <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${escapeHtml(p.tools||'-')}</div></div>
-        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${escapeHtml(p.parts||'-')}</div></div>
+        <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(p.tools)}</div></div>
+        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderItemListView(p.parts)}</div></div>
         <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(p.time||'-')}</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
@@ -3130,14 +3187,19 @@ function renderProposals(){
   }).join('');
   list.querySelectorAll('[data-accept]').forEach(b=>b.addEventListener('click', ()=>acceptProposal(b.getAttribute('data-accept'))));
   list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>rejectProposal(b.getAttribute('data-reject'))));
-  list.querySelectorAll('[data-editprop]').forEach(b=>b.addEventListener('click', ()=>{ editingProposalId=b.getAttribute('data-editprop'); renderProposals(); }));
+  list.querySelectorAll('[data-editprop]').forEach(b=>b.addEventListener('click', ()=>{
+    const pid = b.getAttribute('data-editprop'); const p = DATA.proposals.find(x=>x.id===pid);
+    editingProposalDraft = { tools: toItemList(p?p.tools:[]).length?[...toItemList(p.tools)]:[''], parts: toItemList(p?p.parts:[]).length?[...toItemList(p.parts)]:[''] };
+    editingProposalId = pid; renderProposals();
+  }));
   list.querySelectorAll('[data-cancelpropedit]').forEach(b=>b.addEventListener('click', ()=>{ editingProposalId=null; renderProposals(); }));
+  wireItemListEvents(list, ()=>editingProposalDraft, renderProposals);
   list.querySelectorAll('[data-savepropedit]').forEach(b=>b.addEventListener('click', async ()=>{
     const pid = b.getAttribute('data-savepropedit');
     const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
     const desc = $('prop-edit-desc-'+pid).value.trim();
-    const tools = $('prop-edit-tools-'+pid).value.trim();
-    const parts = $('prop-edit-parts-'+pid).value.trim();
+    const tools = toItemList(editingProposalDraft.tools);
+    const parts = toItemList(editingProposalDraft.parts);
     const time = $('prop-edit-time-'+pid).value.trim();
     if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอน'); return; }
     try{ await fsUpdateProposal(pid, {desc, tools, parts, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
@@ -3151,7 +3213,7 @@ async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
   await loadSolutionsFor(err.id);
-  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:p.tools||'', parts:p.parts||'', time:p.time||'', feedback:[]};
+  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), time:p.time||'', feedback:[]};
   try{
     await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
     const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
@@ -4192,7 +4254,7 @@ function buildBackupWorkbook(data){
       errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'', จำนวนรูป:'', จำนวนโหวตวิธีนี้:'' });
     } else {
       e.solutions.forEach((s,idx)=>{
-        errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:s.tools||'', อะไหล่:s.parts||'', เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตวิธีนี้:(s.feedback||[]).filter(f=>f.type==='up').length });
+        errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:toItemList(s.parts).join(', '), เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตวิธีนี้:(s.feedback||[]).filter(f=>f.type==='up').length });
       });
     }
   });
