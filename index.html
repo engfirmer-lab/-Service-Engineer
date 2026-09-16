@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.8</title>
+<title>Firmer Service Center — v7.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -3999,6 +3999,16 @@ function renderMgrView(){
 }
 
 /* ===================== BACKUP / EXPORT ===================== */
+// ชื่อไฟล์/โฟลเดอร์ backup ทั้งหมดอ้างอิงเวลาไทย (Asia/Bangkok, UTC+7 คงที่ ไม่มี DST) ให้ตรงกับเวลาที่แสดงผลจุดอื่นในแอป
+function bangkokNow(){ return new Date(Date.now() + 7*60*60*1000); } // เลื่อนเป็นเวลาไทยแบบ wall-clock แล้วอ่านค่าแบบ UTC getter
+function bangkokStamp(){
+  const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}-${p(d.getUTCHours())}-${p(d.getUTCMinutes())}-${p(d.getUTCSeconds())}`;
+}
+function bangkokDateFolder(){
+  const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`;
+}
 async function gatherFullBackup(statusElId){
   const statusEl = statusElId ? $(statusElId) : null;
   showLoadingOverlay('กำลังดึงข้อมูลทั้งหมด...');
@@ -4063,7 +4073,7 @@ function downloadBlob(content, filename, mime){
 async function handleBackupJson(statusElId){
   try{
     const data = await gatherFullBackup(statusElId);
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    const stamp = bangkokStamp();
     downloadBlob(JSON.stringify(data,null,2), `trbl-backup-${stamp}.json`, 'application/json');
     fsWriteLog('ดาวน์โหลด Backup (JSON)');
     showToast('✓ ดาวน์โหลด Backup (JSON) แล้ว');
@@ -4109,7 +4119,7 @@ async function handleBackupExcel(statusElId){
   try{
     const data = await gatherFullBackup(statusElId);
     const wb = buildBackupWorkbook(data);
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    const stamp = bangkokStamp();
     XLSX.writeFile(wb, `trbl-export-${stamp}.xlsx`);
     fsWriteLog('ดาวน์โหลด Backup (Excel)');
     showToast('✓ ดาวน์โหลด Excel แล้ว');
@@ -4229,7 +4239,7 @@ async function exportLogToExcel(){
     const rows = logs.map(l=>({ การกระทำ:l.action, ผู้ใช้:l.name||'', อีเมล:l.email||'', เวลา: new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'ActivityLog');
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    const stamp = bangkokStamp();
     XLSX.writeFile(wb, `trbl-activity-log-${stamp}.xlsx`);
     statusEl.textContent = `✓ Export แล้ว (${logs.length.toLocaleString()} รายการ)`;
   }catch(e){ statusEl.textContent = ''; showToast('⚠ Export ไม่สำเร็จ: '+e.message); }
@@ -4301,7 +4311,7 @@ async function handleBackupToDriveNow(statusElId){
   const statusEl = statusElId ? $(statusElId) : null;
   try{
     const data = await gatherFullBackup(statusElId);
-    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    const stamp = bangkokStamp();
 
     const jsonBlob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const wb = buildBackupWorkbook(data);
@@ -4310,7 +4320,7 @@ async function handleBackupToDriveNow(statusElId){
 
     if(statusEl) statusEl.textContent = 'กำลังอัปโหลดเข้า Google Drive...';
     const backupsFolderId = await driveFindOrCreateFolder('Backups', DRIVE_ROOT_FOLDER_ID);
-    const dateFolderName = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const dateFolderName = bangkokDateFolder(); // YYYY-MM-DD ตามเวลาไทย
     const dateFolderId = await driveFindOrCreateFolder(dateFolderName, backupsFolderId);
     await driveUploadFile(jsonBlob, `trbl-backup-${stamp}.json`, 'application/json', dateFolderId);
     await driveUploadFile(excelBlob, `trbl-backup-${stamp}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', dateFolderId);
