@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.9
-  อัปเดตล่าสุด: 16 กันยายน 2569 11:04 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.10
+  อัปเดตล่าสุด: 16 กันยายน 2569 11:13 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.9</title>
+<title>Firmer Service Center — v7.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,9 +18,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer };
+  window._firebaseSdk = { initializeApp, getAuth, GoogleAuthProvider, signInWithCredential, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, arrayUnion, increment, writeBatch, query, where, limit, getCountFromServer, onSnapshot };
   window.dispatchEvent(new Event('firebase-sdk-ready'));
 </script>
 <style>
@@ -291,6 +291,11 @@
 </head>
 <body>
 
+<div id="version-update-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--amber);color:#fff;padding:10px 16px;text-align:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.2);">
+  <span id="version-update-text">🔄 มีเวอร์ชันใหม่กว่าที่คุณใช้อยู่</span>
+  <button id="version-update-refresh-btn" style="margin-left:12px;background:#fff;color:var(--amber);border:none;border-radius:4px;padding:4px 14px;font-weight:600;cursor:pointer;font-size:12.5px;">Refresh ตอนนี้</button>
+</div>
+
 <div class="demo-banner" id="setup-banner">⚠ ก่อนใช้งานจริง ต้องตั้งค่า FIREBASE_CONFIG ที่ต้นไฟล์ index.html (6 ค่าจาก Firebase Console) — ดูขั้นตอนใน FIRESTORE-SETUP-GUIDE.md · การอัปโหลดไฟล์เอกสารตรง (ไม่ใช่แปะลิงก์) ยังเป็นการจำลอง UI เท่านั้น ไม่ได้เก็บไฟล์จริง</div>
 
 <header>
@@ -298,7 +303,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p>Version 7.9</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.10</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -712,7 +717,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.9 (อัปเดตล่าสุด 16 กันยายน 2569 11:04 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.10 (อัปเดตล่าสุด 16 กันยายน 2569 11:13 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -816,6 +821,18 @@ const FIREBASE_CONFIG = {
 };
 
 let db, auth, googleProvider, _fbReady = false;
+
+/* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
+const APP_VERSION = "7.10";
+const APP_UPDATED_AT = "16 กันยายน 2569 11:13 น. เวลาไทย";
+document.title = `Firmer Service Center — v${APP_VERSION}`;
+(function applyVersionLabels(){
+  const brandEl = document.getElementById('app-version-label');
+  if(brandEl) brandEl.textContent = `Version ${APP_VERSION}`;
+  const footerEl = document.getElementById('app-footer-version');
+  if(footerEl) footerEl.textContent = `จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน ${APP_VERSION} (อัปเดตล่าสุด ${APP_UPDATED_AT})`;
+})();
+
 function waitForFirebaseSdk(){
   return new Promise(resolve=>{
     if(window._firebaseSdk){ resolve(); return; }
@@ -1739,6 +1756,30 @@ async function resolveAuthAndStart(){
 }
 
 // เช็คสิทธิ์เข้าถึงก่อนโหลดข้อมูลเต็มรูปแบบ — กันไม่ให้ผู้ใช้ที่ยังไม่ได้รับอนุมัติเจอ permission denied ตอนอ่านข้อมูลจริง
+/* ===================== เช็คเวอร์ชันแอป — เตือนคนที่ Login ค้างไว้เมื่อมีการอัปเดตไฟล์ใหม่ ===================== */
+// ทำงานครั้งเดียวหลัง login+โหลดข้อมูลสำเร็จ: ประกาศเวอร์ชันของตัวเองไว้ที่ meta/appVersion (คนล่าสุดที่เปิดด้วยโค้ดใหม่ชนะ)
+// แล้วฟังการเปลี่ยนแปลงแบบเรียลไทม์ — ถ้ามีใครเปิดด้วยเวอร์ชันใหม่กว่าระหว่างที่เราเปิดค้างไว้ จะขึ้นแบนเนอร์เตือนทันทีโดยไม่ต้องรอ Refresh เอง
+let _versionCheckStarted = false;
+function initVersionCheck(){
+  if(_versionCheckStarted) return; // กันไม่ให้ผูก listener ซ้ำถ้าเรียกซ้ำ (เช่น auth state เปลี่ยนหลายครั้ง)
+  _versionCheckStarted = true;
+  try{
+    const sdk = window._firebaseSdk;
+    const verRef = sdk.doc(db,'meta','appVersion');
+    sdk.setDoc(verRef, { version: APP_VERSION, updatedAt: Date.now() }).catch(e=>console.warn('บันทึกเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
+    sdk.onSnapshot(verRef, (snap)=>{
+      if(!snap.exists()) return;
+      const serverVersion = snap.data().version;
+      if(serverVersion && serverVersion !== APP_VERSION) showVersionUpdateBanner(serverVersion);
+    }, (e)=>console.warn('ฟังการเปลี่ยนแปลงเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
+  }catch(e){ console.warn('เริ่มเช็คเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+}
+function showVersionUpdateBanner(serverVersion){
+  $('version-update-text').textContent = `🔄 มีอัปเดตใหม่ (v${serverVersion}) — คุณกำลังใช้ v${APP_VERSION} อยู่ กด Refresh เพื่ออัปเดต`;
+  $('version-update-banner').style.display = 'block';
+}
+$('version-update-refresh-btn').addEventListener('click', ()=>location.reload());
+
 async function checkAccessAndLoad(){
   setStatus(true, 'กำลังตรวจสอบสิทธิ์เข้าถึง...');
   try{
@@ -1775,6 +1816,7 @@ async function checkAccessAndLoad(){
   }
 
   await loadData();
+  initVersionCheck();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
