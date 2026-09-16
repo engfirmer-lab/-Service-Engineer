@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.17
-  อัปเดตล่าสุด: 16 กันยายน 2569 22:22 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.18
+  อัปเดตล่าสุด: 16 กันยายน 2569 22:41 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.17</title>
+<title>Firmer Service Center — v7.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.17</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.18</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -345,6 +345,7 @@
     <div class="subtab-bar" id="eng-subtabs">
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
       <button data-tab="service_manual">📘 Service Manual</button>
+      <button data-tab="protocol">📜 Protocol</button>
       <button data-tab="spare_part">🔧 Spare Part</button>
       <button data-tab="install_checklist">📋 Install Checklist</button>
       <button data-tab="pm_checklist">🗓️ PM Checklist</button>
@@ -720,7 +721,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.17 (อัปเดตล่าสุด 16 กันยายน 2569 22:22 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.18 (อัปเดตล่าสุด 16 กันยายน 2569 22:41 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -826,8 +827,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.17";
-const APP_UPDATED_AT = "16 กันยายน 2569 22:22 น. เวลาไทย";
+const APP_VERSION = "7.18";
+const APP_UPDATED_AT = "16 กันยายน 2569 22:41 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -913,6 +914,7 @@ const DEFAULT_CATEGORIES = {
 };
 const DOC_TYPES = [
   {key:'service_manual', label:'Service Manual', icon:'📘'},
+  {key:'protocol', label:'Protocol', icon:'📜'},
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
