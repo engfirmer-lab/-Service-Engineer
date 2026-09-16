@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.14
-  อัปเดตล่าสุด: 16 กันยายน 2569 17:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.15
+  อัปเดตล่าสุด: 16 กันยายน 2569 21:37 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.14</title>
+<title>Firmer Service Center — v7.15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -52,6 +52,9 @@
   .brand-logo{height:34px;width:auto;flex-shrink:0;object-fit:contain;}
   .brand-text h1{font-size:14px;font-weight:600;}
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
+  /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ปักหัวตาราง (แถวบน) ให้ติดจอตอนเลื่อนลง ไม่ให้หลุดหายจนไม่รู้ว่าคอลัมน์ไหนคือประเภทเอกสารอะไร
+     ชนกับ header หลักของแอปที่ sticky top:0 อยู่แล้ว เลยต้องเว้น top ให้เท่าความสูง header (~64px) ไม่งั้นจะซ้อนทับกัน */
+  #sup-doc-matrix thead th{ position:sticky; top:64px; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
   .mode-toggle::-webkit-scrollbar{display:none;}
   .mode-toggle-track{display:none;height:3px;background:var(--border);border-radius:999px;margin-top:5px;position:relative;overflow:hidden;}
@@ -303,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.14</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.15</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -446,7 +449,7 @@
       <div class="panel-block">
         <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
         <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
-        <div style="overflow-x:auto;"><table id="sup-doc-matrix"></table></div>
+        <div style="overflow-x:auto;overflow-y:visible;"><table id="sup-doc-matrix"></table></div>
       </div>
       <div class="panel-block">
         <h2>Google Drive Database</h2>
@@ -717,7 +720,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.14 (อัปเดตล่าสุด 16 กันยายน 2569 17:47 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.15 (อัปเดตล่าสุด 16 กันยายน 2569 21:37 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -823,8 +826,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.14";
-const APP_UPDATED_AT = "16 กันยายน 2569 17:47 น. เวลาไทย";
+const APP_VERSION = "7.15";
+const APP_UPDATED_AT = "16 กันยายน 2569 21:37 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
