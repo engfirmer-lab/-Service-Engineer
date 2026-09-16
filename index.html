@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.11
-  อัปเดตล่าสุด: 16 กันยายน 2569 14:03 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.13
+  อัปเดตล่าสุด: 16 กันยายน 2569 17:21 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.11</title>
+<title>Firmer Service Center — v7.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -303,7 +303,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.11</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.13</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -717,7 +717,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.11 (อัปเดตล่าสุด 16 กันยายน 2569 14:03 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.13 (อัปเดตล่าสุด 16 กันยายน 2569 17:21 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -823,8 +823,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.11";
-const APP_UPDATED_AT = "16 กันยายน 2569 14:03 น. เวลาไทย";
+const APP_VERSION = "7.13";
+const APP_UPDATED_AT = "16 กันยายน 2569 17:21 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1011,6 +1011,27 @@ function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'
 // เรียงตามตัวอักษร + ตัวเลขในตัว (เช่น "รุ่น 2" มาก่อน "รุ่น 10") ใช้กับตัวกรอง/dropdown ประเภทและรุ่นเครื่องทุกจุด
 function naturalSort(a, b){ return String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}); }
 function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+// แทนที่แพทเทิร์นเดิมที่ถาม confirm() ซ้อนกัน 2 ครั้งตอนลบเอกสารที่มีไฟล์แนบ (กด "ยกเลิก" บนกล่องแรกโดยตั้งใจแค่ไม่ให้ลบไฟล์ Drive
+// แต่ดันโดนกล่องที่ 2 ถามซ้ำทันที กด "ยกเลิก" อีกทีเพราะงง สุดท้ายไม่มีอะไรถูกลบเลยทั้งที่ตั้งใจจะลบลิงก์) — ใช้ปุ่มเดียวเลือกชัดเจนแทน
+function askDeleteChoice(){
+  return new Promise(resolve=>{
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ov.innerHTML = `
+      <div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:340px;width:100%;">
+        <p style="font-size:14.5px;font-weight:600;margin:0 0 6px;">ลบเอกสารนี้อย่างไร?</p>
+        <p style="font-size:12px;color:var(--text-faint);margin:0 0 16px;">เลือก "ลบไฟล์ใน Drive ด้วย" จะลบไฟล์จริงถาวร กู้คืนไม่ได้</p>
+        <button id="del-choice-file" class="btn btn-primary btn-sm" style="width:100%;margin-bottom:8px;">🗑️ ลบไฟล์ใน Drive + ลิงก์ในระบบ</button>
+        <button id="del-choice-link" class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px;">ลบแค่ลิงก์ในระบบ (ไฟล์ใน Drive ยังอยู่)</button>
+        <button id="del-choice-cancel" class="btn btn-ghost btn-sm" style="width:100%;">ยกเลิก</button>
+      </div>`;
+    document.body.appendChild(ov);
+    const cleanup = (val)=>{ ov.remove(); resolve(val); };
+    ov.querySelector('#del-choice-file').addEventListener('click', ()=>cleanup('file'));
+    ov.querySelector('#del-choice-link').addEventListener('click', ()=>cleanup('link'));
+    ov.querySelector('#del-choice-cancel').addEventListener('click', ()=>cleanup('cancel'));
+  });
+}
 function setStatus(loading, text){ $('status-dot').className='dot'+(loading?' loading':''); $('status-text').textContent=text; }
 const NO_OWNER = '__none__';
 function ownerOf(category, model){
@@ -1348,7 +1369,7 @@ async function driveFindOrCreateFolder(name, parentId){
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
 const _findFolderInFlight = new Map();
-async function findDriveFolder(name, parentId){
+async function findDriveFolder(name, parentId, strict){
   const cacheKey = parentId+'::'+name;
   if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
   if(_findFolderInFlight.has(cacheKey)) return _findFolderInFlight.get(cacheKey);
@@ -1357,7 +1378,11 @@ async function findDriveFolder(name, parentId){
     const safeName = sanitizeFolderName(name).replace(/'/g,"\\'");
     const q = encodeURIComponent(`'${parentId}' in parents and name='${safeName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
     const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-    if(!res.ok) return null;
+    if(!res.ok){
+      // strict=true (ใช้เฉพาะตอนตรวจลิงก์เสีย): request ล้มเหลว (rate limit/เน็ตสะดุด/token หมดอายุ) ไม่เท่ากับ "โฟลเดอร์ไม่มีอยู่จริง" — throw แทนเพื่อให้ผู้เรียกแยกออกจากกรณีหาไม่เจอจริง
+      if(strict) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+      return null;
+    }
     const data = await res.json();
     const foundId = (data.files && data.files.length>0) ? data.files[0].id : null;
     if(foundId) _driveFolderCache.set(cacheKey, foundId); // แคชเฉพาะกรณีเจอจริง — ถ้าไม่เจอ (null) ไม่แคชไว้ เผื่อโฟลเดอร์ถูกสร้างขึ้นทีหลังในเซสชันเดียวกัน
@@ -1476,7 +1501,20 @@ $('precreate-folders-btn').addEventListener('click', precreateDocumentFolders);
 // รองรับทั้งไฟล์ที่อัปโหลดผ่านแอปและไฟล์ที่ลากไปวางเองใน Drive โดยตรง
 // รวม "ซิงค์ไฟล์ใหม่" และ "ตรวจสอบลิงก์เสีย" เป็นฟังก์ชันเดียว — ไล่ดูแต่ละโฟลเดอร์แค่รอบเดียว ได้คำตอบทั้ง 2 เรื่องพร้อมกัน
 // ผลพลอยได้: แก้บั๊กเดิมที่เคยเจอ (404 ปนกันระหว่าง "ไฟล์หายจริง" กับ "ไม่มีสิทธิ์เข้าถึง") เพราะตอนนี้ใช้ "รายชื่อไฟล์จริงในโฟลเดอร์" เป็นตัวตัดสิน แทนการเช็คทีละไฟล์แยก
+let _syncDriveInProgress = false; // กันการกดซ้ำ/กดรัว — ถ้าไม่กันไว้ การกดซ้ำระหว่างที่รอบแรกยังสแกนไม่เสร็จ จะทำให้ทั้ง 2 รอบเจอไฟล์เดิม "ยังไม่มีลิงก์" พร้อมกัน แล้วสร้างลิงก์ซ้ำให้ไฟล์เดียวกัน
 async function syncAndCheckDriveDocuments(){
+  if(_syncDriveInProgress){ showToast('⏳ กำลังตรวจสอบอยู่ กรุณารอให้เสร็จก่อน'); return; }
+  _syncDriveInProgress = true;
+  const btnEl = $('sync-drive-docs-btn');
+  if(btnEl){ btnEl.disabled = true; btnEl.style.opacity = '.5'; btnEl.style.cursor = 'not-allowed'; }
+  try{
+    await syncAndCheckDriveDocumentsInner();
+  } finally {
+    _syncDriveInProgress = false;
+    if(btnEl){ btnEl.disabled = false; btnEl.style.opacity = ''; btnEl.style.cursor = ''; }
+  }
+}
+async function syncAndCheckDriveDocumentsInner(){
   const statusEl = $('sync-drive-docs-status');
   const resultEl = $('dead-links-result');
   resultEl.innerHTML = '';
@@ -1502,10 +1540,10 @@ async function syncAndCheckDriveDocuments(){
       const existingDocsForJob = DATA.documents.filter(d=> d.category===job.cat && d.model===job.model && d.docType===job.docType && (job.docType!=='video' || d.videoSubtype===job.videoSubtype));
       const markAllExistingDead = ()=>{ existingDocsForJob.forEach(d=>{ if(extractDriveFileId(d.url)) dead.push(d); }); };
 
-      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId){ markAllExistingDead(); return; }
-      const catFolderId = await findDriveFolder(job.cat, ownerFolderId); if(!catFolderId){ markAllExistingDead(); return; }
-      const modelFolderId = await findDriveFolder(job.model, catFolderId); if(!modelFolderId){ markAllExistingDead(); return; }
-      const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId){ markAllExistingDead(); return; }
+      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID, true); if(!ownerFolderId){ markAllExistingDead(); return; }
+      const catFolderId = await findDriveFolder(job.cat, ownerFolderId, true); if(!catFolderId){ markAllExistingDead(); return; }
+      const modelFolderId = await findDriveFolder(job.model, catFolderId, true); if(!modelFolderId){ markAllExistingDead(); return; }
+      const typeFolderId = await findDriveFolder(job.label, modelFolderId, true); if(!typeFolderId){ markAllExistingDead(); return; }
 
       const q = encodeURIComponent(`'${typeFolderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
       const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
@@ -3190,8 +3228,12 @@ function renderDocLinkListItems(){
     const id = b.getAttribute('data-dellink');
     const doc = docs.find(d=>d.id===id);
     const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-    const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\nไฟล์จะถูกลบออกจาก Google Drive ทันที ข้อมูลจะหายไปถาวร กู้คืนไม่ได้ — ต้องอัปโหลดไฟล์ใหม่เท่านั้น\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
-    if(!deleteFileToo && !confirm('ยืนยันการลบลิงก์นี้?')) return;
+    let deleteFileToo = false;
+    if(driveFileId){
+      const choice = await askDeleteChoice();
+      if(choice==='cancel') return;
+      deleteFileToo = (choice==='file');
+    } else if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
     if(deleteFileToo){
       showLoadingOverlay('กำลังลบไฟล์...');
       try{
@@ -3306,8 +3348,12 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   const id = doclinkContext.existingId;
   const doc = DATA.documents.find(d=>d.id===id);
   const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-  const deleteFileToo = driveFileId ? confirm('ต้องการลบไฟล์จริงใน Google Drive ด้วยหรือไม่?\n\nไฟล์จะถูกลบออกจาก Google Drive ทันที ข้อมูลจะหายไปถาวร กู้คืนไม่ได้ — ต้องอัปโหลดไฟล์ใหม่เท่านั้น\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย\nกด "ยกเลิก" = ลบแค่ลิงก์ในระบบ ไฟล์ใน Drive จะยังอยู่)') : false;
-  if(!deleteFileToo && !confirm('ยืนยันการลบลิงก์นี้?')) return;
+  let deleteFileToo = false;
+  if(driveFileId){
+    const choice = await askDeleteChoice();
+    if(choice==='cancel') return;
+    deleteFileToo = (choice==='file');
+  } else if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
   if(deleteFileToo){
     showLoadingOverlay('กำลังลบไฟล์...');
     try{
