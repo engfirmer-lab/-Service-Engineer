@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.13
-  อัปเดตล่าสุด: 16 กันยายน 2569 17:21 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.14
+  อัปเดตล่าสุด: 16 กันยายน 2569 17:47 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.13</title>
+<title>Firmer Service Center — v7.14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -303,7 +303,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.13</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.14</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -717,7 +717,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.13 (อัปเดตล่าสุด 16 กันยายน 2569 17:21 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.14 (อัปเดตล่าสุด 16 กันยายน 2569 17:47 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -823,8 +823,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.13";
-const APP_UPDATED_AT = "16 กันยายน 2569 17:21 น. เวลาไทย";
+const APP_VERSION = "7.14";
+const APP_UPDATED_AT = "16 กันยายน 2569 17:47 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1531,29 +1531,28 @@ async function syncAndCheckDriveDocumentsInner(){
   if(jobs.length===0){ statusEl.textContent = 'ไม่มีรุ่นที่คุณดูแลอยู่ ไม่มีอะไรให้ตรวจสอบ'; return; }
 
   let checked = 0, added = 0;
-  const dead = [];
   const token = await ensureDriveAccess();
+
+  // รอบที่ 1 — หาไฟล์ใหม่ที่ยังไม่มีลิงก์ในระบบ: ต้องไล่ตามโครงสร้างโฟลเดอร์จริง เพราะเป็นการ "ค้นพบ" ไฟล์ที่ยังไม่รู้จัก
   await runWithConcurrency(jobs, 6, async (job)=>{
     try{
       const owner = ownerOf(job.cat, job.model);
       const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
       const existingDocsForJob = DATA.documents.filter(d=> d.category===job.cat && d.model===job.model && d.docType===job.docType && (job.docType!=='video' || d.videoSubtype===job.videoSubtype));
-      const markAllExistingDead = ()=>{ existingDocsForJob.forEach(d=>{ if(extractDriveFileId(d.url)) dead.push(d); }); };
 
-      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID, true); if(!ownerFolderId){ markAllExistingDead(); return; }
-      const catFolderId = await findDriveFolder(job.cat, ownerFolderId, true); if(!catFolderId){ markAllExistingDead(); return; }
-      const modelFolderId = await findDriveFolder(job.model, catFolderId, true); if(!modelFolderId){ markAllExistingDead(); return; }
-      const typeFolderId = await findDriveFolder(job.label, modelFolderId, true); if(!typeFolderId){ markAllExistingDead(); return; }
+      const ownerFolderId = await findDriveFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID); if(!ownerFolderId) return;
+      const catFolderId = await findDriveFolder(job.cat, ownerFolderId); if(!catFolderId) return;
+      const modelFolderId = await findDriveFolder(job.model, catFolderId); if(!modelFolderId) return;
+      const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId) return;
 
       const q = encodeURIComponent(`'${typeFolderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
       const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
       if(!res.ok) return;
       const data = await res.json();
       const filesInDrive = data.files || [];
-      const fileIdsInDrive = new Set(filesInDrive.map(f=>f.id));
       const existingFileIds = new Set(existingDocsForJob.map(d=>extractDriveFileId(d.url)).filter(Boolean));
 
-      // กรณี A: มีไฟล์ใน Drive แต่ยังไม่มีลิงก์ในระบบ → เพิ่มลิงก์ใหม่ให้
+      // มีไฟล์ใน Drive แต่ยังไม่มีลิงก์ในระบบ → เพิ่มลิงก์ใหม่ให้
       for(const f of filesInDrive){
         if(existingFileIds.has(f.id)) continue;
         try{ await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}/permissions`, { method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ role:'reader', type:'anyone' }) }); }catch(e){}
@@ -1564,18 +1563,32 @@ async function syncAndCheckDriveDocumentsInner(){
         DATA.documents.push({ id:newId, ...fields });
         added++;
       }
-      // กรณี B: มีลิงก์ในระบบ แต่หาไฟล์ไม่เจอในรายชื่อจริง (ลบไปแล้ว หรือย้ายลงถังขยะ — ทั้ง 2 แบบจะไม่โผล่ในผลลัพธ์นี้อยู่แล้ว) → ลิงก์เสีย
-      for(const d of existingDocsForJob){
-        const fileId = extractDriveFileId(d.url);
-        if(fileId && !fileIdsInDrive.has(fileId)) dead.push(d);
-      }
     }catch(e){ /* โฟลเดอร์นี้เช็คไม่ได้ก็ข้ามไปโฟลเดอร์ถัดไป ไม่ทำให้ทั้งหมดล้มเหลว */ }
     checked++;
-    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${jobs.length})`;
+    statusEl.textContent = `กำลังตรวจสอบไฟล์ใหม่... (${checked}/${jobs.length})`;
+  });
+
+  // รอบที่ 2 — เช็คลิงก์เสีย: เช็คที่ตัวไฟล์โดยตรงด้วย Drive fileId (files.get) แทนการไล่หาตามโครงสร้างโฟลเดอร์แบบเดิม
+  // เหตุผล: วิธีเดิม (ต้องเจอไฟล์อยู่ในโฟลเดอร์ตามลำดับ ผู้ดูแล/ประเภท/รุ่น/ชนิดเอกสาร ที่คาดไว้เป๊ะๆ) พลาดง่ายมาก — ถ้าไฟล์ถูกย้าย
+  // หรือชื่อโฟลเดอร์ไม่ตรงเป๊ะ (เช่น ลากไฟล์ไปวางเองแล้วตั้งชื่อโฟลเดอร์ผิดจากที่ระบบคาด) จะโดนตัดสินว่า "ลิงก์เสีย" ทั้งที่ไฟล์ยังเปิดได้ปกติ
+  // วิธีใหม่เช็คตรงที่ไฟล์เลย ไม่สนใจว่าตอนนี้อยู่โฟลเดอร์ไหน แม่นยำกว่าและปลอดภัยกว่ามาก
+  statusEl.textContent = 'กำลังตรวจสอบลิงก์เสีย...';
+  const ownedCatSet = new Set(cats);
+  const docsToCheck = DATA.documents.filter(d=> ownedCatSet.has(d.category) && ownerOf(d.category, d.model)===currentSupIdentity && extractDriveFileId(d.url));
+  const dead = [];
+  await runWithConcurrency(docsToCheck, 6, async (d)=>{
+    const fileId = extractDriveFileId(d.url);
+    try{
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=id,trashed`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(res.status===404){ dead.push(d); return; } // ยืนยันแล้วว่าไฟล์ไม่มีอยู่จริง (ถูกลบถาวรไปแล้ว)
+      if(!res.ok) return; // เช็คไม่ได้ (rate limit/เน็ตสะดุด/ไม่มีสิทธิ์ดู ฯลฯ) — ไม่แน่ใจ ไม่ตัดสินว่าเสีย ข้ามไปก่อน
+      const info = await res.json();
+      if(info.trashed) dead.push(d); // อยู่ในถังขยะแล้ว = ใช้งานจริงไม่ได้เหมือนกัน
+    }catch(e){ /* เช็คไม่ได้ก็ข้าม ไม่ตัดสินว่าเสีย */ }
   });
 
   _deadLinksFound = dead;
-  statusEl.textContent = `✓ ตรวจสอบครบ ${jobs.length} โฟลเดอร์ — เพิ่มลิงก์ใหม่ ${added} รายการ, พบลิงก์เสีย ${dead.length} รายการ`;
+  statusEl.textContent = `✓ ตรวจสอบครบ (${jobs.length} โฟลเดอร์ + ${docsToCheck.length} ลิงก์) — เพิ่มลิงก์ใหม่ ${added} รายการ, พบลิงก์เสีย ${dead.length} รายการ`;
   renderAll();
   showToast(`✓ เพิ่มลิงก์ใหม่ ${added} รายการ, พบลิงก์เสีย ${dead.length} รายการ`);
 
