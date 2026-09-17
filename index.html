@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.25
-  อัปเดตล่าสุด: 17 กันยายน 2569 15:50 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.26
+  อัปเดตล่าสุด: 17 กันยายน 2569 15:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.25</title>
+<title>Firmer Service Center — v7.26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.25</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.26</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -608,7 +608,7 @@
       <div class="field-wrap"><label>ปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="ระบุวันที่พบ + อาการเกิดขึ้นตอนไหน..."></textarea></div>
       <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
       <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
-      <div class="field-wrap"><label>รายการอะไหล่ที่เคลม <span style="color:var(--red);">*</span></label><div id="claim-parts-wrap"></div></div>
+      <div class="field-wrap"><label>รายการอะไหล่ที่เคลม (ถ้ามี)</label><div id="claim-parts-wrap"></div></div>
       <div class="field-wrap"><label>เลข Job Factorium <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-jobfactorium"></div>
       <div class="field-wrap"><label>เลขที่ใบยืม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
       <div id="claim-attach-groups"></div>
@@ -814,7 +814,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.25 (อัปเดตล่าสุด 17 กันยายน 2569 15:50 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.26 (อัปเดตล่าสุด 17 กันยายน 2569 15:55 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -914,8 +914,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.25";
-const APP_UPDATED_AT = "17 กันยายน 2569 15:50 น. เวลาไทย";
+const APP_VERSION = "7.26";
+const APP_UPDATED_AT = "17 กันยายน 2569 15:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3886,7 +3886,7 @@ const CLAIM_ATTACHMENT_GROUPS = [
   {key:'alarmError', label:'Alarm Error หรือ อาการเสีย', required:true},
   {key:'partCount', label:'Count (ถ้าอะไหล่มี Count)', required:false},
   {key:'partsCompare', label:'อะไหล่ดี + อะไหล่เสียคู่กัน', required:true},
-  {key:'afterResult', label:'ผลหลังเปลี่ยนอะไหล่', required:false},
+  {key:'afterResult', label:'ผลลัพธ์หลังการแก้ไข', required:true},
   {key:'partAge', label:'อายุอะไหล่ (กล่อง Electrode)', required:false},
 ];
 function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=>o[g.key]=[]); return o; }
@@ -4052,7 +4052,6 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
   const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.count);
   if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.serialNumber || !claimDraft.problem || !claimDraft.solution || !claimDraft.errorCode || !claimDraft.errorMessage || !claimDraft.jobFactorium || !claimDraft.loanSlipNo){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ'); return; }
-  if(rawParts.length===0){ showToast('⚠ กรุณาใส่รายการอะไหล่อย่างน้อย 1 รายการ'); return; }
   if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้'); return; }
   const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
