@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.22
-  อัปเดตล่าสุด: 17 กันยายน 2569 11:23 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.23
+  อัปเดตล่าสุด: 17 กันยายน 2569 12:24 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.22</title>
+<title>Firmer Service Center — v7.23</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.22</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.23</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -362,10 +362,10 @@
         </div>
         <div id="eng-add-error-form" style="display:none;margin-top:14px;">
           <div class="form-grid two">
-            <div class="field-wrap"><label>Product *</label><select id="eng-f-category"></select></div>
-            <div class="field-wrap"><label>Model *</label><select id="eng-f-model"></select></div>
-            <div class="field-wrap"><label>Error Code</label><input type="text" id="eng-f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
-            <div class="field-wrap"><label>Alarm Detail *</label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+            <div class="field-wrap"><label>Product <span style="color:var(--red);">*</span></label><select id="eng-f-category"></select></div>
+            <div class="field-wrap"><label>Model <span style="color:var(--red);">*</span></label><select id="eng-f-model"></select></div>
+            <div class="field-wrap"><label>Error Code <span style="color:var(--red);">*</span></label><input type="text" id="eng-f-code" placeholder="เช่น E-203"></div>
+            <div class="field-wrap"><label>Alarm Detail <span style="color:var(--red);">*</span></label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
           </div>
           <div id="eng-solutions-editor" style="margin-top:14px;"></div>
           <button class="btn btn-ghost btn-sm" id="eng-add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
@@ -511,10 +511,10 @@
       <p class="panel-sub" id="sup-form-sub" style="margin-bottom:14px;">กรอกข้อมูล Error พร้อมวิธีแก้ไข</p>
       <div id="add-error-form">
         <div class="form-grid two">
-          <div class="field-wrap" id="f-category-field"><label>Product *</label><select id="f-category"></select></div>
-          <div class="field-wrap" id="f-model-field"><label>Model *</label><select id="f-model"></select></div>
-          <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
-          <div class="field-wrap"><label>Alarm Detail *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+          <div class="field-wrap" id="f-category-field"><label>Product <span style="color:var(--red);">*</span></label><select id="f-category"></select></div>
+          <div class="field-wrap" id="f-model-field"><label>Model <span style="color:var(--red);">*</span></label><select id="f-model"></select></div>
+          <div class="field-wrap"><label>Error Code <span style="color:var(--red);">*</span></label><input type="text" id="f-code" placeholder="เช่น E-203"></div>
+          <div class="field-wrap"><label>Alarm Detail <span style="color:var(--red);">*</span></label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
         </div>
         <div id="solutions-editor" style="margin-top:16px;"></div>
         <button class="btn btn-ghost btn-sm" id="add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
@@ -538,9 +538,9 @@
         <button class="btn btn-ghost btn-sm" id="doclink-mode-upload-btn" style="flex:1;">⬆ อัปโหลดไฟล์</button>
       </div>
       <div class="field-wrap"><label id="doclink-title-label">ชื่อเอกสาร *</label><input type="text" id="doclink-title-input" placeholder="เช่น คู่มือซ่อม BS-820M ฉบับปี 2026"></div>
-      <div class="field-wrap" style="margin-top:10px;" id="doclink-url-field"><label>ลิงก์ *</label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
+      <div class="field-wrap" style="margin-top:10px;" id="doclink-url-field"><label>ลิงก์ <span style="color:var(--red);">*</span></label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
       <div class="field-wrap" style="margin-top:10px;display:none;" id="doclink-upload-field">
-        <label>เลือกไฟล์ *</label>
+        <label>เลือกไฟล์ <span style="color:var(--red);">*</span></label>
         <input type="file" id="doclink-file-input">
         <div id="doclink-upload-progress-wrap" style="display:none;margin-top:8px;">
           <div style="height:6px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="doclink-upload-progress-bar" style="height:100%;width:0%;background:var(--amber);transition:width .2s;"></div></div>
@@ -594,22 +594,22 @@
     <div class="modal" style="max-width:480px;">
       <button class="modal-close-x" id="claim-modal-close">✕</button>
       <h3 id="claim-modal-title">บันทึกเคลม/แจ้งปัญหาใหม่</h3>
-      <div class="field-wrap"><label>ผู้เคลม *</label><input type="text" id="claim-f-claimant"></div>
-      <div class="field-wrap"><label>ชื่อสถานที่ *</label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
+      <div class="field-wrap"><label>ผู้เคลม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-claimant"></div>
+      <div class="field-wrap"><label>ชื่อสถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
       <div class="form-grid two">
-        <div class="field-wrap"><label>Product *</label><select id="claim-f-category"></select></div>
-        <div class="field-wrap"><label>รุ่น *</label><select id="claim-f-model"></select></div>
+        <div class="field-wrap"><label>Product <span style="color:var(--red);">*</span></label><select id="claim-f-category"></select></div>
+        <div class="field-wrap"><label>รุ่น <span style="color:var(--red);">*</span></label><select id="claim-f-model"></select></div>
       </div>
-      <div class="field-wrap"><label>S/N *</label><input type="text" id="claim-f-sn"></div>
-      <div class="field-wrap"><label>ปัญหาที่พบ *</label><textarea id="claim-f-problem" placeholder="ระบุวันที่พบ + อาการเกิดขึ้นตอนไหน..."></textarea></div>
-      <div class="field-wrap"><label>วิธีการแก้ไข *</label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
+      <div class="field-wrap"><label>S/N <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-sn"></div>
+      <div class="field-wrap"><label>ปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="ระบุวันที่พบ + อาการเกิดขึ้นตอนไหน..."></textarea></div>
+      <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
       <div class="form-grid two">
-        <div class="field-wrap"><label>Error code *</label><input type="text" id="claim-f-errcode"></div>
-        <div class="field-wrap"><label>Error message *</label><input type="text" id="claim-f-errmsg"></div>
+        <div class="field-wrap"><label>Error code <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errcode"></div>
+        <div class="field-wrap"><label>Error message <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errmsg"></div>
       </div>
       <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
-      <div class="field-wrap"><label>รายการอะไหล่ที่เคลม *</label><div id="claim-parts-wrap"></div></div>
-      <div class="field-wrap"><label>เลขที่ใบยืม *</label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
+      <div class="field-wrap"><label>รายการอะไหล่ที่เคลม <span style="color:var(--red);">*</span></label><div id="claim-parts-wrap"></div></div>
+      <div class="field-wrap"><label>เลขที่ใบยืม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
       <div class="field-wrap"><label>แนบไฟล์ (รูป/เอกสาร/วิดีโอ — ไฟล์ละไม่เกิน 5 MB)</label>
         <div class="img-upload-row" id="claim-files-row">
           <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" id="claim-file-input"></label>
@@ -700,7 +700,7 @@
       <div id="add-model-form" style="display:none;background:var(--panel-alt);border-radius:10px;padding:14px;margin-bottom:14px;">
         <div class="form-grid">
           <div class="field-wrap">
-            <label>Product *</label>
+            <label>Product <span style="color:var(--red);">*</span></label>
             <select id="new-model-cat"><option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option></select>
             <input type="text" id="new-cat-input" placeholder="พิมพ์ชื่อประเภทใหม่" style="margin-top:6px;display:none;">
           </div>
@@ -709,7 +709,7 @@
             <input type="text" id="new-model-input" placeholder="ชื่อรุ่น">
           </div>
           <div class="field-wrap">
-            <label>ผู้ดูแล *</label>
+            <label>ผู้ดูแล <span style="color:var(--red);">*</span></label>
             <select id="new-model-owner"></select>
           </div>
         </div>
@@ -818,7 +818,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.22 (อัปเดตล่าสุด 17 กันยายน 2569 11:23 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.23 (อัปเดตล่าสุด 17 กันยายน 2569 12:24 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -871,15 +871,9 @@
   <div class="modal" style="max-width:460px;">
     <button class="modal-close-x" id="down-modal-close-x">✕</button>
     <h3>ลองทุกวิธีแล้วไม่ได้ผล 😕</h3>
-    <p>ช่วยกรอกวิธีที่ใช้แก้ปัญหานี้ได้จริง (จำเป็นต้องกรอกอย่างน้อยคำอธิบาย)</p>
-    <div class="field-wrap"><label>คำอธิบายขั้นตอนที่แก้ได้จริง *</label><textarea id="down-modal-desc" placeholder="อธิบายวิธีที่ใช้แก้จริง..."></textarea></div>
-    <div class="form-grid two" style="margin-top:8px;">
-      <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label><div id="down-modal-tools-wrap"></div></div>
-      <div class="field-wrap"><label>อะไหล่ที่ใช้</label><div id="down-modal-parts-wrap"></div></div>
-      <div class="field-wrap full"><label>เวลาโดยประมาณ</label><input type="text" id="down-modal-time" placeholder="เช่น 30 นาที"></div>
-    </div>
-    <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label><div class="img-upload-row" id="down-modal-imgrow"><label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label></div></div>
-    <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label><div style="display:flex;flex-wrap:wrap;gap:8px;" id="down-modal-vidrow"><label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" id="down-modal-upload-vid"></label></div></div>
+    <p>ช่วยกรอกสาเหตุ/วิธีที่ใช้แก้ปัญหานี้ได้จริง (จำเป็นต้องกรอกอย่างน้อย 1 สาเหตุ)</p>
+    <div id="down-modal-causes-editor"></div>
+    <button class="btn btn-ghost btn-sm" id="down-modal-add-cause-btn" style="margin-top:6px;">+ เพิ่มสาเหตุ</button>
     <div class="modal-actions" style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="down-modal-submit">ส่งข้อเสนอ</button><button class="btn btn-ghost btn-sm" id="down-modal-cancel">ปิด (กดผิด/ยกเลิก)</button></div>
   </div>
 </div>
@@ -924,8 +918,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.22";
-const APP_UPDATED_AT = "17 กันยายน 2569 11:23 น. เวลาไทย";
+const APP_VERSION = "7.23";
+const APP_UPDATED_AT = "17 กันยายน 2569 12:24 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1092,15 +1086,42 @@ let docQuery=''; let docFilterCategory='all'; let docFilterModel='all';
 let editingErrorId = null;
 let editingSolutions = [];
 let downModalErrorId = null;
-let downModalImages = [];
-let downModalVideos = [];
-let downModalItems = { tools:[''], parts:[''] }; // อุปกรณ์/อะไหล่ที่ใช้ — เก็บเป็นลิสต์ เพิ่ม/ลบได้ทีละรายการ
-function renderDownModalLists(){
-  $('down-modal-tools-wrap').innerHTML = renderItemListRows(downModalItems.tools, 'downmodal', 'tools');
-  $('down-modal-parts-wrap').innerHTML = renderItemListRows(downModalItems.parts, 'downmodal', 'parts');
-  wireItemListEvents($('down-modal-tools-wrap'), ()=>downModalItems, renderDownModalLists);
-  wireItemListEvents($('down-modal-parts-wrap'), ()=>downModalItems, renderDownModalLists);
+let downModalCauses = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[''], parts:[''], time:''}];
+function renderDownModalCauses(){
+  const wrap = $('down-modal-causes-editor');
+  wrap.innerHTML = downModalCauses.map((s,idx)=>`
+    <div class="solution-editor" data-sid="${s.id}">
+      <div class="num-badge">สาเหตุที่ ${idx+1}</div>
+      ${downModalCauses.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
+      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} <span style="color:var(--red);">*</span></label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title)}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="form-grid two" style="margin-top:8px;">
+        <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
+        <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
+        <div class="img-upload-row" data-imgrow="${s.id}">
+          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        </div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        </div>
+      </div>
+    </div>`).join('');
+  wrap.querySelectorAll('textarea[data-field],input[data-field]:not([data-listfield])').forEach(el=>{ el.addEventListener('input', ()=>{ const sid=el.getAttribute('data-sid'); const field=el.getAttribute('data-field'); const sol=downModalCauses.find(s=>s.id===sid); if(sol) sol[field]=el.value; }); });
+  wireItemListEvents(wrap, sid=>downModalCauses.find(s=>s.id===sid), renderDownModalCauses);
+  wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalCauses = downModalCauses.filter(s=>s.id!==btn.getAttribute('data-remove')); renderDownModalCauses(); }));
+  wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=downModalCauses.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderDownModalCauses(); }); });
+  wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=downModalCauses.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalCauses(); }); });
+  wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
 }
+$('down-modal-add-cause-btn').addEventListener('click', ()=>{ downModalCauses.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[''], parts:[''], time:''}); renderDownModalCauses(); });
 
 let myGoogleId = null;
 let myUserName = null;
@@ -1163,6 +1184,18 @@ function renderItemListView(val){
   if(list.length===0) return '-';
   if(list.length===1) return escapeHtml(list[0]);
   return '<ul style="margin:0;padding-left:18px;">' + list.map(v=>`<li>${escapeHtml(v)}</li>`).join('') + '</ul>';
+}
+// "อะไหล่ที่ใช้" เฉพาะ — ถ้าไม่มีรายการเลย แสดง "ไม่ต้องใช้" แทน "-" เพราะสื่อความหมายชัดกว่า (ต่างจาก "อุปกรณ์ที่ใช้" ที่ยังใช้ "-" ตามเดิม)
+function renderPartsListView(val){
+  const list = toItemList(val);
+  if(list.length===0) return 'ไม่ต้องใช้';
+  return renderItemListView(val);
+}
+// เติมหน่วย "นาที" ให้อัตโนมัติเฉพาะตอนค่าที่กรอกเป็นตัวเลขล้วนๆ (เช่น "30") — ถ้าผู้ใช้พิมพ์มาเองแล้วว่า "30 นาที" หรือ "ครึ่งชม." จะไม่เติมซ้ำ
+function timeDisplay(t){
+  const s = String(t||'').trim();
+  if(!s) return '-';
+  return /^\d+(\.\d+)?$/.test(s) ? escapeHtml(s)+' นาที' : escapeHtml(s);
 }
 // เรียงตามตัวอักษร + ตัวเลขในตัว (เช่น "รุ่น 2" มาก่อน "รุ่น 10") ใช้กับตัวกรอง/dropdown ประเภทและรุ่นเครื่องทุกจุด
 function naturalSort(a, b){ return String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}); }
@@ -2425,8 +2458,8 @@ function renderSolutionCard(err, s, idx){
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
     <div class="meta-grid">
       <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(s.tools)}</div></div>
-      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderItemListView(s.parts)}</div></div>
-      <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(s.time||'-')}</div></div>
+      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(s.parts)}</div></div>
+      <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${timeDisplay(s.time)}</div></div>
     </div>
     <div class="fb-row">
       ${currentMode==='sup' ? '' : `<button class="fb-btn up ${upLocked?'sel':''}" data-sol="${s.id}" title="${upLocked?'แตะอีกครั้งเพื่อยกเลิก':''}">${upLocked?'✓ คุณกดแล้ว (แตะเพื่อยกเลิก)':'👍 แก้ได้จริง'} (${up.length})</button>`}
@@ -2442,7 +2475,7 @@ function bindFeedbackButtons(root){
   root.querySelectorAll('[data-errpropose]').forEach(btn=>{
     if(btn.disabled) return;
     btn.addEventListener('click', ev=>{ ev.stopPropagation(); const errId=btn.getAttribute('data-errpropose');
-      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalImages=[]; downModalVideos=[]; $('down-modal-desc').value=''; downModalItems={tools:[''],parts:['']}; renderDownModalLists(); $('down-modal-time').value=''; renderDownModalImages(); renderDownModalVideos(); const dbtn=$('down-modal-submit'); dbtn.disabled=false; dbtn.style.opacity=''; dbtn.style.cursor=''; $('down-modal').classList.add('show'); }); });
+      ensureSignedIn(()=>{ closeErrorDetail(); downModalErrorId=errId; downModalCauses=[{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[''], parts:[''], time:''}]; renderDownModalCauses(); const dbtn=$('down-modal-submit'); dbtn.disabled=false; dbtn.style.opacity=''; dbtn.style.cursor=''; $('down-modal').classList.add('show'); }); });
   });
 }
 async function submitUp(solId){
@@ -2470,38 +2503,28 @@ async function submitUp(solId){
 
 $('down-modal-close-x').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
 $('down-modal-cancel').addEventListener('click', ()=>{ $('down-modal').classList.remove('show'); downModalErrorId=null; });
-function renderDownModalImages(){
-  const wrap = $('down-modal-imgrow');
-  wrap.innerHTML = downModalImages.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-dm-rmimg="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" id="down-modal-upload"></label>`;
-  $('down-modal-upload').addEventListener('change', async ()=>{ for(const file of $('down-modal-upload').files){ try{ const c=await compressImage(file); downModalImages.push(c); }catch(e){} } renderDownModalImages(); });
-  wrap.querySelectorAll('[data-dm-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalImages.splice(parseInt(btn.getAttribute('data-dm-rmimg')),1); renderDownModalImages(); }));
-}
-function renderDownModalVideos(){
-  const wrap = $('down-modal-vidrow');
-  wrap.innerHTML = downModalVideos.map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-dm-rmvid="${i}">✕</button></div>`).join('') + `<label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" id="down-modal-upload-vid"></label>`;
-  $('down-modal-upload-vid').addEventListener('change', ()=>{ for(const file of $('down-modal-upload-vid').files){ downModalVideos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalVideos(); });
-  wrap.querySelectorAll('[data-dm-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalVideos.splice(parseInt(btn.getAttribute('data-dm-rmvid')),1); renderDownModalVideos(); }));
-}
 $('down-modal-submit').addEventListener('click', async ()=>{
   const btn = $('down-modal-submit');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/ส่งอยู่
-  const desc = $('down-modal-desc').value.trim();
-  if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอนก่อนส่ง'); return; }
+  const validCauses = downModalCauses.filter(s=>s.desc.trim() && (s.title||'').trim());
+  if(validCauses.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
   const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
-  let uploadedImages = []; let uploadedVideos = [];
-  try{
-    if(parentErr){
-      uploadedImages = await resolveImagesForUpload(downModalImages, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
-      uploadedVideos = await resolveVideosForUpload(downModalVideos, parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length);
-    }
-  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  const fields = { errorId:downModalErrorId, desc, tools:toItemList(downModalItems.tools), parts:toItemList(downModalItems.parts), time:$('down-modal-time').value.trim(), images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
   DATA.proposals = DATA.proposals || [];
-  let newId;
-  try{ newId = await fsAddProposal(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  DATA.proposals.push({ id:newId, ...fields });
+  try{
+    for(let i=0;i<validCauses.length;i++){
+      const s = validCauses[i];
+      let uploadedImages = []; let uploadedVideos = [];
+      if(parentErr){
+        uploadedImages = await resolveImagesForUpload(s.images||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
+        uploadedVideos = await resolveVideosForUpload(s.videos||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
+      }
+      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
+      const newId = await fsAddProposal(fields);
+      DATA.proposals.push({ id:newId, ...fields });
+    }
+  }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   myVotes['down:'+downModalErrorId] = true;
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
@@ -2869,8 +2892,8 @@ function renderEngSolutionsEditor(){
     <div class="solution-editor" data-sid="${s.id}">
       <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
-      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} *</label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
-      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} <span style="color:var(--red);">*</span></label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
@@ -3082,8 +3105,8 @@ function renderSolutionsEditor(){
     <div class="solution-editor" data-sid="${s.id}">
       <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
-      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} *</label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
-      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} <span style="color:var(--red);">*</span></label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
@@ -3286,7 +3309,8 @@ function renderProposals(){
     if(editingProposalId===p.id){
       return `<div class="proposal-card" data-pid="${p.id}">
         ${metaLine}
-        <div class="field-wrap"><label>คำอธิบายขั้นตอน *</label><textarea id="prop-edit-desc-${p.id}" rows="3">${escapeHtml(p.desc)}</textarea></div>
+        <div class="field-wrap"><label>สาเหตุ <span style="color:var(--red);">*</span></label><input type="text" id="prop-edit-title-${p.id}" value="${escapeHtml(p.title||'')}"></div>
+        <div class="field-wrap"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea id="prop-edit-desc-${p.id}" rows="3">${escapeHtml(p.desc)}</textarea></div>
         <div class="meta-grid" style="margin-top:8px;">
           <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(editingProposalDraft.tools, 'propedit', 'tools')}</div>
           <div class="field-wrap"><label>อะไหล่</label>${renderItemListRows(editingProposalDraft.parts, 'propedit', 'parts')}</div>
@@ -3302,13 +3326,14 @@ function renderProposals(){
     }
     return `<div class="proposal-card" data-pid="${p.id}">
       ${metaLine}
+      ${p.title ? `<div class="proposal-text" style="font-weight:600;margin-bottom:2px;">${escapeHtml(p.title)}</div>` : ''}
       <div class="proposal-text">${escapeHtml(p.desc)}</div>
       ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
       ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin-bottom:10px;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
         <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(p.tools)}</div></div>
-        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderItemListView(p.parts)}</div></div>
-        <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${escapeHtml(p.time||'-')}</div></div>
+        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(p.parts)}</div></div>
+        <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${timeDisplay(p.time)}</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" data-accept="${p.id}">✓ รับเป็นวิธีแก้ไขทางการ</button>
@@ -3329,13 +3354,14 @@ function renderProposals(){
   list.querySelectorAll('[data-savepropedit]').forEach(b=>b.addEventListener('click', async ()=>{
     const pid = b.getAttribute('data-savepropedit');
     const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
+    const title = $('prop-edit-title-'+pid).value.trim();
     const desc = $('prop-edit-desc-'+pid).value.trim();
     const tools = toItemList(editingProposalDraft.tools);
     const parts = toItemList(editingProposalDraft.parts);
     const time = $('prop-edit-time-'+pid).value.trim();
-    if(!desc){ showToast('⚠ กรุณากรอกคำอธิบายขั้นตอน'); return; }
-    try{ await fsUpdateProposal(pid, {desc, tools, parts, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
-    p.desc=desc; p.tools=tools; p.parts=parts; p.time=time;
+    if(!title || !desc){ showToast('⚠ กรุณากรอกสาเหตุและขั้นตอนให้ครบ'); return; }
+    try{ await fsUpdateProposal(pid, {title, desc, tools, parts, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    p.title=title; p.desc=desc; p.tools=tools; p.parts=parts; p.time=time;
     editingProposalId = null;
     renderProposals();
     showToast('✓ แก้ไขข้อเสนอแล้ว');
@@ -3345,7 +3371,7 @@ async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
   await loadSolutionsFor(err.id);
-  const newSol = {id:uid('sol'), desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), time:p.time||'', feedback:[]};
+  const newSol = {id:uid('sol'), title:p.title||'', desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), time:p.time||'', feedback:[]};
   try{
     await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
     const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
