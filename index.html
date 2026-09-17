@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.26
-  อัปเดตล่าสุด: 17 กันยายน 2569 15:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.27
+  อัปเดตล่าสุด: 17 กันยายน 2569 21:53 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.26</title>
+<title>Firmer Service Center — v7.27</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.26</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.27</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -319,7 +319,6 @@
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
       <button id="mode-sup">Sup Product</button>
-      <button id="mode-claims">🔧 เคลม/แจ้ง ปัญหา<span id="claims-tab-badge" class="badge-count" style="display:none;margin-left:4px;">0</span></button>
       <button id="mode-owner">จัดการ Product</button>
       <button id="mode-access">จัดการสิทธิ์</button>
       <button id="mode-mgr">Manager</button>
@@ -429,6 +428,7 @@
     <div class="subtab-bar" id="sup-subtabs">
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
       <button data-tab="docs">📁 จัดการเอกสาร</button>
+      <button data-tab="claims">🔧 เคลม/แจ้งปัญหา<span id="claims-tab-badge" class="badge-count" style="display:none;margin-left:4px;">0</span></button>
     </div>
 
     <div id="sup-tab-trbl">
@@ -473,6 +473,39 @@
         <button class="btn btn-ghost btn-sm" id="sync-drive-docs-btn">🔄 ซิงค์ + ตรวจสอบลิงก์เสีย</button>
         <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
         <div id="dead-links-result" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div id="sup-tab-claims" style="display:none;">
+      <div class="panel-block">
+        <p class="panel-sub">สรุปเคลม/แจ้งปัญหาที่ Engineer และ Sup Product บันทึกเข้ามา — หน้านี้สำหรับดูและติดตามสถานะเท่านั้น (บันทึกเคลมใหม่ได้จากแท็บ Engineer)</p>
+      </div>
+      <div class="panel-block">
+        <div class="name-select-wrap" id="claims-identity-wrap" style="display:none;margin-bottom:14px;">
+          <label>คุณคือ:</label>
+          <select id="claims-sup-identity"></select>
+          <span class="privacy-note">กรองเฉพาะ Product ที่คุณดูแล</span>
+        </div>
+        <div class="stat-cards" id="claims-dashboard"></div>
+      </div>
+      <div class="panel-block" id="claims-filter-block">
+        <div class="form-grid two">
+          <div class="field-wrap"><label>สถานะ</label>
+            <select id="claims-filter-status">
+              <option value="">ทั้งหมด</option>
+              <option value="pending">ยังไม่เคลม</option>
+              <option value="claimed">รออะไหล่เคลม</option>
+              <option value="received">เสร็จสิ้น</option>
+              <option value="rejected">ถูกปฏิเสธ</option>
+              <option value="cancelled">ยกเลิก</option>
+            </select>
+          </div>
+          <div class="field-wrap"><label>ค้นหา</label><input type="text" id="claims-filter-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h2 id="claims-list-title">รายการเคลม</h2>
+        <div id="claims-list"></div>
       </div>
     </div>
   </div>
@@ -552,40 +585,6 @@
         <button class="btn btn-ghost btn-sm" id="doclink-delete-btn" style="display:none;color:var(--red);border-color:var(--red);">ลบลิงก์นี้</button>
         <button class="btn btn-ghost btn-sm" id="doclink-cancel-btn">ยกเลิก</button>
       </div>
-    </div>
-  </div>
-
-  <!-- ============ CLAIMS VIEW (เคลมอะไหล่) ============ -->
-  <div id="view-claims" style="display:none;">
-    <div class="panel-block">
-      <p class="panel-sub">รวมข้อมูลเคลม/แจ้งปัญหาของทุก Product ไว้ที่เดียว — Engineer/Sup Product บันทึกได้ทุกคน, Sup Product เห็นเฉพาะ Product ที่ตัวเองดูแล</p>
-      <button class="btn btn-primary" id="claims-new-btn">+ บันทึกเคลม/แจ้งปัญหาใหม่</button>
-    </div>
-
-    <div class="panel-block" id="claims-filter-block">
-      <div class="name-select-wrap" id="claims-identity-wrap" style="display:none;margin-bottom:14px;">
-        <label>คุณคือ:</label>
-        <select id="claims-sup-identity"></select>
-        <span class="privacy-note">กรองเฉพาะ Product ที่คุณดูแล</span>
-      </div>
-      <div class="form-grid two">
-        <div class="field-wrap"><label>สถานะ</label>
-          <select id="claims-filter-status">
-            <option value="">ทั้งหมด</option>
-            <option value="pending">รอเลข Service Order</option>
-            <option value="claimed">ส่งเคลมแล้ว</option>
-            <option value="received">ได้รับอะไหล่แล้ว</option>
-            <option value="rejected">ถูกปฏิเสธ</option>
-            <option value="cancelled">ยกเลิก</option>
-          </select>
-        </div>
-        <div class="field-wrap"><label>ค้นหา</label><input type="text" id="claims-filter-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
-      </div>
-    </div>
-
-    <div class="panel-block">
-      <h2 id="claims-list-title">รายการเคลม</h2>
-      <div id="claims-list"></div>
     </div>
   </div>
 
@@ -814,7 +813,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.26 (อัปเดตล่าสุด 17 กันยายน 2569 15:55 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.27 (อัปเดตล่าสุด 17 กันยายน 2569 21:53 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -914,8 +913,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.26";
-const APP_UPDATED_AT = "17 กันยายน 2569 15:55 น. เวลาไทย";
+const APP_VERSION = "7.27";
+const APP_UPDATED_AT = "17 กันยายน 2569 21:53 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2089,20 +2088,17 @@ function switchMode(mode){
   currentMode = mode;
   $('view-eng').style.display = mode==='eng' ? 'block':'none';
   $('view-sup').style.display = mode==='sup' ? 'block':'none';
-  $('view-claims').style.display = mode==='claims' ? 'block':'none';
   $('view-access').style.display = mode==='access' ? 'block':'none';
   $('view-owner').style.display = mode==='owner' ? 'block':'none';
   $('view-mgr').style.display = mode==='mgr' ? 'block':'none';
   $('view-backup').style.display = mode==='backup' ? 'block':'none';
   $('mode-eng').classList.toggle('active', mode==='eng');
   $('mode-sup').classList.toggle('active', mode==='sup');
-  $('mode-claims').classList.toggle('active', mode==='claims');
   $('mode-access').classList.toggle('active', mode==='access');
   $('mode-owner').classList.toggle('active', mode==='owner');
   $('mode-mgr').classList.toggle('active', mode==='mgr');
   $('mode-backup').classList.toggle('active', mode==='backup');
   if(mode==='sup') renderSupView();
-  if(mode==='claims') renderClaimsView();
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') loadAllErrorsThenRenderMgr();
@@ -2116,7 +2112,6 @@ async function loadAllErrorsThenRenderMgr(){
 }
 $('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
 $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
-$('mode-claims').addEventListener('click', ()=>requestModeSwitch('claims'));
 $('mode-access').addEventListener('click', ()=>requestModeSwitch('access'));
 $('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
@@ -2145,7 +2140,6 @@ function renderAll(){
   populateEngErrorFormSelectors();
   updateNotifBadge();
   if(currentMode==='sup') renderSupView();
-  if(currentMode==='claims') renderClaimsView();
   if(currentMode==='owner') renderOwnerView();
   if(currentMode==='mgr') renderMgrView();
 }
@@ -2953,7 +2947,9 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
     supActiveTab = btn.getAttribute('data-tab');
     $('sup-tab-trbl').style.display = supActiveTab==='trbl' ? 'block':'none';
     $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
+    $('sup-tab-claims').style.display = supActiveTab==='claims' ? 'block':'none';
     if(supActiveTab==='docs') renderSupDocTab();
+    if(supActiveTab==='claims') renderClaimsView();
   });
 });
 
@@ -3077,7 +3073,7 @@ function populateSupSelectors(){
 }
 function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
-$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(currentMode==='claims') renderClaimsView(); });
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); });
 $('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
 
 function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
@@ -3613,6 +3609,7 @@ async function renderSupView(){
   }
   renderProposals(); renderErrorCountSummary();
   if(supActiveTab==='docs') renderSupDocTab();
+  if(supActiveTab==='claims') renderClaimsView();
 }
 
 /* ===================== OWNER VIEW (ผู้รับผิดชอบ Product) ===================== */
@@ -3873,9 +3870,9 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 });
 /* ===================== เคลมอะไหล่ ===================== */
 const CLAIM_STATUS = [
-  {key:'pending', label:'รอเลข Service Order', color:'var(--amber)'},
-  {key:'claimed', label:'ส่งเคลมแล้ว', color:'var(--blue)'},
-  {key:'received', label:'ได้รับอะไหล่แล้ว', color:'var(--green)'},
+  {key:'pending', label:'ยังไม่เคลม', color:'var(--amber)'},
+  {key:'claimed', label:'รออะไหล่เคลม', color:'var(--blue)'},
+  {key:'received', label:'เสร็จสิ้น', color:'var(--green)'},
   {key:'rejected', label:'ถูกปฏิเสธ', color:'var(--red)'},
   {key:'cancelled', label:'ยกเลิก', color:'var(--text-faint)'},
 ];
@@ -4031,7 +4028,6 @@ function openClaimModal(existingClaim){
   renderClaimAttachGroups();
   $('claim-modal').classList.add('show');
 }
-$('claims-new-btn').addEventListener('click', ()=>openClaimModal(null));
 $('eng-quick-claim-btn').addEventListener('click', ()=>openClaimModal(null));
 $('claim-modal-close').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
 $('claim-cancel-btn').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
@@ -4127,8 +4123,18 @@ function myVisibleClaims(){
   return DATA.claims.filter(c=>c.submittedBy===myUserEmail);
 }
 
+function renderClaimsDashboard(){
+  const all = myVisibleClaims();
+  const count = key => all.filter(c=>c.status===key).length;
+  $('claims-dashboard').innerHTML = `
+    <div class="stat-card"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
+    <div class="stat-card"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
+    <div class="stat-card"><div class="label">เสร็จสิ้น</div><div class="value green">${count('received')}</div></div>
+  `;
+}
 function renderClaimsView(){
   $('claims-identity-wrap').style.display = (isEditor() && !isSuperAdmin()) ? 'flex' : 'none';
+  renderClaimsDashboard();
   const statusFilter = $('claims-filter-status').value;
   const search = ($('claims-filter-search').value||'').toLowerCase().trim();
   let claims = myVisibleClaims().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -4191,7 +4197,7 @@ function openClaimDetail(id){
       : escapeHtml(c.serviceOrderNo||'-')}
     </div></div>
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>รอเลข Service Order</option><option value="claimed"${c.status==='claimed'?' selected':''}>ส่งเคลมแล้ว</option><option value="received"${c.status==='received'?' selected':''}>ได้รับอะไหล่แล้ว</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
@@ -4203,7 +4209,7 @@ function openClaimDetail(id){
     $('claim-detail-svo-save').addEventListener('click', async ()=>{
       const svo = $('claim-detail-svo').value.trim();
       const updates = { serviceOrderNo: svo };
-      // กรอกเลข Service Order ครั้งแรกตอนยังอยู่สถานะ "รอเลข Service Order" ให้ขยับสถานะเป็น "ส่งเคลมแล้ว" ให้อัตโนมัติ — ไม่งั้นต้องมาคอยเปลี่ยนสถานะเองซ้ำอีกขั้น
+      // กรอกเลข Service Order ครั้งแรกตอนยังอยู่สถานะ "ยังไม่เคลม" ให้ขยับสถานะเป็น "รออะไหล่เคลม" ให้อัตโนมัติ — ไม่งั้นต้องมาคอยเปลี่ยนสถานะเองซ้ำอีกขั้น
       if(svo && c.status==='pending') updates.status = 'claimed';
       try{ await fsUpdateClaim(c.id, updates); Object.assign(c, updates); renderClaimsView(); showToast('✓ บันทึกเลข Service Order แล้ว'); openClaimDetail(c.id); }
       catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
