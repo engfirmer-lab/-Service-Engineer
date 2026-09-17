@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.19
-  อัปเดตล่าสุด: 16 กันยายน 2569 23:13 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.20
+  อัปเดตล่าสุด: 17 กันยายน 2569 06:32 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.19</title>
+<title>Firmer Service Center — v7.20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.19</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.20</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -319,6 +319,7 @@
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
       <button id="mode-sup">Sup Product</button>
+      <button id="mode-claims">🔧 เคลมอะไหล่</button>
       <button id="mode-owner">จัดการ Product</button>
       <button id="mode-access">จัดการสิทธิ์</button>
       <button id="mode-mgr">Manager</button>
@@ -547,6 +548,71 @@
     </div>
   </div>
 
+  <!-- ============ CLAIMS VIEW (เคลมอะไหล่) ============ -->
+  <div id="view-claims" style="display:none;">
+    <div class="panel-block">
+      <p class="panel-sub">รวมข้อมูลเคลมอะไหล่ของทุก Product ไว้ที่เดียว — Engineer/Sup Product บันทึกได้ทุกคน, Sup Product เห็นเฉพาะ Product ที่ตัวเองดูแล</p>
+      <button class="btn btn-primary" id="claims-new-btn">+ บันทึกเคลมอะไหล่ใหม่</button>
+    </div>
+
+    <div class="panel-block" id="claims-filter-block">
+      <div class="form-grid two">
+        <div class="field-wrap"><label>สถานะ</label>
+          <select id="claims-filter-status">
+            <option value="">ทั้งหมด</option>
+            <option value="pending">รอเคลม</option>
+            <option value="claimed">ส่งเคลมแล้ว</option>
+            <option value="received">ได้รับอะไหล่แล้ว</option>
+            <option value="rejected">ถูกปฏิเสธ</option>
+            <option value="cancelled">ยกเลิก</option>
+          </select>
+        </div>
+        <div class="field-wrap"><label>ค้นหา</label><input type="text" id="claims-filter-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
+      </div>
+    </div>
+
+    <div class="panel-block">
+      <h2 id="claims-list-title">รายการเคลม</h2>
+      <div id="claims-list"></div>
+    </div>
+  </div>
+
+  <!-- ============ CLAIM ENTRY MODAL ============ -->
+  <div class="modal-overlay" id="claim-modal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close-x" id="claim-modal-close">✕</button>
+      <h3 id="claim-modal-title">บันทึกเคลมอะไหล่ใหม่</h3>
+      <div class="field-wrap"><label>ผู้เคลม *</label><input type="text" id="claim-f-claimant"></div>
+      <div class="field-wrap"><label>ชื่อสถานที่ *</label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
+      <div class="form-grid two">
+        <div class="field-wrap"><label>Product *</label><select id="claim-f-category"></select></div>
+        <div class="field-wrap"><label>รุ่น *</label><select id="claim-f-model"></select></div>
+      </div>
+      <div class="field-wrap"><label>S/N</label><input type="text" id="claim-f-sn"></div>
+      <div class="field-wrap"><label>ปัญหาที่พบ *</label><textarea id="claim-f-problem" placeholder="อธิบายอาการ..."></textarea></div>
+      <div class="field-wrap"><label>รายการอะไหล่ที่เคลม *</label><div id="claim-parts-wrap"></div></div>
+      <div class="field-wrap"><label>เลขที่ใบยืม</label><input type="text" id="claim-f-loan" placeholder="ถ้ามี"></div>
+      <div class="field-wrap"><label>แนบไฟล์ (รูป/เอกสาร/วิดีโอ — ไฟล์ละไม่เกิน 5 MB)</label>
+        <div class="img-upload-row" id="claim-files-row">
+          <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" id="claim-file-input"></label>
+        </div>
+        <div id="claim-files-progress" style="font-size:11px;color:var(--text-faint);margin-top:4px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="claim-save-btn">บันทึกเคลม</button>
+        <button class="btn btn-ghost btn-sm" id="claim-cancel-btn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CLAIM DETAIL MODAL ============ -->
+  <div class="modal-overlay" id="claim-detail-modal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close-x" id="claim-detail-close">✕</button>
+      <div id="claim-detail-body"></div>
+    </div>
+  </div>
+
   <!-- ============ ACCESS VIEW (จัดการสิทธิ์เข้าถึง) ============ -->
   <div id="view-access" style="display:none;">
     <div class="desktop-hint">🔐 หน้านี้จัดการว่าใครเข้าระบบได้บ้าง และใครแก้ไขข้อมูลได้บ้าง</div>
@@ -721,7 +787,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.19 (อัปเดตล่าสุด 16 กันยายน 2569 23:13 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.20 (อัปเดตล่าสุด 17 กันยายน 2569 06:32 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -827,8 +893,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.19";
-const APP_UPDATED_AT = "16 กันยายน 2569 23:13 น. เวลาไทย";
+const APP_VERSION = "7.20";
+const APP_UPDATED_AT = "17 กันยายน 2569 06:32 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1119,20 +1185,22 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [docsSnap, propSnap, pendSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
+    const [docsSnap, propSnap, pendSnap, claimsSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
+      sdk.getDocs(sdk.collection(db,'claims')),
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
     ]);
-    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
+    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
     docsSnap.forEach(d=> DATA.documents.push({ id:d.id, ...d.data() }));
     propSnap.forEach(d=> DATA.proposals.push({ id:d.id, ...d.data() }));
     pendSnap.forEach(d=> DATA.pendingErrors.push({ id:d.id, ...d.data() }));
+    claimsSnap.forEach(d=> DATA.claims.push({ id:d.id, ...d.data() }));
     if(catDoc.exists()){ const cd = catDoc.data(); DATA.categories = cd.categories||{}; DATA.owners = cd.owners||{categoryOwners:{},modelOverrides:{}}; }
     if(Object.keys(DATA.categories).length===0){
       // ครั้งแรกที่ไม่มีข้อมูล — สร้างค่าเริ่มต้นให้ในฐานข้อมูลจริงเลย
@@ -1243,6 +1311,7 @@ function ensureDataShape(){
   if(!DATA.errors) DATA.errors = [];
   if(!DATA.documents) DATA.documents = [];
   if(!DATA.proposals) DATA.proposals = [];
+  if(!DATA.claims) DATA.claims = [];
   if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
 }
 
@@ -1292,6 +1361,10 @@ async function fsUpdatePendingError(id, fields){ showLoadingOverlay('กำล�
 async function fsAddDocument(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'documents'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateDocument(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'documents',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); }finally{ hideLoadingOverlay(); } }
+/* ===================== เคลมอะไหล่ ===================== */
+async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
+async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); }finally{ hideLoadingOverlay(); } }
+async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); }finally{ hideLoadingOverlay(); } }
 async function fsSaveCategoriesDoc(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners }); }finally{ hideLoadingOverlay(); } }
 // อัปเดตฟิลด์ (category หรือ model) ให้ตรงกับชื่อใหม่ ในทุกเอกสารของ collection ที่ระบุ — แบ่งเป็นชุดละ 400 กันชนลิมิต 500 ของ Firestore batch
 async function fsBatchUpdateField(collectionName, docIds, fields){ showLoadingOverlay('กำลังบันทึก...'); try{
@@ -1512,6 +1585,15 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   const f2 = await driveFindOrCreateFolder(category, f1);
   const f3 = await driveFindOrCreateFolder(model, f2);
   const f4 = await driveFindOrCreateFolder(docTypeFolderName, f3);
+  return f4;
+}
+// โฟลเดอร์เคลมอะไหล่ — แยกสาขาต่างหากจากเอกสาร ไม่อิงผู้ดูแล เพราะเคลมอะไหล่ผูกกับ "เคส" ไม่ใช่ผู้รับผิดชอบ Product
+// โครงสร้าง: Service Center/Claims/[Product]/[รุ่น]/[วันที่_สถานที่]/
+async function ensureClaimFolderPath(category, model, claimFolderName){
+  const rootClaims = await driveFindOrCreateFolder('Claims', DRIVE_ROOT_FOLDER_ID);
+  const f2 = await driveFindOrCreateFolder(category, rootClaims);
+  const f3 = await driveFindOrCreateFolder(model, f2);
+  const f4 = await driveFindOrCreateFolder(claimFolderName, f3);
   return f4;
 }
 // สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล — เผื่อเอาไฟล์ไปวางเองใน Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป
@@ -1949,17 +2031,20 @@ function switchMode(mode){
   currentMode = mode;
   $('view-eng').style.display = mode==='eng' ? 'block':'none';
   $('view-sup').style.display = mode==='sup' ? 'block':'none';
+  $('view-claims').style.display = mode==='claims' ? 'block':'none';
   $('view-access').style.display = mode==='access' ? 'block':'none';
   $('view-owner').style.display = mode==='owner' ? 'block':'none';
   $('view-mgr').style.display = mode==='mgr' ? 'block':'none';
   $('view-backup').style.display = mode==='backup' ? 'block':'none';
   $('mode-eng').classList.toggle('active', mode==='eng');
   $('mode-sup').classList.toggle('active', mode==='sup');
+  $('mode-claims').classList.toggle('active', mode==='claims');
   $('mode-access').classList.toggle('active', mode==='access');
   $('mode-owner').classList.toggle('active', mode==='owner');
   $('mode-mgr').classList.toggle('active', mode==='mgr');
   $('mode-backup').classList.toggle('active', mode==='backup');
   if(mode==='sup') renderSupView();
+  if(mode==='claims') renderClaimsView();
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
   if(mode==='mgr') loadAllErrorsThenRenderMgr();
@@ -1973,6 +2058,7 @@ async function loadAllErrorsThenRenderMgr(){
 }
 $('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
 $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
+$('mode-claims').addEventListener('click', ()=>requestModeSwitch('claims'));
 $('mode-access').addEventListener('click', ()=>requestModeSwitch('access'));
 $('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
@@ -2001,6 +2087,7 @@ function renderAll(){
   populateEngErrorFormSelectors();
   updateNotifBadge();
   if(currentMode==='sup') renderSupView();
+  if(currentMode==='claims') renderClaimsView();
   if(currentMode==='owner') renderOwnerView();
   if(currentMode==='mgr') renderMgrView();
 }
@@ -3719,6 +3806,259 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
   renderSupIdentityOptions(); renderOwnerView();
   showToast(`✓ เพิ่ม "${name}" แล้ว`);
 });
+/* ===================== เคลมอะไหล่ ===================== */
+const CLAIM_STATUS = [
+  {key:'pending', label:'รอเคลม', color:'var(--amber)'},
+  {key:'claimed', label:'ส่งเคลมแล้ว', color:'var(--blue)'},
+  {key:'received', label:'ได้รับอะไหล่แล้ว', color:'var(--green)'},
+  {key:'rejected', label:'ถูกปฏิเสธ', color:'var(--red)'},
+  {key:'cancelled', label:'ยกเลิก', color:'var(--text-faint)'},
+];
+function claimStatusInfo(key){ return CLAIM_STATUS.find(s=>s.key===key) || CLAIM_STATUS[0]; }
+
+let claimDraft = null;
+let claimEditingId = null;
+
+function resetClaimDraft(){
+  claimDraft = { claimant: myUserName||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', attachments:[] };
+  claimEditingId = null;
+}
+
+function renderClaimPartsRows(){
+  const wrap = $('claim-parts-wrap');
+  const list = claimDraft.parts.length ? claimDraft.parts : [{partNumber:'',partName:'',count:''}];
+  wrap.innerHTML = list.map((p,i)=>`
+    <div style="background:var(--panel-alt);border-radius:8px;padding:8px;margin-bottom:8px;">
+      <div style="display:flex;gap:6px;margin-bottom:6px;">
+        <input type="text" data-partfield="partNumber" data-idx="${i}" value="${escapeHtml(p.partNumber)}" placeholder="Part number" style="flex:1.2;">
+        <input type="text" data-partfield="partName" data-idx="${i}" value="${escapeHtml(p.partName)}" placeholder="Part name" style="flex:1.5;">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input type="number" data-partfield="count" data-idx="${i}" value="${escapeHtml(p.count)}" placeholder="จำนวน" style="width:90px;">
+        <span style="font-size:11px;color:var(--text-faint);">(ถ้ามี)</span>
+        <button type="button" data-partrm="${i}" style="margin-left:auto;background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;">✕</button>
+      </div>
+    </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" id="claim-part-add-btn">+ เพิ่มรายการอะไหล่</button>`;
+  wrap.querySelectorAll('[data-partfield]').forEach(el=>{
+    el.addEventListener('input', ()=>{ const idx=+el.getAttribute('data-idx'); const field=el.getAttribute('data-partfield'); claimDraft.parts[idx][field]=el.value; });
+  });
+  wrap.querySelectorAll('[data-partrm]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',count:''}]; renderClaimPartsRows(); });
+  });
+  $('claim-part-add-btn').addEventListener('click', ()=>{ claimDraft.parts.push({partNumber:'',partName:'',count:''}); renderClaimPartsRows(); });
+}
+
+function populateClaimCategorySelect(){
+  const sel = $('claim-f-category');
+  const cats = Object.keys(DATA.categories).sort(naturalSort);
+  sel.innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  populateClaimModelSelect();
+}
+function populateClaimModelSelect(){
+  const cat = $('claim-f-category').value;
+  const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
+  $('claim-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+}
+$('claim-f-category').addEventListener('change', populateClaimModelSelect);
+
+function renderClaimFilesRow(){
+  const row = $('claim-files-row');
+  const addBtn = row.querySelector('label.upload-btn');
+  row.querySelectorAll('.img-thumb').forEach(el=>el.remove());
+  claimDraft.attachments.forEach((att,i)=>{
+    const div = document.createElement('div');
+    div.className = 'img-thumb';
+    if(att.kind==='image'){
+      div.innerHTML = `<img src="${att.dataUrl||att.url}"><button data-rmclaimfile="${i}">✕</button>`;
+    } else {
+      div.innerHTML = `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--panel-alt);border-radius:6px;">📄</div><button data-rmclaimfile="${i}">✕</button>`;
+    }
+    row.insertBefore(div, addBtn);
+  });
+  row.querySelectorAll('[data-rmclaimfile]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-rmclaimfile'); claimDraft.attachments.splice(idx,1); renderClaimFilesRow(); });
+  });
+}
+
+$('claim-file-input').addEventListener('change', async ()=>{
+  const files = Array.from($('claim-file-input').files);
+  $('claim-file-input').value = '';
+  for(const file of files){
+    if(file.type.startsWith('image/')){
+      try{
+        const c = await compressImage(file);
+        if(c.blob && c.blob.size > 5*1024*1024){ showToast('⚠ '+file.name+' บีบอัดแล้วยังเกิน 5MB ข้ามไฟล์นี้'); continue; }
+        claimDraft.attachments.push({ kind:'image', pending:true, dataUrl:c.dataUrl, blob:c.blob, name:file.name });
+      }catch(e){ showToast('⚠ แนบรูป '+file.name+' ไม่สำเร็จ'); }
+    } else {
+      if(file.size > 5*1024*1024){ showToast('⚠ '+file.name+' มีขนาดเกิน 5MB กรุณาเลือกไฟล์ที่เล็กกว่านี้'); continue; }
+      claimDraft.attachments.push({ kind:'file', pending:true, file, name:file.name });
+    }
+  }
+  renderClaimFilesRow();
+});
+
+function openClaimModal(existingClaim){
+  if(existingClaim){
+    claimEditingId = existingClaim.id;
+    claimDraft = {
+      claimant: existingClaim.claimant||'', siteName: existingClaim.siteName||'', category: existingClaim.category||'', model: existingClaim.model||'',
+      serialNumber: existingClaim.serialNumber||'', problem: existingClaim.problem||'',
+      parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({...p})):[{partNumber:'',partName:'',count:''}],
+      loanSlipNo: existingClaim.loanSlipNo||'', attachments: (existingClaim.attachments||[]).map(a=>({...a}))
+    };
+    $('claim-modal-title').textContent = 'แก้ไขเคลมอะไหล่';
+  } else {
+    resetClaimDraft();
+    $('claim-modal-title').textContent = 'บันทึกเคลมอะไหล่ใหม่';
+  }
+  $('claim-f-claimant').value = claimDraft.claimant;
+  $('claim-f-site').value = claimDraft.siteName;
+  populateClaimCategorySelect();
+  if(claimDraft.category) $('claim-f-category').value = claimDraft.category;
+  populateClaimModelSelect();
+  if(claimDraft.model) $('claim-f-model').value = claimDraft.model;
+  $('claim-f-sn').value = claimDraft.serialNumber;
+  $('claim-f-problem').value = claimDraft.problem;
+  $('claim-f-loan').value = claimDraft.loanSlipNo;
+  renderClaimPartsRows();
+  renderClaimFilesRow();
+  $('claim-modal').classList.add('show');
+}
+$('claims-new-btn').addEventListener('click', ()=>openClaimModal(null));
+$('claim-modal-close').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
+$('claim-cancel-btn').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
+
+$('claim-save-btn').addEventListener('click', async ()=>{
+  claimDraft.claimant = $('claim-f-claimant').value.trim();
+  claimDraft.siteName = $('claim-f-site').value.trim();
+  claimDraft.category = $('claim-f-category').value;
+  claimDraft.model = $('claim-f-model').value;
+  claimDraft.serialNumber = $('claim-f-sn').value.trim();
+  claimDraft.problem = $('claim-f-problem').value.trim();
+  claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
+  const cleanParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
+  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.problem){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ'); return; }
+  if(cleanParts.length===0){ showToast('⚠ กรุณาใส่รายการอะไหล่อย่างน้อย 1 รายการ'); return; }
+
+  const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
+  try{
+    const claimFolderName = `${bangkokDateFolder()}_${sanitizeFolderName(claimDraft.siteName)}`;
+    const folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+    const uploadedAttachments = [];
+    for(const att of claimDraft.attachments){
+      if(!att.pending){ uploadedAttachments.push({kind:att.kind, name:att.name, url:att.url}); continue; }
+      const fileToUpload = att.blob || att.file;
+      const fileName = att.name || ('attachment_'+Date.now());
+      const url = await driveUploadLargeFile(fileToUpload, fileName, folderId);
+      uploadedAttachments.push({ kind: att.kind, name: fileName, url });
+    }
+    const fields = {
+      claimant: claimDraft.claimant, siteName: claimDraft.siteName, category: claimDraft.category, model: claimDraft.model,
+      serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, parts: cleanParts, loanSlipNo: claimDraft.loanSlipNo,
+      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myUserName,
+    };
+    if(claimEditingId){
+      await fsUpdateClaim(claimEditingId, fields);
+      const c = DATA.claims.find(x=>x.id===claimEditingId); if(c) Object.assign(c, fields);
+    } else {
+      fields.status = 'pending'; fields.createdAt = Date.now();
+      const newId = await fsAddClaim(fields);
+      DATA.claims.push({ id:newId, ...fields });
+    }
+    $('claim-modal').classList.remove('show');
+    renderClaimsView();
+    showToast('✓ บันทึกเคลมอะไหล่แล้ว');
+  }catch(e){
+    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
+  } finally {
+    btn.disabled=false; btn.style.opacity='';
+  }
+});
+
+// ใครเห็นเคลมไหนบ้าง: Super Admin เห็นหมด, Sup Product (Editor) เห็นเฉพาะ Product ที่ตัวเองดูแล, Engineer ทั่วไปเห็นเฉพาะที่ตัวเองบันทึก
+function myVisibleClaims(){
+  if(!DATA.claims) return [];
+  if(isSuperAdmin()) return DATA.claims;
+  if(isEditor()){ const owned = new Set(myOwnedCategories()); return DATA.claims.filter(c=>owned.has(c.category)); }
+  return DATA.claims.filter(c=>c.submittedBy===myUserEmail);
+}
+
+function renderClaimsView(){
+  const statusFilter = $('claims-filter-status').value;
+  const search = ($('claims-filter-search').value||'').toLowerCase().trim();
+  let claims = myVisibleClaims().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(statusFilter) claims = claims.filter(c=>c.status===statusFilter);
+  if(search) claims = claims.filter(c=>
+    (c.siteName||'').toLowerCase().includes(search) ||
+    (c.model||'').toLowerCase().includes(search) ||
+    (c.serialNumber||'').toLowerCase().includes(search) ||
+    (c.parts||[]).some(p=>(p.partNumber||'').toLowerCase().includes(search) || (p.partName||'').toLowerCase().includes(search))
+  );
+  $('claims-list-title').textContent = isSuperAdmin() ? `รายการเคลมทั้งหมด (${claims.length})` : isEditor() ? `รายการเคลม Product ที่ดูแล (${claims.length})` : `เคลมที่คุณบันทึกไว้ (${claims.length})`;
+  const list = $('claims-list');
+  if(claims.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายการเคลม</p>`; return; }
+  list.innerHTML = claims.map(c=>{
+    const st = claimStatusInfo(c.status);
+    const partsText = (c.parts||[]).map(p=>p.partName||p.partNumber).filter(Boolean).join(', ');
+    return `<div class="card" data-claimrow="${c.id}">
+      <div class="card-head">
+        <div>
+          <div style="font-weight:600;font-size:13.5px;">${escapeHtml(c.siteName)} · ${escapeHtml(c.model)}</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${escapeHtml(c.category)}${c.serialNumber?' · S/N '+escapeHtml(c.serialNumber):''}</div>
+          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">🔧 ${escapeHtml(partsText||'-')}</div>
+          <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):''}</div>
+        </div>
+        <span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;white-space:nowrap;">${st.label}</span>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('[data-claimrow]').forEach(el=>el.addEventListener('click', ()=>openClaimDetail(el.getAttribute('data-claimrow'))));
+}
+$('claims-filter-status').addEventListener('change', renderClaimsView);
+$('claims-filter-search').addEventListener('input', renderClaimsView);
+
+function openClaimDetail(id){
+  const c = DATA.claims.find(x=>x.id===id); if(!c) return;
+  const st = claimStatusInfo(c.status);
+  const canManage = isEditor();
+  const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
+  const attHtml = (c.attachments||[]).map(a=> a.kind==='image' ? `<a href="${a.url}" target="_blank" rel="noopener"><img src="${a.url}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>` : `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`).join('');
+  $('claim-detail-body').innerHTML = `
+    <h3 style="margin-bottom:2px;">${escapeHtml(c.siteName)} · ${escapeHtml(c.model)}</h3>
+    <p style="font-size:12px;color:var(--text-faint);margin-bottom:12px;">${escapeHtml(c.category)}${c.serialNumber?' · S/N '+escapeHtml(c.serialNumber):''}</p>
+    <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(c.claimant)}</div></div>
+    <div class="meta-item"><div class="k">ปัญหาที่พบ</div><div class="v">${escapeHtml(c.problem)}</div></div>
+    <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
+    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
+    <div style="margin:10px 0;">${attHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
+    <div class="meta-item"><div class="k">สถานะ</div><div class="v">
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>รอเคลม</option><option value="claimed"${c.status==='claimed'?' selected':''}>ส่งเคลมแล้ว</option><option value="received"${c.status==='received'?' selected':''}>ได้รับอะไหล่แล้ว</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
+    </div></div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
+      <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
+    </div>`;
+  if(canManage){
+    $('claim-detail-status').addEventListener('change', async ()=>{
+      const newStatus = $('claim-detail-status').value;
+      try{ await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus; renderClaimsView(); showToast('✓ อัปเดตสถานะแล้ว'); }
+      catch(e){ showToast('⚠ อัปเดตไม่สำเร็จ: '+e.message); }
+    });
+    $('claim-detail-edit-btn').addEventListener('click', ()=>{ $('claim-detail-modal').classList.remove('show'); openClaimModal(c); });
+    $('claim-detail-delete-btn').addEventListener('click', async ()=>{
+      if(!confirm('ยืนยันการลบเคลมนี้? ลบแล้วกู้คืนไม่ได้')) return;
+      try{ await fsDeleteClaim(c.id); DATA.claims = DATA.claims.filter(x=>x.id!==c.id); $('claim-detail-modal').classList.remove('show'); renderClaimsView(); showToast('✓ ลบแล้ว'); }
+      catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); }
+    });
+  }
+  $('claim-detail-close-btn').addEventListener('click', ()=>$('claim-detail-modal').classList.remove('show'));
+  $('claim-detail-modal').classList.add('show');
+}
+$('claim-detail-close').addEventListener('click', ()=>$('claim-detail-modal').classList.remove('show'));
+
 async function renderOwnerView(){
   renderSupNameList();
   populateOwnerFormSelectors();
