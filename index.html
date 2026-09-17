@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.21
-  อัปเดตล่าสุด: 17 กันยายน 2569 07:52 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.22
+  อัปเดตล่าสุด: 17 กันยายน 2569 11:23 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.21</title>
+<title>Firmer Service Center — v7.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.21</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.22</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -319,7 +319,7 @@
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
       <button id="mode-sup">Sup Product</button>
-      <button id="mode-claims">🔧 เคลม/แจ้ง ปัญหา</button>
+      <button id="mode-claims">🔧 เคลม/แจ้ง ปัญหา<span id="claims-tab-badge" class="badge-count" style="display:none;margin-left:4px;">0</span></button>
       <button id="mode-owner">จัดการ Product</button>
       <button id="mode-access">จัดการสิทธิ์</button>
       <button id="mode-mgr">Manager</button>
@@ -365,7 +365,7 @@
             <div class="field-wrap"><label>Product *</label><select id="eng-f-category"></select></div>
             <div class="field-wrap"><label>Model *</label><select id="eng-f-model"></select></div>
             <div class="field-wrap"><label>Error Code</label><input type="text" id="eng-f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
-            <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+            <div class="field-wrap"><label>Alarm Detail *</label><input type="text" id="eng-f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
           </div>
           <div id="eng-solutions-editor" style="margin-top:14px;"></div>
           <button class="btn btn-ghost btn-sm" id="eng-add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
@@ -374,6 +374,13 @@
             <button class="btn btn-ghost" id="eng-cancel-error-btn">ยกเลิก</button>
             <span class="mono" id="eng-save-msg" style="color:var(--green);font-size:12px;opacity:0;transition:.2s;">✓ ส่งแล้ว</span>
           </div>
+        </div>
+      </div>
+
+      <div class="panel-block" style="padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><h2 style="margin-bottom:2px;font-size:14px;">แจ้ง/เคลม ปัญหา</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">แจ้งปัญหาหน้างานพร้อมเคลมอะไหล่ ส่งตรงถึง Sup Product</p></div>
+          <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">+ แจ้ง/เคลม ปัญหา</button>
         </div>
       </div>
 
@@ -507,7 +514,7 @@
           <div class="field-wrap" id="f-category-field"><label>Product *</label><select id="f-category"></select></div>
           <div class="field-wrap" id="f-model-field"><label>Model *</label><select id="f-model"></select></div>
           <div class="field-wrap"><label>Error Code</label><input type="text" id="f-code" placeholder="เช่น E-203 (เว้นว่างได้)"></div>
-          <div class="field-wrap"><label>อาการ/คีย์เวิร์ด *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
+          <div class="field-wrap"><label>Alarm Detail *</label><input type="text" id="f-symptom" placeholder="เช่น เครื่องค้างตอน Start up"></div>
         </div>
         <div id="solutions-editor" style="margin-top:16px;"></div>
         <button class="btn btn-ghost btn-sm" id="add-solution-btn" style="margin-top:6px;">+ เพิ่มวิธีแก้ไข</button>
@@ -556,11 +563,16 @@
     </div>
 
     <div class="panel-block" id="claims-filter-block">
+      <div class="name-select-wrap" id="claims-identity-wrap" style="display:none;margin-bottom:14px;">
+        <label>คุณคือ:</label>
+        <select id="claims-sup-identity"></select>
+        <span class="privacy-note">กรองเฉพาะ Product ที่คุณดูแล</span>
+      </div>
       <div class="form-grid two">
         <div class="field-wrap"><label>สถานะ</label>
           <select id="claims-filter-status">
             <option value="">ทั้งหมด</option>
-            <option value="pending">รอเคลม</option>
+            <option value="pending">รอเลข Service Order</option>
             <option value="claimed">ส่งเคลมแล้ว</option>
             <option value="received">ได้รับอะไหล่แล้ว</option>
             <option value="rejected">ถูกปฏิเสธ</option>
@@ -616,6 +628,19 @@
     <div class="modal" style="max-width:480px;">
       <button class="modal-close-x" id="claim-detail-close">✕</button>
       <div id="claim-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- ============ CLAIM SUCCESS SUMMARY MODAL ============ -->
+  <div class="modal-overlay" id="claim-success-modal">
+    <div class="modal" style="max-width:480px;">
+      <div style="text-align:center;margin-bottom:14px;">
+        <div style="font-size:36px;line-height:1;">✅</div>
+        <h3 style="color:var(--green);margin:8px 0 0;">บันทึกสำเร็จ</h3>
+        <p class="panel-sub" style="margin:4px 0 0;">ตรวจสอบรายละเอียดที่บันทึกไปด้านล่าง — ถ้าถูกต้องแล้วกดปิดได้เลย ไม่ต้องกดส่งซ้ำ</p>
+      </div>
+      <div id="claim-success-body"></div>
+      <button class="btn btn-primary" id="claim-success-close-btn" style="width:100%;margin-top:16px;">ปิด</button>
     </div>
   </div>
 
@@ -793,7 +818,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.21 (อัปเดตล่าสุด 17 กันยายน 2569 07:52 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.22 (อัปเดตล่าสุด 17 กันยายน 2569 11:23 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -899,8 +924,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.21";
-const APP_UPDATED_AT = "17 กันยายน 2569 07:52 น. เวลาไทย";
+const APP_VERSION = "7.22";
+const APP_UPDATED_AT = "17 กันยายน 2569 11:23 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1594,13 +1619,12 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   return f4;
 }
 // โฟลเดอร์เคลมอะไหล่ — แยกสาขาต่างหากจากเอกสาร ไม่อิงผู้ดูแล เพราะเคลมอะไหล่ผูกกับ "เคส" ไม่ใช่ผู้รับผิดชอบ Product
-// โครงสร้าง: Service Center/Claims/[Product]/[รุ่น]/[วันที่_สถานที่]/
-async function ensureClaimFolderPath(category, model, claimFolderName){
+// โครงสร้าง: Service Center/Claims/[Product]/[DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ]/ — โฟลเดอร์แยกต่างหากทุกเคลม 1 รายการ
+async function ensureClaimFolderPath(category, claimFolderName){
   const rootClaims = await driveFindOrCreateFolder('Claims', DRIVE_ROOT_FOLDER_ID);
   const f2 = await driveFindOrCreateFolder(category, rootClaims);
-  const f3 = await driveFindOrCreateFolder(model, f2);
-  const f4 = await driveFindOrCreateFolder(claimFolderName, f3);
-  return f4;
+  const f3 = await driveFindOrCreateFolder(claimFolderName, f2);
+  return f3;
 }
 // สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล — เผื่อเอาไฟล์ไปวางเองใน Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป
 // รันงานหลายอันพร้อมกันแบบจำกัดจำนวน (กันยิง request รัวเกินไปจน Google บล็อกชั่วคราว) เร็วกว่าทำทีละอันมาก
@@ -2394,7 +2418,8 @@ function renderSolutionCard(err, s, idx){
   const names = up.map(f=>f.name).filter(Boolean);
   return `
   <div class="solution-block">
-    <div class="solution-num">วิธี ${idx+1}</div>
+    <div class="solution-num">สาเหตุที่ ${idx+1}</div>
+    ${s.title ? `<div class="solution-desc" style="font-weight:600;margin-bottom:4px;">${escapeHtml(s.title)}</div>` : ''}
     <div class="solution-desc">${escapeHtml(s.desc)}</div>
     ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${imgSrcOf(img)}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
@@ -2509,15 +2534,21 @@ let _cachedBackupAlertDismissedAt = 0;
 async function updateNotifBadge(){
   const unreadResolved = myResolvedSubmissions().filter(p=>!p.notifRead).length + myResolvedProposals().filter(p=>!p.notifRead).length;
   const pendingReview = myPendingReviewCount();
+  const pendingClaims = (isEditor() && DATA && DATA.claims) ? myVisibleClaims().filter(c=>c.status==='pending').length : 0;
   let accessReqCount = 0;
   if(isSuperAdmin()){
     try{ accessReqCount = (await fsGetPendingAccessRequests()).length; }catch(e){}
   }
   const showBackupAlert = isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt;
-  const total = unreadResolved + pendingReview + accessReqCount + (showBackupAlert?1:0);
+  const total = unreadResolved + pendingReview + accessReqCount + pendingClaims + (showBackupAlert?1:0);
   const badge = $('notif-badge');
   if(total>0){ badge.style.display='block'; badge.textContent = total; }
   else{ badge.style.display='none'; }
+  const claimsBadge = $('claims-tab-badge');
+  if(claimsBadge){
+    if(pendingClaims>0){ claimsBadge.style.display='inline-block'; claimsBadge.textContent = pendingClaims; }
+    else{ claimsBadge.style.display='none'; }
+  }
 }
 $('notif-bell').addEventListener('click', ()=>{
   if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
@@ -2828,7 +2859,7 @@ $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $
 
 function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
-  engEditingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
+  engEditingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderEngSolutionsEditor();
   const ebtn=$('eng-save-error-btn'); ebtn.disabled=false; ebtn.style.opacity=''; ebtn.style.cursor='';
 }
@@ -2836,9 +2867,10 @@ function renderEngSolutionsEditor(){
   const wrap = $('eng-solutions-editor');
   wrap.innerHTML = engEditingSolutions.map((s,idx)=>`
     <div class="solution-editor" data-sid="${s.id}">
-      <div class="num-badge">วิธี ${idx+1}</div>
+      <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
-      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} *</label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
@@ -2865,7 +2897,7 @@ function renderEngSolutionsEditor(){
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
 }
-$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderEngSolutionsEditor(); });
+$('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderEngSolutionsEditor(); });
 
 $('eng-save-error-btn').addEventListener('click', async ()=>{
   const btn = $('eng-save-error-btn');
@@ -2874,8 +2906,8 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   const errorCode = $('eng-f-code').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
   if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
-  const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
-  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  const validSolutions = engEditingSolutions.filter(s=>s.desc.trim() && (s.title||'').trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
   DATA.pendingErrors = DATA.pendingErrors || [];
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   try{
@@ -2912,6 +2944,7 @@ function renderSupIdentityOptions(){
   $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
   if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
   $('sup-identity').value = currentSupIdentity;
+  if($('claims-sup-identity')){ $('claims-sup-identity').innerHTML = $('sup-identity').innerHTML; $('claims-sup-identity').value = currentSupIdentity; }
 }
 function myOwnedCategories(){
   return Object.keys(DATA.categories).filter(c=> (DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity)).sort(naturalSort);
@@ -3025,7 +3058,8 @@ function populateSupSelectors(){
 }
 function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
-$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; renderSupView(); updateNotifBadge(); });
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(currentMode==='claims') renderClaimsView(); });
+$('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
 
 function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
 
@@ -3046,9 +3080,10 @@ function renderSolutionsEditor(){
   const wrap = $('solutions-editor');
   wrap.innerHTML = editingSolutions.map((s,idx)=>`
     <div class="solution-editor" data-sid="${s.id}">
-      <div class="num-badge">วิธี ${idx+1}</div>
+      <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
-      <div class="field-wrap" style="margin-top:8px;"><label>คำอธิบายขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="ขั้นตอนการแก้ไข...">${escapeHtml(s.desc)}</textarea></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} *</label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน *</label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
@@ -3075,7 +3110,7 @@ function renderSolutionsEditor(){
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
 }
-$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderSolutionsEditor(); });
+$('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderSolutionsEditor(); });
 
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
@@ -3093,14 +3128,14 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
     const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
-    await fsSaveSolution(errorId, s.id, { desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, feedback:s.feedback||[] });
+    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, feedback:s.feedback||[] });
   }
 }
 
 function resetErrorForm(){
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
   $('f-code').value=''; $('f-symptom').value='';
-  editingSolutions = [{id:uid('sol'), desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
+  editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderSolutionsEditor();
   $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
   $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
@@ -3114,8 +3149,8 @@ $('save-error-btn').addEventListener('click', async ()=>{
   const errorCode = $('f-code').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
   if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
-  const validSolutions = editingSolutions.filter(s=>s.desc.trim());
-  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
+  const validSolutions = editingSolutions.filter(s=>s.desc.trim() && (s.title||'').trim());
+  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
 
   if(reviewingPendingErrorId){
@@ -3816,7 +3851,7 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 });
 /* ===================== เคลมอะไหล่ ===================== */
 const CLAIM_STATUS = [
-  {key:'pending', label:'รอเคลม', color:'var(--amber)'},
+  {key:'pending', label:'รอเลข Service Order', color:'var(--amber)'},
   {key:'claimed', label:'ส่งเคลมแล้ว', color:'var(--blue)'},
   {key:'received', label:'ได้รับอะไหล่แล้ว', color:'var(--green)'},
   {key:'rejected', label:'ถูกปฏิเสธ', color:'var(--red)'},
@@ -3939,6 +3974,7 @@ function openClaimModal(existingClaim){
   $('claim-modal').classList.add('show');
 }
 $('claims-new-btn').addEventListener('click', ()=>openClaimModal(null));
+$('eng-quick-claim-btn').addEventListener('click', ()=>openClaimModal(null));
 $('claim-modal-close').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
 $('claim-cancel-btn').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
 
@@ -3962,8 +3998,10 @@ $('claim-save-btn').addEventListener('click', async ()=>{
 
   const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
   try{
-    const claimFolderName = `${bangkokDateFolder()}_${sanitizeFolderName(claimDraft.siteName)}`;
-    const folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+    // ชื่อโฟลเดอร์ตามข้อกำหนด: DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ — ตัดอาการให้สั้นลงกันชื่อโฟลเดอร์ยาวเกินไป (sanitizeFolderName ตัดความยาวรวมอีกชั้นอยู่แล้ว)
+    const symptomShort = claimDraft.problem.slice(0, 40);
+    const claimFolderName = sanitizeFolderName(`${bangkokDateDDMMYYYY()}_${claimDraft.claimant}_${claimDraft.siteName}_${claimDraft.model}_${symptomShort}`);
+    const folderId = await ensureClaimFolderPath(claimDraft.category, claimFolderName);
     const uploadedAttachments = [];
     for(const att of claimDraft.attachments){
       if(!att.pending){ uploadedAttachments.push({kind:att.kind, name:att.name, url:att.url}); continue; }
@@ -3983,19 +4021,38 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       await fsUpdateClaim(claimEditingId, fields);
       const c = DATA.claims.find(x=>x.id===claimEditingId); if(c) Object.assign(c, fields);
     } else {
-      fields.status = 'pending'; fields.createdAt = Date.now();
+      fields.status = 'pending'; fields.createdAt = Date.now(); fields.serviceOrderNo = '';
       const newId = await fsAddClaim(fields);
       DATA.claims.push({ id:newId, ...fields });
     }
     $('claim-modal').classList.remove('show');
     renderClaimsView();
-    showToast('✓ บันทึกเรียบร้อยแล้ว');
+    showClaimSuccessSummary(fields);
   }catch(e){
     showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
   } finally {
     btn.disabled=false; btn.style.opacity='';
   }
 });
+
+function showClaimSuccessSummary(fields){
+  const partsRows = (fields.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
+  $('claim-success-body').innerHTML = `
+    <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(fields.claimant)}</div></div>
+    <div class="meta-item"><div class="k">สถานที่</div><div class="v">${escapeHtml(fields.siteName)}</div></div>
+    <div class="meta-item"><div class="k">Product / รุ่น</div><div class="v">${escapeHtml(fields.category)} / ${escapeHtml(fields.model)}</div></div>
+    <div class="meta-item"><div class="k">S/N</div><div class="v">${escapeHtml(fields.serialNumber)}</div></div>
+    <div class="meta-item"><div class="k">ปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problem)}</div></div>
+    <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(fields.solution)}</div></div>
+    <div class="meta-item"><div class="k">Error code / message</div><div class="v">${escapeHtml(fields.errorCode)} / ${escapeHtml(fields.errorMessage)}</div></div>
+    ${fields.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(fields.problemCount)}</div></div>` : ''}
+    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
+    <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(fields.loanSlipNo)}</div></div>
+    <div class="meta-item"><div class="k">ไฟล์แนบ</div><div class="v">${(fields.attachments||[]).length} ไฟล์</div></div>
+  `;
+  $('claim-success-modal').classList.add('show');
+}
+$('claim-success-close-btn').addEventListener('click', ()=>$('claim-success-modal').classList.remove('show'));
 
 // ใครเห็นเคลมไหนบ้าง: Super Admin เห็นหมด, Sup Product (Editor) เห็นเฉพาะ Product ที่ตัวเองดูแล, Engineer ทั่วไปเห็นเฉพาะที่ตัวเองบันทึก
 function myVisibleClaims(){
@@ -4006,6 +4063,7 @@ function myVisibleClaims(){
 }
 
 function renderClaimsView(){
+  $('claims-identity-wrap').style.display = (isEditor() && !isSuperAdmin()) ? 'flex' : 'none';
   const statusFilter = $('claims-filter-status').value;
   const search = ($('claims-filter-search').value||'').toLowerCase().trim();
   let claims = myVisibleClaims().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
@@ -4057,8 +4115,12 @@ function openClaimDetail(id){
     <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
     <div style="margin:10px 0;">${attHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
+    <div class="meta-item"><div class="k">เลข Service Order</div><div class="v">
+      ${canManage ? `<div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div>`
+      : escapeHtml(c.serviceOrderNo||'-')}
+    </div></div>
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>รอเคลม</option><option value="claimed"${c.status==='claimed'?' selected':''}>ส่งเคลมแล้ว</option><option value="received"${c.status==='received'?' selected':''}>ได้รับอะไหล่แล้ว</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>รอเลข Service Order</option><option value="claimed"${c.status==='claimed'?' selected':''}>ส่งเคลมแล้ว</option><option value="received"${c.status==='received'?' selected':''}>ได้รับอะไหล่แล้ว</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
@@ -4067,6 +4129,14 @@ function openClaimDetail(id){
       <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
     </div>`;
   if(canManage){
+    $('claim-detail-svo-save').addEventListener('click', async ()=>{
+      const svo = $('claim-detail-svo').value.trim();
+      const updates = { serviceOrderNo: svo };
+      // กรอกเลข Service Order ครั้งแรกตอนยังอยู่สถานะ "รอเลข Service Order" ให้ขยับสถานะเป็น "ส่งเคลมแล้ว" ให้อัตโนมัติ — ไม่งั้นต้องมาคอยเปลี่ยนสถานะเองซ้ำอีกขั้น
+      if(svo && c.status==='pending') updates.status = 'claimed';
+      try{ await fsUpdateClaim(c.id, updates); Object.assign(c, updates); renderClaimsView(); showToast('✓ บันทึกเลข Service Order แล้ว'); openClaimDetail(c.id); }
+      catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+    });
     $('claim-detail-status').addEventListener('change', async ()=>{
       const newStatus = $('claim-detail-status').value;
       try{ await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus; renderClaimsView(); showToast('✓ อัปเดตสถานะแล้ว'); }
@@ -4541,6 +4611,10 @@ function bangkokStamp(){
 function bangkokDateFolder(){
   const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
   return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())}`;
+}
+function bangkokDateDDMMYYYY(){
+  const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
+  return `${p(d.getUTCDate())}${p(d.getUTCMonth()+1)}${d.getUTCFullYear()}`;
 }
 async function gatherFullBackup(statusElId){
   const statusEl = statusElId ? $(statusElId) : null;
