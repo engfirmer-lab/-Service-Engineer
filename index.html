@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.20
-  อัปเดตล่าสุด: 17 กันยายน 2569 06:32 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.21
+  อัปเดตล่าสุด: 17 กันยายน 2569 07:52 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.20</title>
+<title>Firmer Service Center — v7.21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -139,7 +139,7 @@
   @keyframes gls-spin{to{transform:rotate(360deg);}}
   .global-loading-text{color:#fff;font-size:13px;font-weight:600;background:rgba(0,0,0,.35);padding:6px 14px;border-radius:999px;}
   .modal-overlay.show{display:flex;}
-  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;position:relative;}
+  .modal{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;overscroll-behavior-y:contain;position:relative;}
   .modal-close-x{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;padding:2px 6px;}
   .modal-close-x:hover{color:var(--text);}
   .modal h3{font-size:15px;margin-bottom:6px;padding-right:20px;}
@@ -250,7 +250,7 @@
   .lightbox-nav.prev{left:14px;} .lightbox-nav.next{right:14px;}
   .lightbox-counter{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);font-family:'IBM Plex Mono';font-size:12px;color:rgba(255,255,255,.7);z-index:301;}
 
-  .fullscreen-panel{display:none;position:fixed;inset:0;background:var(--bg);z-index:250;overflow-y:auto;}
+  .fullscreen-panel{display:none;position:fixed;inset:0;background:var(--bg);z-index:250;overflow-y:auto;overscroll-behavior-y:contain;}
   .fullscreen-panel.show{display:block;}
   .fullscreen-panel-inner{max-width:640px;margin:0 auto;padding:64px 16px 50px;}
   .fullscreen-close{position:fixed;top:14px;right:14px;width:38px;height:38px;border-radius:50%;background:var(--panel-alt);border:1px solid var(--border);color:var(--text);font-size:17px;cursor:pointer;z-index:251;display:flex;align-items:center;justify-content:center;transition:.12s;}
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.20</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.21</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -319,7 +319,7 @@
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
       <button id="mode-sup">Sup Product</button>
-      <button id="mode-claims">🔧 เคลมอะไหล่</button>
+      <button id="mode-claims">🔧 เคลม/แจ้ง ปัญหา</button>
       <button id="mode-owner">จัดการ Product</button>
       <button id="mode-access">จัดการสิทธิ์</button>
       <button id="mode-mgr">Manager</button>
@@ -551,8 +551,8 @@
   <!-- ============ CLAIMS VIEW (เคลมอะไหล่) ============ -->
   <div id="view-claims" style="display:none;">
     <div class="panel-block">
-      <p class="panel-sub">รวมข้อมูลเคลมอะไหล่ของทุก Product ไว้ที่เดียว — Engineer/Sup Product บันทึกได้ทุกคน, Sup Product เห็นเฉพาะ Product ที่ตัวเองดูแล</p>
-      <button class="btn btn-primary" id="claims-new-btn">+ บันทึกเคลมอะไหล่ใหม่</button>
+      <p class="panel-sub">รวมข้อมูลเคลม/แจ้งปัญหาของทุก Product ไว้ที่เดียว — Engineer/Sup Product บันทึกได้ทุกคน, Sup Product เห็นเฉพาะ Product ที่ตัวเองดูแล</p>
+      <button class="btn btn-primary" id="claims-new-btn">+ บันทึกเคลม/แจ้งปัญหาใหม่</button>
     </div>
 
     <div class="panel-block" id="claims-filter-block">
@@ -581,17 +581,23 @@
   <div class="modal-overlay" id="claim-modal">
     <div class="modal" style="max-width:480px;">
       <button class="modal-close-x" id="claim-modal-close">✕</button>
-      <h3 id="claim-modal-title">บันทึกเคลมอะไหล่ใหม่</h3>
+      <h3 id="claim-modal-title">บันทึกเคลม/แจ้งปัญหาใหม่</h3>
       <div class="field-wrap"><label>ผู้เคลม *</label><input type="text" id="claim-f-claimant"></div>
       <div class="field-wrap"><label>ชื่อสถานที่ *</label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
       <div class="form-grid two">
         <div class="field-wrap"><label>Product *</label><select id="claim-f-category"></select></div>
         <div class="field-wrap"><label>รุ่น *</label><select id="claim-f-model"></select></div>
       </div>
-      <div class="field-wrap"><label>S/N</label><input type="text" id="claim-f-sn"></div>
-      <div class="field-wrap"><label>ปัญหาที่พบ *</label><textarea id="claim-f-problem" placeholder="อธิบายอาการ..."></textarea></div>
+      <div class="field-wrap"><label>S/N *</label><input type="text" id="claim-f-sn"></div>
+      <div class="field-wrap"><label>ปัญหาที่พบ *</label><textarea id="claim-f-problem" placeholder="ระบุวันที่พบ + อาการเกิดขึ้นตอนไหน..."></textarea></div>
+      <div class="field-wrap"><label>วิธีการแก้ไข *</label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
+      <div class="form-grid two">
+        <div class="field-wrap"><label>Error code *</label><input type="text" id="claim-f-errcode"></div>
+        <div class="field-wrap"><label>Error message *</label><input type="text" id="claim-f-errmsg"></div>
+      </div>
+      <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
       <div class="field-wrap"><label>รายการอะไหล่ที่เคลม *</label><div id="claim-parts-wrap"></div></div>
-      <div class="field-wrap"><label>เลขที่ใบยืม</label><input type="text" id="claim-f-loan" placeholder="ถ้ามี"></div>
+      <div class="field-wrap"><label>เลขที่ใบยืม *</label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
       <div class="field-wrap"><label>แนบไฟล์ (รูป/เอกสาร/วิดีโอ — ไฟล์ละไม่เกิน 5 MB)</label>
         <div class="img-upload-row" id="claim-files-row">
           <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" id="claim-file-input"></label>
@@ -787,7 +793,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.20 (อัปเดตล่าสุด 17 กันยายน 2569 06:32 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.21 (อัปเดตล่าสุด 17 กันยายน 2569 07:52 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -893,8 +899,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.20";
-const APP_UPDATED_AT = "17 กันยายน 2569 06:32 น. เวลาไทย";
+const APP_VERSION = "7.21";
+const APP_UPDATED_AT = "17 กันยายน 2569 07:52 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2865,11 +2871,12 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   const btn = $('eng-save-error-btn');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่
   const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
+  const errorCode = $('eng-f-code').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
   const validSolutions = engEditingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
   DATA.pendingErrors = DATA.pendingErrors || [];
-  const errorCode = $('eng-f-code').value.trim();
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   try{
     for(let i=0;i<validSolutions.length;i++){
@@ -3104,10 +3111,11 @@ $('save-error-btn').addEventListener('click', async ()=>{
   const btn = $('save-error-btn');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่ (สาเหตุที่เคยทำให้ได้ไฟล์ซ้ำ)
   const category=$('f-category').value, model=$('f-model').value, symptom=$('f-symptom').value.trim();
+  const errorCode = $('f-code').value.trim();
   if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
+  if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
   const validSolutions = editingSolutions.filter(s=>s.desc.trim());
   if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 วิธีแก้ไข'); return; }
-  const errorCode = $('f-code').value.trim();
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
 
   if(reviewingPendingErrorId){
@@ -3820,7 +3828,7 @@ let claimDraft = null;
 let claimEditingId = null;
 
 function resetClaimDraft(){
-  claimDraft = { claimant: myUserName||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', attachments:[] };
+  claimDraft = { claimant: myUserName||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', attachments:[] };
   claimEditingId = null;
 }
 
@@ -3903,14 +3911,15 @@ function openClaimModal(existingClaim){
     claimEditingId = existingClaim.id;
     claimDraft = {
       claimant: existingClaim.claimant||'', siteName: existingClaim.siteName||'', category: existingClaim.category||'', model: existingClaim.model||'',
-      serialNumber: existingClaim.serialNumber||'', problem: existingClaim.problem||'',
+      serialNumber: existingClaim.serialNumber||'', problem: existingClaim.problem||'', solution: existingClaim.solution||'',
+      errorCode: existingClaim.errorCode||'', errorMessage: existingClaim.errorMessage||'', problemCount: existingClaim.problemCount||'',
       parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({...p})):[{partNumber:'',partName:'',count:''}],
       loanSlipNo: existingClaim.loanSlipNo||'', attachments: (existingClaim.attachments||[]).map(a=>({...a}))
     };
-    $('claim-modal-title').textContent = 'แก้ไขเคลมอะไหล่';
+    $('claim-modal-title').textContent = 'แก้ไขเคลม/แจ้งปัญหา';
   } else {
     resetClaimDraft();
-    $('claim-modal-title').textContent = 'บันทึกเคลมอะไหล่ใหม่';
+    $('claim-modal-title').textContent = 'บันทึกเคลม/แจ้งปัญหาใหม่';
   }
   $('claim-f-claimant').value = claimDraft.claimant;
   $('claim-f-site').value = claimDraft.siteName;
@@ -3920,6 +3929,10 @@ function openClaimModal(existingClaim){
   if(claimDraft.model) $('claim-f-model').value = claimDraft.model;
   $('claim-f-sn').value = claimDraft.serialNumber;
   $('claim-f-problem').value = claimDraft.problem;
+  $('claim-f-solution').value = claimDraft.solution;
+  $('claim-f-errcode').value = claimDraft.errorCode;
+  $('claim-f-errmsg').value = claimDraft.errorMessage;
+  $('claim-f-problemcount').value = claimDraft.problemCount;
   $('claim-f-loan').value = claimDraft.loanSlipNo;
   renderClaimPartsRows();
   renderClaimFilesRow();
@@ -3936,10 +3949,16 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.model = $('claim-f-model').value;
   claimDraft.serialNumber = $('claim-f-sn').value.trim();
   claimDraft.problem = $('claim-f-problem').value.trim();
+  claimDraft.solution = $('claim-f-solution').value.trim();
+  claimDraft.errorCode = $('claim-f-errcode').value.trim();
+  claimDraft.errorMessage = $('claim-f-errmsg').value.trim();
+  claimDraft.problemCount = $('claim-f-problemcount').value.trim();
   claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
-  const cleanParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
-  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.problem){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ'); return; }
-  if(cleanParts.length===0){ showToast('⚠ กรุณาใส่รายการอะไหล่อย่างน้อย 1 รายการ'); return; }
+  const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
+  const cleanParts = rawParts.filter(p=>p.partNumber && p.partName);
+  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.serialNumber || !claimDraft.problem || !claimDraft.solution || !claimDraft.errorCode || !claimDraft.errorMessage || !claimDraft.loanSlipNo){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ'); return; }
+  if(rawParts.length===0){ showToast('⚠ กรุณาใส่รายการอะไหล่อย่างน้อย 1 รายการ'); return; }
+  if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอกทั้ง Part number และ Part name ให้ครบทุกแถวที่กรอกไว้'); return; }
 
   const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
   try{
@@ -3955,7 +3974,9 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     }
     const fields = {
       claimant: claimDraft.claimant, siteName: claimDraft.siteName, category: claimDraft.category, model: claimDraft.model,
-      serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, parts: cleanParts, loanSlipNo: claimDraft.loanSlipNo,
+      serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
+      errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemCount: claimDraft.problemCount,
+      parts: cleanParts, loanSlipNo: claimDraft.loanSlipNo,
       attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myUserName,
     };
     if(claimEditingId){
@@ -3968,7 +3989,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     }
     $('claim-modal').classList.remove('show');
     renderClaimsView();
-    showToast('✓ บันทึกเคลมอะไหล่แล้ว');
+    showToast('✓ บันทึกเรียบร้อยแล้ว');
   }catch(e){
     showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
   } finally {
@@ -4029,6 +4050,10 @@ function openClaimDetail(id){
     <p style="font-size:12px;color:var(--text-faint);margin-bottom:12px;">${escapeHtml(c.category)}${c.serialNumber?' · S/N '+escapeHtml(c.serialNumber):''}</p>
     <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(c.claimant)}</div></div>
     <div class="meta-item"><div class="k">ปัญหาที่พบ</div><div class="v">${escapeHtml(c.problem)}</div></div>
+    <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
+    <div class="meta-item"><div class="k">Error code</div><div class="v">${escapeHtml(c.errorCode||'-')}</div></div>
+    <div class="meta-item"><div class="k">Error message</div><div class="v">${escapeHtml(c.errorMessage||'-')}</div></div>
+    ${c.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(c.problemCount)}</div></div>` : ''}
     <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
     <div style="margin:10px 0;">${attHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
