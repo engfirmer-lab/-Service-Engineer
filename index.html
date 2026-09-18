@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.27
-  อัปเดตล่าสุด: 17 กันยายน 2569 21:53 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.28
+  อัปเดตล่าสุด: 18 กันยายน 2569 07:52 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.27</title>
+<title>Firmer Service Center — v7.28</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.27</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.28</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -639,6 +639,16 @@
     </div>
   </div>
 
+  <!-- ============ NICKNAME MODAL (บังคับกรอกครั้งแรกที่ login) ============ -->
+  <div class="modal-overlay" id="nickname-modal">
+    <div class="modal" style="max-width:400px;">
+      <h3>ยินดีต้อนรับ 👋</h3>
+      <p class="panel-sub">ตั้งชื่อเล่นที่จะใช้แสดงในระบบนี้ (ใช้แทนชื่อ/อีเมลบัญชี Google ทุกจุด — กรอกครั้งเดียว ใช้ถาวรจนกว่าแอดมินจะลบสิทธิ์บัญชีนี้)</p>
+      <div class="field-wrap"><label>ชื่อเล่น <span style="color:var(--red);">*</span></label><input type="text" id="nickname-input" placeholder="เช่น บอย, แจ็ค, น้องฝ้าย" maxlength="40"></div>
+      <button class="btn btn-primary" id="nickname-save-btn" style="width:100%;margin-top:10px;">เริ่มใช้งาน</button>
+    </div>
+  </div>
+
   <!-- ============ ACCESS VIEW (จัดการสิทธิ์เข้าถึง) ============ -->
   <div id="view-access" style="display:none;">
     <div class="desktop-hint">🔐 หน้านี้จัดการว่าใครเข้าระบบได้บ้าง และใครแก้ไขข้อมูลได้บ้าง</div>
@@ -813,7 +823,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.27 (อัปเดตล่าสุด 17 กันยายน 2569 21:53 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.28 (อัปเดตล่าสุด 18 กันยายน 2569 07:52 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -913,8 +923,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.27";
-const APP_UPDATED_AT = "17 กันยายน 2569 21:53 น. เวลาไทย";
+const APP_VERSION = "7.28";
+const APP_UPDATED_AT = "18 กันยายน 2569 07:52 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1124,6 +1134,8 @@ const SUPER_ADMIN_EMAIL = 'engfirmer@gmail.com'; // ผู้ดูแลสู�
 let adminEmails = []; // รายชื่ออีเมลที่แก้ไขข้อมูลได้ (โหลดจาก Firestore)
 let approvedUsers = []; // รายชื่ออีเมลที่มีสิทธิ์เข้าถึง (อ่าน) ระบบได้ (โหลดจาก Firestore)
 let myVotes = {};
+let nicknamesMap = {}; // email(lowercase) -> nickname ที่ผู้ใช้ตั้งไว้ครั้งแรกที่ login (แทนชื่อ/อีเมลบัญชี Google ทุกจุดในแอป)
+let myNicknameDocId = null; // uid ของเอกสาร nicknames/{uid} ของผู้ใช้ปัจจุบัน (ถ้ามี)
 
 let engEditingSolutions = [];
 let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไข" on a pending Engineer submission
@@ -1243,11 +1255,12 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [docsSnap, propSnap, pendSnap, claimsSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
+    const [docsSnap, propSnap, pendSnap, claimsSnap, nickSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
       sdk.getDocs(sdk.collection(db,'claims')),
+      sdk.getDocs(sdk.collection(db,'nicknames')),
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
@@ -1255,6 +1268,11 @@ async function loadData(){
     DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
+    nicknamesMap = {}; myNicknameDocId = null;
+    nickSnap.forEach(d=>{
+      const nd = d.data();
+      if(nd && nd.email){ nicknamesMap[nd.email.toLowerCase()] = nd.nickname; if(myUserEmail && nd.email.toLowerCase()===myUserEmail) myNicknameDocId = d.id; }
+    });
     docsSnap.forEach(d=> DATA.documents.push({ id:d.id, ...d.data() }));
     propSnap.forEach(d=> DATA.proposals.push({ id:d.id, ...d.data() }));
     pendSnap.forEach(d=> DATA.pendingErrors.push({ id:d.id, ...d.data() }));
@@ -1483,8 +1501,14 @@ function compressImage(file){
 function imgSrcOf(img){ return typeof img==='string' ? img : img.dataUrl; } // ใช้แสดงรูปทั้งตอน preview (ยังไม่อัปโหลด) และตอนอัปโหลดแล้ว (เป็นลิงก์จริง)
 
 /* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
+function nicknameFor(email){ // คืนชื่อเล่นที่ผู้ใช้ตั้งไว้ ถ้าไม่มีให้ fallback เป็นอีเมล/ชื่อบัญชี Google
+  if(!email) return '';
+  return nicknamesMap[email.toLowerCase()] || email;
+}
+function myDisplayName(){ return nicknameFor(myUserEmail) || myUserName || myUserEmail || ''; }
 function showSignedInPill(){
-  $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = myUserName.charAt(0); $('signed-in-name').textContent = myUserName;
+  const name = myDisplayName();
+  $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = (name||'?').charAt(0); $('signed-in-name').textContent = name;
 }
 const GOOGLE_CLIENT_ID = "652851518589-9jdarip7ndm82967s3bkllnbcj9hmuvh.apps.googleusercontent.com";
 
@@ -2065,12 +2089,44 @@ async function checkAccessAndLoad(){
   }
 
   await loadData();
+  showSignedInPill(); // อัปเดต pill อีกครั้งหลังโหลดข้อมูล — ตอน sign-in ครั้งแรก nicknamesMap ยังไม่มา เลยต้องรีเฟรชชื่อที่แสดงให้เป็นชื่อเล่นจริง
   initVersionCheck();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
+  if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal(); // ล็อกอินครั้งแรกด้วยอีเมลนี้ — ยังไม่เคยตั้งชื่อเล่น บังคับตั้งก่อนใช้งาน
   if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; }
 }
+
+/* ===================== NICKNAME (ชื่อเล่น) — ตั้งครั้งแรกที่ login แทนอีเมล/ชื่อบัญชี Google ทุกจุดในแอป ===================== */
+function showNicknameModal(){
+  $('nickname-input').value = '';
+  $('nickname-modal').classList.add('show');
+  setTimeout(()=>$('nickname-input').focus(), 50);
+}
+async function saveNickname(){
+  const val = $('nickname-input').value.trim();
+  if(!val){ showToast('⚠ กรุณากรอกชื่อเล่นก่อนเริ่มใช้งาน'); return; }
+  const btn = $('nickname-save-btn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try{
+    const sdk = window._firebaseSdk;
+    const docId = myNicknameDocId || myGoogleId || uid('nick');
+    await sdk.setDoc(sdk.doc(db,'nicknames',docId), { email: myUserEmail, nickname: val, updatedAt: Date.now() });
+    myNicknameDocId = docId;
+    nicknamesMap[myUserEmail] = val;
+    $('nickname-modal').classList.remove('show');
+    showSignedInPill();
+    renderAll();
+    showToast('✅ ตั้งชื่อเล่นเรียบร้อย — ยินดีต้อนรับ ' + val);
+  }catch(e){
+    showToast('⚠ บันทึกชื่อเล่นไม่สำเร็จ: '+e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = 'เริ่มใช้งาน';
+  }
+}
+$('nickname-save-btn').addEventListener('click', saveNickname);
+$('nickname-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') saveNickname(); });
 
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 function requestModeSwitch(mode){
@@ -2480,11 +2536,11 @@ async function submitUp(solId){
     try{ await fsRemoveFeedback(targetErrId, solId, existing); }catch(e){ showToast('⚠ ยกเลิกไม่สำเร็จ: '+e.message); }
     showToast('ยกเลิกการโหวตแล้ว');
   } else {
-    const entry = {type:'up', name:myUserName, ts:Date.now()};
+    const entry = {type:'up', name:myDisplayName(), ts:Date.now()};
     for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(entry); e.totalUps=(e.totalUps||0)+1; break; } }
     myVotes['up:'+solId]=entry;
     try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
-    showToast('✓ บันทึก feedback แล้วในชื่อ '+myUserName);
+    showToast('✓ บันทึก feedback แล้วในชื่อ '+myDisplayName());
   }
   renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId) renderErrorDetailPanel();
@@ -2510,7 +2566,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
         uploadedImages = await resolveImagesForUpload(s.images||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
         uploadedVideos = await resolveVideosForUpload(s.videos||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
       }
-      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myUserName };
+      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myDisplayName() };
       const newId = await fsAddProposal(fields);
       DATA.proposals.push({ id:newId, ...fields });
     }
@@ -2519,17 +2575,17 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
-  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myUserName); downModalErrorId=null;
+  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myDisplayName()); downModalErrorId=null;
 });
 
 /* ===================== NOTIFICATIONS (Engineer's submitted-error status) ===================== */
 function myResolvedSubmissions(){
   if(!myUserName || !DATA) return [];
-  return (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
+  return (DATA.pendingErrors||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName()) && p.status!=='pending');
 }
 function myResolvedProposals(){
   if(!myUserName || !DATA) return [];
-  return (DATA.proposals||[]).filter(p=>p.submitterName===myUserName && p.status!=='pending');
+  return (DATA.proposals||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName()) && p.status!=='pending');
 }
 function myPendingReviewCount(){
   // ถ้าเลือกตัวตนเป็น Sup Product คนใดคนหนึ่งไว้แล้ว นับ Error/ข้อเสนอที่ยังรอเขาตรวจสอบ (คงอยู่จนกว่าจะอนุมัติ/ปฏิเสธ)
@@ -2577,8 +2633,8 @@ function statusBadgeHtml(status){
 }
 async function renderNotifList(){
   const list = $('notif-list');
-  const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
-  const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName).sort((a,b)=>b.createdAt-a.createdAt);
+  const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName()).sort((a,b)=>b.createdAt-a.createdAt);
+  const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName()).sort((a,b)=>b.createdAt-a.createdAt);
   // แสดงเฉพาะรายการที่ "รอตรวจสอบ" หรือ "จบสถานะแล้วแต่ยังไม่เคยเห็นผล" — พอเคยเห็นผลแล้วจะหายไปจากรายการ ไม่ค้างอยู่ตลอดไป
   const myErrsVisible = myErrs.filter(p=>p.status==='pending' || !p.notifRead);
   const myPropsVisible = myProps.filter(p=>p.status==='pending' || !p.notifRead);
@@ -2929,7 +2985,7 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
       validSolutions[i].videos = await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i);
     }
   }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myUserName, status:'pending', createdAt: Date.now() };
+  const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myDisplayName(), status:'pending', createdAt: Date.now() };
   let newId;
   try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   DATA.pendingErrors.push({ id:newId, ...fields });
@@ -3712,8 +3768,9 @@ function renderUnifiedPermissionList(){
   const approved = approvedUsers.slice().sort(naturalSort);
 
   function userRowHtml(email, role){
+    const nick = nicknamesMap[email.toLowerCase()];
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(email)}</span></div>
+      <div class="admin-row-main"><span style="font-size:13px;">${nick?`👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>`:`✉️ ${escapeHtml(email)}`}</span></div>
       <div style="display:flex;gap:6px;align-items:center;">
         <select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">
           <option value="approved" ${role==='approved'?'selected':''}>ผู้ใช้ทั่วไป</option>
@@ -3892,7 +3949,7 @@ let claimDraft = null;
 let claimEditingId = null;
 
 function resetClaimDraft(){
-  claimDraft = { claimant: myUserName||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
+  claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
   claimEditingId = null;
 }
 
@@ -4074,7 +4131,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
       errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemCount: claimDraft.problemCount,
       parts: cleanParts, jobFactorium: claimDraft.jobFactorium, loanSlipNo: claimDraft.loanSlipNo,
-      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myUserName,
+      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myDisplayName(),
     };
     if(claimEditingId){
       await fsUpdateClaim(claimEditingId, fields);
