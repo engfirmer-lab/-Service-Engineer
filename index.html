@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.31
-  อัปเดตล่าสุด: 18 กันยายน 2569 14:21 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.32
+  อัปเดตล่าสุด: 18 กันยายน 2569 14:30 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.31</title>
+<title>Firmer Service Center — v7.32</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -198,9 +198,9 @@
   .img-thumb button{position:absolute;top:1px;right:1px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:3px;font-size:9px;width:14px;height:14px;cursor:pointer;line-height:1;}
   .upload-btn{width:56px;height:56px;border:1px dashed var(--border);border-radius:6px;background:var(--panel);color:var(--text-faint);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .upload-btn:hover{border-color:var(--amber);color:var(--amber);}
-  .claim-dropzone{border:1px dashed transparent;border-radius:8px;padding:4px;transition:.12s;}
-  .claim-dropzone.drag-over{border-color:var(--amber);background:rgba(232,163,61,.08);}
-  .claim-dropzone-hint{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+  .file-dropzone{border:1px dashed transparent;border-radius:8px;padding:4px;transition:.12s;}
+  .file-dropzone.drag-over{border-color:var(--amber);background:rgba(232,163,61,.08);}
+  .file-dropzone-hint{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
 
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{text-align:left;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;padding:9px 10px;border-bottom:1px solid var(--border);}
@@ -320,7 +320,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.31</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.32</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -589,7 +589,10 @@
       <div class="field-wrap" style="margin-top:10px;" id="doclink-url-field"><label>ลิงก์ <span style="color:var(--red);">*</span></label><input type="text" id="doclink-url-input" placeholder="วางลิงก์ไฟล์ที่นี่ (Google Drive, NAS ฯลฯ)"></div>
       <div class="field-wrap" style="margin-top:10px;display:none;" id="doclink-upload-field">
         <label>เลือกไฟล์ <span style="color:var(--red);">*</span></label>
-        <input type="file" id="doclink-file-input">
+        <div class="file-dropzone" id="doclink-dropzone">
+          <input type="file" id="doclink-file-input">
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
+        </div>
         <div id="doclink-upload-progress-wrap" style="display:none;margin-top:8px;">
           <div style="height:6px;background:var(--border);border-radius:999px;overflow:hidden;"><div id="doclink-upload-progress-bar" style="height:100%;width:0%;background:var(--amber);transition:width .2s;"></div></div>
           <div id="doclink-upload-progress-text" style="font-size:11px;color:var(--text-faint);margin-top:4px;"></div>
@@ -843,7 +846,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.31 (อัปเดตล่าสุด 18 กันยายน 2569 14:21 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.32 (อัปเดตล่าสุด 18 กันยายน 2569 14:30 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -943,8 +946,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.31";
-const APP_UPDATED_AT = "18 กันยายน 2569 14:21 น. เวลาไทย";
+const APP_VERSION = "7.32";
+const APP_UPDATED_AT = "18 กันยายน 2569 14:30 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1126,15 +1129,21 @@ function renderDownModalCauses(){
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
-        <div class="img-upload-row" data-imgrow="${s.id}">
-          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        <div class="file-dropzone" data-imgdrop="${s.id}">
+          <div class="img-upload-row" data-imgrow="${s.id}">
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
-          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        <div class="file-dropzone" data-viddrop="${s.id}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+            ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
     </div>`).join('');
@@ -1145,6 +1154,7 @@ function renderDownModalCauses(){
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=downModalCauses.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalCauses(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
+  wireSolutionMediaDropzones(wrap, sid=>downModalCauses.find(s=>s.id===sid), renderDownModalCauses);
 }
 
 let myGoogleId = null;
@@ -2984,15 +2994,21 @@ function renderEngSolutionsEditor(){
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
-        <div class="img-upload-row" data-imgrow="${s.id}">
-          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        <div class="file-dropzone" data-imgdrop="${s.id}">
+          <div class="img-upload-row" data-imgrow="${s.id}">
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
-          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        <div class="file-dropzone" data-viddrop="${s.id}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+            ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
     </div>`).join('');
@@ -3003,6 +3019,7 @@ function renderEngSolutionsEditor(){
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
+  wireSolutionMediaDropzones(wrap, sid=>engEditingSolutions.find(s=>s.id===sid), renderEngSolutionsEditor);
 }
 $('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderEngSolutionsEditor(); });
 
@@ -3199,15 +3216,21 @@ function renderSolutionsEditor(){
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
-        <div class="img-upload-row" data-imgrow="${s.id}">
-          ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+        <div class="file-dropzone" data-imgdrop="${s.id}">
+          <div class="img-upload-row" data-imgrow="${s.id}">
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
-          ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-          <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+        <div class="file-dropzone" data-viddrop="${s.id}">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
+            ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
     </div>`).join('');
@@ -3218,6 +3241,7 @@ function renderSolutionsEditor(){
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
   wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
+  wireSolutionMediaDropzones(wrap, sid=>editingSolutions.find(s=>s.id===sid), renderSolutionsEditor);
 }
 $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderSolutionsEditor(); });
 
@@ -3590,6 +3614,12 @@ function setDoclinkMode(mode){
 }
 $('doclink-mode-link-btn').addEventListener('click', ()=>setDoclinkMode('link'));
 $('doclink-mode-upload-btn').addEventListener('click', ()=>setDoclinkMode('upload'));
+wireFileDropzone($('doclink-dropzone'), (files)=>{
+  // ใส่ไฟล์ที่ลากมาเข้า input เดิมตรงๆ ผ่าน DataTransfer — โค้ดตอนกดบันทึกที่อ่านจาก $('doclink-file-input').files[0] ใช้ได้เลยไม่ต้องแก้
+  const dt = new DataTransfer();
+  Array.from(files).forEach(f=>dt.items.add(f));
+  $('doclink-file-input').files = dt.files;
+});
 
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
@@ -4042,6 +4072,48 @@ function populateClaimModelSelect(){
 }
 $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
+// ผูก drag & drop ให้กับกล่อง "รูปภาพประกอบ"/"วิดีโอประกอบ" ของสาเหตุแต่ละอัน (ใช้ซ้ำ 3 จุด: เสนอวิธีแก้ใหม่, Engineer เพิ่ม Error ใหม่, Sup Product แก้ไข Error)
+// wrap: container ที่ innerHTML ถูก re-render ทุกครั้ง (มี [data-imgdrop]/[data-viddrop] อยู่ข้างใน) · findSol: (sid)=>solution object · onRerender: เรียกหลังเพิ่มไฟล์เสร็จ
+function wireSolutionMediaDropzones(wrap, findSol, onRerender){
+  wrap.querySelectorAll('[data-imgdrop]').forEach(zone=>{
+    const sid = zone.getAttribute('data-imgdrop');
+    wireFileDropzone(zone, async (files)=>{
+      const sol = findSol(sid); if(!sol) return;
+      for(const file of Array.from(files)){
+        if(!file.type.startsWith('image/')){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์รูปภาพ ข้ามไฟล์นี้'); continue; }
+        try{ const c = await compressImage(file); sol.images.push(c); }catch(e){ showToast('⚠ แนบรูป '+file.name+' ไม่สำเร็จ'); }
+      }
+      onRerender();
+    });
+  });
+  wrap.querySelectorAll('[data-viddrop]').forEach(zone=>{
+    const sid = zone.getAttribute('data-viddrop');
+    wireFileDropzone(zone, async (files)=>{
+      const sol = findSol(sid); if(!sol) return;
+      if(!sol.videos) sol.videos = [];
+      for(const file of Array.from(files)){
+        if(!file.type.startsWith('video/')){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ ข้ามไฟล์นี้'); continue; }
+        sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file });
+      }
+      onRerender();
+    });
+  });
+}
+// ผูก event ลากไฟล์มาวาง (drag & drop) ให้กับ dropzone element ใดๆ — ใช้ร่วมกันทุกจุดที่มีการอัปโหลดไฟล์ในแอป (เคลม, เอกสาร, รูป/วิดีโอใน Troubleshooting)
+// onFiles: async (fileList) => void — เรียกตอนมีไฟล์มาวางจริง (FileList เหมือนตอนเลือกจาก input type=file ปกติ)
+function wireFileDropzone(zone, onFiles){
+  if(!zone || zone._dropzoneWired) return;
+  zone._dropzoneWired = true;
+  let dragDepth = 0; // ใช้นับเข้า/ออกแทนเช็ค relatedTarget — กันขอบ dropzone มีหลายชั้น dragleave ตอนลากผ่านลูกในแล้วกระพริบ
+  zone.addEventListener('dragenter', (e)=>{ e.preventDefault(); dragDepth++; zone.classList.add('drag-over'); });
+  zone.addEventListener('dragover', (e)=>{ e.preventDefault(); });
+  zone.addEventListener('dragleave', (e)=>{ e.preventDefault(); dragDepth=Math.max(0,dragDepth-1); if(dragDepth===0) zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', async (e)=>{
+    e.preventDefault(); dragDepth=0; zone.classList.remove('drag-over');
+    if(!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length===0) return;
+    await onFiles(e.dataTransfer.files);
+  });
+}
 // จัดการไฟล์ที่เลือกมา ไม่ว่าจะมาจากปุ่ม ＋ (input file) หรือลากไฟล์มาวาง (drag & drop) — ใช้ฟังก์ชันเดียวกัน กันโค้ดซ้ำ
 async function handleClaimAttachFiles(groupKey, fileList){
   const files = Array.from(fileList);
@@ -4064,11 +4136,11 @@ function renderClaimAttachGroups(){
   wrap.innerHTML = CLAIM_ATTACHMENT_GROUPS.map(g=>`
     <div class="field-wrap">
       <label>${escapeHtml(g.label)}${g.required?' <span style="color:var(--red);">*</span>':' (ถ้ามี)'}</label>
-      <div class="claim-dropzone" id="claim-dropzone-${g.key}">
+      <div class="file-dropzone" id="file-dropzone-${g.key}">
         <div class="img-upload-row" id="claim-attach-row-${g.key}">
           <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" data-attachinput="${g.key}"></label>
         </div>
-        <p class="claim-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
+        <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
       </div>
     </div>`).join('') + `<p style="font-size:11px;color:var(--text-faint);margin:-4px 0 4px;">ไฟล์ละไม่เกิน 5 MB</p>`;
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>renderClaimAttachGroupRow(g.key));
@@ -4082,17 +4154,7 @@ function renderClaimAttachGroups(){
   });
   // ลากไฟล์จากเครื่องมาวางในกรอบเพื่ออัปโหลด — ไม่ต้องกดปุ่ม ＋ แล้วไปค้นหาโฟลเดอร์เอง (ใช้งานได้บนเดสก์ท็อป ยกเว้นมือถือที่ลากไฟล์แบบนี้ไม่ได้อยู่แล้ว)
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>{
-    const zone = $('claim-dropzone-'+g.key);
-    if(!zone) return;
-    let dragDepth = 0; // ใช้นับเข้า/ออกแทนเช็ค relatedTarget — กันขอบ dropzone มีหลายชั้น dragleave ตอนลากผ่านลูกในแล้วกระพริบ
-    zone.addEventListener('dragenter', (e)=>{ e.preventDefault(); dragDepth++; zone.classList.add('drag-over'); });
-    zone.addEventListener('dragover', (e)=>{ e.preventDefault(); });
-    zone.addEventListener('dragleave', (e)=>{ e.preventDefault(); dragDepth=Math.max(0,dragDepth-1); if(dragDepth===0) zone.classList.remove('drag-over'); });
-    zone.addEventListener('drop', async (e)=>{
-      e.preventDefault(); dragDepth=0; zone.classList.remove('drag-over');
-      if(!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length===0) return;
-      await handleClaimAttachFiles(g.key, e.dataTransfer.files);
-    });
+    wireFileDropzone($('file-dropzone-'+g.key), (files)=>handleClaimAttachFiles(g.key, files));
   });
 }
 function renderClaimAttachGroupRow(groupKey){
