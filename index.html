@@ -1686,11 +1686,13 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   const f4 = await driveFindOrCreateFolder(docTypeFolderName, f3);
   return f4;
 }
-// โฟลเดอร์เคลมอะไหล่ — แยกสาขาต่างหากจากเอกสาร ไม่อิงผู้ดูแล เพราะเคลมอะไหล่ผูกกับ "เคส" ไม่ใช่ผู้รับผิดชอบ Product
-// โครงสร้าง: Service Center/Claims/[Product]/[DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ]/ — โฟลเดอร์แยกต่างหากทุกเคลม 1 รายการ
-async function ensureClaimFolderPath(category, claimFolderName){
-  const rootClaims = await driveFindOrCreateFolder('Claims', DRIVE_ROOT_FOLDER_ID);
-  const f2 = await driveFindOrCreateFolder(category, rootClaims);
+// โฟลเดอร์เคลมอะไหล่ — จัดตามผู้ดูแล (Sup Product) ของ Product/รุ่นนั้นๆ เหมือนโครงสร้างเอกสาร ให้ Sup Product แต่ละคนเห็นเคลมของตัวเองรวมอยู่ที่เดียว
+// โครงสร้าง: Service Center/[ชื่อ Sup Product]/Claim/[DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ]/ — โฟลเดอร์แยกต่างหากทุกเคลม 1 รายการ
+async function ensureClaimFolderPath(category, model, claimFolderName){
+  const owner = ownerOf(category, model);
+  const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+  const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
+  const f2 = await driveFindOrCreateFolder('Claim', f1);
   const f3 = await driveFindOrCreateFolder(claimFolderName, f2);
   return f3;
 }
@@ -4037,34 +4039,56 @@ function populateClaimModelSelect(){
 }
 $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
+// จัดการไฟล์ที่เลือกมา ไม่ว่าจะมาจากปุ่ม ＋ (input file) หรือลากไฟล์มาวาง (drag & drop) — ใช้ฟังก์ชันเดียวกัน กันโค้ดซ้ำ
+async function handleClaimAttachFiles(groupKey, fileList){
+  const files = Array.from(fileList);
+  for(const file of files){
+    if(file.type.startsWith('image/')){
+      try{
+        const c = await compressImage(file);
+        if(c.blob && c.blob.size > 5*1024*1024){ showToast('⚠ '+file.name+' บีบอัดแล้วยังเกิน 5MB ข้ามไฟล์นี้'); continue; }
+        claimDraft.attachments[groupKey].push({ kind:'image', pending:true, dataUrl:c.dataUrl, blob:c.blob, name:file.name });
+      }catch(e){ showToast('⚠ แนบรูป '+file.name+' ไม่สำเร็จ'); }
+    } else {
+      if(file.size > 5*1024*1024){ showToast('⚠ '+file.name+' มีขนาดเกิน 5MB กรุณาเลือกไฟล์ที่เล็กกว่านี้'); continue; }
+      claimDraft.attachments[groupKey].push({ kind:'file', pending:true, file, name:file.name });
+    }
+  }
+  renderClaimAttachGroupRow(groupKey);
+}
 function renderClaimAttachGroups(){
   const wrap = $('claim-attach-groups');
   wrap.innerHTML = CLAIM_ATTACHMENT_GROUPS.map(g=>`
     <div class="field-wrap">
       <label>${escapeHtml(g.label)}${g.required?' <span style="color:var(--red);">*</span>':' (ถ้ามี)'}</label>
-      <div class="img-upload-row" id="claim-attach-row-${g.key}">
-        <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" data-attachinput="${g.key}"></label>
+      <div class="claim-dropzone" id="claim-dropzone-${g.key}">
+        <div class="img-upload-row" id="claim-attach-row-${g.key}">
+          <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" data-attachinput="${g.key}"></label>
+        </div>
+        <p class="claim-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
       </div>
     </div>`).join('') + `<p style="font-size:11px;color:var(--text-faint);margin:-4px 0 4px;">ไฟล์ละไม่เกิน 5 MB</p>`;
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>renderClaimAttachGroupRow(g.key));
   wrap.querySelectorAll('[data-attachinput]').forEach(inp=>{
     inp.addEventListener('change', async ()=>{
       const groupKey = inp.getAttribute('data-attachinput');
-      const files = Array.from(inp.files);
+      const files = inp.files;
       inp.value = '';
-      for(const file of files){
-        if(file.type.startsWith('image/')){
-          try{
-            const c = await compressImage(file);
-            if(c.blob && c.blob.size > 5*1024*1024){ showToast('⚠ '+file.name+' บีบอัดแล้วยังเกิน 5MB ข้ามไฟล์นี้'); continue; }
-            claimDraft.attachments[groupKey].push({ kind:'image', pending:true, dataUrl:c.dataUrl, blob:c.blob, name:file.name });
-          }catch(e){ showToast('⚠ แนบรูป '+file.name+' ไม่สำเร็จ'); }
-        } else {
-          if(file.size > 5*1024*1024){ showToast('⚠ '+file.name+' มีขนาดเกิน 5MB กรุณาเลือกไฟล์ที่เล็กกว่านี้'); continue; }
-          claimDraft.attachments[groupKey].push({ kind:'file', pending:true, file, name:file.name });
-        }
-      }
-      renderClaimAttachGroupRow(groupKey);
+      await handleClaimAttachFiles(groupKey, files);
+    });
+  });
+  // ลากไฟล์จากเครื่องมาวางในกรอบเพื่ออัปโหลด — ไม่ต้องกดปุ่ม ＋ แล้วไปค้นหาโฟลเดอร์เอง (ใช้งานได้บนเดสก์ท็อป ยกเว้นมือถือที่ลากไฟล์แบบนี้ไม่ได้อยู่แล้ว)
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{
+    const zone = $('claim-dropzone-'+g.key);
+    if(!zone) return;
+    let dragDepth = 0; // ใช้นับเข้า/ออกแทนเช็ค relatedTarget — กันขอบ dropzone มีหลายชั้น dragleave ตอนลากผ่านลูกในแล้วกระพริบ
+    zone.addEventListener('dragenter', (e)=>{ e.preventDefault(); dragDepth++; zone.classList.add('drag-over'); });
+    zone.addEventListener('dragover', (e)=>{ e.preventDefault(); });
+    zone.addEventListener('dragleave', (e)=>{ e.preventDefault(); dragDepth=Math.max(0,dragDepth-1); if(dragDepth===0) zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', async (e)=>{
+      e.preventDefault(); dragDepth=0; zone.classList.remove('drag-over');
+      if(!e.dataTransfer || !e.dataTransfer.files || e.dataTransfer.files.length===0) return;
+      await handleClaimAttachFiles(g.key, e.dataTransfer.files);
     });
   });
 }
@@ -4161,22 +4185,31 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
 
   const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
+  showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
   try{
     // ชื่อโฟลเดอร์ตามข้อกำหนด: DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ — ตัดอาการให้สั้นลงกันชื่อโฟลเดอร์ยาวเกินไป (sanitizeFolderName ตัดความยาวรวมอีกชั้นอยู่แล้ว)
     const symptomShort = claimDraft.problem.slice(0, 40);
     const claimFolderName = sanitizeFolderName(`${bangkokDateDDMMYYYY()}_${claimDraft.claimant}_${claimDraft.siteName}_${claimDraft.model}_${symptomShort}`);
-    const folderId = await ensureClaimFolderPath(claimDraft.category, claimFolderName);
+    const folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
     const uploadedAttachments = emptyClaimAttachments();
+    // นับไฟล์ที่ต้องอัปโหลดจริง (ไม่รวมไฟล์เดิมที่แนบไว้แล้วตอนแก้ไขเคลม) เพื่อโชว์ "ไฟล์ที่ n จาก m" ระหว่างอัปโหลด
+    const pendingFiles = [];
+    CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ claimDraft.attachments[g.key].forEach(att=>{ if(att.pending) pendingFiles.push(g); }); });
+    const totalFiles = pendingFiles.length;
+    let fileIndex = 0;
     for(const g of CLAIM_ATTACHMENT_GROUPS){
       for(const att of claimDraft.attachments[g.key]){
         if(!att.pending){ uploadedAttachments[g.key].push({kind:att.kind, name:att.name, url:att.url}); continue; }
+        fileIndex++;
         const fileToUpload = att.blob || att.file;
         const fileName = att.name || ('attachment_'+Date.now());
+        updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${fileIndex}/${totalFiles} (${g.label})...`);
         const subFolderId = await driveFindOrCreateFolder(g.label, folderId);
-        const url = await driveUploadLargeFile(fileToUpload, fileName, subFolderId);
+        const url = await driveUploadLargeFile(fileToUpload, fileName, subFolderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${fileIndex}/${totalFiles} (${g.label})... ${pct}%`); });
         uploadedAttachments[g.key].push({ kind: att.kind, name: fileName, url });
       }
     }
+    updateLoadingOverlayText('กำลังบันทึกข้อมูล...');
     const fields = {
       claimant: claimDraft.claimant, siteName: claimDraft.siteName, category: claimDraft.category, model: claimDraft.model,
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
@@ -4199,6 +4232,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
   } finally {
     btn.disabled=false; btn.style.opacity='';
+    hideLoadingOverlay();
   }
 });
 
