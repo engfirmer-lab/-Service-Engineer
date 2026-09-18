@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.28
-  อัปเดตล่าสุด: 18 กันยายน 2569 07:52 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.29
+  อัปเดตล่าสุด: 18 กันยายน 2569 10:39 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.28</title>
+<title>Firmer Service Center — v7.29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -306,13 +306,14 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.28</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.29</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
         <div class="gsi-avatar" id="signed-in-avatar">?</div>
         <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
         <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
+        <button id="edit-nickname-btn" title="แก้ไขชื่อเล่น" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">✏️</button>
         <button id="change-name-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">ออกจากระบบ</button>
       </div>
     </div>
@@ -639,13 +640,14 @@
     </div>
   </div>
 
-  <!-- ============ NICKNAME MODAL (บังคับกรอกครั้งแรกที่ login) ============ -->
+  <!-- ============ NICKNAME MODAL (บังคับกรอกครั้งแรกที่ login / แก้ไขทีหลังได้จากปุ่ม ✏️) ============ -->
   <div class="modal-overlay" id="nickname-modal">
     <div class="modal" style="max-width:400px;">
-      <h3>ยินดีต้อนรับ 👋</h3>
-      <p class="panel-sub">ตั้งชื่อเล่นที่จะใช้แสดงในระบบนี้ (ใช้แทนชื่อ/อีเมลบัญชี Google ทุกจุด — กรอกครั้งเดียว ใช้ถาวรจนกว่าแอดมินจะลบสิทธิ์บัญชีนี้)</p>
+      <h3 id="nickname-modal-title">ยินดีต้อนรับ 👋</h3>
+      <p class="panel-sub" id="nickname-modal-sub">ตั้งชื่อเล่นที่จะใช้แสดงในระบบนี้ (ใช้แทนชื่อ/อีเมลบัญชี Google ทุกจุด — กรอกครั้งเดียว ใช้ถาวรจนกว่าแอดมินจะลบสิทธิ์บัญชีนี้)</p>
       <div class="field-wrap"><label>ชื่อเล่น <span style="color:var(--red);">*</span></label><input type="text" id="nickname-input" placeholder="เช่น บอย, แจ็ค, น้องฝ้าย" maxlength="40"></div>
       <button class="btn btn-primary" id="nickname-save-btn" style="width:100%;margin-top:10px;">เริ่มใช้งาน</button>
+      <button class="btn btn-ghost" id="nickname-cancel-btn" style="width:100%;margin-top:8px;display:none;">ยกเลิก</button>
     </div>
   </div>
 
@@ -823,7 +825,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.28 (อัปเดตล่าสุด 18 กันยายน 2569 07:52 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.29 (อัปเดตล่าสุด 18 กันยายน 2569 10:39 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -923,8 +925,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.28";
-const APP_UPDATED_AT = "18 กันยายน 2569 07:52 น. เวลาไทย";
+const APP_VERSION = "7.29";
+const APP_UPDATED_AT = "18 กันยายน 2569 10:39 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2098,9 +2100,23 @@ async function checkAccessAndLoad(){
   if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; }
 }
 
-/* ===================== NICKNAME (ชื่อเล่น) — ตั้งครั้งแรกที่ login แทนอีเมล/ชื่อบัญชี Google ทุกจุดในแอป ===================== */
-function showNicknameModal(){
-  $('nickname-input').value = '';
+/* ===================== NICKNAME (ชื่อเล่น) — ตั้งครั้งแรกที่ login แทนอีเมล/ชื่อบัญชี Google ทุกจุดในแอป — แก้ไขทีหลังได้จากปุ่ม ✏️ ข้างชื่อบน header ===================== */
+let nicknameModalIsFirstTime = true; // true = บังคับตั้งครั้งแรก (ไม่มีปุ่มยกเลิก/ปิด) · false = แก้ไขทีหลัง (ยกเลิกได้)
+function showNicknameModal(isFirstTime){
+  nicknameModalIsFirstTime = isFirstTime !== false;
+  if(nicknameModalIsFirstTime){
+    $('nickname-modal-title').textContent = 'ยินดีต้อนรับ 👋';
+    $('nickname-modal-sub').textContent = 'ตั้งชื่อเล่นที่จะใช้แสดงในระบบนี้ (ใช้แทนชื่อ/อีเมลบัญชี Google ทุกจุด — กรอกครั้งเดียว ใช้ถาวรจนกว่าแอดมินจะลบสิทธิ์บัญชีนี้)';
+    $('nickname-input').value = '';
+    $('nickname-cancel-btn').style.display = 'none';
+    $('nickname-save-btn').textContent = 'เริ่มใช้งาน';
+  } else {
+    $('nickname-modal-title').textContent = 'แก้ไขชื่อเล่น';
+    $('nickname-modal-sub').textContent = 'ชื่อเล่นนี้จะใช้แสดงแทนชื่อ/อีเมลบัญชี Google ของคุณทุกจุดในระบบ';
+    $('nickname-input').value = nicknamesMap[myUserEmail] || '';
+    $('nickname-cancel-btn').style.display = 'block';
+    $('nickname-save-btn').textContent = 'บันทึก';
+  }
   $('nickname-modal').classList.add('show');
   setTimeout(()=>$('nickname-input').focus(), 50);
 }
@@ -2122,11 +2138,13 @@ async function saveNickname(){
   }catch(e){
     showToast('⚠ บันทึกชื่อเล่นไม่สำเร็จ: '+e.message);
   }finally{
-    btn.disabled = false; btn.textContent = 'เริ่มใช้งาน';
+    btn.disabled = false; btn.textContent = nicknameModalIsFirstTime ? 'เริ่มใช้งาน' : 'บันทึก';
   }
 }
 $('nickname-save-btn').addEventListener('click', saveNickname);
 $('nickname-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') saveNickname(); });
+$('nickname-cancel-btn').addEventListener('click', ()=>{ $('nickname-modal').classList.remove('show'); });
+$('edit-nickname-btn').addEventListener('click', ()=>{ if(!myUserEmail){ return; } showNicknameModal(false); });
 
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 function requestModeSwitch(mode){
