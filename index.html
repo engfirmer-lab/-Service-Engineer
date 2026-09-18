@@ -2,18 +2,20 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.29
-  อัปเดตล่าสุด: 18 กันยายน 2569 10:39 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.30
+  อัปเดตล่าสุด: 18 กันยายน 2569 14:02 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.29</title>
+<title>Firmer Service Center — v7.30</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -161,6 +163,15 @@
   input:focus, textarea:focus{border-color:var(--amber);}
   textarea{resize:vertical;min-height:60px;line-height:1.5;width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-family:'Sarabun';font-size:13.5px;}
   .field-wrap{margin-bottom:4px;}
+  input.flatpickr-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2378715f' stroke-width='2'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:34px;}
+  body.dark-theme .flatpickr-calendar{background:var(--panel);border:1px solid var(--border);box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  body.dark-theme .flatpickr-months, body.dark-theme .flatpickr-weekdays{background:var(--panel-alt);}
+  body.dark-theme .flatpickr-day{color:var(--text);}
+  body.dark-theme .flatpickr-day.flatpickr-disabled, body.dark-theme .flatpickr-day.prevMonthDay, body.dark-theme .flatpickr-day.nextMonthDay{color:var(--text-faint);}
+  body.dark-theme .flatpickr-current-month .flatpickr-monthDropdown-months, body.dark-theme .flatpickr-current-month input.cur-year{color:var(--text);background:transparent;}
+  body.dark-theme span.flatpickr-weekday{color:var(--text-faint);}
+  body.dark-theme .flatpickr-day.today{border-color:var(--amber);}
+  body.dark-theme .flatpickr-day.selected{background:var(--amber);border-color:var(--amber);color:#1a1206;}
   .btn{font-family:'Sarabun';font-weight:600;font-size:13px;padding:9px 16px;border-radius:7px;border:none;cursor:pointer;transition:.12s;}
   .btn-primary{background:var(--amber);color:#1a1206;}
   .toggle-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;}
@@ -306,7 +317,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.29</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.30</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -605,7 +616,11 @@
         <div class="field-wrap"><label>Error code <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errcode"></div>
         <div class="field-wrap"><label>Error message <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errmsg"></div>
       </div>
-      <div class="field-wrap"><label>ปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="ระบุวันที่พบ + อาการเกิดขึ้นตอนไหน..."></textarea></div>
+      <div class="form-grid two">
+        <div class="field-wrap"><label>วันที่พบปัญหา <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-problemdate" placeholder="เลือกวันที่..." readonly></div>
+        <div class="field-wrap"><label>วันที่แก้ไข (ถ้ามี)</label><input type="text" id="claim-f-fixdate" placeholder="เลือกวันที่..." readonly></div>
+      </div>
+      <div class="field-wrap"><label>อธิบายปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="ระบุอาการที่พบ เกิดขึ้นตอนไหน..."></textarea></div>
       <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
       <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
       <div class="field-wrap"><label>รายการอะไหล่ที่เคลม (ถ้ามี)</label><div id="claim-parts-wrap"></div></div>
@@ -825,7 +840,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.29 (อัปเดตล่าสุด 18 กันยายน 2569 10:39 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.30 (อัปเดตล่าสุด 18 กันยายน 2569 14:02 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -925,8 +940,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.29";
-const APP_UPDATED_AT = "18 กันยายน 2569 10:39 น. เวลาไทย";
+const APP_VERSION = "7.30";
+const APP_UPDATED_AT = "18 กันยายน 2569 14:02 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3967,9 +3982,24 @@ let claimDraft = null;
 let claimEditingId = null;
 
 function resetClaimDraft(){
-  claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
+  claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemDate:'', fixDate:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
   claimEditingId = null;
 }
+// ตัวเลือกวันที่ในฟอร์มเคลม — บังคับแสดงเป็นปี ค.ศ. (Gregorian) เสมอ ไม่แปลงเป็น พ.ศ. ตามภาษาเครื่อง (ปัญหาที่ input type=date ของเบราว์เซอร์บางตัวบนมือถือไทยทำ)
+let claimProblemDatePicker = null, claimFixDatePicker = null;
+function initClaimDatePickers(){
+  if(typeof flatpickr==='undefined') return;
+  if(!claimProblemDatePicker){
+    claimProblemDatePicker = flatpickr('#claim-f-problemdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false, maxDate:'today',
+      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; } });
+  }
+  if(!claimFixDatePicker){
+    claimFixDatePicker = flatpickr('#claim-f-fixdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false,
+      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; } });
+  }
+}
+function bangkokISOFromDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function isoToDDMMYYYY(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 
 function renderClaimPartsRows(){
   const wrap = $('claim-parts-wrap');
@@ -4076,7 +4106,7 @@ function openClaimModal(existingClaim){
     claimDraft = {
       claimant: existingClaim.claimant||'', siteName: existingClaim.siteName||'', category: existingClaim.category||'', model: existingClaim.model||'',
       serialNumber: existingClaim.serialNumber||'', problem: existingClaim.problem||'', solution: existingClaim.solution||'',
-      errorCode: existingClaim.errorCode||'', errorMessage: existingClaim.errorMessage||'', problemCount: existingClaim.problemCount||'',
+      errorCode: existingClaim.errorCode||'', errorMessage: existingClaim.errorMessage||'', problemDate: existingClaim.problemDate||'', fixDate: existingClaim.fixDate||'', problemCount: existingClaim.problemCount||'',
       parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({...p})):[{partNumber:'',partName:'',count:''}],
       loanSlipNo: existingClaim.loanSlipNo||'', jobFactorium: existingClaim.jobFactorium||'', attachments: groupedAtt
     };
@@ -4099,6 +4129,9 @@ function openClaimModal(existingClaim){
   $('claim-f-problemcount').value = claimDraft.problemCount;
   $('claim-f-jobfactorium').value = claimDraft.jobFactorium;
   $('claim-f-loan').value = claimDraft.loanSlipNo;
+  initClaimDatePickers();
+  if(claimProblemDatePicker){ if(claimDraft.problemDate) claimProblemDatePicker.setDate(claimDraft.problemDate, false); else claimProblemDatePicker.clear(); }
+  if(claimFixDatePicker){ if(claimDraft.fixDate) claimFixDatePicker.setDate(claimDraft.fixDate, false); else claimFixDatePicker.clear(); }
   renderClaimPartsRows();
   renderClaimAttachGroups();
   $('claim-modal').classList.add('show');
@@ -4122,7 +4155,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
   const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
   const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.count);
-  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.serialNumber || !claimDraft.problem || !claimDraft.solution || !claimDraft.errorCode || !claimDraft.errorMessage || !claimDraft.jobFactorium || !claimDraft.loanSlipNo){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ'); return; }
+  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.serialNumber || !claimDraft.problemDate || !claimDraft.problem || !claimDraft.solution || !claimDraft.errorCode || !claimDraft.errorMessage || !claimDraft.jobFactorium || !claimDraft.loanSlipNo){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ (รวมถึงวันที่พบปัญหา)'); return; }
   if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้'); return; }
   const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
@@ -4147,7 +4180,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     const fields = {
       claimant: claimDraft.claimant, siteName: claimDraft.siteName, category: claimDraft.category, model: claimDraft.model,
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
-      errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemCount: claimDraft.problemCount,
+      errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemDate: claimDraft.problemDate, fixDate: claimDraft.fixDate||'', problemCount: claimDraft.problemCount,
       parts: cleanParts, jobFactorium: claimDraft.jobFactorium, loanSlipNo: claimDraft.loanSlipNo,
       attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myDisplayName(),
     };
@@ -4178,7 +4211,9 @@ function showClaimSuccessSummary(fields){
     <div class="meta-item"><div class="k">Product / รุ่น</div><div class="v">${escapeHtml(fields.category)} / ${escapeHtml(fields.model)}</div></div>
     <div class="meta-item"><div class="k">S/N</div><div class="v">${escapeHtml(fields.serialNumber)}</div></div>
     <div class="meta-item"><div class="k">Error code / message</div><div class="v">${escapeHtml(fields.errorCode)} / ${escapeHtml(fields.errorMessage)}</div></div>
-    <div class="meta-item"><div class="k">ปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problem)}</div></div>
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.problemDate)||'-')}</div></div>
+    ${fields.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problem)}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(fields.solution)}</div></div>
     ${fields.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(fields.problemCount)}</div></div>` : ''}
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
@@ -4260,7 +4295,9 @@ function openClaimDetail(id){
     <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(c.claimant)}</div></div>
     <div class="meta-item"><div class="k">Error code</div><div class="v">${escapeHtml(c.errorCode||'-')}</div></div>
     <div class="meta-item"><div class="k">Error message</div><div class="v">${escapeHtml(c.errorMessage||'-')}</div></div>
-    <div class="meta-item"><div class="k">ปัญหาที่พบ</div><div class="v">${escapeHtml(c.problem)}</div></div>
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</div></div>
+    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problem)}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
     ${c.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(c.problemCount)}</div></div>` : ''}
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
