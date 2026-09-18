@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.33
-  อัปเดตล่าสุด: 18 กันยายน 2569 15:45 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.34
+  อัปเดตล่าสุด: 18 กันยายน 2569 19:05 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.33</title>
+<title>Firmer Service Center — v7.34</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -320,7 +320,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.33</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.34</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -846,7 +846,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.33 (อัปเดตล่าสุด 18 กันยายน 2569 15:45 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.34 (อัปเดตล่าสุด 18 กันยายน 2569 19:05 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -946,8 +946,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.33";
-const APP_UPDATED_AT = "18 กันยายน 2569 15:45 น. เวลาไทย";
+const APP_VERSION = "7.34";
+const APP_UPDATED_AT = "18 กันยายน 2569 19:05 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5402,6 +5402,7 @@ setTimeout(updateModeToggleScrollHint, 200);
   document.addEventListener('touchstart', e=>{
     if($('lightbox').classList.contains('show')){ pulling = false; startY = null; return; }
     if($('error-detail-panel').classList.contains('show') || $('manual-panel').classList.contains('show')){ pulling = false; startY = null; return; } // แผงนี้เลื่อนในตัวเอง (position:fixed) window.scrollY เลยค้างที่ 0 ตลอด ต้องข้ามการเช็ค pull-to-refresh ไปเลย
+    if(document.querySelector('.modal-overlay.show')){ pulling = false; startY = null; return; } // ป๊อปอัพทุกชนิด (แจ้งเคลม/รายละเอียดเคลม/ตั้งชื่อเล่น ฯลฯ) ก็เลื่อนในตัวเองเหมือนกัน — window.scrollY ค้างที่ 0 ตลอดเช่นกัน ไม่งั้นแค่เลื่อนดูฟอร์มในป๊อปอัพก็จะโดนถามว่าจะรีเฟรชหน้าทุกครั้ง
     if(window.scrollY <= 0){ startY = e.touches[0].clientY; pulling = true; }
     else { pulling = false; startY = null; }
   }, {passive:true});
