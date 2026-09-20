@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.40
+  เวอร์ชันปัจจุบัน: 7.41
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,13 +10,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.40</title>
+<title>Firmer Service Center — v7.41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -229,6 +230,9 @@
   .file-dropzone{border:1px dashed transparent;border-radius:8px;padding:4px;transition:.12s;}
   .file-dropzone.drag-over{border-color:var(--amber);background:rgba(232,163,61,.08);}
   .file-dropzone-hint{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+  /* กรอบแดง — ใช้ไฮไลต์ช่องที่จำเป็นแต่ยังไม่กรอกตอนกดบันทึกฟอร์มเคลม */
+  input[type=text].field-invalid, select.field-invalid, textarea.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 1px var(--red);}
+  .file-dropzone.field-invalid{border-style:solid;border-color:var(--red);background:rgba(224,73,73,.06);}
 
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{text-align:left;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;padding:9px 10px;border-bottom:1px solid var(--border);}
@@ -348,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.40</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.41</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -679,13 +683,18 @@
   <!-- ============ CLAIM SUCCESS SUMMARY MODAL ============ -->
   <div class="modal-overlay" id="claim-success-modal">
     <div class="modal" style="max-width:480px;">
-      <div style="text-align:center;margin-bottom:14px;">
-        <div style="font-size:36px;line-height:1;">✅</div>
-        <h3 style="color:var(--green);margin:8px 0 0;">บันทึกสำเร็จ</h3>
-        <p class="panel-sub" style="margin:4px 0 0;">ตรวจสอบรายละเอียดที่บันทึกไปด้านล่าง — ถ้าถูกต้องแล้วกดปิดได้เลย ไม่ต้องกดส่งซ้ำ</p>
+      <div id="claim-success-capture-area">
+        <div style="text-align:center;margin-bottom:14px;">
+          <div style="font-size:36px;line-height:1;">✅</div>
+          <h3 style="color:var(--green);margin:8px 0 0;">บันทึกสำเร็จ</h3>
+          <p class="panel-sub" style="margin:4px 0 0;">ตรวจสอบรายละเอียดที่บันทึกไปด้านล่าง — ถ้าถูกต้องแล้วกดปิดได้เลย ไม่ต้องกดส่งซ้ำ</p>
+        </div>
+        <div id="claim-success-body"></div>
       </div>
-      <div id="claim-success-body"></div>
-      <button class="btn btn-primary" id="claim-success-close-btn" style="width:100%;margin-top:16px;">ปิด</button>
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        <button class="btn btn-ghost" id="claim-success-download-btn" style="flex:1;">⬇ บันทึกรูปภาพ</button>
+        <button class="btn btn-primary" id="claim-success-close-btn" style="flex:1;">ปิด</button>
+      </div>
     </div>
   </div>
 
@@ -874,7 +883,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.40 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.41 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -974,7 +983,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.40";
+const APP_VERSION = "7.41";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -4373,6 +4382,7 @@ function renderClaimAttachGroupRow(groupKey){
   if(!row) return;
   const addBtn = row.querySelector('label.upload-btn');
   row.querySelectorAll('.img-thumb').forEach(el=>el.remove());
+  if(claimDraft.attachments[groupKey].length>0){ const dz=$('file-dropzone-'+groupKey); if(dz) dz.classList.remove('field-invalid'); } // มีไฟล์แนบแล้ว ล้างกรอบแดง (ถ้าเคยขึ้นเตือนไว้)
   claimDraft.attachments[groupKey].forEach((att,i)=>{
     const div = document.createElement('div');
     div.className = 'img-thumb';
@@ -4434,11 +4444,75 @@ function openClaimModal(existingClaim){
   if(claimFixDatePicker){ if(claimDraft.fixDate) claimFixDatePicker.setDate(claimDraft.fixDate, false); else claimFixDatePicker.clear(); }
   renderClaimPartsRows();
   renderClaimAttachGroups();
+  clearAllClaimFieldInvalid(); // ล้างกรอบแดงค้างจากครั้งก่อน (ถ้ามี) ทุกครั้งที่เปิดฟอร์มใหม่
+  wireClaimFieldInvalidReset();
   $('claim-modal').classList.add('show');
 }
 $('eng-quick-claim-btn').addEventListener('click', ()=>openClaimModal(null));
 $('claim-modal-close').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
 $('claim-cancel-btn').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
+
+// ===== Validation UX ฟอร์มแจ้งเคลม: ไฮไลต์กรอบแดงช่องที่ยังไม่กรอก + เลื่อนไปช่องแรกที่ขาด + แจ้งเตือนรายชื่อช่องที่ขาดทั้งหมด =====
+const CLAIM_REQUIRED_FIELDS = [
+  { id:'claim-f-claimant', label:'ผู้เคลม' },
+  { id:'claim-f-site', label:'ชื่อสถานที่' },
+  { id:'claim-f-category', label:'Product' },
+  { id:'claim-f-model', label:'รุ่น' },
+  { id:'claim-f-sn', label:'S/N' },
+  { id:'claim-f-errcode', label:'Error code' },
+  { id:'claim-f-errmsg', label:'Error message' },
+  { id:'claim-f-problemdate', label:'วันที่พบปัญหา' },
+  { id:'claim-f-problem', label:'อธิบายปัญหาที่พบ' },
+  { id:'claim-f-solution', label:'วิธีการแก้ไข' },
+  { id:'claim-f-jobfactorium', label:'เลข Job Factorium' },
+  { id:'claim-f-loan', label:'เลขที่ใบยืม' },
+];
+function clearAllClaimFieldInvalid(){
+  CLAIM_REQUIRED_FIELDS.forEach(f=>{ const el=$(f.id); if(el) el.classList.remove('field-invalid'); });
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ const dz=$('file-dropzone-'+g.key); if(dz) dz.classList.remove('field-invalid'); });
+}
+// ผูก listener ล้างกรอบแดงทันทีที่ผู้ใช้กรอก/เลือกค่าแล้ว — ผูกครั้งเดียวพอ (idempotent ผ่าน _invalidResetWired)
+function wireClaimFieldInvalidReset(){
+  CLAIM_REQUIRED_FIELDS.forEach(f=>{
+    const el = $(f.id);
+    if(!el || el._invalidResetWired) return;
+    el._invalidResetWired = true;
+    const evtName = (el.tagName==='SELECT') ? 'change' : 'input';
+    el.addEventListener(evtName, ()=>{ if((el.value||'').trim()) el.classList.remove('field-invalid'); });
+  });
+}
+function validateClaimRequiredFields(){
+  const missing = [];
+  let firstInvalidEl = null;
+  CLAIM_REQUIRED_FIELDS.forEach(f=>{
+    const el = $(f.id);
+    if(!el) return;
+    const val = (el.value||'').trim();
+    if(!val){
+      el.classList.add('field-invalid');
+      missing.push(f.label);
+      if(!firstInvalidEl) firstInvalidEl = el;
+    } else {
+      el.classList.remove('field-invalid');
+    }
+  });
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{
+    const dz = $('file-dropzone-'+g.key);
+    if(!dz) return;
+    if(g.required && claimDraft.attachments[g.key].length===0){
+      dz.classList.add('field-invalid');
+      missing.push(g.label);
+      if(!firstInvalidEl) firstInvalidEl = dz;
+    } else {
+      dz.classList.remove('field-invalid');
+    }
+  });
+  if(firstInvalidEl){
+    firstInvalidEl.scrollIntoView({behavior:'smooth', block:'center'});
+    if(typeof firstInvalidEl.focus === 'function') firstInvalidEl.focus();
+  }
+  return { valid: missing.length===0, missing };
+}
 
 $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.claimant = $('claim-f-claimant').value.trim();
@@ -4455,7 +4529,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
   const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
   const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.count);
-  if(!claimDraft.claimant || !claimDraft.siteName || !claimDraft.category || !claimDraft.model || !claimDraft.serialNumber || !claimDraft.problemDate || !claimDraft.problem || !claimDraft.solution || !claimDraft.errorCode || !claimDraft.errorMessage || !claimDraft.jobFactorium || !claimDraft.loanSlipNo){ showToast('⚠ กรุณากรอกข้อมูลที่มี * ให้ครบ (รวมถึงวันที่พบปัญหา)'); return; }
+  const validation = validateClaimRequiredFields();
+  if(!validation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+validation.missing.join(', ')); return; }
   if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้'); return; }
   const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
@@ -4534,7 +4609,31 @@ function showClaimSuccessSummary(fields){
   `;
   $('claim-success-modal').classList.add('show');
 }
-$('claim-success-close-btn').addEventListener('click', ()=>$('claim-success-modal').classList.remove('show'));
+// จับภาพหน้าจอสรุปข้อมูล (เฉพาะส่วนสรุป ไม่รวมปุ่มด้านล่าง) แล้วดาวน์โหลดเป็นรูป PNG
+async function downloadClaimSuccessImage(){
+  const el = $('claim-success-capture-area');
+  if(!el || typeof html2canvas !== 'function'){ showToast('⚠ ไม่สามารถบันทึกรูปภาพสรุปข้อมูลได้ในขณะนี้'); return false; }
+  try{
+    const bg = getComputedStyle(document.querySelector('#claim-success-modal .modal')).backgroundColor || '#ffffff';
+    const canvas = await html2canvas(el, { backgroundColor: bg, scale: 2, useCORS: true });
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
+    document.body.appendChild(a); a.click(); a.remove();
+    return true;
+  }catch(e){
+    showToast('⚠ บันทึกรูปภาพไม่สำเร็จ: '+e.message);
+    return false;
+  }
+}
+$('claim-success-download-btn').addEventListener('click', ()=>{ downloadClaimSuccessImage(); });
+$('claim-success-close-btn').addEventListener('click', async ()=>{
+  // ถามก่อนปิดว่าต้องการบันทึกรูปภาพสรุปข้อมูลไว้ก่อนหรือไม่ — กด OK = บันทึกแล้วค่อยปิด, กด Cancel = ปิดเลยไม่บันทึก
+  const wantsSave = confirm('ต้องการบันทึกรูปภาพสรุปข้อมูลหรือไม่?');
+  if(wantsSave){ await downloadClaimSuccessImage(); }
+  $('claim-success-modal').classList.remove('show');
+});
 
 // ใครเห็นเคลมไหนบ้าง: Super Admin เห็นหมด, Sup Product (Editor) เห็นเฉพาะ Product ที่ตัวเองดูแล, Engineer ทั่วไปเห็นเฉพาะที่ตัวเองบันทึก
 function myVisibleClaims(){
