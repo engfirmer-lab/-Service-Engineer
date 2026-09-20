@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.44
+  เวอร์ชันปัจจุบัน: 7.45
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.44</title>
+<title>Firmer Service Center — v7.45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.44</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.45</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -886,7 +886,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.44 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.45 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -986,7 +986,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.44";
+const APP_VERSION = "7.45";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -5973,6 +5973,13 @@ setTimeout(updateModeToggleScrollHint, 200);
   const OVERLAY_SHOWN_SELECTOR = '.modal-overlay.show, .fullscreen-panel.show, .lightbox.show';
   let trapActive = false; // true = ตอนนี้มี history state ที่เรา push ไว้เพื่อดักปุ่มย้อนกลับค้างอยู่ 1 อัน
   let ignoreNextPopstate = false; // true ระหว่างที่เรากำลังเรียก history.back() เอง (เคลียร์ trap หลัง popup ถูกปิดจากปุ่มในแอป) — ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับจริง
+  // ===== ชั้นป้องกันที่ 2: ถ้าไม่มี popup ไหนเปิดอยู่เลย (อยู่หน้าแรกของแอปปกติ) แล้วกดปุ่มย้อนกลับ ก่อนหน้านี้จะหลุดออกจากแอปทันทีไม่มีเตือน — เพิ่ม "ด่านกันออกแอป" ไว้อีกชั้น ต้องกดย้อนกลับแล้วยืนยันอีกครั้งถึงจะออกจริง =====
+  let exitGuardArmed = false; // true = มี history state สำรองไว้กันการกดย้อนกลับหลุดออกแอปทันที
+  function armExitGuard(){
+    if(exitGuardArmed) return;
+    try{ history.pushState({ firmerExitGuard:true }, ''); exitGuardArmed = true; }catch(e){}
+  }
+  armExitGuard(); // ตั้งด่านไว้ตั้งแต่เปิดแอปครั้งแรก
 
   function anyOverlayOpen(){ return !!document.querySelector(OVERLAY_SHOWN_SELECTOR); }
   function topmostOpenOverlay(){
@@ -6006,8 +6013,21 @@ setTimeout(updateModeToggleScrollHint, 200);
     const overlay = topmostOpenOverlay();
     if(overlay){
       overlay.classList.remove('show'); // ปิดตัวบนสุด — ถ้ายังมีตัวอื่นเปิดซ้อนอยู่ observer จะ push trap ใหม่ให้อัตโนมัติ (กดย้อนกลับอีกทีปิดตัวถัดไปได้)
+      return;
     }
-    // ไม่มี popup เปิดอยู่เลย — ปล่อยให้เบราว์เซอร์ย้อนกลับตามปกติ (ออกจากแอป)
+    // ไม่มี popup เปิดอยู่เลย -> การกดย้อนกลับครั้งนี้ไปโดน "ด่านกันออกแอป" ที่ตั้งไว้ (exit guard) พอดี -> ถามยืนยันก่อนออกจริง กันกดพลาดหลุดออกแอปไปเฉยๆ
+    if(exitGuardArmed){
+      exitGuardArmed = false; // ด่านนี้ถูกใช้ไปแล้ว (บริโภค state ที่ pop ไปแล้ว)
+      const wantsExit = confirm('ต้องการออกจากแอป Firmer Service Center หรือไม่?');
+      if(wantsExit){
+        // ยืนยันจะออกจริง -> กดย้อนกลับอีกครั้งเพื่อออกจากหน้าเว็บนี้ไปจริงๆ (ตำแหน่ง history ตอนนี้คือก่อนด่านกันออกแอปแล้ว)
+        try{ history.back(); }catch(e){}
+      } else {
+        // ไม่ต้องการออก -> ตั้งด่านกันออกแอปกลับเข้าไปใหม่ กันกดย้อนกลับครั้งถัดไปหลุดออกทันทีโดยไม่ถาม
+        armExitGuard();
+      }
+    }
+    // exitGuardArmed เป็น false อยู่แล้ว (เช่นกรณีนี้คือ popstate ที่เกิดจาก history.back() ที่เราสั่งตอนยืนยันออกด้านบน) — ปล่อยให้เบราว์เซอร์ออกจากแอปไปตามปกติ ไม่ต้องทำอะไรเพิ่ม
   });
 })();
 </script>
