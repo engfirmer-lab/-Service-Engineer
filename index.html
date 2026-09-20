@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.46
+  เวอร์ชันปัจจุบัน: 7.47
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.46</title>
+<title>Firmer Service Center — v7.47</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.46</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.47</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -887,7 +887,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.46 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.47 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -987,7 +987,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.46";
+const APP_VERSION = "7.47";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -1397,7 +1397,7 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [docsSnap, propSnap, pendSnap, claimsSnap, nickSnap, catDoc, supDoc, catVerDoc, claimsSheetDoc] = await Promise.all([
+    const [docsSnap, propSnap, pendSnap, claimsSnap, nickSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
@@ -1406,11 +1406,15 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
-      sdk.getDoc(sdk.doc(db,'meta','claimsSheet')),
     ]);
     DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} } };
     // ลิงก์/gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว (แยกแท็บตามผู้ดูแล Product) — แคชไว้กันต้องยิง Sheets API ทุกครั้งที่เปิดหน้ารายการเคลม
-    if(claimsSheetDoc.exists()){ const csd = claimsSheetDoc.data(); DATA.claimsSheetMeta = { spreadsheetId: csd.spreadsheetId||null, tabs: csd.tabs||{} }; }
+    // สำคัญ: อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจ และดักด้วย try/catch ของตัวเอง — เอกสาร meta/claimsSheet เป็นเอกสารใหม่ (เพิ่งเพิ่มทีหลัง) ถ้า Firestore Rules ของโปรเจกต์ยังไม่ได้อนุญาตให้อ่านเอกสารนี้ (ยังไม่ได้แก้ Rules ตาม path ใหม่)
+    // จะทำให้อ่านไม่สำเร็จ — ถ้าเอาไปรวมไว้ใน Promise.all เดียวกับข้อมูลอื่น จะทำให้ Promise.all ทั้งก้อน reject ไปด้วย ซึ่งเคยทำให้ nicknamesMap ไม่ถูกตั้งค่าเลยและแอปถามชื่อเล่นซ้ำทุกครั้งที่รีเฟรช (บั๊กที่เจอและแก้ใน v7.47)
+    try{
+      const claimsSheetDoc = await sdk.getDoc(sdk.doc(db,'meta','claimsSheet'));
+      if(claimsSheetDoc.exists()){ const csd = claimsSheetDoc.data(); DATA.claimsSheetMeta = { spreadsheetId: csd.spreadsheetId||null, tabs: csd.tabs||{} }; }
+    }catch(claimsSheetErr){ console.warn('อ่านแคชลิงก์ Google Sheet ของเคลมไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', claimsSheetErr.message); }
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
     nicknamesMap = {}; myNicknameDocId = null;
