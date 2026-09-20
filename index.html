@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.41
+  เวอร์ชันปัจจุบัน: 7.42
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.41</title>
+<title>Firmer Service Center — v7.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.41</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.42</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -883,7 +883,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.41 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.42 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -983,7 +983,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.41";
+const APP_VERSION = "7.42";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -1273,6 +1273,77 @@ function timeDisplay(t){
 // เรียงตามตัวอักษร + ตัวเลขในตัว (เช่น "รุ่น 2" มาก่อน "รุ่น 10") ใช้กับตัวกรอง/dropdown ประเภทและรุ่นเครื่องทุกจุด
 function naturalSort(a, b){ return String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}); }
 function showToast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+// ===== Validation UX ทั่วทั้งแอป: ไฮไลต์กรอบแดงช่องที่จำเป็นแต่ยังว่าง + เลื่อน/โฟกัสไปช่องแรกที่ขาด + ล้างกรอบแดงอัตโนมัติทันทีที่กรอกถูกต้อง =====
+// ใช้ el ตรงๆ (ไม่ใช่แค่ id) เพื่อรองรับทั้งช่อง input/select/textarea แบบ id คงที่ และแบบ dynamic (เช่นแถววิธีแก้ไขที่เพิ่ม/ลบได้)
+function wireRequiredFieldReset(el){
+  if(!el || el._invalidResetWired) return;
+  el._invalidResetWired = true;
+  const evtName = (el.tagName==='SELECT') ? 'change' : 'input';
+  el.addEventListener(evtName, ()=>{ if((el.value||'').trim()) el.classList.remove('field-invalid'); });
+}
+// fieldDefs: [{id, label}] หรือ [{el, label}] — คืน array ของช่องที่ยังว่าง [{id/el, label, el}] พร้อมใส่/ล้างกรอบแดงให้เรียบร้อย (ไม่ scroll เอง เผื่อผู้เรียกอยากรวมกับรายการอื่นก่อน)
+function checkRequiredFields(fieldDefs){
+  const missing = [];
+  fieldDefs.forEach(f=>{
+    const el = f.el || $(f.id);
+    if(!el) return;
+    wireRequiredFieldReset(el);
+    const val = (el.value||'').trim();
+    if(!val){ el.classList.add('field-invalid'); missing.push({ label:f.label, el }); }
+    else { el.classList.remove('field-invalid'); }
+  });
+  return missing;
+}
+function focusFirstInvalidField(missingList){
+  if(missingList && missingList.length){
+    const el = missingList[0].el;
+    el.scrollIntoView({behavior:'smooth', block:'center'});
+    if(typeof el.focus === 'function') el.focus();
+  }
+}
+// ตรวจฟอร์มที่มีแค่ช่อง id คงที่ (ไม่มีไฟล์แนบ/แถว dynamic) — ใช้ซ้ำได้กับฟอร์มทั่วไปในแอป (นิดเนม, เพิ่ม Error, เอกสาร ฯลฯ)
+function validateRequiredFieldsSimple(fieldDefs){
+  const missing = checkRequiredFields(fieldDefs);
+  focusFirstInvalidField(missing);
+  return { valid: missing.length===0, missing: missing.map(m=>m.label) };
+}
+// ใช้ร่วมกันระหว่างฟอร์ม "เพิ่ม Error ใหม่" ของ Engineer (eng-f-*) และของ Sup Product (f-*) — โครงสร้างเหมือนกันทุกอย่าง ต่างแค่ prefix id
+// และ array ของวิธีแก้ไข (ต้องมีอย่างน้อย 1 แถวที่กรอกครบทั้งสาเหตุและขั้นตอน) — ไฮไลต์แถวแรกถ้ายังไม่มีแถวไหนกรอกครบ
+// ตรวจแถววิธีแก้ไข/สาเหตุแบบ dynamic (เพิ่ม/ลบแถวได้) — ต้องมีอย่างน้อย 1 แถวที่กรอกครบทั้ง "สาเหตุ" (data-field=title) และ "ขั้นตอน" (data-field=desc)
+// ถ้ายังไม่มีแถวไหนครบเลย ไฮไลต์แถวแรกให้เห็นว่าต้องกรอกตรงไหน — ใช้ร่วมกันทั้งฟอร์ม "เพิ่ม Error" (eng/sup) และฟอร์ม "แจ้งเครื่องเสีย" (down-modal)
+function validateAtLeastOneSolutionRow(solutionsArr){
+  const validSolutions = solutionsArr.filter(s=>s.desc.trim() && (s.title||'').trim());
+  let missingSolutionFields = [];
+  if(validSolutions.length===0){
+    const firstSol = solutionsArr[0];
+    if(firstSol){
+      const titleEl = document.querySelector(`[data-field="title"][data-sid="${firstSol.id}"]`);
+      const descEl = document.querySelector(`[data-field="desc"][data-sid="${firstSol.id}"]`);
+      const rowDefs = [];
+      if(titleEl) rowDefs.push({ el:titleEl, label:'สาเหตุ' });
+      if(descEl) rowDefs.push({ el:descEl, label:'ขั้นตอน' });
+      missingSolutionFields = checkRequiredFields(rowDefs);
+    }
+  }
+  const labels = missingSolutionFields.map(m=>m.label);
+  if(validSolutions.length===0 && labels.length===0) labels.push('สาเหตุและขั้นตอนอย่างน้อย 1 รายการ'); // เผื่อกรณีไม่มีแถวเหลืออยู่เลย (ปกติ UI บังคับให้เหลืออย่างน้อย 1 แถวอยู่แล้ว)
+  return { valid: validSolutions.length>0, missing: missingSolutionFields, missingLabels: labels, validSolutions };
+}
+function validateAddErrorForm(fieldPrefix, solutionsArr){
+  const fieldDefs = [
+    { id: fieldPrefix+'category', label:'Product' },
+    { id: fieldPrefix+'model', label:'Model' },
+    { id: fieldPrefix+'code', label:'Error Code' },
+    { id: fieldPrefix+'symptom', label:'Alarm Detail' },
+  ];
+  const missingFields = checkRequiredFields(fieldDefs);
+  const solResult = validateAtLeastOneSolutionRow(solutionsArr);
+  const allMissing = missingFields.concat(solResult.missing);
+  focusFirstInvalidField(allMissing);
+  const labels = missingFields.map(m=>m.label).concat(solResult.missingLabels);
+  return { valid: missingFields.length===0 && solResult.valid, missing: labels, validSolutions: solResult.validSolutions };
+}
 // แทนที่แพทเทิร์นเดิมที่ถาม confirm() ซ้อนกัน 2 ครั้งตอนลบเอกสารที่มีไฟล์แนบ (กด "ยกเลิก" บนกล่องแรกโดยตั้งใจแค่ไม่ให้ลบไฟล์ Drive
 // แต่ดันโดนกล่องที่ 2 ถามซ้ำทันที กด "ยกเลิก" อีกทีเพราะงง สุดท้ายไม่มีอะไรถูกลบเลยทั้งที่ตั้งใจจะลบลิงก์) — ใช้ปุ่มเดียวเลือกชัดเจนแทน
 function askDeleteChoice(){
@@ -2365,12 +2436,14 @@ function showNicknameModal(isFirstTime){
     $('nickname-cancel-btn').style.display = 'block';
     $('nickname-save-btn').textContent = 'บันทึก';
   }
+  $('nickname-input').classList.remove('field-invalid');
   $('nickname-modal').classList.add('show');
   setTimeout(()=>$('nickname-input').focus(), 50);
 }
 async function saveNickname(){
+  const validation = validateRequiredFieldsSimple([{ id:'nickname-input', label:'ชื่อเล่น' }]);
+  if(!validation.valid){ showToast('⚠ กรุณากรอกชื่อเล่นก่อนเริ่มใช้งาน'); return; }
   const val = $('nickname-input').value.trim();
-  if(!val){ showToast('⚠ กรุณากรอกชื่อเล่นก่อนเริ่มใช้งาน'); return; }
   const btn = $('nickname-save-btn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   try{
@@ -2818,8 +2891,10 @@ $('down-modal-add-cause-btn').addEventListener('click', ()=>{ downModalCauses.pu
 $('down-modal-submit').addEventListener('click', async ()=>{
   const btn = $('down-modal-submit');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/ส่งอยู่
-  const validCauses = downModalCauses.filter(s=>s.desc.trim() && (s.title||'').trim());
-  if(validCauses.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
+  const downValidation = validateAtLeastOneSolutionRow(downModalCauses);
+  focusFirstInvalidField(downValidation.missing);
+  if(!downValidation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+downValidation.missingLabels.join(', ')); return; }
+  const validCauses = downValidation.validSolutions;
   if(myVotes['down:'+downModalErrorId]){ showToast('คุณเคยแจ้งไปแล้ว'); $('down-modal').classList.remove('show'); return; }
   const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
@@ -3194,6 +3269,7 @@ $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $
 
 function resetEngErrorForm(){
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
+  ['eng-f-category','eng-f-model','eng-f-code','eng-f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
   engEditingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderEngSolutionsEditor();
   const ebtn=$('eng-save-error-btn'); ebtn.disabled=false; ebtn.style.opacity=''; ebtn.style.cursor='';
@@ -3244,12 +3320,11 @@ $('eng-add-solution-btn').addEventListener('click', ()=>{ engEditingSolutions.pu
 $('eng-save-error-btn').addEventListener('click', async ()=>{
   const btn = $('eng-save-error-btn');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่
+  const engValidation = validateAddErrorForm('eng-f-', engEditingSolutions);
+  if(!engValidation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+engValidation.missing.join(', ')); return; }
   const category=$('eng-f-category').value, model=$('eng-f-model').value, symptom=$('eng-f-symptom').value.trim();
   const errorCode = $('eng-f-code').value.trim();
-  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
-  if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
-  const validSolutions = engEditingSolutions.filter(s=>s.desc.trim() && (s.title||'').trim());
-  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
+  const validSolutions = engValidation.validSolutions;
   DATA.pendingErrors = DATA.pendingErrors || [];
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   try{
@@ -3486,6 +3561,7 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
 function resetErrorForm(){
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
   $('f-code').value=''; $('f-symptom').value='';
+  ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
   editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderSolutionsEditor();
   $('sup-form-heading').innerHTML = 'เพิ่ม Error ใหม่ <span class="tag">SUP PRODUCT</span>';
@@ -3496,12 +3572,11 @@ function resetErrorForm(){
 $('save-error-btn').addEventListener('click', async ()=>{
   const btn = $('save-error-btn');
   if(btn.disabled) return; // กันกดซ้ำระหว่างกำลังอัปโหลด/บันทึกอยู่ (สาเหตุที่เคยทำให้ได้ไฟล์ซ้ำ)
+  const supValidation = validateAddErrorForm('f-', editingSolutions);
+  if(!supValidation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+supValidation.missing.join(', ')); return; }
   const category=$('f-category').value, model=$('f-model').value, symptom=$('f-symptom').value.trim();
   const errorCode = $('f-code').value.trim();
-  if(!category||!model||!symptom){ showToast('⚠ กรุณากรอกประเภท, รุ่น, และอาการ'); return; }
-  if(!errorCode){ showToast('⚠ กรุณากรอก Error code'); return; }
-  const validSolutions = editingSolutions.filter(s=>s.desc.trim() && (s.title||'').trim());
-  if(validSolutions.length===0){ showToast('⚠ กรุณากรอกอย่างน้อย 1 สาเหตุ พร้อมชื่อสาเหตุและขั้นตอน'); return; }
+  const validSolutions = supValidation.validSolutions;
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
 
   if(reviewingPendingErrorId){
@@ -3837,7 +3912,9 @@ wireFileDropzone($('doclink-dropzone'), (files)=>{
   const dt = new DataTransfer();
   Array.from(files).forEach(f=>dt.items.add(f));
   $('doclink-file-input').files = dt.files;
+  $('doclink-dropzone').classList.remove('field-invalid');
 });
+$('doclink-file-input').addEventListener('change', ()=>{ if($('doclink-file-input').files.length>0) $('doclink-dropzone').classList.remove('field-invalid'); });
 
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
@@ -3852,6 +3929,9 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   $('doclink-title-input').value = existing ? existing.title : '';
   $('doclink-url-input').value = existing ? (existing.url||'') : '';
   $('doclink-file-input').value = '';
+  $('doclink-title-input').classList.remove('field-invalid');
+  $('doclink-url-input').classList.remove('field-invalid');
+  const doclinkDz0 = $('doclink-dropzone'); if(doclinkDz0) doclinkDz0.classList.remove('field-invalid');
   $('doclink-upload-progress-wrap').style.display = 'none';
   $('doclink-upload-progress-bar').style.width = '0%';
   $('doclink-delete-btn').style.display = existing ? 'inline-block' : 'none';
@@ -3868,19 +3948,35 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
   if(!doclinkContext) return;
   const saveBtn = $('doclink-save-btn');
   if(saveBtn.disabled) return; // กันกดซ้ำระหว่างกำลังบันทึกอยู่ (สาเหตุที่เคยทำให้ได้ไฟล์ซ้ำ 2 รูป)
+  const nounMap2 = { video:'วีดีโอ', diagram:'แผนภาพ' };
+  const titleLabel = 'ชื่อ'+(nounMap2[doclinkContext.docType]||'เอกสาร');
+  const missingTitle = checkRequiredFields([{ id:'doclink-title-input', label:titleLabel }]);
+  let missingUrlOrFile = [];
+  const doclinkDz = $('doclink-dropzone');
+  if(doclinkMode==='link'){
+    if(doclinkDz) doclinkDz.classList.remove('field-invalid');
+    missingUrlOrFile = checkRequiredFields([{ id:'doclink-url-input', label:'ลิงก์' }]);
+  } else {
+    $('doclink-url-input').classList.remove('field-invalid');
+    const fileInput = $('doclink-file-input');
+    if(!fileInput.files || fileInput.files.length===0){
+      if(doclinkDz) doclinkDz.classList.add('field-invalid');
+      missingUrlOrFile = [{ label:'ไฟล์ที่จะอัปโหลด', el: doclinkDz||fileInput }];
+    } else if(doclinkDz){ doclinkDz.classList.remove('field-invalid'); }
+  }
+  const allMissing = missingTitle.concat(missingUrlOrFile);
+  focusFirstInvalidField(allMissing);
+  if(allMissing.length){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+allMissing.map(m=>m.label).join(', ')); return; }
   const title = $('doclink-title-input').value.trim();
-  if(!title){ const nounMap2 = { video:'วีดีโอ', diagram:'แผนภาพ' }; showToast(`⚠ กรุณากรอกชื่อ${nounMap2[doclinkContext.docType]||'เอกสาร'}`); return; }
   const { category, model, docType, videoSubtype, existingId } = doclinkContext;
   saveBtn.disabled = true; saveBtn.style.opacity = '.5'; saveBtn.style.cursor = 'not-allowed';
 
   let url;
   if(doclinkMode==='link'){
     const rawUrl = $('doclink-url-input').value.trim();
-    if(!rawUrl){ showToast('⚠ กรุณากรอกลิงก์'); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
     url = normalizeDriveLink(rawUrl);
   } else {
     const file = $('doclink-file-input').files[0];
-    if(!file){ showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลด'); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
     try{
       $('doclink-upload-progress-wrap').style.display = 'block';
       const typeLabel = docTypeHasSubtypes(docType) ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
@@ -4471,47 +4567,26 @@ function clearAllClaimFieldInvalid(){
   CLAIM_REQUIRED_FIELDS.forEach(f=>{ const el=$(f.id); if(el) el.classList.remove('field-invalid'); });
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ const dz=$('file-dropzone-'+g.key); if(dz) dz.classList.remove('field-invalid'); });
 }
-// ผูก listener ล้างกรอบแดงทันทีที่ผู้ใช้กรอก/เลือกค่าแล้ว — ผูกครั้งเดียวพอ (idempotent ผ่าน _invalidResetWired)
+// ผูก listener ล้างกรอบแดงทันทีที่ผู้ใช้กรอก/เลือกค่าแล้ว — ผูกครั้งเดียวพอ (idempotent ผ่าน _invalidResetWired ในตัว wireRequiredFieldReset)
 function wireClaimFieldInvalidReset(){
-  CLAIM_REQUIRED_FIELDS.forEach(f=>{
-    const el = $(f.id);
-    if(!el || el._invalidResetWired) return;
-    el._invalidResetWired = true;
-    const evtName = (el.tagName==='SELECT') ? 'change' : 'input';
-    el.addEventListener(evtName, ()=>{ if((el.value||'').trim()) el.classList.remove('field-invalid'); });
-  });
+  CLAIM_REQUIRED_FIELDS.forEach(f=>wireRequiredFieldReset($(f.id)));
 }
 function validateClaimRequiredFields(){
-  const missing = [];
-  let firstInvalidEl = null;
-  CLAIM_REQUIRED_FIELDS.forEach(f=>{
-    const el = $(f.id);
-    if(!el) return;
-    const val = (el.value||'').trim();
-    if(!val){
-      el.classList.add('field-invalid');
-      missing.push(f.label);
-      if(!firstInvalidEl) firstInvalidEl = el;
-    } else {
-      el.classList.remove('field-invalid');
-    }
-  });
+  const missingFields = checkRequiredFields(CLAIM_REQUIRED_FIELDS);
+  const missingAttachments = [];
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>{
     const dz = $('file-dropzone-'+g.key);
     if(!dz) return;
     if(g.required && claimDraft.attachments[g.key].length===0){
       dz.classList.add('field-invalid');
-      missing.push(g.label);
-      if(!firstInvalidEl) firstInvalidEl = dz;
+      missingAttachments.push({ label:g.label, el:dz });
     } else {
       dz.classList.remove('field-invalid');
     }
   });
-  if(firstInvalidEl){
-    firstInvalidEl.scrollIntoView({behavior:'smooth', block:'center'});
-    if(typeof firstInvalidEl.focus === 'function') firstInvalidEl.focus();
-  }
-  return { valid: missing.length===0, missing };
+  const allMissing = missingFields.concat(missingAttachments);
+  focusFirstInvalidField(allMissing);
+  return { valid: allMissing.length===0, missing: allMissing.map(m=>m.label) };
 }
 
 $('claim-save-btn').addEventListener('click', async ()=>{
