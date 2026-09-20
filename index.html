@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.38
+  เวอร์ชันปัจจุบัน: 7.39
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.38</title>
+<title>Firmer Service Center — v7.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -69,7 +69,8 @@
   #claims-table{border:1px solid var(--border);}
   /* ป๊อปอัพรายละเอียดเคลม — แสดงเต็มหน้าจอ เพื่อให้เห็นข้อมูล/รูปภาพครบโดยไม่ต้องเลื่อนซ้อนสองชั้น */
   #claim-detail-modal{padding:0;}
-  #claim-detail-modal .modal{max-width:100%;width:100%;height:100vh;max-height:100vh;border-radius:0;}
+  /* เดิมใช้ height:100vh + flex centering ของ .modal-overlay ทำให้บนมือถือ (แถบที่อยู่/แถบเครื่องมือของเบราว์เซอร์ย่อ-ขยายได้) เกิดความคลาดเคลื่อนระหว่าง 100vh กับพื้นที่จอที่เห็นจริง ทำให้เนื้อหาบนสุด/ล่างสุดถูกดันเลื่อนออกนอกจอและเข้าไม่ถึง (เลื่อนไม่ได้จริง) — แก้โดยให้ .modal ของหน้านี้ปักหมุดเต็มจอเองด้วย position:fixed;inset:0 แยกออกจาก flex layout ของ overlay ไปเลย จะได้ยึดตามพื้นที่จอที่เห็นจริงเสมอ ไม่พึ่ง vh */
+  #claim-detail-modal .modal{position:fixed;inset:0;width:auto;height:auto;max-width:100%;max-height:100%;border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
   /* ตัวกรองหัวตารางสไตล์ Excel — ปุ่มรูปลูกศรที่หัวคอลัมน์ กดแล้วเปิดดรอปดาวน์ค้นหา+เลือกหลายค่า */
   #claims-table th{position:sticky;} /* (ประกาศซ้ำเพื่อความชัดเจน — เป็น containing block ให้ dropdown ลูกที่ position:absolute) */
   .col-filter-btn{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 4px;border-radius:4px;flex-shrink:0;}
@@ -347,7 +348,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.38</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.39</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -873,7 +874,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.38 (อัปเดตล่าสุด 20 กันยายน 2569 14:55 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.39 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -973,7 +974,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.38";
+const APP_VERSION = "7.39";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -1539,20 +1540,36 @@ async function confirmAndRemoveMedia(item, onRemoved){
 }
 
 function compressImage(file){
-  return new Promise((resolve,reject)=>{
-    const reader = new FileReader();
-    reader.onload = e=>{
-      const img = new Image();
-      img.onload = ()=>{
-        const maxW=1600; const scale=Math.min(1, maxW/img.width); // เดิม 480px — ตอนนี้เก็บที่ Drive แล้วไม่ต้องบีบแรงเหมือนตอนฝังใน Firestore
-        const canvas=document.createElement('canvas'); canvas.width=img.width*scale; canvas.height=img.height*scale;
-        const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg',0.88);
-        canvas.toBlob(blob=>{ resolve({ pending:true, dataUrl, blob }); }, 'image/jpeg', 0.88);
-      };
-      img.onerror = reject; img.src = e.target.result;
+  return new Promise((resolve)=>{
+    // ไม่ reject เด็ดขาด — ถ้าบีบอัดผ่าน canvas ไม่สำเร็จไม่ว่าขั้นตอนไหน (เช่น รูป HEIC จากไอโฟน หรือฟอร์แมตที่เบราว์เซอร์มือถือ/แอปในเครือข่ายสังคม (เช่น LINE) เปิดด้วย canvas ไม่ได้)
+    // ให้ใช้ไฟล์ต้นฉบับตรงๆ แทน ดีกว่าทำให้แนบรูปไม่ได้เลย
+    let done = false;
+    const fallback = ()=>{
+      if(done) return; done = true;
+      resolve({ pending:true, dataUrl:URL.createObjectURL(file), blob:file, _fallbackNoCompress:true });
     };
-    reader.onerror = reject; reader.readAsDataURL(file);
+    const finish = (result)=>{ if(done) return; done = true; resolve(result); };
+    try{
+      const reader = new FileReader();
+      reader.onload = e=>{
+        try{
+          const img = new Image();
+          img.onload = ()=>{
+            try{
+              const maxW=1600; const scale=Math.min(1, maxW/img.width); // เดิม 480px — ตอนนี้เก็บที่ Drive แล้วไม่ต้องบีบแรงเหมือนตอนฝังใน Firestore
+              const canvas=document.createElement('canvas'); canvas.width=Math.max(1, Math.round(img.width*scale)); canvas.height=Math.max(1, Math.round(img.height*scale));
+              const ctx=canvas.getContext('2d'); ctx.drawImage(img,0,0,canvas.width,canvas.height);
+              const dataUrl = canvas.toDataURL('image/jpeg',0.88);
+              canvas.toBlob(blob=>{ if(blob) finish({ pending:true, dataUrl, blob }); else fallback(); }, 'image/jpeg', 0.88);
+            }catch(err){ fallback(); }
+          };
+          img.onerror = fallback;
+          img.src = e.target.result;
+        }catch(err){ fallback(); }
+      };
+      reader.onerror = fallback;
+      reader.readAsDataURL(file);
+    }catch(err){ fallback(); }
   });
 }
 function imgSrcOf(img){ return typeof img==='string' ? img : img.dataUrl; } // ใช้แสดงรูปทั้งตอน preview (ยังไม่อัปโหลด) และตอนอัปโหลดแล้ว (เป็นลิงก์จริง)
