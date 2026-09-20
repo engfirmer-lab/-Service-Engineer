@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.47
-  อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.48
+  อัปเดตล่าสุด: 20 กันยายน 2569 15:40 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.47</title>
+<title>Firmer Service Center — v7.48</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -534,7 +534,6 @@
           <span class="privacy-note">กรองเฉพาะ Product ที่คุณดูแล</span>
         </div>
         <div class="stat-cards" id="claims-dashboard"></div>
-        <div id="claims-sheet-history-link" style="margin-top:10px;"></div>
       </div>
       <div class="panel-block" id="claims-filter-block">
         <div class="form-grid two">
@@ -554,6 +553,10 @@
       <div class="panel-block">
         <h2 id="claims-list-title">รายการเคลม</h2>
         <div id="claims-list"></div>
+      </div>
+      <!-- ลิงก์ Google Sheet ประวัติเคลมที่เสร็จแล้ว — ค้างไว้ถาวรที่ล่างสุดของหน้า เหมือนลิงก์เช็ค Database ให้กดเข้าไปดูได้ตลอดเวลา -->
+      <div class="panel-block" id="claims-sheet-history-block">
+        <div id="claims-sheet-history-link"></div>
       </div>
     </div>
   </div>
@@ -987,8 +990,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.47";
-const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
+const APP_VERSION = "7.48";
+const APP_UPDATED_AT = "20 กันยายน 2569 15:40 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1881,12 +1884,13 @@ async function appendClaimRowToSheet(spreadsheetId, rowValues, tabTitle){
 function buildClaimSheetRow(c){
   const partsText = (c.parts||[]).map(p=>`${p.partNumber||''} / ${p.partName||''} / ${p.count||''}`).join(' | ');
   return [
-    bangkokDateDDMMYYYY(), c.claimant||'', c.siteName||'', c.category||'', c.model||'', c.serialNumber||'',
+    bangkokDateDDMMYYYYSlash(), c.claimant||'', c.siteName||'', c.category||'', c.model||'', c.serialNumber||'',
     c.problem||'', c.solution||'', c.errorCode||'', c.errorMessage||'',
     isoToDDMMYYYY(c.problemDate)||'', isoToDDMMYYYY(c.fixDate)||'',
     partsText, c.problemCount||'', c.jobFactorium||'', c.loanSlipNo||'', c.serviceOrderNo||'',
     claimStatusInfo(c.status).label||c.status||'', c.submitterName||c.submittedBy||'',
-    c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):'', c.driveFolderUrl||''
+    tsToDDMMYYYYGregorian(c.createdAt), c.driveFolderUrl||''
+    // วันที่ทั้งหมดในแถวนี้เป็นรูปแบบ วัน/เดือน/ปี แบบ ค.ศ. (Gregorian) ล้วน — ห้ามใช้ toLocaleString('th-TH',...) ในไฟล์นี้อีก เพราะจะได้ปี พ.ศ. ซึ่งผิดตามที่ผู้ใช้ระบุไว้ชัดเจน
   ];
 }
 // ลิงก์เปิดแท็บของผู้ดูแลคนหนึ่งใน Google Sheet โดยตรง (ถ้ารู้ gid แล้ว) — ใช้แสดงในหน้ารายการเคลม ให้กดเข้าประวัติเคลมที่จบแล้วของ Product ตัวเองได้ทันที
@@ -4468,13 +4472,14 @@ function renderClaimPartsRows(){
     el.addEventListener('input', ()=>{
       const idx=+el.getAttribute('data-idx'); const field=el.getAttribute('data-partfield');
       claimDraft.parts[idx][field]=el.value;
+      if((el.value||'').toString().trim()) el.classList.remove('field-invalid'); // พิมพ์แล้วล้างกรอบแดงทันที (เหมือนช่องอื่นในแอป)
       // พิมพ์ Part number ตรงกับที่เคยกรอกไว้ก่อนหน้าเป๊ะ ๆ แล้วช่อง Part name ว่างอยู่ -> เติม Part name ให้อัตโนมัติ (กันลืม/พิมพ์ไม่ตรงกัน)
       if(field==='partNumber'){
         const known = getKnownPartsMap().get(el.value.trim());
         if(known && !claimDraft.parts[idx].partName){
           claimDraft.parts[idx].partName = known;
           const nameEl = wrap.querySelector(`[data-partfield="partName"][data-idx="${idx}"]`);
-          if(nameEl) nameEl.value = known;
+          if(nameEl){ nameEl.value = known; nameEl.classList.remove('field-invalid'); }
         }
       }
       if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave();
@@ -4484,6 +4489,31 @@ function renderClaimPartsRows(){
     btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',count:''}]; renderClaimPartsRows(); if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); });
   });
   $('claim-part-add-btn').addEventListener('click', ()=>{ claimDraft.parts.push({partNumber:'',partName:'',count:''}); renderClaimPartsRows(); });
+}
+// ตรวจแถวอะไหล่แบบ dynamic: แถวไหนที่เริ่มกรอกแล้ว (มีอย่างน้อย 1 ช่อง) แต่ยังไม่ครบทั้ง Part number/Part name/จำนวน -> ไฮไลต์กรอบแดงเฉพาะช่องที่ขาดของแถวนั้น
+// แถวที่ว่างสนิททั้งแถวไม่ต้องไฮไลต์ (ผู้ใช้อาจไม่ได้ตั้งใจกรอกอะไหล่เลยก็ได้ ถูกกรองทิ้งอัตโนมัติตอนบันทึกอยู่แล้ว)
+function validateClaimPartsRows(){
+  const wrap = $('claim-parts-wrap');
+  const missing = [];
+  if(!wrap) return missing;
+  claimDraft.parts.forEach((p,i)=>{
+    const partNumber = (p.partNumber||'').toString().trim();
+    const partName = (p.partName||'').toString().trim();
+    const count = (p.count||'').toString().trim();
+    const numEl = wrap.querySelector(`[data-partfield="partNumber"][data-idx="${i}"]`);
+    const nameEl = wrap.querySelector(`[data-partfield="partName"][data-idx="${i}"]`);
+    const countEl = wrap.querySelector(`[data-partfield="count"][data-idx="${i}"]`);
+    if(!(partNumber || partName || count)){ // แถวว่างสนิท ล้างกรอบแดงเผื่อเคยขึ้นไว้ก่อนหน้า แล้วข้าม
+      if(numEl) numEl.classList.remove('field-invalid');
+      if(nameEl) nameEl.classList.remove('field-invalid');
+      if(countEl) countEl.classList.remove('field-invalid');
+      return;
+    }
+    if(!partNumber && numEl){ numEl.classList.add('field-invalid'); missing.push({ el:numEl, label:`Part number (แถวที่ ${i+1})` }); } else if(numEl) numEl.classList.remove('field-invalid');
+    if(!partName && nameEl){ nameEl.classList.add('field-invalid'); missing.push({ el:nameEl, label:`Part name (แถวที่ ${i+1})` }); } else if(nameEl) nameEl.classList.remove('field-invalid');
+    if(!count && countEl){ countEl.classList.add('field-invalid'); missing.push({ el:countEl, label:`จำนวน (แถวที่ ${i+1})` }); } else if(countEl) countEl.classList.remove('field-invalid');
+  });
+  return missing;
 }
 
 function populateClaimCategorySelect(){
@@ -4792,7 +4822,12 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.count);
   const validation = validateClaimRequiredFields();
   if(!validation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+validation.missing.join(', ')); return; }
-  if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้'); return; }
+  const partsInvalid = validateClaimPartsRows();
+  if(cleanParts.length !== rawParts.length || partsInvalid.length){
+    showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้');
+    focusFirstInvalidField(partsInvalid);
+    return;
+  }
   const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
   if(navigator.onLine===false){ showToast('⚠ ไม่มีการเชื่อมต่ออินเทอร์เน็ต ระบบบันทึกข้อมูลที่กรอกไว้เป็นร่างในเครื่องแล้ว กรุณาลองกด "บันทึกเคลม" อีกครั้งเมื่อเชื่อมต่อเน็ตได้'); return; }
@@ -4919,24 +4954,31 @@ function renderClaimsDashboard(){
 // ลิงก์ Google Sheet ของประวัติเคลมที่เสร็จแล้ว (แยกแท็บตามผู้ดูแล Product) — ใช้เฉพาะข้อมูลที่แคชไว้แล้ว ไม่ยิง Sheets API ตอน render (กันหน่วง/ขอสิทธิ์ Drive โดยไม่จำเป็นแค่เข้าหน้ารายการเคลม)
 function renderClaimsSheetHistoryLink(){
   const wrap = $('claims-sheet-history-link');
+  const block = $('claims-sheet-history-block');
   if(!wrap) return;
   const meta = DATA.claimsSheetMeta || { spreadsheetId:null, tabs:{} };
+  const heading = `<h2 style="margin-bottom:6px;">🗄️ ฐานข้อมูลประวัติเคลม (Google Sheet)</h2>`;
   if(!meta.spreadsheetId){
-    wrap.innerHTML = `<p style="font-size:12px;color:var(--text-faint);">📊 ยังไม่มีประวัติเคลมที่เสร็จแล้ว — ระบบจะสร้าง Google Sheet ให้อัตโนมัติเมื่อมีเคลมแรกที่ถูกทำเครื่องหมายว่าเสร็จสิ้น</p>`;
+    if(block) block.style.display = 'block';
+    wrap.innerHTML = `${heading}<p style="font-size:12px;color:var(--text-faint);">ยังไม่มีประวัติเคลมที่เสร็จแล้ว — ระบบจะสร้าง Google Sheet ให้อัตโนมัติเมื่อมีเคลมแรกที่ถูกทำเครื่องหมายว่าเสร็จสิ้น</p>`;
     return;
   }
+  // ลิงก์เดียวกันสำหรับทุกคน ข้อมูลทั้งหมดอยู่ที่สเปรดชีทเดียวกัน ต่างกันแค่แท็บ (Sheet) ที่พาไปเปิดตรงตามสิทธิ์การมองเห็นของแต่ละคน — ค้างไว้ถาวรที่ล่างสุดของหน้า กดเข้าไปเช็คได้ตลอด เหมือนลิงก์เช็ค Database
   if(isSuperAdmin()){
-    wrap.innerHTML = `<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วทั้งหมด (Google Sheet — แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>`;
+    if(block) block.style.display = 'block';
+    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วทั้งหมด (แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>`;
     return;
   }
   if(isEditor() && currentSupIdentity){
+    if(block) block.style.display = 'block';
     const tabTitle = sanitizeSheetTabName(currentSupIdentity);
     const gid = meta.tabs ? meta.tabs[tabTitle] : undefined;
     const noteHtml = gid===undefined ? `<p style="font-size:11px;color:var(--text-faint);margin-top:2px;">(ยังไม่มีประวัติของคุณ — จะสร้างแท็บให้อัตโนมัติเมื่อมีเคลมแรกที่เสร็จสิ้น)</p>` : '';
-    wrap.innerHTML = `<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)} (Google Sheet)</a></p>${noteHtml}`;
+    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)}</a></p>${noteHtml}`;
     return;
   }
   wrap.innerHTML = ''; // Engineer ทั่วไป (ไม่ใช่ Sup Product) เห็นแค่เคลมที่ตัวเองบันทึกในแอปอยู่แล้ว ไม่ต้องมีลิงก์นี้
+  if(block) block.style.display = 'none';
 }
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
@@ -5642,6 +5684,18 @@ function bangkokDateFolder(){
 function bangkokDateDDMMYYYY(){
   const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
   return `${p(d.getUTCDate())}${p(d.getUTCMonth()+1)}${d.getUTCFullYear()}`;
+}
+// วันที่ปัจจุบัน (เวลาไทย) รูปแบบ วัน/เดือน/ปี แบบ ค.ศ. (Gregorian) เช่น 08/12/2026 — ใช้สำหรับคอลัมน์ใน Google Sheet โดยเฉพาะ
+// (ต่างจาก bangkokDateDDMMYYYY() ด้านบนซึ่งไม่มี "/" คั่น เพราะใช้ตั้งชื่อโฟลเดอร์/ไฟล์ที่ห้ามมีเครื่องหมายนี้ จึงแยกฟังก์ชันกันไว้คนละหน้าที่)
+function bangkokDateDDMMYYYYSlash(){
+  const d = bangkokNow(), p = n=>String(n).padStart(2,'0');
+  return `${p(d.getUTCDate())}/${p(d.getUTCMonth()+1)}/${d.getUTCFullYear()}`;
+}
+// แปลง timestamp (มิลลิวินาที เช่น createdAt) เป็น วัน/เดือน/ปี แบบ ค.ศ. (Gregorian) ตามเวลาไทย — ห้ามใช้ toLocaleString('th-TH',...) เพราะ locale นี้จะให้ปี พ.ศ. ไม่ใช่ ค.ศ. ตามที่ต้องการใน Google Sheet
+function tsToDDMMYYYYGregorian(ts){
+  if(!ts) return '';
+  const d = new Date(ts + 7*60*60*1000), p = n=>String(n).padStart(2,'0'); // เลื่อนเป็นเวลาไทยแบบ wall-clock แล้วอ่านค่าแบบ UTC getter (เหมือน bangkokNow())
+  return `${p(d.getUTCDate())}/${p(d.getUTCMonth()+1)}/${d.getUTCFullYear()}`;
 }
 async function gatherFullBackup(statusElId){
   const statusEl = statusElId ? $(statusElId) : null;
