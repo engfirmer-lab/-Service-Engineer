@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.45
+  เวอร์ชันปัจจุบัน: 7.46
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.45</title>
+<title>Firmer Service Center — v7.46</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.45</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.46</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -534,6 +534,7 @@
           <span class="privacy-note">กรองเฉพาะ Product ที่คุณดูแล</span>
         </div>
         <div class="stat-cards" id="claims-dashboard"></div>
+        <div id="claims-sheet-history-link" style="margin-top:10px;"></div>
       </div>
       <div class="panel-block" id="claims-filter-block">
         <div class="form-grid two">
@@ -886,7 +887,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.45 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.46 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -986,7 +987,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.45";
+const APP_VERSION = "7.46";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -1396,7 +1397,7 @@ async function loadData(){
   }
   try{
     const sdk = window._firebaseSdk;
-    const [docsSnap, propSnap, pendSnap, claimsSnap, nickSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
+    const [docsSnap, propSnap, pendSnap, claimsSnap, nickSnap, catDoc, supDoc, catVerDoc, claimsSheetDoc] = await Promise.all([
       sdk.getDocs(sdk.collection(db,'documents')),
       sdk.getDocs(sdk.collection(db,'proposals')),
       sdk.getDocs(sdk.collection(db,'pendingErrors')),
@@ -1405,8 +1406,11 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
+      sdk.getDoc(sdk.doc(db,'meta','claimsSheet')),
     ]);
-    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} } };
+    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} } };
+    // ลิงก์/gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว (แยกแท็บตามผู้ดูแล Product) — แคชไว้กันต้องยิง Sheets API ทุกครั้งที่เปิดหน้ารายการเคลม
+    if(claimsSheetDoc.exists()){ const csd = claimsSheetDoc.data(); DATA.claimsSheetMeta = { spreadsheetId: csd.spreadsheetId||null, tabs: csd.tabs||{} }; }
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
     nicknamesMap = {}; myNicknameDocId = null;
@@ -1530,6 +1534,7 @@ function ensureDataShape(){
   if(!DATA.proposals) DATA.proposals = [];
   if(!DATA.claims) DATA.claims = [];
   if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
+  if(!DATA.claimsSheetMeta) DATA.claimsSheetMeta = { spreadsheetId:null, tabs:{} };
 }
 
 // โหลดวิธีแก้ไข (subcollection) ของ Error หนึ่งรายการ แบบ lazy — โหลดเฉพาะตอนเปิดดูจริง
@@ -1764,14 +1769,29 @@ async function googleApiErrorMessage(res){
   try{ const data = await res.json(); return (data && data.error && data.error.message) ? data.error.message : ('HTTP '+res.status); }
   catch(e){ return 'HTTP '+res.status; }
 }
-/* ===================== GOOGLE SHEETS — บันทึกเคลมที่จบเคสแล้ว (ย้ายออกจาก Firestore กันเปลืองพื้นที่) ===================== */
+/* ===================== GOOGLE SHEETS — บันทึกเคลมที่จบเคสแล้ว (ย้ายออกจาก Firestore กันเปลืองพื้นที่) =====================
+   สเปรดชีตกลาง 1 ไฟล์ แต่แยกเป็น "แท็บ" (sheet tab) ย่อยตามผู้ดูแล Product — เคลมของ Product ไหน ใครเป็นผู้ดูแล Product นั้น (ownerOf) แถวจะถูกเก็บไว้ในแท็บของคนนั้น
+   ทำให้แต่ละ Sup Product เปิดดูประวัติเคลมที่จบแล้วของ Product ตัวเองได้ตรงๆ โดยไม่ปนกับ Product คนอื่น */
 const CLAIMS_SHEET_NAME = 'บันทึกเคลมอะไหล่ (จบเคสแล้ว)';
 const CLAIMS_SHEET_HEADERS = ['วันที่บันทึกลง Sheet','ผู้เคลม','สถานที่','Product','รุ่น','S/N','ปัญหาที่พบ','วิธีการแก้ไข','Error code','Error message','วันที่พบปัญหา','วันที่แก้ไข','อะไหล่ (Part number / Part name / จำนวน)','จำนวน Count ของปัญหา','เลข Job Factorium','เลขที่ใบยืม','เลข Service Order','สถานะสุดท้าย','ผู้บันทึกเคลม','วันที่สร้างเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive'];
 let _claimsSheetIdCache = null;
 let _claimsSheetInFlight = null;
+// บันทึก spreadsheetId + gid ของแต่ละแท็บ ลง Firestore (meta/claimsSheet) กันต้องยิง Sheets API ค้นหาใหม่ทุกครั้ง — ไม่ critical ถ้าเขียนไม่สำเร็จ (แค่แคชหาย ต้องหาใหม่รอบหน้า ไม่กระทบข้อมูลเคลม)
+async function fsSaveClaimsSheetMeta(){
+  try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','claimsSheet'), DATA.claimsSheetMeta); }
+  catch(e){ console.warn('บันทึกแคชลิงก์ Google Sheet ไม่สำเร็จ (ไม่กระทบข้อมูลเคลม):', e.message); }
+}
+// ชื่อแท็บใน Google Sheets ห้ามมีอักขระบางตัว (: \ / ? * [ ]) และยาวได้ไม่เกิน 100 ตัวอักษร — ตัด/แทนที่กันพัง
+function sanitizeSheetTabName(name){
+  let n = String(name||'ไม่ระบุผู้ดูแล').replace(/[:\\\/\?\*\[\]]/g, '_').trim();
+  if(!n) n = 'ไม่ระบุผู้ดูแล';
+  if(n.length>90) n = n.slice(0,90);
+  return n;
+}
 // หา (หรือสร้างใหม่ถ้ายังไม่มี) สเปรดชีตกลางไว้บันทึกเคลมที่จบเคสแล้ว — วางไว้ใต้โฟลเดอร์ root เดียวกับข้อมูลอื่นๆ ในแอป
 async function ensureClaimsLogSpreadsheet(){
   if(_claimsSheetIdCache) return _claimsSheetIdCache;
+  if(DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId){ _claimsSheetIdCache = DATA.claimsSheetMeta.spreadsheetId; return _claimsSheetIdCache; }
   if(_claimsSheetInFlight) return _claimsSheetInFlight;
   _claimsSheetInFlight = (async ()=>{
     const token = await ensureDriveAccess();
@@ -1779,28 +1799,75 @@ async function ensureClaimsLogSpreadsheet(){
     const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!res.ok) throw new Error('ค้นหาชีตบันทึกเคลมไม่สำเร็จ: '+await googleApiErrorMessage(res));
     const data = await res.json();
-    if(data.files && data.files.length>0){ _claimsSheetIdCache = data.files[0].id; return _claimsSheetIdCache; }
+    if(data.files && data.files.length>0){
+      _claimsSheetIdCache = data.files[0].id;
+      DATA.claimsSheetMeta.spreadsheetId = _claimsSheetIdCache;
+      fsSaveClaimsSheetMeta();
+      return _claimsSheetIdCache;
+    }
     // ยังไม่มี — สร้างใหม่ผ่าน Sheets API (ไฟล์จะถูกสร้างไว้ที่ My Drive root ก่อน) แล้วค่อยย้ายเข้าโฟลเดอร์ root ของแอปด้วย Drive API
     // หมายเหตุสำคัญ: ต้องเปิดใช้งาน "Google Sheets API" ในโปรเจกต์ Google Cloud เดียวกับที่ใช้ Drive API ด้วย (คนละสวิตช์กับ Drive API — ถ้าไม่เปิด จะเจอ error "Google Sheets API has not been used ... or it is disabled" ตรงนี้)
+    // แท็บแรกที่สร้างมากับสเปรดชีตตั้งชื่อ "ไม่ระบุผู้ดูแล" ไว้เป็นแท็บสำรอง (ใช้กับเคลมของ Product ที่ยังไม่มีคนตั้งผู้ดูแล) ตรงกับข้อความที่ ownerOf() คืนมาพอดี
     const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ properties:{ title: CLAIMS_SHEET_NAME }, sheets:[{ properties:{ title:'บันทึกเคลม' } }] })
+      body: JSON.stringify({ properties:{ title: CLAIMS_SHEET_NAME }, sheets:[{ properties:{ title:'ยังไม่มีผู้ดูแล' } }] })
     });
     if(!createRes.ok) throw new Error('สร้างชีตบันทึกเคลมไม่สำเร็จ: '+await googleApiErrorMessage(createRes));
     const created = await createRes.json();
     const sheetId = created.spreadsheetId;
+    const defaultTabGid = (created.sheets && created.sheets[0] && created.sheets[0].properties) ? created.sheets[0].properties.sheetId : 0;
     const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
     if(!moveRes.ok) throw new Error('ย้ายชีตบันทึกเคลมเข้าโฟลเดอร์ไม่สำเร็จ: '+await googleApiErrorMessage(moveRes));
     _claimsSheetIdCache = sheetId;
-    await appendClaimRowToSheet(sheetId, CLAIMS_SHEET_HEADERS); // เขียนหัวตารางไว้แถวแรก
+    DATA.claimsSheetMeta.spreadsheetId = sheetId;
+    DATA.claimsSheetMeta.tabs['ไม่ระบุผู้ดูแล'] = defaultTabGid;
+    await fsSaveClaimsSheetMeta();
+    await appendClaimRowToSheet(sheetId, CLAIMS_SHEET_HEADERS, 'ไม่ระบุผู้ดูแล'); // เขียนหัวตารางไว้แถวแรกของแท็บสำรอง
     return sheetId;
   })();
   try{ return await _claimsSheetInFlight; }
   finally{ _claimsSheetInFlight = null; }
 }
-async function appendClaimRowToSheet(spreadsheetId, rowValues){
+const _claimsSheetTabInFlight = new Map();
+// หา (หรือสร้างใหม่) แท็บย่อยของผู้ดูแลคนหนึ่งในสเปรดชีตกลาง — คืนทั้งชื่อแท็บ (ตัดแต่งแล้ว) และ gid (เลขอ้างอิงแท็บ ใช้ทำลิงก์เปิดตรงแท็บได้)
+async function ensureOwnerSheetTab(spreadsheetId, ownerName){
+  const tabTitle = sanitizeSheetTabName(ownerName);
+  if(DATA.claimsSheetMeta.tabs && DATA.claimsSheetMeta.tabs[tabTitle]!==undefined){
+    return { title: tabTitle, gid: DATA.claimsSheetMeta.tabs[tabTitle] };
+  }
+  if(_claimsSheetTabInFlight.has(tabTitle)) return _claimsSheetTabInFlight.get(tabTitle);
+  const promise = (async ()=>{
+    const token = await ensureDriveAccess();
+    // เช็คของจริงในสเปรดชีตก่อนสร้างซ้ำ เผื่อแท็บนี้มีอยู่แล้วแต่แคชในเครื่อง/Firestore หายไป (เช่นคนละอุปกรณ์ยังไม่เคย sync)
+    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!getRes.ok) throw new Error('อ่านรายชื่อแท็บใน Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
+    const getData = await getRes.json();
+    const existing = (getData.sheets||[]).find(s=>s.properties && s.properties.title===tabTitle);
+    let gid;
+    if(existing){
+      gid = existing.properties.sheetId;
+    } else {
+      const addRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+        method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ requests:[{ addSheet:{ properties:{ title: tabTitle } } }] })
+      });
+      if(!addRes.ok) throw new Error(`สร้างแท็บ "${tabTitle}" ใน Sheet ไม่สำเร็จ: `+await googleApiErrorMessage(addRes));
+      const addData = await addRes.json();
+      gid = addData.replies[0].addSheet.properties.sheetId;
+      await appendClaimRowToSheet(spreadsheetId, CLAIMS_SHEET_HEADERS, tabTitle); // เขียนหัวตารางไว้แถวแรกของแท็บใหม่
+    }
+    DATA.claimsSheetMeta.tabs[tabTitle] = gid;
+    await fsSaveClaimsSheetMeta();
+    return { title: tabTitle, gid };
+  })();
+  _claimsSheetTabInFlight.set(tabTitle, promise);
+  try{ return await promise; }
+  finally{ _claimsSheetTabInFlight.delete(tabTitle); }
+}
+async function appendClaimRowToSheet(spreadsheetId, rowValues, tabTitle){
   const token = await ensureDriveAccess();
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
+  const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values:[rowValues] })
   });
@@ -1818,12 +1885,20 @@ function buildClaimSheetRow(c){
     c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):'', c.driveFolderUrl||''
   ];
 }
-// ย้ายเคลม 1 รายการไป Google Sheet แล้วลบออกจาก Firestore — ใช้ทั้งตอนเปลี่ยนสถานะเป็นสถานะจบเคส และตอนกดปุ่ม "ลองย้ายอีกครั้ง"
+// ลิงก์เปิดแท็บของผู้ดูแลคนหนึ่งใน Google Sheet โดยตรง (ถ้ารู้ gid แล้ว) — ใช้แสดงในหน้ารายการเคลม ให้กดเข้าประวัติเคลมที่จบแล้วของ Product ตัวเองได้ทันที
+function claimsSheetTabLink(spreadsheetId, gid){
+  return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit${gid!==undefined&&gid!==null?'#gid='+gid:''}`;
+}
+// ย้ายเคลม 1 รายการไป Google Sheet (แท็บของผู้ดูแล Product ที่เคลมนี้สังกัดอยู่) แล้วลบออกจาก Firestore — ใช้ทั้งตอนเปลี่ยนสถานะเป็นสถานะจบเคส และตอนกดปุ่ม "ลองย้ายอีกครั้ง"
 async function archiveClaimToSheetAndDelete(c){
   showLoadingOverlay('กำลังบันทึกลง Google Sheet...');
   try{
     const sheetId = await ensureClaimsLogSpreadsheet();
-    await appendClaimRowToSheet(sheetId, buildClaimSheetRow(c));
+    const ownerName = ownerOf(c.category, c.model); // แยกแท็บตามผู้ดูแล Product ของเคลมนี้ — Product ไหนใครดูแล เคลมที่จบแล้วของ Product นั้นจะถูกเก็บไว้ในแท็บของคนนั้น
+    updateLoadingOverlayText(`กำลังเตรียมแท็บของ "${ownerName}"...`);
+    const tab = await ensureOwnerSheetTab(sheetId, ownerName);
+    updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
+    await appendClaimRowToSheet(sheetId, buildClaimSheetRow(c), tab.title);
     updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
     await fsDeleteClaim(c.id);
     DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
@@ -4837,6 +4912,28 @@ function renderClaimsDashboard(){
     <div class="stat-card"><div class="label">เสร็จสิ้น</div><div class="value green">${count('received')}</div></div>
   `;
 }
+// ลิงก์ Google Sheet ของประวัติเคลมที่เสร็จแล้ว (แยกแท็บตามผู้ดูแล Product) — ใช้เฉพาะข้อมูลที่แคชไว้แล้ว ไม่ยิง Sheets API ตอน render (กันหน่วง/ขอสิทธิ์ Drive โดยไม่จำเป็นแค่เข้าหน้ารายการเคลม)
+function renderClaimsSheetHistoryLink(){
+  const wrap = $('claims-sheet-history-link');
+  if(!wrap) return;
+  const meta = DATA.claimsSheetMeta || { spreadsheetId:null, tabs:{} };
+  if(!meta.spreadsheetId){
+    wrap.innerHTML = `<p style="font-size:12px;color:var(--text-faint);">📊 ยังไม่มีประวัติเคลมที่เสร็จแล้ว — ระบบจะสร้าง Google Sheet ให้อัตโนมัติเมื่อมีเคลมแรกที่ถูกทำเครื่องหมายว่าเสร็จสิ้น</p>`;
+    return;
+  }
+  if(isSuperAdmin()){
+    wrap.innerHTML = `<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วทั้งหมด (Google Sheet — แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>`;
+    return;
+  }
+  if(isEditor() && currentSupIdentity){
+    const tabTitle = sanitizeSheetTabName(currentSupIdentity);
+    const gid = meta.tabs ? meta.tabs[tabTitle] : undefined;
+    const noteHtml = gid===undefined ? `<p style="font-size:11px;color:var(--text-faint);margin-top:2px;">(ยังไม่มีประวัติของคุณ — จะสร้างแท็บให้อัตโนมัติเมื่อมีเคลมแรกที่เสร็จสิ้น)</p>` : '';
+    wrap.innerHTML = `<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 ดูประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)} (Google Sheet)</a></p>${noteHtml}`;
+    return;
+  }
+  wrap.innerHTML = ''; // Engineer ทั่วไป (ไม่ใช่ Sup Product) เห็นแค่เคลมที่ตัวเองบันทึกในแอปอยู่แล้ว ไม่ต้องมีลิงก์นี้
+}
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
   { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
@@ -4922,6 +5019,7 @@ function renderClaimsView(){
   claimsOpenFilterCol = null; // ตารางถูกสร้างใหม่ทั้งก้อนทุกครั้งที่ render — ดรอปดาวน์ตัวกรอง (ถ้าเปิดค้างอยู่) จะหายไปจาก DOM ไปด้วย ต้องล้างสถานะนี้กันค้าง
   $('claims-identity-wrap').style.display = (isEditor() && !isSuperAdmin()) ? 'flex' : 'none';
   renderClaimsDashboard();
+  renderClaimsSheetHistoryLink();
   const statusFilter = $('claims-filter-status').value;
   const search = ($('claims-filter-search').value||'').toLowerCase().trim();
   let claims = myVisibleClaims().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
