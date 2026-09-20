@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.42
+  เวอร์ชันปัจจุบัน: 7.44
   อัปเดตล่าสุด: 20 กันยายน 2569 14:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.42</title>
+<title>Firmer Service Center — v7.44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.42</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.44</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -662,6 +662,9 @@
       <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
       <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
       <div class="field-wrap"><label>รายการอะไหล่ที่เคลม (ถ้ามี)</label><div id="claim-parts-wrap"></div></div>
+      <!-- รายการ Part number/Part name ที่เคยกรอกไว้ก่อนหน้า — ใช้เป็น autocomplete กันพิมพ์ผิด/สะกดไม่ตรงกันระหว่างเคลม -->
+      <datalist id="claim-partnum-datalist"></datalist>
+      <datalist id="claim-partname-datalist"></datalist>
       <div class="field-wrap"><label>เลข Job Factorium <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-jobfactorium"></div>
       <div class="field-wrap"><label>เลขที่ใบยืม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
       <div id="claim-attach-groups"></div>
@@ -883,7 +886,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.42 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.44 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -983,7 +986,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.42";
+const APP_VERSION = "7.44";
 const APP_UPDATED_AT = "20 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -4342,24 +4345,40 @@ function initClaimDatePickers(){
   if(typeof flatpickr==='undefined') return;
   if(!claimProblemDatePicker){
     claimProblemDatePicker = flatpickr('#claim-f-problemdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false, maxDate:'today',
-      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; } });
+      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); } });
   }
   if(!claimFixDatePicker){
     claimFixDatePicker = flatpickr('#claim-f-fixdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false,
-      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; } });
+      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); } });
   }
 }
 function bangkokISOFromDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
 function isoToDDMMYYYY(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
 
+// รวบรวม Part number -> Part name จากเคลมทั้งหมดที่เคยบันทึกไว้ (ไม่สร้างที่เก็บข้อมูลใหม่ ใช้ DATA.claims ที่โหลดมาอยู่แล้ว) ใช้ทำ autocomplete กันพิมพ์ Part number/Part name ผิดหรือสะกดไม่ตรงกันระหว่างเคลม
+function getKnownPartsMap(){
+  const map = new Map();
+  (DATA.claims||[]).forEach(c=>{ (c.parts||[]).forEach(p=>{ if(p && p.partNumber) map.set(String(p.partNumber).trim(), (p.partName||'').trim()); }); });
+  return map;
+}
+function refreshClaimPartsDatalist(){
+  const numDl = $('claim-partnum-datalist'), nameDl = $('claim-partname-datalist');
+  if(!numDl || !nameDl) return;
+  const map = getKnownPartsMap();
+  const names = new Set();
+  let numOpts = '';
+  map.forEach((name, num)=>{ numOpts += `<option value="${escapeHtml(num)}">`; if(name) names.add(name); });
+  numDl.innerHTML = numOpts;
+  nameDl.innerHTML = Array.from(names).map(n=>`<option value="${escapeHtml(n)}">`).join('');
+}
 function renderClaimPartsRows(){
   const wrap = $('claim-parts-wrap');
   const list = claimDraft.parts.length ? claimDraft.parts : [{partNumber:'',partName:'',count:''}];
   wrap.innerHTML = list.map((p,i)=>`
     <div style="background:var(--panel-alt);border-radius:8px;padding:8px;margin-bottom:8px;">
       <div style="display:flex;gap:6px;margin-bottom:6px;">
-        <input type="text" data-partfield="partNumber" data-idx="${i}" value="${escapeHtml(p.partNumber)}" placeholder="Part number" style="flex:1.2;">
-        <input type="text" data-partfield="partName" data-idx="${i}" value="${escapeHtml(p.partName)}" placeholder="Part name" style="flex:1.5;">
+        <input type="text" list="claim-partnum-datalist" data-partfield="partNumber" data-idx="${i}" value="${escapeHtml(p.partNumber)}" placeholder="Part number" style="flex:1.2;">
+        <input type="text" list="claim-partname-datalist" data-partfield="partName" data-idx="${i}" value="${escapeHtml(p.partName)}" placeholder="Part name" style="flex:1.5;">
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
         <input type="number" data-partfield="count" data-idx="${i}" value="${escapeHtml(p.count)}" placeholder="จำนวน *" style="width:90px;">
@@ -4367,10 +4386,23 @@ function renderClaimPartsRows(){
       </div>
     </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" id="claim-part-add-btn">+ เพิ่มรายการอะไหล่</button>`;
   wrap.querySelectorAll('[data-partfield]').forEach(el=>{
-    el.addEventListener('input', ()=>{ const idx=+el.getAttribute('data-idx'); const field=el.getAttribute('data-partfield'); claimDraft.parts[idx][field]=el.value; });
+    el.addEventListener('input', ()=>{
+      const idx=+el.getAttribute('data-idx'); const field=el.getAttribute('data-partfield');
+      claimDraft.parts[idx][field]=el.value;
+      // พิมพ์ Part number ตรงกับที่เคยกรอกไว้ก่อนหน้าเป๊ะ ๆ แล้วช่อง Part name ว่างอยู่ -> เติม Part name ให้อัตโนมัติ (กันลืม/พิมพ์ไม่ตรงกัน)
+      if(field==='partNumber'){
+        const known = getKnownPartsMap().get(el.value.trim());
+        if(known && !claimDraft.parts[idx].partName){
+          claimDraft.parts[idx].partName = known;
+          const nameEl = wrap.querySelector(`[data-partfield="partName"][data-idx="${idx}"]`);
+          if(nameEl) nameEl.value = known;
+        }
+      }
+      if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave();
+    });
   });
   wrap.querySelectorAll('[data-partrm]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',count:''}]; renderClaimPartsRows(); });
+    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',count:''}]; renderClaimPartsRows(); if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); });
   });
   $('claim-part-add-btn').addEventListener('click', ()=>{ claimDraft.parts.push({partNumber:'',partName:'',count:''}); renderClaimPartsRows(); });
 }
@@ -4498,6 +4530,61 @@ function renderClaimAttachGroupRow(groupKey){
   });
 }
 
+// ===== Autosave ร่างฟอร์มเคลม (กันข้อมูลหายกรณีปิดแอป/สลับหน้าจอ/เน็ตหลุดโดยไม่ตั้งใจ) — เก็บเฉพาะข้อมูลตัวหนังสือใน localStorage เท่านั้น (ไม่เก็บไฟล์แนบ เพราะไฟล์ต้องเลือกใหม่จากเครื่องอยู่ดีหลัง reload) =====
+const CLAIM_DRAFT_AUTOSAVE_FIELD_IDS = ['claim-f-claimant','claim-f-site','claim-f-category','claim-f-model','claim-f-sn','claim-f-errcode','claim-f-errmsg','claim-f-problem','claim-f-solution','claim-f-problemcount','claim-f-jobfactorium','claim-f-loan'];
+function claimDraftStorageKey(){ return claimEditingId ? ('firmer_claim_draft_edit_'+claimEditingId) : 'firmer_claim_draft_new'; }
+function snapshotClaimFormFromDOM(){
+  return {
+    claimant: $('claim-f-claimant').value, siteName: $('claim-f-site').value, category: $('claim-f-category').value, model: $('claim-f-model').value,
+    serialNumber: $('claim-f-sn').value, errorCode: $('claim-f-errcode').value, errorMessage: $('claim-f-errmsg').value,
+    problemDate: (claimDraft&&claimDraft.problemDate)||'', fixDate: (claimDraft&&claimDraft.fixDate)||'',
+    problem: $('claim-f-problem').value, solution: $('claim-f-solution').value, problemCount: $('claim-f-problemcount').value,
+    jobFactorium: $('claim-f-jobfactorium').value, loanSlipNo: $('claim-f-loan').value,
+    parts: (claimDraft&&claimDraft.parts)?claimDraft.parts.map(p=>({...p})):[],
+    savedAt: Date.now(),
+  };
+}
+// นับว่ามีข้อมูลควรค่าแก่การเก็บร่าง ถ้ากรอกช่องใดช่องหนึ่งไว้แล้ว (ไม่นับ "ผู้เคลม" เพราะถูก autofill จากชื่อเล่นอยู่แล้วทุกครั้ง ไม่ถือเป็นข้อมูลที่ผู้ใช้กรอกเอง)
+function isClaimDraftMeaningful(snap){
+  return !!(snap.siteName || snap.category || snap.model || snap.serialNumber || snap.errorCode || snap.errorMessage
+    || snap.problem || snap.solution || snap.problemDate || snap.fixDate || snap.problemCount
+    || snap.jobFactorium || snap.loanSlipNo || (snap.parts||[]).some(p=>p.partNumber||p.partName));
+}
+let claimDraftAutosaveTimer = null;
+function scheduleClaimDraftAutosave(){
+  if(!$('claim-modal') || !$('claim-modal').classList.contains('show')) return;
+  clearTimeout(claimDraftAutosaveTimer);
+  claimDraftAutosaveTimer = setTimeout(()=>{
+    try{
+      const snap = snapshotClaimFormFromDOM();
+      if(isClaimDraftMeaningful(snap)) localStorage.setItem(claimDraftStorageKey(), JSON.stringify(snap));
+      else localStorage.removeItem(claimDraftStorageKey()); // กรอกแล้วลบจนว่างหมด ก็เคลียร์ร่างทิ้งไปด้วย ไม่ปล่อยร่างเปล่าค้างไว้
+    }catch(e){} // localStorage เต็ม/ถูกบล็อก ก็แค่ไม่ autosave ไม่กระทบการกรอกฟอร์มปกติ
+  }, 600);
+}
+function claimModalHasUnsavedDraft(){ try{ return !!localStorage.getItem(claimDraftStorageKey()); }catch(e){ return false; } }
+function clearPersistedClaimDraft(){ try{ localStorage.removeItem(claimDraftStorageKey()); }catch(e){} }
+function wireClaimDraftAutosaveListeners(){
+  CLAIM_DRAFT_AUTOSAVE_FIELD_IDS.forEach(id=>{
+    const el = $(id); if(!el || el._autosaveWired) return; el._autosaveWired = true;
+    el.addEventListener(el.tagName==='SELECT' ? 'change' : 'input', scheduleClaimDraftAutosave);
+  });
+}
+// เตือนก่อนปิดแท็บ/รีเฟรชหน้า ถ้าฟอร์มเคลมเปิดอยู่และมีข้อมูลที่ยังไม่ได้บันทึกจริง (กันข้อมูลหายจากการรีเฟรช/ปิดโดยไม่ตั้งใจ)
+window.addEventListener('beforeunload', (e)=>{
+  if($('claim-modal') && $('claim-modal').classList.contains('show') && claimModalHasUnsavedDraft()){
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+// ปิดฟอร์มเคลมโดยเช็คก่อนว่ามีข้อมูลค้างอยู่มั้ย (ปุ่ม X / ยกเลิก) — ถ้ามี ถามยืนยันก่อน แต่ไม่ลบร่างที่ autosave ไว้ไม่ว่าจะเลือกทางไหน เผื่อกลับมากรอกต่อทีหลัง
+function closeClaimModalWithGuard(){
+  if($('claim-modal').classList.contains('show') && claimModalHasUnsavedDraft()){
+    const ok = confirm('มีข้อมูลที่ยังไม่ได้บันทึก ต้องการออกจากฟอร์มนี้หรือไม่?\n(ระบบบันทึกร่างไว้ให้แล้ว กลับมาเปิดฟอร์มนี้ใหม่จะกู้คืนให้อัตโนมัติ)');
+    if(!ok) return;
+  }
+  $('claim-modal').classList.remove('show');
+}
+
 function openClaimModal(existingClaim){
   if(existingClaim){
     claimEditingId = existingClaim.id;
@@ -4521,6 +4608,24 @@ function openClaimModal(existingClaim){
     resetClaimDraft();
     $('claim-modal-title').textContent = 'บันทึกเคลม/แจ้งปัญหาใหม่';
   }
+  // มีร่างที่ autosave ไว้ก่อนหน้า (โหมด/เคลมเดียวกัน) ถามผู้ใช้ว่าจะกู้คืนหรือไม่ ก่อนเติมค่าลงฟอร์ม
+  try{
+    const savedRaw = localStorage.getItem(claimDraftStorageKey());
+    if(savedRaw){
+      const saved = JSON.parse(savedRaw);
+      if(isClaimDraftMeaningful(saved)){
+        const wantsRestore = confirm('พบข้อมูลที่กรอกค้างไว้ก่อนหน้า (ยังไม่ได้บันทึก)\nต้องการกู้คืนข้อมูลนี้กลับมาหรือไม่?');
+        if(wantsRestore){
+          Object.assign(claimDraft, { claimant: saved.claimant, siteName: saved.siteName, category: saved.category, model: saved.model,
+            serialNumber: saved.serialNumber, errorCode: saved.errorCode, errorMessage: saved.errorMessage, problemDate: saved.problemDate, fixDate: saved.fixDate,
+            problem: saved.problem, solution: saved.solution, problemCount: saved.problemCount, jobFactorium: saved.jobFactorium, loanSlipNo: saved.loanSlipNo,
+            parts: (saved.parts&&saved.parts.length)?saved.parts:claimDraft.parts });
+        } else {
+          clearPersistedClaimDraft();
+        }
+      }
+    }
+  }catch(e){}
   $('claim-f-claimant').value = claimDraft.claimant;
   $('claim-f-site').value = claimDraft.siteName;
   populateClaimCategorySelect();
@@ -4540,13 +4645,15 @@ function openClaimModal(existingClaim){
   if(claimFixDatePicker){ if(claimDraft.fixDate) claimFixDatePicker.setDate(claimDraft.fixDate, false); else claimFixDatePicker.clear(); }
   renderClaimPartsRows();
   renderClaimAttachGroups();
+  refreshClaimPartsDatalist();
   clearAllClaimFieldInvalid(); // ล้างกรอบแดงค้างจากครั้งก่อน (ถ้ามี) ทุกครั้งที่เปิดฟอร์มใหม่
   wireClaimFieldInvalidReset();
+  wireClaimDraftAutosaveListeners();
   $('claim-modal').classList.add('show');
 }
 $('eng-quick-claim-btn').addEventListener('click', ()=>openClaimModal(null));
-$('claim-modal-close').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
-$('claim-cancel-btn').addEventListener('click', ()=>$('claim-modal').classList.remove('show'));
+$('claim-modal-close').addEventListener('click', closeClaimModalWithGuard);
+$('claim-cancel-btn').addEventListener('click', closeClaimModalWithGuard);
 
 // ===== Validation UX ฟอร์มแจ้งเคลม: ไฮไลต์กรอบแดงช่องที่ยังไม่กรอก + เลื่อนไปช่องแรกที่ขาด + แจ้งเตือนรายชื่อช่องที่ขาดทั้งหมด =====
 const CLAIM_REQUIRED_FIELDS = [
@@ -4609,6 +4716,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   if(cleanParts.length !== rawParts.length){ showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้'); return; }
   const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
+  if(navigator.onLine===false){ showToast('⚠ ไม่มีการเชื่อมต่ออินเทอร์เน็ต ระบบบันทึกข้อมูลที่กรอกไว้เป็นร่างในเครื่องแล้ว กรุณาลองกด "บันทึกเคลม" อีกครั้งเมื่อเชื่อมต่อเน็ตได้'); return; }
 
   const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
   showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
@@ -4652,11 +4760,13 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       const newId = await fsAddClaim(fields);
       DATA.claims.push({ id:newId, ...fields });
     }
+    clearPersistedClaimDraft(); // บันทึกขึ้น Firestore สำเร็จแล้ว ไม่ต้องเก็บร่างไว้อีกต่อไป
     $('claim-modal').classList.remove('show');
     renderClaimsView();
     showClaimSuccessSummary(fields);
   }catch(e){
-    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
+    // บันทึกไม่สำเร็จ (เช่นเน็ตหลุดระหว่างอัปโหลด) — จงใจไม่ลบร่างที่ autosave ไว้ ผู้ใช้เปิดฟอร์มนี้ใหม่แล้วกู้คืนข้อมูลมากรอกซ้ำ/ลองบันทึกใหม่ได้ทันที ไม่ต้องพิมพ์ใหม่ทั้งหมด
+    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)');
   } finally {
     btn.disabled=false; btn.style.opacity='';
     hideLoadingOverlay();
@@ -5852,61 +5962,52 @@ setTimeout(updateModeToggleScrollHint, 200);
 })();
 
 /* ===================== ปุ่มย้อนกลับของมือถือ (Android back / เลื่อนนิ้วย้อนกลับ) — ให้ปิด popup/แผงที่เปิดอยู่ก่อน แทนที่จะย้อนออกจากแอปไปเลย =====================
-   หลักการ: ทุกครั้งที่ popup/แผงแบบเต็มจอ (modal-overlay, fullscreen-panel, lightbox) ถูกเปิด (.show) จะ push history state ใหม่ไว้ 1 อัน
-   พอผู้ใช้กดปุ่มย้อนกลับ เบราว์เซอร์จะ pop state นั้นก่อน (popstate event) เราเลยดักจับไปปิด popup ที่เปิดอยู่บนสุดแทนที่จะปล่อยให้ย้อนออกจากหน้าเว็บไปเลย
-   ถ้าปิด popup ด้วยปุ่มในแอปเอง (X/ยกเลิก) ก็ต้องเคลียร์ state ที่ค้างไว้ทิ้งด้วย (history.back() แบบเงียบๆ) ไม่งั้นกดย้อนกลับครั้งถัดไปจะเจอ state ปลอมค้างอยู่ */
+   หลักการ: ใช้ history state 1 อันเป็น "ตัวดัก" (trap) — มี popup/แผงเต็มจอ (modal-overlay, fullscreen-panel, lightbox) เปิดอยู่กี่ตัวก็ตาม จะมี trap state ค้างอยู่ "พอดี 1 อัน" เสมอ
+   ทุกครั้งที่มีการเปิด/ปิด popup จะเช็คสถานะจริงของ DOM (มี .show เหลืออยู่มั้ย) แล้วปรับ trap ให้ตรงกับสถานะจริงเสมอ (push ถ้าควรมีแต่ยังไม่มี / pop ถ้าไม่ควรมีแต่ดันมี)
+   วิธีนี้ตรวจจาก "สถานะสุดท้ายจริง" แทนการนับทีละ event ทำให้ไม่พังแม้ปิด popup หนึ่งแล้วเปิดอีกอันทันทีในการคลิกเดียวกัน (เช่น ปิดฟอร์มแจ้งเคลมแล้วเปิดหน้าสรุปผลต่อ) */
 (function setupMobileBackButtonClosesPopups(){
   if(typeof history === 'undefined' || typeof history.pushState !== 'function') return;
   const OVERLAY_SELECTOR = '.modal-overlay, .fullscreen-panel, .lightbox';
-  let pushedDepth = 0; // จำนวน state ที่เรา push ไว้ค้างอยู่ตอนนี้ (ต้องตรงกับจำนวน popup ที่เปิดซ้อนกันอยู่)
-  let programmaticBack = false; // true ระหว่างที่เรากำลังเรียก history.back() เองเพื่อเคลียร์ state (ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับ)
-  let closingViaPopstate = false; // true ระหว่างที่เรากำลังปิด popup เพราะโดน popstate (กันไม่ให้ observer พยายามเคลียร์ state ซ้ำ)
+  // สำคัญ: ต้องต่อท้าย ".show" ให้แต่ละ selector ย่อยแยกกัน (ไม่ใช่ต่อท้ายทั้งสตริงรวมทีเดียว) ไม่งั้นจะกลายเป็น ".modal-overlay, .fullscreen-panel, .lightbox.show"
+  // ซึ่งแปลว่า ".modal-overlay" และ ".fullscreen-panel" จะ match ทุกตัวไม่ว่าจะเปิดอยู่จริงหรือไม่ (ต่อท้าย .show ให้แค่ตัวสุดท้ายเท่านั้น) — ทำให้เข้าใจผิดว่ามี popup เปิดอยู่ตลอดเวลา
+  const OVERLAY_SHOWN_SELECTOR = '.modal-overlay.show, .fullscreen-panel.show, .lightbox.show';
+  let trapActive = false; // true = ตอนนี้มี history state ที่เรา push ไว้เพื่อดักปุ่มย้อนกลับค้างอยู่ 1 อัน
+  let ignoreNextPopstate = false; // true ระหว่างที่เรากำลังเรียก history.back() เอง (เคลียร์ trap หลัง popup ถูกปิดจากปุ่มในแอป) — ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับจริง
 
-  function openOverlays(){ return Array.from(document.querySelectorAll(OVERLAY_SELECTOR+'.show')); }
+  function anyOverlayOpen(){ return !!document.querySelector(OVERLAY_SHOWN_SELECTOR); }
   function topmostOpenOverlay(){
-    const open = openOverlays();
+    const open = Array.from(document.querySelectorAll(OVERLAY_SHOWN_SELECTOR));
     if(!open.length) return null;
     let best = open[0], bestZ = parseInt(getComputedStyle(open[0]).zIndex)||0;
     open.forEach(el=>{ const z = parseInt(getComputedStyle(el).zIndex)||0; if(z>=bestZ){ bestZ=z; best=el; } });
     return best;
   }
+  // เรียกได้บ่อยเท่าไหร่ก็ได้ ปลอดภัยเสมอ (idempotent) — เทียบสถานะ DOM จริงกับ trapActive แล้วปรับให้ตรงกัน
+  function syncTrapToOverlayState(){
+    const shouldTrap = anyOverlayOpen();
+    if(shouldTrap && !trapActive){
+      trapActive = true;
+      try{ history.pushState({ firmerOverlayTrap:true }, ''); }catch(e){ trapActive = false; }
+    } else if(!shouldTrap && trapActive){
+      trapActive = false;
+      ignoreNextPopstate = true;
+      try{ history.back(); }catch(e){ ignoreNextPopstate = false; }
+    }
+  }
 
-  const observer = new MutationObserver(mutations=>{
-    mutations.forEach(m=>{
-      if(m.type!=='attributes' || m.attributeName!=='class') return;
-      const el = m.target;
-      if(!(el instanceof Element) || !el.matches(OVERLAY_SELECTOR)) return;
-      const isShown = el.classList.contains('show');
-      const wasShown = (m.oldValue||'').split(' ').includes('show');
-      if(isShown && !wasShown){
-        pushedDepth++;
-        try{ history.pushState({ firmerOverlay:true, depth: pushedDepth }, ''); }catch(e){}
-      } else if(!isShown && wasShown){
-        if(closingViaPopstate) return; // ปิดเพราะกดปุ่มย้อนกลับอยู่แล้ว — เบราว์เซอร์ pop state ให้เองแล้ว ไม่ต้องเคลียร์ซ้ำ
-        if(pushedDepth > 0){
-          pushedDepth--;
-          programmaticBack = true;
-          try{ history.back(); }catch(e){ programmaticBack = false; }
-        }
-      }
-    });
-  });
+  const observer = new MutationObserver(()=>{ syncTrapToOverlayState(); }); // เช็คสถานะรวมหลังการเปลี่ยนแปลงทั้งหมดใน batch นี้จบแล้ว (ไม่ไล่ทีละ mutation record เพื่อกัน race)
   document.querySelectorAll(OVERLAY_SELECTOR).forEach(el=>{
-    observer.observe(el, { attributes:true, attributeFilter:['class'], attributeOldValue:true });
+    observer.observe(el, { attributes:true, attributeFilter:['class'] });
   });
 
   window.addEventListener('popstate', ()=>{
-    if(programmaticBack){ programmaticBack = false; return; } // นี่คือ state ที่เราสั่ง back() เองตอนเคลียร์ค่า ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับ
+    if(ignoreNextPopstate){ ignoreNextPopstate = false; return; } // นี่คือ state ที่เราสั่ง back() เองตอนเคลียร์ trap ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับ
+    trapActive = false; // เบราว์เซอร์ pop state ของเราไปแล้วจริงๆ
     const overlay = topmostOpenOverlay();
     if(overlay){
-      closingViaPopstate = true;
-      overlay.classList.remove('show'); // การ remove นี้ทำให้ MutationObserver ข้างบน "จองคิว" microtask ไว้ทำงานแล้ว (ยังไม่รันจนกว่า synchronous code ส่วนนี้จบ)
-      if(pushedDepth > 0) pushedDepth--;
-      // รีเซ็ตแฟล็กผ่าน microtask (ไม่ใช่ทันทีแบบ synchronous) เพื่อให้แน่ใจว่า MutationObserver callback ที่ถูกจองคิวจาก remove('show') ข้างบน
-      // ได้อ่านค่า closingViaPopstate=true ไปก่อนแล้ว (microtask queue เป็น FIFO — คิวของ observerถูกจองก่อน คิวนี้จึงรันหลัง) กัน race condition ที่ observer เข้าใจผิดว่าปิดจากปุ่มในแอป แล้วไป history.back() ซ้ำเกิน
-      Promise.resolve().then(()=>{ closingViaPopstate = false; });
+      overlay.classList.remove('show'); // ปิดตัวบนสุด — ถ้ายังมีตัวอื่นเปิดซ้อนอยู่ observer จะ push trap ใหม่ให้อัตโนมัติ (กดย้อนกลับอีกทีปิดตัวถัดไปได้)
     }
-    // ไม่มี popup เปิดอยู่เลย — ปล่อยให้เบราว์เซอร์ย้อนกลับตามปกติ
+    // ไม่มี popup เปิดอยู่เลย — ปล่อยให้เบราว์เซอร์ย้อนกลับตามปกติ (ออกจากแอป)
   });
 })();
 </script>
