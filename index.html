@@ -2,20 +2,21 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.35
-  อัปเดตล่าสุด: 20 กันยายน 2569 11:30 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.36
+  อัปเดตล่าสุด: 20 กันยายน 2569 12:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.35</title>
+<title>Firmer Service Center — v7.36</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -59,10 +60,16 @@
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
-  #claims-table{min-width:1150px;font-size:12.5px;}
-  #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;box-shadow:0 1px 0 var(--border);white-space:nowrap;}
+  #claims-table{min-width:1150px;font-size:12.5px;border-collapse:collapse;}
+  #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:nowrap;}
   #claims-table tbody tr{cursor:pointer;}
   #claims-table td{font-size:12.5px;}
+  /* เส้นตารางแบบ Excel — ขีดเส้นทั้งแถวและคอลัมน์ให้เห็นชัดเจน (ไม่ใช่แค่เส้นใต้แถวแบบตารางทั่วไปในแอป) */
+  #claims-table th, #claims-table td{border:1px solid var(--border);}
+  #claims-table{border:1px solid var(--border);}
+  /* ป๊อปอัพรายละเอียดเคลม — แสดงเต็มหน้าจอ เพื่อให้เห็นข้อมูล/รูปภาพครบโดยไม่ต้องเลื่อนซ้อนสองชั้น */
+  #claim-detail-modal{padding:0;}
+  #claim-detail-modal .modal{max-width:100%;width:100%;height:100vh;max-height:100vh;border-radius:0;}
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
   .mode-toggle::-webkit-scrollbar{display:none;}
   .mode-toggle-track{display:none;height:3px;background:var(--border);border-radius:999px;margin-top:5px;position:relative;overflow:hidden;}
@@ -326,7 +333,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.35</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.36</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -648,7 +655,7 @@
 
   <!-- ============ CLAIM DETAIL MODAL ============ -->
   <div class="modal-overlay" id="claim-detail-modal">
-    <div class="modal" style="max-width:480px;">
+    <div class="modal">
       <button class="modal-close-x" id="claim-detail-close">✕</button>
       <div id="claim-detail-body"></div>
     </div>
@@ -852,7 +859,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.35 (อัปเดตล่าสุด 20 กันยายน 2569 11:30 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.36 (อัปเดตล่าสุด 20 กันยายน 2569 12:55 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -952,8 +959,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.35";
-const APP_UPDATED_AT = "20 กันยายน 2569 11:30 น. เวลาไทย";
+const APP_VERSION = "7.36";
+const APP_UPDATED_AT = "20 กันยายน 2569 12:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1590,6 +1597,26 @@ function normalizeDriveLink(url){
   }
   return trimmed; // ไม่ใช่ลิงก์ Drive หรือจับรูปแบบไม่ได้ — ปล่อยผ่านตามเดิม ไม่ยุ่ง
 }
+// ดึง File ID ออกจากลิงก์ Drive ทุกรูปแบบที่แอปนี้เคยสร้าง (ทั้งแบบ /file/d/ID/view และ lh3.googleusercontent.com/d/ID)
+function driveFileIdFromUrl(url){
+  if(!url) return null;
+  const patterns = [
+    /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/uc\?.*[?&]id=([a-zA-Z0-9_-]+)/,
+    /drive\.google\.com\/thumbnail\?id=([a-zA-Z0-9_-]+)/,
+    /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+  ];
+  for(const re of patterns){ const m = String(url).match(re); if(m && m[1]) return m[1]; }
+  return null;
+}
+// ลิงก์ .../file/d/ID/view เปิดเป็นหน้า HTML ของ Drive ใช้เป็น <img src> ตรงๆ ไม่ได้ (โหลดไม่ขึ้น) — ต้องแปลงเป็นลิงก์รูปตรง (lh3.googleusercontent.com) ก่อนเสมอ
+function driveImgSrc(url){
+  if(!url) return url;
+  const id = driveFileIdFromUrl(url);
+  return id ? `https://lh3.googleusercontent.com/d/${id}` : url;
+}
 const _driveFolderCache = new Map(); // แคชโฟลเดอร์ที่เคยหา/สร้างไปแล้วในเซสชันนี้ — กันการค้นหาซ้ำๆ ทุกครั้งที่บันทึก (สาเหตุหลักที่บันทึกวิดีโอ/รูปช้า)
 const _driveFolderInFlight = new Map(); // เก็บ Promise ที่กำลังทำงานอยู่ — กัน Worker หลายตัวพร้อมกันหาโฟลเดอร์เดียวกันแล้วสร้างซ้ำ (race condition ตอนทำงานแบบ parallel)
 async function driveFindOrCreateFolder(name, parentId){
@@ -1980,6 +2007,77 @@ async function driveUploadLargeFile(file, filename, parentId, onProgress){
     body: JSON.stringify({ role:'reader', type:'anyone' })
   });
   return `https://drive.google.com/file/d/${fileId}/view`;
+}
+// บีบอัดรูป (Blob) ให้ไม่เกินขนาดที่กำหนด — ลดคุณภาพ JPEG ก่อน ถ้ายังไม่พอค่อยลดขนาดภาพลงเป็นขั้นๆ
+function compressBlobToMaxBytes(blob, maxBytes){
+  return new Promise((resolve, reject)=>{
+    const objUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = ()=>{
+      let scale = 1, quality = 0.9, attempts = 0;
+      const tryCompress = ()=>{
+        attempts++;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width*scale));
+        canvas.height = Math.max(1, Math.round(img.height*scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(out=>{
+          if(!out){ URL.revokeObjectURL(objUrl); reject(new Error('บีบอัดรูปไม่สำเร็จ')); return; }
+          if(out.size<=maxBytes || attempts>=12){ URL.revokeObjectURL(objUrl); resolve(out); return; }
+          if(quality>0.4) quality -= 0.15; else scale *= 0.8; // ลดคุณภาพก่อน ถ้าลดจนต่ำสุดแล้วยังใหญ่เกินค่อยลดขนาดภาพ
+          tryCompress();
+        }, 'image/jpeg', quality);
+      };
+      tryCompress();
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(objUrl); reject(new Error('เปิดรูปไม่สำเร็จ')); };
+    img.src = objUrl;
+  });
+}
+// ดาวน์โหลดรูปภาพทั้งหมดของเคลม 1 รายการ รวมเป็นไฟล์ .zip — บีบอัดรูปที่ใหญ่เกิน 5MB ก่อนใส่ลง zip
+async function downloadClaimImagesAsZip(c){
+  const imageAtts = [];
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ (c.attachments && c.attachments[g.key] ? c.attachments[g.key] : []).forEach(a=>{ if(a.kind==='image') imageAtts.push(a); }); });
+  if(imageAtts.length===0){ showToast('⚠ เคลมนี้ไม่มีไฟล์รูปภาพ'); return; }
+  const MAX_IMG_BYTES = 5*1024*1024; // 5MB ต่อไฟล์
+  showLoadingOverlay(`กำลังดาวน์โหลดรูปที่ 1/${imageAtts.length}...`);
+  try{
+    const zip = new JSZip();
+    let okCount = 0;
+    for(let i=0;i<imageAtts.length;i++){
+      updateLoadingOverlayText(`กำลังดาวน์โหลดรูปที่ ${i+1}/${imageAtts.length}...`);
+      const a = imageAtts[i];
+      let blob;
+      try{
+        const res = await fetch(driveImgSrc(a.url));
+        if(!res.ok) throw new Error('โหลดรูปไม่สำเร็จ ('+res.status+')');
+        blob = await res.blob();
+      }catch(e){ continue; } // รูปไหนโหลดไม่ได้ ข้ามไปเลย ไม่ให้ทั้งไฟล์ zip ล้ม
+      if(blob.size > MAX_IMG_BYTES){
+        updateLoadingOverlayText(`กำลังบีบอัดรูปที่ ${i+1}/${imageAtts.length}...`);
+        try{ blob = await compressBlobToMaxBytes(blob, MAX_IMG_BYTES); }catch(e){}
+      }
+      const ext = (blob.type||'').includes('png') ? 'png' : 'jpg';
+      const baseName = sanitizeFolderName((a.name||`image-${i+1}`).replace(/\.[a-zA-Z0-9]+$/,''));
+      zip.file(`${String(i+1).padStart(2,'0')}_${baseName}.${ext}`, blob);
+      okCount++;
+    }
+    if(okCount===0){ showToast('⚠ ดาวน์โหลดรูปไม่สำเร็จเลยสักไฟล์'); return; }
+    updateLoadingOverlayText('กำลังบีบอัดไฟล์ zip...');
+    const zipBlob = await zip.generateAsync({ type:'blob', compression:'DEFLATE', compressionOptions:{ level:6 } });
+    const zipName = sanitizeFolderName(`${c.siteName||'ไม่ระบุสถานที่'}_${c.model||'ไม่ระบุรุ่น'}_${(c.problem||'ไม่ระบุอาการ').slice(0,40)}`) + '.zip';
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = zipName;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(()=>URL.revokeObjectURL(link.href), 4000);
+    showToast(okCount<imageAtts.length ? `✓ ดาวน์โหลด zip แล้ว (${okCount}/${imageAtts.length} รูป — บางรูปโหลดไม่สำเร็จ)` : '✓ ดาวน์โหลด zip รูปภาพทั้งหมดแล้ว');
+  }catch(e){
+    showToast('⚠ สร้างไฟล์ zip ไม่สำเร็จ: '+e.message);
+  } finally {
+    hideLoadingOverlay();
+  }
 }
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
@@ -4476,10 +4574,12 @@ function openClaimDetail(id){
   const st = claimStatusInfo(c.status);
   const canManage = isEditor();
   const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
+  const claimImageCount = CLAIM_ATTACHMENT_GROUPS.reduce((n,g)=>n+((c.attachments&&c.attachments[g.key])?c.attachments[g.key].filter(a=>a.kind==='image').length:0), 0);
   const attGroupsHtml = CLAIM_ATTACHMENT_GROUPS.map(g=>{
     const items = (c.attachments && c.attachments[g.key]) ? c.attachments[g.key] : [];
     if(items.length===0) return '';
-    const files = items.map(a=> a.kind==='image' ? `<a href="${a.url}" target="_blank" rel="noopener"><img src="${a.url}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>` : `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`).join('');
+    // รูปภาพ: ลิงก์ .../file/d/ID/view เปิดเป็น <img src> ตรงๆ ไม่ได้ (โหลดไม่ขึ้น) ต้องแปลงเป็นลิงก์รูปตรงด้วย driveImgSrc ก่อนเสมอ — คลิกรูปแล้วเปิดลิงก์เดิม (view) ในแท็บใหม่ได้ตามปกติ
+    const files = items.map(a=> a.kind==='image' ? `<a href="${a.url}" target="_blank" rel="noopener"><img src="${driveImgSrc(a.url)}" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>` : `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`).join('');
     return `<div style="margin-bottom:8px;"><div style="font-size:12px;font-weight:600;color:var(--text-faint);margin-bottom:2px;">${escapeHtml(g.label)}</div>${files}</div>`;
   }).join('');
   $('claim-detail-body').innerHTML = `
@@ -4508,10 +4608,14 @@ function openClaimDetail(id){
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
     ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;">⚠ เคลมนี้อยู่สถานะจบเคสแล้วแต่ยังค้างอยู่ในแอพ (ครั้งก่อนย้ายไป Sheet ไม่สำเร็จ) — กดปุ่มด้านล่างเพื่อลองย้ายอีกครั้ง</p>` : ''}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      ${claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
       ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<button class="btn btn-primary btn-sm" id="claim-detail-archive-btn">🗄️ ย้ายไป Sheet เดี๋ยวนี้</button>` : ''}
       ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
       <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
     </div>`;
+  if($('claim-detail-download-zip-btn')){
+    $('claim-detail-download-zip-btn').addEventListener('click', ()=>downloadClaimImagesAsZip(c));
+  }
   if(canManage){
     $('claim-detail-svo-save').addEventListener('click', async ()=>{
       const svo = $('claim-detail-svo').value.trim();
