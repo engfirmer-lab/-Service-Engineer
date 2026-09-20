@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.34
-  อัปเดตล่าสุด: 18 กันยายน 2569 19:05 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.35
+  อัปเดตล่าสุด: 20 กันยายน 2569 11:30 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.34</title>
+<title>Firmer Service Center — v7.35</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,6 +57,12 @@
   /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ทำให้กล่องตารางเป็นกรอบเลื่อนของตัวเอง (สูงไม่เกิน 65% ของจอ) แล้วปักหัวตารางให้ติดอยู่กับที่ภายในกรอบนี้เสมอ
      (รอบก่อนลองให้หัวตารางติดกับการเลื่อนทั้งหน้าแทน แต่ overflow-x:auto ของกล่องห่อ ทำให้เบราว์เซอร์บังคับปิดการ sticky ข้ามกล่องไปหาหน้าเว็บไม่ได้ — วิธีนี้แก้ตรงจุด) */
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
+  /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
+  .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
+  #claims-table{min-width:1150px;font-size:12.5px;}
+  #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;box-shadow:0 1px 0 var(--border);white-space:nowrap;}
+  #claims-table tbody tr{cursor:pointer;}
+  #claims-table td{font-size:12.5px;}
   .mode-toggle{display:flex;background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative;}
   .mode-toggle::-webkit-scrollbar{display:none;}
   .mode-toggle-track{display:none;height:3px;background:var(--border);border-radius:999px;margin-top:5px;position:relative;overflow:hidden;}
@@ -320,7 +326,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.34</p></div>
+        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.35</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -846,7 +852,7 @@
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
-  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.34 (อัปเดตล่าสุด 18 กันยายน 2569 19:05 น. เวลาไทย)</div>
+  <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.35 (อัปเดตล่าสุด 20 กันยายน 2569 11:30 น. เวลาไทย)</div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -946,8 +952,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.34";
-const APP_UPDATED_AT = "18 กันยายน 2569 19:05 น. เวลาไทย";
+const APP_VERSION = "7.35";
+const APP_UPDATED_AT = "20 กันยายน 2569 11:30 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4428,22 +4434,39 @@ function renderClaimsView(){
   $('claims-list-title').textContent = isSuperAdmin() ? `รายการเคลมทั้งหมด (${claims.length})` : isEditor() ? `รายการเคลม Product ที่ดูแล (${claims.length})` : `เคลมที่คุณบันทึกไว้ (${claims.length})`;
   const list = $('claims-list');
   if(claims.length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายการเคลม</p>`; return; }
-  list.innerHTML = claims.map(c=>{
+  const CLAIMS_TABLE_HEADERS = ['วันที่แจ้ง','วันที่พบปัญหา','ชื่อผู้แจ้ง','ชื่อ รพ.','รุ่น','S/N','อาการ','Part Number','Part Name','จำนวน','วันที่เคลม','Service Order','สถานะ'];
+  const rowsHtml = claims.map(c=>{
     const st = claimStatusInfo(c.status);
-    const partsText = (c.parts||[]).map(p=>p.partName||p.partNumber).filter(Boolean).join(', ');
-    return `<div class="card" data-claimrow="${c.id}">
-      <div class="card-head">
-        <div>
-          <div style="font-weight:600;font-size:13.5px;">${escapeHtml(c.siteName)} · ${escapeHtml(c.model)}</div>
-          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">${escapeHtml(c.category)}${c.serialNumber?' · S/N '+escapeHtml(c.serialNumber):''}</div>
-          <div style="font-size:12px;color:var(--text-faint);margin-top:2px;">🔧 ${escapeHtml(partsText||'-')}</div>
-          <div style="font-size:11px;color:var(--text-faint);margin-top:6px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):''}</div>
-        </div>
-        <span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;white-space:nowrap;">${st.label}</span>
-      </div>
-    </div>`;
+    const parts = (c.parts&&c.parts.length) ? c.parts : [{partNumber:'-',partName:'-',count:'-'}];
+    const partNumbers = parts.map(p=>escapeHtml(p.partNumber||'-')).join('<br>');
+    const partNames = parts.map(p=>escapeHtml(p.partName||'-')).join('<br>');
+    const partCounts = parts.map(p=>escapeHtml(p.count||'-')).join('<br>');
+    const symptomFull = c.problem||'';
+    const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
+    return `<tr data-claimrow="${c.id}">
+      <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(c.siteName||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(c.model||'-')}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serialNumber||'-')}</td>
+      <td style="max-width:240px;white-space:normal;" title="${escapeHtml(symptomFull)}">${symptomShort}</td>
+      <td class="frac" style="white-space:nowrap;">${partNumbers}</td>
+      <td style="white-space:nowrap;">${partNames}</td>
+      <td class="chk" style="white-space:nowrap;">${partCounts}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(isoToDDMMYYYY(c.fixDate)||'-')}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
+    </tr>`;
   }).join('');
-  list.querySelectorAll('[data-claimrow]').forEach(el=>el.addEventListener('click', ()=>openClaimDetail(el.getAttribute('data-claimrow'))));
+  list.innerHTML = `<div class="claims-table-wrap">
+    <table id="claims-table">
+      <thead><tr>${CLAIMS_TABLE_HEADERS.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  </div>`;
+  list.querySelectorAll('[data-claimrow]').forEach(el=>el.addEventListener('click', (e)=>{ if(e.target.closest('[data-managebtn]')) return; openClaimDetail(el.getAttribute('data-claimrow')); }));
+  list.querySelectorAll('[data-managebtn]').forEach(el=>el.addEventListener('click', (e)=>{ e.stopPropagation(); openClaimDetail(el.getAttribute('data-managebtn')); }));
 }
 $('claims-filter-status').addEventListener('change', renderClaimsView);
 $('claims-filter-search').addEventListener('input', renderClaimsView);
