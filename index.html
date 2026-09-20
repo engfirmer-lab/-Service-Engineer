@@ -5850,6 +5850,65 @@ setTimeout(updateModeToggleScrollHint, 200);
     }
   });
 })();
+
+/* ===================== ปุ่มย้อนกลับของมือถือ (Android back / เลื่อนนิ้วย้อนกลับ) — ให้ปิด popup/แผงที่เปิดอยู่ก่อน แทนที่จะย้อนออกจากแอปไปเลย =====================
+   หลักการ: ทุกครั้งที่ popup/แผงแบบเต็มจอ (modal-overlay, fullscreen-panel, lightbox) ถูกเปิด (.show) จะ push history state ใหม่ไว้ 1 อัน
+   พอผู้ใช้กดปุ่มย้อนกลับ เบราว์เซอร์จะ pop state นั้นก่อน (popstate event) เราเลยดักจับไปปิด popup ที่เปิดอยู่บนสุดแทนที่จะปล่อยให้ย้อนออกจากหน้าเว็บไปเลย
+   ถ้าปิด popup ด้วยปุ่มในแอปเอง (X/ยกเลิก) ก็ต้องเคลียร์ state ที่ค้างไว้ทิ้งด้วย (history.back() แบบเงียบๆ) ไม่งั้นกดย้อนกลับครั้งถัดไปจะเจอ state ปลอมค้างอยู่ */
+(function setupMobileBackButtonClosesPopups(){
+  if(typeof history === 'undefined' || typeof history.pushState !== 'function') return;
+  const OVERLAY_SELECTOR = '.modal-overlay, .fullscreen-panel, .lightbox';
+  let pushedDepth = 0; // จำนวน state ที่เรา push ไว้ค้างอยู่ตอนนี้ (ต้องตรงกับจำนวน popup ที่เปิดซ้อนกันอยู่)
+  let programmaticBack = false; // true ระหว่างที่เรากำลังเรียก history.back() เองเพื่อเคลียร์ state (ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับ)
+  let closingViaPopstate = false; // true ระหว่างที่เรากำลังปิด popup เพราะโดน popstate (กันไม่ให้ observer พยายามเคลียร์ state ซ้ำ)
+
+  function openOverlays(){ return Array.from(document.querySelectorAll(OVERLAY_SELECTOR+'.show')); }
+  function topmostOpenOverlay(){
+    const open = openOverlays();
+    if(!open.length) return null;
+    let best = open[0], bestZ = parseInt(getComputedStyle(open[0]).zIndex)||0;
+    open.forEach(el=>{ const z = parseInt(getComputedStyle(el).zIndex)||0; if(z>=bestZ){ bestZ=z; best=el; } });
+    return best;
+  }
+
+  const observer = new MutationObserver(mutations=>{
+    mutations.forEach(m=>{
+      if(m.type!=='attributes' || m.attributeName!=='class') return;
+      const el = m.target;
+      if(!(el instanceof Element) || !el.matches(OVERLAY_SELECTOR)) return;
+      const isShown = el.classList.contains('show');
+      const wasShown = (m.oldValue||'').split(' ').includes('show');
+      if(isShown && !wasShown){
+        pushedDepth++;
+        try{ history.pushState({ firmerOverlay:true, depth: pushedDepth }, ''); }catch(e){}
+      } else if(!isShown && wasShown){
+        if(closingViaPopstate) return; // ปิดเพราะกดปุ่มย้อนกลับอยู่แล้ว — เบราว์เซอร์ pop state ให้เองแล้ว ไม่ต้องเคลียร์ซ้ำ
+        if(pushedDepth > 0){
+          pushedDepth--;
+          programmaticBack = true;
+          try{ history.back(); }catch(e){ programmaticBack = false; }
+        }
+      }
+    });
+  });
+  document.querySelectorAll(OVERLAY_SELECTOR).forEach(el=>{
+    observer.observe(el, { attributes:true, attributeFilter:['class'], attributeOldValue:true });
+  });
+
+  window.addEventListener('popstate', ()=>{
+    if(programmaticBack){ programmaticBack = false; return; } // นี่คือ state ที่เราสั่ง back() เองตอนเคลียร์ค่า ไม่ใช่ผู้ใช้กดปุ่มย้อนกลับ
+    const overlay = topmostOpenOverlay();
+    if(overlay){
+      closingViaPopstate = true;
+      overlay.classList.remove('show'); // การ remove นี้ทำให้ MutationObserver ข้างบน "จองคิว" microtask ไว้ทำงานแล้ว (ยังไม่รันจนกว่า synchronous code ส่วนนี้จบ)
+      if(pushedDepth > 0) pushedDepth--;
+      // รีเซ็ตแฟล็กผ่าน microtask (ไม่ใช่ทันทีแบบ synchronous) เพื่อให้แน่ใจว่า MutationObserver callback ที่ถูกจองคิวจาก remove('show') ข้างบน
+      // ได้อ่านค่า closingViaPopstate=true ไปก่อนแล้ว (microtask queue เป็น FIFO — คิวของ observerถูกจองก่อน คิวนี้จึงรันหลัง) กัน race condition ที่ observer เข้าใจผิดว่าปิดจากปุ่มในแอป แล้วไป history.back() ซ้ำเกิน
+      Promise.resolve().then(()=>{ closingViaPopstate = false; });
+    }
+    // ไม่มี popup เปิดอยู่เลย — ปล่อยให้เบราว์เซอร์ย้อนกลับตามปกติ
+  });
+})();
 </script>
 
 </body>
