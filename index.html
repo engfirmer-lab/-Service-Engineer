@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.50
-  อัปเดตล่าสุด: 20 กันยายน 2569 21:20 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.51
+  อัปเดตล่าสุด: 20 กันยายน 2569 21:41 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.50</title>
+<title>Firmer Service Center — v7.51</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -428,6 +428,13 @@
           <div><h2 style="margin-bottom:2px;font-size:14px;">แจ้ง/เคลม ปัญหา</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">แจ้งปัญหาหน้างานพร้อมเคลมอะไหล่ ส่งตรงถึง Sup Product</p></div>
           <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">+ แจ้ง/เคลม ปัญหา</button>
         </div>
+      </div>
+
+      <div class="panel-block" id="eng-my-claims-block" style="padding:14px;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><h2 style="margin-bottom:2px;font-size:14px;">เคลมของฉัน<span id="eng-my-claims-badge" class="badge-count" style="display:none;margin-left:6px;">0</span></h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ติดตามสถานะเคลมที่คุณส่งไป — แก้ไข/เพิ่มข้อมูลได้เองตราบใดที่ยังไม่ถูกย้ายไป Google Sheet (เผื่อกรณีลืมกรอกบางอย่างตอนทำเสร็จ)</p></div>
+        </div>
+        <div id="eng-my-claims-list" style="margin-top:10px;"></div>
       </div>
 
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
@@ -990,8 +997,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.50";
-const APP_UPDATED_AT = "20 กันยายน 2569 21:20 น. เวลาไทย";
+const APP_VERSION = "7.51";
+const APP_UPDATED_AT = "20 กันยายน 2569 21:41 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1410,7 +1417,7 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
     ]);
-    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} } };
+    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], claimNotices: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} } };
     // ลิงก์/gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว (แยกแท็บตามผู้ดูแล Product) — แคชไว้กันต้องยิง Sheets API ทุกครั้งที่เปิดหน้ารายการเคลม
     // สำคัญ: อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจ และดักด้วย try/catch ของตัวเอง — เอกสาร meta/claimsSheet เป็นเอกสารใหม่ (เพิ่งเพิ่มทีหลัง) ถ้า Firestore Rules ของโปรเจกต์ยังไม่ได้อนุญาตให้อ่านเอกสารนี้ (ยังไม่ได้แก้ Rules ตาม path ใหม่)
     // จะทำให้อ่านไม่สำเร็จ — ถ้าเอาไปรวมไว้ใน Promise.all เดียวกับข้อมูลอื่น จะทำให้ Promise.all ทั้งก้อน reject ไปด้วย ซึ่งเคยทำให้ nicknamesMap ไม่ถูกตั้งค่าเลยและแอปถามชื่อเล่นซ้ำทุกครั้งที่รีเฟรช (บั๊กที่เจอและแก้ใน v7.47)
@@ -1418,6 +1425,17 @@ async function loadData(){
       const claimsSheetDoc = await sdk.getDoc(sdk.doc(db,'meta','claimsSheet'));
       if(claimsSheetDoc.exists()){ const csd = claimsSheetDoc.data(); DATA.claimsSheetMeta = { spreadsheetId: csd.spreadsheetId||null, tabs: csd.tabs||{} }; }
     }catch(claimsSheetErr){ console.warn('อ่านแคชลิงก์ Google Sheet ของเคลมไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', claimsSheetErr.message); }
+    // แจ้งเตือนความคืบหน้าเคลม (ให้ผู้แจ้งเคลมเห็นตอนสถานะเคลมของตัวเองเปลี่ยน) — เก็บแยกคอลเลกชันต่างหาก (claimNotices) โดยตั้งใจ ไม่ผูกกับเอกสารเคลมหลัก
+    // เพราะเอกสารเคลมหลักจะถูกลบทิ้งทันทีตอนย้ายไป Google Sheet (จบเคส) ถ้าผูกไว้ด้วยกัน แจ้งเตือนสุดท้ายจะหายไปพร้อมกันก่อนผู้แจ้งจะทันเห็น
+    // อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจเช่นเดียวกับ claimsSheetMeta ด้านบน (บทเรียนจากบั๊ก v7.47) — อ่านไม่สำเร็จก็แค่ไม่มีแจ้งเตือนเคลม ไม่กระทบข้อมูลอื่น
+    try{
+      if(myUserEmail){
+        const sdk2 = window._firebaseSdk;
+        const noticeQ = sdk2.query(sdk2.collection(db,'claimNotices'), sdk2.where('submittedBy','==',myUserEmail));
+        const noticeSnap = await sdk2.getDocs(noticeQ);
+        noticeSnap.forEach(d=> DATA.claimNotices.push({ id:d.id, ...d.data() }));
+      }
+    }catch(noticeErr){ console.warn('อ่านแจ้งเตือนความคืบหน้าเคลมไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', noticeErr.message); }
     loadedErrorCategories = new Set(); // เคลียร์แคชว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" ทุกครั้งที่โหลดข้อมูลใหม่
     categoryVersionsFromServer = catVerDoc.exists() ? (catVerDoc.data()||{}) : {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริง — ใช้เช็คว่าแคชในเครื่องเก่าไปหรือยัง
     nicknamesMap = {}; myNicknameDocId = null;
@@ -1540,6 +1558,7 @@ function ensureDataShape(){
   if(!DATA.documents) DATA.documents = [];
   if(!DATA.proposals) DATA.proposals = [];
   if(!DATA.claims) DATA.claims = [];
+  if(!DATA.claimNotices) DATA.claimNotices = [];
   if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
   if(!DATA.claimsSheetMeta) DATA.claimsSheetMeta = { spreadsheetId:null, tabs:{} };
 }
@@ -1594,6 +1613,23 @@ async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ..
 async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); }finally{ hideLoadingOverlay(); } }
+// แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง — เก็บเป็นเอกสารแยกต่างหาก (claimId เป็น doc id เดียวกับเคลม) ไม่ผูกวงจรชีวิตกับเอกสารเคลมหลัก
+// เรียกทุกครั้งที่ Sup Product เปลี่ยนสถานะ/เลข Service Order ของเคลม เพื่อให้เอกสารนี้ "อยู่รอด" ต่อไปได้แม้เคลมหลักจะถูกลบทิ้งตอนย้ายไป Google Sheet (จบเคส)
+// ไม่ critical ถ้าบันทึกไม่สำเร็จ — แค่ผู้แจ้งจะไม่เห็นแจ้งเตือน ไม่กระทบข้อมูลเคลมหลัก
+async function fsUpsertClaimNotice(claim){
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    await sdk.setDoc(sdk.doc(db,'claimNotices', claim.id), {
+      claimId: claim.id, submittedBy: claim.submittedBy||'', submitterName: claim.submitterName||'',
+      siteName: claim.siteName||'', model: claim.model||'', category: claim.category||'',
+      status: claim.status, notifRead: false, updatedAt: Date.now(),
+    }, { merge: true });
+  }catch(e){ console.warn('บันทึกแจ้งเตือนความคืบหน้าเคลมไม่สำเร็จ (ไม่กระทบข้อมูลเคลมหลัก):', e.message); }
+}
+async function fsMarkClaimNoticeRead(noticeId){
+  try{ await initFirebase(); const sdk = window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claimNotices', noticeId), { notifRead:true }); }
+  catch(e){ console.warn('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', e.message); }
+}
 async function fsSaveCategoriesDoc(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners }); }finally{ hideLoadingOverlay(); } }
 // อัปเดตฟิลด์ (category หรือ model) ให้ตรงกับชื่อใหม่ ในทุกเอกสารของ collection ที่ระบุ — แบ่งเป็นชุดละ 400 กันชนลิมิต 500 ของ Firestore batch
 async function fsBatchUpdateField(collectionName, docIds, fields){ showLoadingOverlay('กำลังบันทึก...'); try{
@@ -2653,6 +2689,7 @@ function renderAll(){
   renderDocFilterEng(); renderEngDocResults();
   populateSupSelectors();
   populateEngErrorFormSelectors();
+  renderEngMyClaimsList();
   updateNotifBadge();
   if(currentMode==='sup') renderSupView();
   if(currentMode==='owner') renderOwnerView();
@@ -3065,12 +3102,13 @@ async function updateNotifBadge(){
   const unreadResolved = myResolvedSubmissions().filter(p=>!p.notifRead).length + myResolvedProposals().filter(p=>!p.notifRead).length;
   const pendingReview = myPendingReviewCount();
   const pendingClaims = (isEditor() && DATA && DATA.claims) ? myVisibleClaims().filter(c=>c.status==='pending').length : 0;
+  const unreadClaimNotices = (DATA && DATA.claimNotices) ? DATA.claimNotices.filter(n=>!n.notifRead).length : 0;
   let accessReqCount = 0;
   if(isSuperAdmin()){
     try{ accessReqCount = (await fsGetPendingAccessRequests()).length; }catch(e){}
   }
   const showBackupAlert = isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt;
-  const total = unreadResolved + pendingReview + accessReqCount + pendingClaims + (showBackupAlert?1:0);
+  const total = unreadResolved + pendingReview + accessReqCount + pendingClaims + unreadClaimNotices + (showBackupAlert?1:0);
   const badge = $('notif-badge');
   if(total>0){ badge.style.display='block'; badge.textContent = total; }
   else{ badge.style.display='none'; }
@@ -3168,6 +3206,22 @@ async function renderNotifList(){
       </div>`;
     }).join('');
   }
+  // แจ้งเตือนความคืบหน้าเคลมของฉัน (claimNotices) — เก็บแยกจาก claims หลักตั้งใจ (ดูคอมเมนต์ที่ fsUpsertClaimNotice)
+  const myClaimNoticesUnread = (DATA.claimNotices||[]).filter(n=>!n.notifRead).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  if(myClaimNoticesUnread.length>0){
+    html += `<h4 style="font-size:12px;margin:14px 0 8px;color:var(--text-dim);">🔧 ความคืบหน้าเคลมของคุณ</h4>`;
+    html += myClaimNoticesUnread.map(n=>{
+      const st = claimStatusInfo(n.status);
+      const stillActive = (DATA.claims||[]).some(c=>c.id===n.claimId);
+      return `<div class="admin-row" data-claim-notice-open="${n.claimId}" style="cursor:${stillActive?'pointer':'default'};">
+        <div class="admin-row-main">
+          <span style="font-size:12.5px;">${escapeHtml(n.siteName||'-')} · ${escapeHtml(n.model||'-')}</span>
+          <span style="font-size:11px;color:var(--text-faint);">${stillActive?'':'(ย้ายไป Sheet แล้ว)'}</span>
+        </div>
+        <span style="color:${st.color};font-weight:600;font-size:12px;">${st.label}</span>
+      </div>`;
+    }).join('');
+  }
   if(!html){ html = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีการแจ้งเตือน</p>`; }
   list.innerHTML = html;
 
@@ -3190,6 +3244,23 @@ async function renderNotifList(){
       p.notifRead = false; updateNotifBadge();
     });
   });
+  // เปิดดูแล้ว (แสดงในรายการแจ้งเตือนแล้ว) = ถือว่ารับทราบความคืบหน้าเคลมนั้นแล้ว เคลียร์ทิ้ง
+  myClaimNoticesUnread.forEach(n=>{
+    n.notifRead = true;
+    fsMarkClaimNoticeRead(n.id).catch(err=>{
+      console.error('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', err);
+      n.notifRead = false; updateNotifBadge();
+    });
+  });
+  list.querySelectorAll('[data-claim-notice-open]').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const claimId = row.getAttribute('data-claim-notice-open');
+      if((DATA.claims||[]).some(c=>c.id===claimId)){
+        $('notif-modal').classList.remove('show');
+        openClaimDetail(claimId);
+      }
+    });
+  });
   updateNotifBadge();
   $('dismiss-backup-alert-btn')?.addEventListener('click', async ()=>{
     const ts = _cachedBackupFailureAlert.timestamp;
@@ -3197,6 +3268,7 @@ async function renderNotifList(){
     _cachedBackupAlertDismissedAt = ts;
     renderNotifList();
   });
+  renderEngMyClaimsList();
 }
 
 /* ===================== LIGHTBOX ===================== */
@@ -4911,6 +4983,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     clearPersistedClaimDraft(); // บันทึกขึ้น Firestore สำเร็จแล้ว ไม่ต้องเก็บร่างไว้อีกต่อไป
     $('claim-modal').classList.remove('show');
     renderClaimsView();
+    renderEngMyClaimsList();
     showClaimSuccessSummary(fields);
   }catch(e){
     // บันทึกไม่สำเร็จ (เช่นเน็ตหลุดระหว่างอัปโหลด) — จงใจไม่ลบร่างที่ autosave ไว้ ผู้ใช้เปิดฟอร์มนี้ใหม่แล้วกู้คืนข้อมูลมากรอกซ้ำ/ลองบันทึกใหม่ได้ทันที ไม่ต้องพิมพ์ใหม่ทั้งหมด
@@ -4974,6 +5047,72 @@ function myVisibleClaims(){
   if(isSuperAdmin()) return DATA.claims;
   if(isEditor()){ const owned = new Set(myOwnedCategories()); return DATA.claims.filter(c=>owned.has(c.category)); }
   return DATA.claims.filter(c=>c.submittedBy===myUserEmail);
+}
+
+// รายการ "เคลมของฉัน" ที่ผู้แจ้งเห็นได้จากหน้า Engineer โดยตรง (ไม่ต้องมีสิทธิ์ Sup Product/Editor) — ต่างจาก myVisibleClaims() ตรงที่รวมทั้งเคลมที่ยังอยู่ในแอป (คลิกดู/แก้ไขได้เต็ม)
+// และเคลมที่จบเคสไปแล้ว (เหลือแค่แจ้งเตือนสรุปสถานะสุดท้ายจาก claimNotices เพราะข้อมูลเต็มถูกย้ายไป Google Sheet แล้ว)
+function renderEngMyClaimsList(){
+  const block = $('eng-my-claims-block');
+  const wrap = $('eng-my-claims-list');
+  const badge = $('eng-my-claims-badge');
+  if(!wrap || !block) return;
+  if(!myUserEmail || !DATA){ block.style.display='none'; return; }
+  const activeMine = (DATA.claims||[]).filter(c=>c.submittedBy===myUserEmail);
+  const activeIds = new Set(activeMine.map(c=>c.id));
+  const noticesById = new Map((DATA.claimNotices||[]).map(n=>[n.claimId, n]));
+  const archivedNotices = (DATA.claimNotices||[]).filter(n=>!activeIds.has(n.claimId));
+  if(activeMine.length===0 && archivedNotices.length===0){ block.style.display='none'; return; }
+  block.style.display='block';
+
+  const items = [];
+  activeMine.forEach(c=>{
+    const notice = noticesById.get(c.id);
+    items.push({ id:c.id, noticeId: notice?notice.id:null, siteName:c.siteName, model:c.model, status:c.status,
+      unread: !!(notice && !notice.notifRead), ts: c.createdAt||0, clickable:true, archived:false });
+  });
+  archivedNotices.forEach(n=>{
+    items.push({ id:n.claimId, noticeId:n.id, siteName:n.siteName, model:n.model, status:n.status,
+      unread: !n.notifRead, ts: n.updatedAt||0, clickable:false, archived:true });
+  });
+  items.sort((a,b)=>b.ts-a.ts);
+
+  let unreadCount = 0;
+  wrap.innerHTML = items.map(it=>{
+    if(it.unread) unreadCount++;
+    const st = claimStatusInfo(it.status);
+    const dateStr = it.ts ? new Date(it.ts).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
+    const dataAttr = it.clickable ? `data-claim-open="${it.id}"` : `data-notice-dismiss="${it.noticeId||''}"`;
+    const bg = it.unread ? 'background:rgba(232,163,61,.08);' : '';
+    const archivedNote = it.archived ? ` <span style="color:var(--text-faint);font-size:10.5px;">(ย้ายไป Sheet แล้ว)</span>` : '';
+    return `<div class="admin-row" ${dataAttr} style="cursor:pointer;${bg}">
+      <div class="admin-row-main">
+        <span style="font-size:12.5px;">${it.unread?'🔔 ':''}${escapeHtml(it.siteName||'-')} · ${escapeHtml(it.model||'-')}${archivedNote}</span>
+        <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
+      </div>
+      <span style="color:${st.color};font-weight:600;font-size:12px;">${st.label}</span>
+    </div>`;
+  }).join('');
+
+  if(badge){
+    if(unreadCount>0){ badge.style.display='inline-block'; badge.textContent=unreadCount; }
+    else{ badge.style.display='none'; }
+  }
+
+  wrap.querySelectorAll('[data-claim-open]').forEach(row=>{
+    row.addEventListener('click', ()=>openClaimDetail(row.getAttribute('data-claim-open')));
+  });
+  wrap.querySelectorAll('[data-notice-dismiss]').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const noticeId = row.getAttribute('data-notice-dismiss');
+      const notice = (DATA.claimNotices||[]).find(n=>n.id===noticeId);
+      if(notice && !notice.notifRead){
+        notice.notifRead = true;
+        fsMarkClaimNoticeRead(noticeId);
+        renderEngMyClaimsList();
+        updateNotifBadge();
+      }
+    });
+  });
 }
 
 function renderClaimsDashboard(){
@@ -5190,6 +5329,19 @@ function openClaimDetail(id){
   const c = DATA.claims.find(x=>x.id===id); if(!c) return;
   const st = claimStatusInfo(c.status);
   const canManage = isEditor();
+  // ผู้แจ้งเคลม (ไม่จำเป็นต้องเป็น Editor/Sup Product) แก้ไขข้อมูลเคลมของตัวเองได้ ตราบใดที่ยังไม่ถูกย้ายไป Google Sheet — กันกรณีลืมกรอก/ลืมแนบไฟล์ตอนบันทึกครั้งแรก
+  // ตั้งใจแยกจาก canManage: แก้ได้แค่ข้อมูลเชิงรายละเอียด (ปัญหา/วิธีแก้/อะไหล่/ไฟล์แนบ ฯลฯ) ไม่แตะสถานะ/เลข Service Order ซึ่งเป็นข้อมูลฝั่ง Sup Product
+  const canSelfEdit = !canManage && c.submittedBy===myUserEmail;
+  // เปิดดูเคลมของตัวเอง (ไม่ว่าจะยังเป็น pending หรือคืบหน้าไปแล้ว) -> ถือว่าเห็นความคืบหน้าล่าสุดแล้ว เคลียร์แจ้งเตือนเคลมนี้ทิ้ง
+  if(c.submittedBy===myUserEmail){
+    const notice = (DATA.claimNotices||[]).find(n=>n.claimId===c.id);
+    if(notice && !notice.notifRead){
+      notice.notifRead = true;
+      fsMarkClaimNoticeRead(notice.id).then(()=>updateNotifBadge());
+      updateNotifBadge();
+      renderEngMyClaimsList();
+    }
+  }
   const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
   const claimImageCount = CLAIM_ATTACHMENT_GROUPS.reduce((n,g)=>n+((c.attachments&&c.attachments[g.key])?c.attachments[g.key].filter(a=>a.kind==='image').length:0), 0);
   const attGroupsHtml = CLAIM_ATTACHMENT_GROUPS.map(g=>{
@@ -5228,6 +5380,7 @@ function openClaimDetail(id){
       ${claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
       ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<button class="btn btn-primary btn-sm" id="claim-detail-archive-btn">🗄️ ย้ายไป Sheet เดี๋ยวนี้</button>` : ''}
       ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
+      ${canSelfEdit ? `<button class="btn btn-ghost btn-sm" id="claim-detail-selfedit-btn">✏️ แก้ไข/เพิ่มข้อมูลเคลมนี้</button>` : ''}
       <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
     </div>`;
   if($('claim-detail-download-zip-btn')){
@@ -5239,7 +5392,11 @@ function openClaimDetail(id){
       const updates = { serviceOrderNo: svo };
       // กรอกเลข Service Order ครั้งแรกตอนยังอยู่สถานะ "ยังไม่เคลม" ให้ขยับสถานะเป็น "รออะไหล่เคลม" ให้อัตโนมัติ — ไม่งั้นต้องมาคอยเปลี่ยนสถานะเองซ้ำอีกขั้น
       if(svo && c.status==='pending') updates.status = 'claimed';
-      try{ await fsUpdateClaim(c.id, updates); Object.assign(c, updates); renderClaimsView(); showToast('✓ บันทึกเลข Service Order แล้ว'); openClaimDetail(c.id); }
+      try{
+        await fsUpdateClaim(c.id, updates); Object.assign(c, updates);
+        fsUpsertClaimNotice(c); // แจ้งเตือนผู้แจ้งเคลมว่ามีความคืบหน้า (เลข SVO บันทึกแล้ว และ/หรือสถานะขยับ)
+        renderClaimsView(); showToast('✓ บันทึกเลข Service Order แล้ว'); openClaimDetail(c.id);
+      }
       catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
     });
     $('claim-detail-status').addEventListener('change', async ()=>{
@@ -5251,6 +5408,7 @@ function openClaimDetail(id){
         }
         try{
           await fsUpdateClaim(c.id, {status:newStatus}); c.status = newStatus;
+          await fsUpsertClaimNotice(c); // บันทึกแจ้งเตือนสถานะสุดท้ายไว้ก่อนย้าย/ลบเคลมหลัก กันแจ้งเตือนหายไปพร้อมกัน
           await archiveClaimToSheetAndDelete(c);
           $('claim-detail-modal').classList.remove('show'); renderClaimsView();
           showToast('✓ อัปเดตสถานะ และย้ายเคลมนี้ไป Google Sheet แล้ว');
@@ -5261,7 +5419,11 @@ function openClaimDetail(id){
         }
         return;
       }
-      try{ await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus; renderClaimsView(); showToast('✓ อัปเดตสถานะแล้ว'); }
+      try{
+        await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus;
+        fsUpsertClaimNotice(c); // แจ้งเตือนผู้แจ้งเคลมว่าสถานะเปลี่ยน
+        renderClaimsView(); showToast('✓ อัปเดตสถานะแล้ว');
+      }
       catch(e){ showToast('⚠ อัปเดตไม่สำเร็จ: '+e.message); }
     });
     $('claim-detail-edit-btn').addEventListener('click', ()=>{ $('claim-detail-modal').classList.remove('show'); openClaimModal(c); });
@@ -5281,6 +5443,9 @@ function openClaimDetail(id){
         }
       });
     }
+  }
+  if(canSelfEdit){
+    $('claim-detail-selfedit-btn').addEventListener('click', ()=>{ $('claim-detail-modal').classList.remove('show'); openClaimModal(c); });
   }
   $('claim-detail-close-btn').addEventListener('click', ()=>$('claim-detail-modal').classList.remove('show'));
   $('claim-detail-modal').classList.add('show');
@@ -5926,6 +6091,9 @@ function techDocsHtml(){
       <li><b>meta/approvedUsers</b> — รายชื่อผู้ใช้ทั่วไปที่ได้รับอนุมัติ</li>
       <li><b>meta/backupSchedule</b> — ตั้งค่า Backup อัตโนมัติ (เปิด/ปิด, เวลา, ความถี่, จำนวนวันเก็บไฟล์)</li>
       <li><b>meta/backupAlertDismissed</b> — สถานะปิดแจ้งเตือน Backup ล้มเหลว</li>
+      <li><b>claims</b> — เคลมอะไหล่ที่ยังไม่จบเคส (จบเคสแล้วจะถูกย้ายไป Google Sheet แล้วลบออกจากนี่)</li>
+      <li><b>claimNotices</b> — แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง (doc id = claimId) — เก็บแยกจาก claims ตั้งใจ เพื่อให้แจ้งเตือนล่าสุดยังอยู่ต่อได้แม้เคลมหลักจะถูกลบไปแล้วตอนจบเคส</li>
+      <li><b>meta/claimsSheet</b> — แคช spreadsheetId + gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว</li>
     </ul>
 
     <p style="margin-bottom:8px;"><b>🏗️ สถาปัตยกรรมหลักที่ควรรู้ก่อนแก้โค้ด</b></p>
