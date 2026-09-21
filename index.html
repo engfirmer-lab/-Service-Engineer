@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.53
-  อัปเดตล่าสุด: 21 กันยายน 2569 08:59 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.55
+  อัปเดตล่าสุด: 21 กันยายน 2569 10:20 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.53</title>
+<title>Firmer Service Center — v7.55</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -391,6 +391,7 @@
   <div id="view-eng" class="narrow">
     <div class="subtab-bar" id="eng-subtabs">
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
+      <button data-tab="claim">📢 แจ้ง/เคลม ปัญหา</button>
       <button data-tab="service_manual">📘 Service Manual</button>
       <button data-tab="spare_part">🔧 Spare Part</button>
       <button data-tab="install_checklist">📋 Install Checklist</button>
@@ -423,20 +424,6 @@
         </div>
       </div>
 
-      <div class="panel-block" style="padding:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div><h2 style="margin-bottom:2px;font-size:14px;">แจ้ง/เคลม ปัญหา</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">แจ้งปัญหาหน้างานพร้อมเคลมอะไหล่ ส่งตรงถึง Sup Product</p></div>
-          <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">+ แจ้ง/เคลม ปัญหา</button>
-        </div>
-      </div>
-
-      <div class="panel-block" id="eng-my-claims-block" style="padding:14px;display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div><h2 style="margin-bottom:2px;font-size:14px;">เคลมของฉัน<span id="eng-my-claims-badge" class="badge-count" style="display:none;margin-left:6px;">0</span></h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ติดตามสถานะเคลมที่คุณส่งไป — แก้ไข/เพิ่มข้อมูลได้เองตราบใดที่ยังไม่ถูกย้ายไป Google Sheet (เผื่อกรณีลืมกรอกบางอย่างตอนทำเสร็จ)</p></div>
-        </div>
-        <div id="eng-my-claims-list" style="margin-top:10px;"></div>
-      </div>
-
       <div class="console"><div class="console-row"><span class="prompt-chevron">&gt;</span><input id="search-input" type="text" placeholder="ค้นหา error code, Model, อาการ..."><button class="clear-btn" id="clear-search">✕</button></div></div>
       <label style="font-size:11px;color:var(--text-faint);display:block;margin:8px 0 4px;">ตัวกรอง</label>
       <div class="filter-row">
@@ -446,6 +433,23 @@
       <button class="btn btn-primary btn-sm" id="search-submit-btn" style="margin-top:8px;width:100%;">🔍 ค้นหา</button>
       <div class="result-count" id="result-count"></div>
       <div id="results-list"></div>
+    </div>
+
+    <div id="eng-tab-claim" style="display:none;">
+      <div class="panel-block" style="padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><h2 style="margin-bottom:2px;font-size:14px;">แจ้ง/เคลม ปัญหา</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">แจ้งปัญหาหน้างานพร้อมเคลมอะไหล่ ส่งตรงถึง Sup Product</p></div>
+          <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">+ แจ้ง/เคลม ปัญหา</button>
+        </div>
+      </div>
+
+      <div class="panel-block" id="eng-my-claims-block" style="padding:14px;display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;" id="eng-my-claims-header">
+          <div><h2 style="margin-bottom:2px;font-size:14px;">เคลมของฉัน<span id="eng-my-claims-badge" class="badge-count" style="display:none;margin-left:6px;">0</span></h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ติดตามสถานะเคลมที่คุณส่งไป — แก้ไข/เพิ่มข้อมูลได้เองตราบใดที่ยังไม่ถูกย้ายไป Google Sheet (เผื่อกรณีลืมกรอกบางอย่างตอนทำเสร็จ)</p></div>
+          <button class="btn btn-ghost btn-sm" id="eng-my-claims-toggle-btn">▾ แสดง</button>
+        </div>
+        <div id="eng-my-claims-list" style="margin-top:10px;display:none;"></div>
+      </div>
     </div>
 
     <div id="eng-tab-docs" style="display:none;">
@@ -657,8 +661,8 @@
       <div class="field-wrap"><label>ผู้เคลม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-claimant"></div>
       <div class="field-wrap"><label>ชื่อสถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
       <div class="form-grid two">
-        <div class="field-wrap"><label>Product <span style="color:var(--red);">*</span></label><select id="claim-f-category"></select></div>
-        <div class="field-wrap"><label>รุ่น <span style="color:var(--red);">*</span></label><select id="claim-f-model"></select></div>
+        <div class="field-wrap"><label>Product</label><select id="claim-f-category"></select></div>
+        <div class="field-wrap"><label>รุ่น</label><select id="claim-f-model"></select></div>
       </div>
       <div class="field-wrap"><label>S/N <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-sn"></div>
       <div class="form-grid two">
@@ -998,8 +1002,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.53";
-const APP_UPDATED_AT = "21 กันยายน 2569 08:59 น. เวลาไทย";
+const APP_VERSION = "7.55";
+const APP_UPDATED_AT = "21 กันยายน 2569 10:20 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1630,6 +1634,12 @@ async function fsUpsertClaimNotice(claim){
 async function fsMarkClaimNoticeRead(noticeId){
   try{ await initFirebase(); const sdk = window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claimNotices', noticeId), { notifRead:true }); }
   catch(e){ console.warn('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', e.message); }
+}
+// ลบแจ้งเตือนเคลมทิ้งจาก Firestore ถาวร — เรียกเฉพาะตอนเคลมนั้นจบเคส/ย้ายไป Google Sheet แล้ว (ข้อมูลเต็มปลอดภัยอยู่ในชีทแล้ว) และผู้แจ้งเห็นแจ้งเตือนสุดท้ายนี้แล้ว
+// เพื่อไม่ให้เอกสาร claimNotices ค้างอยู่ใน Firestore เกินความจำเป็นตามที่ขอ (ประหยัดพื้นที่ของแอป)
+async function fsDeleteClaimNotice(noticeId){
+  try{ await initFirebase(); const sdk = window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claimNotices', noticeId)); }
+  catch(e){ console.warn('ลบแจ้งเตือนเคลมที่จบเคสแล้วไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', e.message); }
 }
 async function fsSaveCategoriesDoc(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners }); }finally{ hideLoadingOverlay(); } }
 // อัปเดตฟิลด์ (category หรือ model) ให้ตรงกับชื่อใหม่ ในทุกเอกสารของ collection ที่ระบุ — แบ่งเป็นชุดละ 400 กันชนลิมิต 500 ของ Firestore batch
@@ -2717,9 +2727,10 @@ document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
     engActiveTab = btn.getAttribute('data-tab');
-    if(engActiveTab==='trbl'){ $('eng-tab-trbl').style.display='block'; $('eng-tab-docs').style.display='none'; }
+    if(engActiveTab==='trbl'){ $('eng-tab-trbl').style.display='block'; $('eng-tab-claim').style.display='none'; $('eng-tab-docs').style.display='none'; }
+    else if(engActiveTab==='claim'){ $('eng-tab-trbl').style.display='none'; $('eng-tab-claim').style.display='block'; $('eng-tab-docs').style.display='none'; }
     else{
-      $('eng-tab-trbl').style.display='none'; $('eng-tab-docs').style.display='block'; engDocTypeActive = engActiveTab;
+      $('eng-tab-trbl').style.display='none'; $('eng-tab-claim').style.display='none'; $('eng-tab-docs').style.display='block'; engDocTypeActive = engActiveTab;
       $('eng-video-subtabs').style.display = engActiveTab==='video' ? 'flex' : 'none';
       $('eng-diagram-subtabs').style.display = engActiveTab==='diagram' ? 'flex' : 'none';
       if(docTypeHasSubtypes(engActiveTab)){
@@ -3259,13 +3270,21 @@ async function renderNotifList(){
       p.notifRead = false; updateNotifBadge();
     });
   });
-  // เปิดดูแล้ว (แสดงในรายการแจ้งเตือนแล้ว) = ถือว่ารับทราบความคืบหน้าเคลมนั้นแล้ว เคลียร์ทิ้ง
+  // เปิดดูแล้ว (แสดงในรายการแจ้งเตือนแล้ว) = ถือว่ารับทราบความคืบหน้าเคลมนั้นแล้ว
+  // ถ้าเคลมยังไม่จบเคส (ยังอยู่ใน DATA.claims) แค่มาร์คว่าอ่านแล้ว เผื่อยังมีความคืบหน้าต่อไปอีก
+  // แต่ถ้าจบเคสไปแล้ว (ย้ายข้อมูลเต็มไป Google Sheet แล้ว ปลอดภัยแล้ว) ให้ลบแจ้งเตือนทิ้งจาก Firestore ไปเลย ไม่ต้องเก็บค้างไว้ (ประหยัดพื้นที่ตามที่ขอ)
   myClaimNoticesUnread.forEach(n=>{
-    n.notifRead = true;
-    fsMarkClaimNoticeRead(n.id).catch(err=>{
-      console.error('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', err);
-      n.notifRead = false; updateNotifBadge();
-    });
+    const stillActive = (DATA.claims||[]).some(c=>c.id===n.claimId);
+    if(stillActive){
+      n.notifRead = true;
+      fsMarkClaimNoticeRead(n.id).catch(err=>{
+        console.error('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', err);
+        n.notifRead = false; updateNotifBadge();
+      });
+    } else {
+      DATA.claimNotices = (DATA.claimNotices||[]).filter(x=>x.id!==n.id);
+      fsDeleteClaimNotice(n.id);
+    }
   });
   list.querySelectorAll('[data-claim-notice-open]').forEach(row=>{
     row.addEventListener('click', ()=>{
@@ -4530,8 +4549,8 @@ const CLAIM_TERMINAL_STATUSES = ['received','rejected','cancelled'];
 const CLAIM_ATTACHMENT_GROUPS = [
   {key:'alarmError', label:'Alarm Error หรือ อาการเสีย', required:true},
   {key:'partCount', label:'Count (ถ้าอะไหล่มี Count)', required:false},
-  {key:'partsCompare', label:'อะไหล่ดี + อะไหล่เสียคู่กัน', required:true},
-  {key:'afterResult', label:'ผลลัพธ์หลังการแก้ไข', required:true},
+  {key:'partsCompare', label:'อะไหล่ดี + อะไหล่เสียคู่กัน', required:false},
+  {key:'afterResult', label:'ผลลัพธ์หลังการแก้ไข', required:false},
   {key:'partAge', label:'อายุอะไหล่ (กล่อง Electrode)', required:false},
 ];
 function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=>o[g.key]=[]); return o; }
@@ -4640,13 +4659,15 @@ function validateClaimPartsRows(){
 function populateClaimCategorySelect(){
   const sel = $('claim-f-category');
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  sel.innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  // Product ไม่บังคับกรอกอีกต่อไป (ตามคำขอ) — เพิ่มตัวเลือกว่างไว้บนสุด เผื่อบางเคสยังไม่ทราบ Product ชัดเจนตอนแจ้งปัญหา
+  sel.innerHTML = `<option value="">-- ไม่ระบุ --</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   populateClaimModelSelect();
 }
 function populateClaimModelSelect(){
   const cat = $('claim-f-category').value;
   const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
-  $('claim-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  // รุ่น ไม่บังคับกรอกเช่นกัน — เพิ่มตัวเลือกว่างไว้บนสุด
+  $('claim-f-model').innerHTML = `<option value="">-- ไม่ระบุ --</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
 }
 $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
@@ -4889,8 +4910,7 @@ $('claim-cancel-btn').addEventListener('click', closeClaimModalWithGuard);
 const CLAIM_REQUIRED_FIELDS = [
   { id:'claim-f-claimant', label:'ผู้เคลม' },
   { id:'claim-f-site', label:'ชื่อสถานที่' },
-  { id:'claim-f-category', label:'Product' },
-  { id:'claim-f-model', label:'รุ่น' },
+  // Product/รุ่น ไม่บังคับกรอกอีกต่อไป (ตามคำขอ) — เว้นว่างไว้ได้ กรณีบางทีแจ้งปัญหายังไม่ทราบรุ่น/Product ชัดเจน
   { id:'claim-f-sn', label:'S/N' },
   { id:'claim-f-errcode', label:'Error code' },
   { id:'claim-f-errmsg', label:'Error message' },
@@ -5064,19 +5084,31 @@ function myVisibleClaims(){
   return DATA.claims.filter(c=>c.submittedBy===myUserEmail);
 }
 
+// สถานะเปิด/ปิด บล็อก "เคลมของฉัน" — เริ่มต้นเป็นปิดไว้ก่อนเสมอ (ตามคำขอ กันไม่ให้เกะกะหน้าจอ) กดปุ่มเพื่อเปิด/ปิดได้เอง อยู่ได้ตลอด session
+let engMyClaimsExpanded = false;
+$('eng-my-claims-header').addEventListener('click', (e)=>{
+  engMyClaimsExpanded = !engMyClaimsExpanded;
+  const wrap = $('eng-my-claims-list');
+  const btn = $('eng-my-claims-toggle-btn');
+  wrap.style.display = engMyClaimsExpanded ? 'block' : 'none';
+  btn.textContent = engMyClaimsExpanded ? '▴ ซ่อน' : '▾ แสดง';
+});
+
 // รายการ "เคลมของฉัน" ที่ผู้แจ้งเห็นได้จากหน้า Engineer โดยตรง (ไม่ต้องมีสิทธิ์ Sup Product/Editor) — ต่างจาก myVisibleClaims() ตรงที่รวมทั้งเคลมที่ยังอยู่ในแอป (คลิกดู/แก้ไขได้เต็ม)
-// และเคลมที่จบเคสไปแล้ว (เหลือแค่แจ้งเตือนสรุปสถานะสุดท้ายจาก claimNotices เพราะข้อมูลเต็มถูกย้ายไป Google Sheet แล้ว)
+// และเคลมที่จบเคสไปแล้ว (เหลือแค่แจ้งเตือนสรุปสถานะสุดท้ายจาก claimNotices เพราะข้อมูลเต็มถูกย้ายไป Google Sheet แล้ว — พอผู้แจ้งกดดูแล้วจะลบแจ้งเตือนนี้ทิ้งเลย กันไม่ให้ Firestore ค้างข้อมูลที่ไม่จำเป็นแล้ว)
 function renderEngMyClaimsList(){
   const block = $('eng-my-claims-block');
   const wrap = $('eng-my-claims-list');
   const badge = $('eng-my-claims-badge');
   if(!wrap || !block) return;
+  wrap.style.display = engMyClaimsExpanded ? 'block' : 'none';
+  $('eng-my-claims-toggle-btn').textContent = engMyClaimsExpanded ? '▴ ซ่อน' : '▾ แสดง';
   if(!myUserEmail || !DATA){ block.style.display='none'; return; }
   const activeMine = (DATA.claims||[]).filter(c=>c.submittedBy===myUserEmail);
   const activeIds = new Set(activeMine.map(c=>c.id));
   const noticesById = new Map((DATA.claimNotices||[]).map(n=>[n.claimId, n]));
   const archivedNotices = (DATA.claimNotices||[]).filter(n=>!activeIds.has(n.claimId));
-  if(activeMine.length===0 && archivedNotices.length===0){ block.style.display='none'; return; }
+  if(activeMine.length===0 && archivedNotices.length===0){ block.style.display='none'; wrap.innerHTML=''; return; }
   block.style.display='block';
 
   const items = [];
@@ -5119,13 +5151,11 @@ function renderEngMyClaimsList(){
   wrap.querySelectorAll('[data-notice-dismiss]').forEach(row=>{
     row.addEventListener('click', ()=>{
       const noticeId = row.getAttribute('data-notice-dismiss');
-      const notice = (DATA.claimNotices||[]).find(n=>n.id===noticeId);
-      if(notice && !notice.notifRead){
-        notice.notifRead = true;
-        fsMarkClaimNoticeRead(noticeId);
-        renderEngMyClaimsList();
-        updateNotifBadge();
-      }
+      // เคลมนี้จบเคสและย้ายข้อมูลเต็มไป Google Sheet แล้ว (ปลอดภัยแล้ว) — พอผู้แจ้งกดดู/ปิดแจ้งเตือนนี้ ลบทิ้งจาก Firestore ไปเลย ไม่ต้องแค่มาร์คว่าอ่านแล้วเหมือนเดิม กันไม่ให้ค้างเปลืองพื้นที่
+      DATA.claimNotices = (DATA.claimNotices||[]).filter(n=>n.id!==noticeId);
+      fsDeleteClaimNotice(noticeId);
+      renderEngMyClaimsList();
+      updateNotifBadge();
     });
   });
 }
@@ -6107,7 +6137,7 @@ function techDocsHtml(){
       <li><b>meta/backupSchedule</b> — ตั้งค่า Backup อัตโนมัติ (เปิด/ปิด, เวลา, ความถี่, จำนวนวันเก็บไฟล์)</li>
       <li><b>meta/backupAlertDismissed</b> — สถานะปิดแจ้งเตือน Backup ล้มเหลว</li>
       <li><b>claims</b> — เคลมอะไหล่ที่ยังไม่จบเคส (จบเคสแล้วจะถูกย้ายไป Google Sheet แล้วลบออกจากนี่)</li>
-      <li><b>claimNotices</b> — แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง (doc id = claimId) — เก็บแยกจาก claims ตั้งใจ เพื่อให้แจ้งเตือนล่าสุดยังอยู่ต่อได้แม้เคลมหลักจะถูกลบไปแล้วตอนจบเคส</li>
+      <li><b>claimNotices</b> — แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง (doc id = claimId) — เก็บแยกจาก claims ตั้งใจ เพื่อให้แจ้งเตือนล่าสุดยังอยู่ต่อได้แม้เคลมหลักจะถูกลบไปแล้วตอนจบเคส (พอผู้แจ้งเห็นแจ้งเตือนสุดท้ายของเคลมที่จบเคสแล้วครั้งเดียว จะถูกลบทิ้งจาก Firestore อัตโนมัติ ไม่ค้างเก็บไว้เกินความจำเป็น)</li>
       <li><b>meta/claimsSheet</b> — แคช spreadsheetId + gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว</li>
     </ul>
 
