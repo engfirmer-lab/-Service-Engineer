@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.52
-  อัปเดตล่าสุด: 21 กันยายน 2569 08:07 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.53
+  อัปเดตล่าสุด: 21 กันยายน 2569 08:59 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.52</title>
+<title>Firmer Service Center — v7.53</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -998,8 +998,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.52";
-const APP_UPDATED_AT = "21 กันยายน 2569 08:07 น. เวลาไทย";
+const APP_VERSION = "7.53";
+const APP_UPDATED_AT = "21 กันยายน 2569 08:59 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2488,12 +2488,18 @@ async function resolveAuthAndStart(){
   const sdk = window._firebaseSdk;
   sdk.onAuthStateChanged(auth, (user)=>{
     if(user){
-      myGoogleId = user.uid; myUserName = user.displayName || user.email; myUserEmail = (user.email||'').toLowerCase();
+      const newEmail = (user.email||'').toLowerCase();
+      // ถ้าอีเมลที่ล็อกอินอยู่เปลี่ยนไปจากเดิม (สลับบัญชี) ให้ถือว่าเป็นการเริ่มแอปใหม่เสมอ แม้จะไม่ได้ผ่านสถานะ signed-out (user===null) มาก่อนก็ตาม
+      // กันบั๊ก: ถ้าไม่เช็คจุดนี้ แล้วบัญชีที่ล็อกอินอยู่เปลี่ยนไปเป็นอีเมลอื่นแบบไม่ผ่านล็อกเอาต์ชัดเจน (เช่น Firebase สลับ session ให้เอง)
+      // โค้ดจะเข้ากิ่ง "เคย start แอปไปแล้ว" ทันที ข้ามการเช็คสิทธิ์/โหลดข้อมูลของบัญชีใหม่ไปเฉยๆ ทำให้เห็นข้อมูลเก่าหรือหน้าจอค้าง
+      const accountChanged = window._appStarted && myUserEmail && newEmail && myUserEmail !== newEmail;
+      myGoogleId = user.uid; myUserName = user.displayName || user.email; myUserEmail = newEmail;
       showSignedInPill();
       // ไม่ขอสิทธิ์ Drive ล่วงหน้าอัตโนมัติอีกต่อไป — เพราะไม่ได้เกิดจากการแตะหน้าจอโดยตรง เบราว์เซอร์เลยบล็อก popup (โดยเฉพาะตอน Refresh แล้ว session ถูกจำได้เองเงียบๆ)
       // จะขอสิทธิ์ก็ต่อเมื่อผู้ใช้กดปุ่มที่ต้องใช้ Drive จริงๆ (อัปโหลดรูป/วิดีโอ/เอกสาร, เช็คขนาดไฟล์ ฯลฯ) ซึ่งเป็นการแตะหน้าจอโดยตรงอยู่แล้ว ไม่โดนบล็อก
-      if(!window._appStarted){
+      if(!window._appStarted || accountChanged){
         window._appStarted = true;
+        DATA = null; // ล้างข้อมูลของบัญชีเก่าทิ้งก่อนโหลดใหม่ กันโชว์ข้อมูลของบัญชีเก่าค้างไว้ระหว่างที่กำลังเช็คสิทธิ์บัญชีใหม่
         checkAccessAndLoad();
       } else {
         $('gsi-overlay').classList.remove('show');
@@ -2501,6 +2507,10 @@ async function resolveAuthAndStart(){
       }
     } else {
       myGoogleId = null; myUserName = null; myUserEmail = null;
+      // รีเซ็ต _appStarted ตอนออกจากระบบ — กันบั๊ก: ถ้าไม่รีเซ็ต แล้วมีคนกดปุ่ม "ออกจากระบบ" (เช่นจากหน้าจอรอสิทธิ์) แล้วสลับไป login บัญชีอื่น
+      // โค้ดจะเข้าเงื่อนไข "เคย start แอปไปแล้ว" (เข้า else ด้านบนแทนที่จะเรียก checkAccessAndLoad ใหม่) เลยข้ามการเช็คสิทธิ์/แสดงหน้าจอขอสิทธิ์ไปเฉยๆ
+      // ทำให้ผู้ใช้ที่ login ใหม่เจอหน้าจอค้างเปล่าๆ ไม่มีทั้งปุ่ม login และปุ่มขอสิทธิ์
+      window._appStarted = false;
       $('signed-in-pill').style.display = 'none';
       $('gsi-overlay').classList.add('show');
       $('access-request-overlay').classList.remove('show');
