@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <!--
   ===================================================================
-  APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.64
-  อัปเดตล่าสุด: 22 กันยายน 2569 13:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  F1 Service — Firmer Service Center Web App
+  ===================================================================
+  เวอร์ชันปัจจุบัน : 7.65
+  อัปเดตล่าสุด   : 22 กันยายน 2569 17:13 น. เวลาไทย
+  ===================================================================
+  DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
+  1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
+  2. อัปเดต APP_VERSION และ APP_UPDATED_AT ใน JS ให้ตรงกับเวอร์ชันและเวลาไทยจริง
+  3. อัปเดต comment block นี้ (เวอร์ชันปัจจุบัน + อัปเดตล่าสุด) ให้ตรงกันด้วย
+  4. อัปเดต <title> ให้ตรงกันด้วย
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.64</title>
+<title>F1 Service — v7.65</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1002,8 +1009,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.64";
-const APP_UPDATED_AT = "22 กันยายน 2569 15:40 น. เวลาไทย";
+const APP_VERSION = "7.65";
+const APP_UPDATED_AT = "22 กันยายน 2569 17:13 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
