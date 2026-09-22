@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.67
-  อัปเดตล่าสุด   : 22 กันยายน 2569 22:58 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.68
+  อัปเดตล่าสุด   : 22 กันยายน 2569 23:04 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -20,12 +20,22 @@
   - Bug: รูป thumbnail ใน attachment preview แสดงเป็น icon แทนรูปจริง (driveImgSrc/CORS)
   - Hidden item: "(ซ่อนไว้ไม่ให้รกหน้าจอ) เดี๋ยวลบออกไป" — รายละเอียดยังไม่ชัด รอ user ระบุ
   ===================================================================
+  CAUTION — ข้อควรระวังสำคัญ (Claude ต้องอ่านทุกครั้งก่อนแก้โค้ด)
+  1. DATABASE BACKWARD COMPAT — อย่าแก้ field ชื่อ/โครงสร้างใน Firestore documents
+     โดยไม่มี migration plan เพราะ record เก่าจะพัง ถ้าเพิ่ม field ใหม่ให้ใช้ fallback เสมอ (|| '')
+  2. FIRESTORE QUOTA — ระวังฟังก์ชันที่เขียน Firestore บ่อย (loop, realtime listener ที่ trigger write)
+     Free tier: 20K writes/วัน — ถ้าจะเพิ่มฟีเจอร์ที่เขียนบ่อย ต้องแจ้ง user ก่อนว่าจะเปลืองโควต้า
+  3. DRIVE SYNC — ทุกครั้งที่ลบข้อมูลจากแอพ (claim/attachment) ต้องลบไฟล์ใน Google Drive ด้วย
+     ห้ามลบแค่ใน Firestore แล้วปล่อย Drive ค้างไว้ — ใช้ driveDeleteFile() เสมอ
+  4. GOOGLE SHEET SYNC — ถ้ามีข้อมูลตกค้างใน Google Sheet (claimsSheetMeta) และมีการลบ claim
+     ต้องระวังว่า Sheet อาจยังมีแถวเก่าค้างอยู่ — ยังไม่มี auto-sync ลบ Sheet row
+  ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.67</title>
+<title>F1 Service — v7.68</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1017,8 +1027,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.67";
-const APP_UPDATED_AT = "22 กันยายน 2569 22:58 น. เวลาไทย";
+const APP_VERSION = "7.68";
+const APP_UPDATED_AT = "22 กันยายน 2569 23:04 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
