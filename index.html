@@ -5610,12 +5610,16 @@ function openClaimDetail(id){
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
     ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;">⚠ เคลมนี้อยู่สถานะจบเคสแล้วแต่ยังค้างอยู่ในแอพ (ครั้งก่อนย้ายไป Sheet ไม่สำเร็จ) — กดปุ่มด้านล่างเพื่อลองย้ายอีกครั้ง</p>` : ''}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      ${canManage && claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
       ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<button class="btn btn-primary btn-sm" id="claim-detail-archive-btn">🗄️ ย้ายไป Sheet เดี๋ยวนี้</button>` : ''}
       ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
       ${canSelfEdit ? `<button class="btn btn-ghost btn-sm" id="claim-detail-selfedit-btn">✏️ แก้ไข/เพิ่มข้อมูลเคลมนี้</button>` : ''}
       <button class="btn btn-ghost btn-sm" id="claim-detail-dl-summary-btn">📷 โหลดภาพสรุปอีกครั้ง</button>
       <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
     </div>`;
+  if($('claim-detail-download-zip-btn')){
+    $('claim-detail-download-zip-btn').addEventListener('click', ()=>downloadClaimImagesAsZip(c));
+  }
   $('claim-detail-dl-summary-btn').addEventListener('click', ()=>{
     // สร้างข้อมูลสรุปจากเคลมที่มีอยู่ แล้วเปิด success modal ให้กดดาวน์โหลดรูปภาพสรุปได้อีกครั้ง
     $('claim-detail-modal').classList.remove('show');
