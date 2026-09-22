@@ -5602,10 +5602,7 @@ function openClaimDetail(id){
     <div class="meta-item"><div class="k">เลข Job Factorium</div><div class="v">${escapeHtml(c.jobFactorium||'-')}</div></div>
     <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
-    <div class="meta-item"><div class="k">เลข Service Order</div><div class="v">
-      ${canManage ? `<div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div>`
-      : escapeHtml(c.serviceOrderNo||'-')}
-    </div></div>
+    ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
       ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
@@ -5613,15 +5610,23 @@ function openClaimDetail(id){
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
     ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;">⚠ เคลมนี้อยู่สถานะจบเคสแล้วแต่ยังค้างอยู่ในแอพ (ครั้งก่อนย้ายไป Sheet ไม่สำเร็จ) — กดปุ่มด้านล่างเพื่อลองย้ายอีกครั้ง</p>` : ''}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-      ${canManage && claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
       ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<button class="btn btn-primary btn-sm" id="claim-detail-archive-btn">🗄️ ย้ายไป Sheet เดี๋ยวนี้</button>` : ''}
       ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
       ${canSelfEdit ? `<button class="btn btn-ghost btn-sm" id="claim-detail-selfedit-btn">✏️ แก้ไข/เพิ่มข้อมูลเคลมนี้</button>` : ''}
+      <button class="btn btn-ghost btn-sm" id="claim-detail-dl-summary-btn">📷 โหลดภาพสรุปอีกครั้ง</button>
       <button class="btn btn-ghost btn-sm" id="claim-detail-close-btn">ปิด</button>
     </div>`;
-  if($('claim-detail-download-zip-btn')){
-    $('claim-detail-download-zip-btn').addEventListener('click', ()=>downloadClaimImagesAsZip(c));
-  }
+  $('claim-detail-dl-summary-btn').addEventListener('click', ()=>{
+    // สร้างข้อมูลสรุปจากเคลมที่มีอยู่ แล้วเปิด success modal ให้กดดาวน์โหลดรูปภาพสรุปได้อีกครั้ง
+    $('claim-detail-modal').classList.remove('show');
+    showClaimSuccessSummary({
+      claimant: c.claimant||'', siteName: c.siteName||'', category: c.category||'', model: c.model||'',
+      serialNumber: c.serialNumber||'', errorCode: c.errorCode||'', errorMessage: c.errorMessage||'',
+      problemDate: c.problemDate||'', fixDate: c.fixDate||'', problem: c.problem||'',
+      problemDetail: c.problemDetail||'', solution: c.solution||'', parts: c.parts||[],
+      jobFactorium: c.jobFactorium||'', loanSlipNo: c.loanSlipNo||'', attachments: c.attachments||{}
+    });
+  });
   if(canManage){
     $('claim-detail-svo-save').addEventListener('click', async ()=>{
       const svo = $('claim-detail-svo').value.trim();
