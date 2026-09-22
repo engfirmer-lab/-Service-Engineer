@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.68
-  อัปเดตล่าสุด   : 22 กันยายน 2569 23:04 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.69
+  อัปเดตล่าสุด   : 22 กันยายน 2569 23:26 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -19,6 +19,7 @@
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
   - Bug: รูป thumbnail ใน attachment preview แสดงเป็น icon แทนรูปจริง (driveImgSrc/CORS)
   - Hidden item: "(ซ่อนไว้ไม่ให้รกหน้าจอ) เดี๋ยวลบออกไป" — รายละเอียดยังไม่ชัด รอ user ระบุ
+  - Auto-delete Sheet row: เมื่อ Sup Product ลบเคลมที่ถูก "ย้ายไป Sheet" ไปแล้ว ให้ลบแถวใน Google Spreadsheet ด้วย (ปัจจุบันแถวค้างอยู่)
   ===================================================================
   CAUTION — ข้อควรระวังสำคัญ (Claude ต้องอ่านทุกครั้งก่อนแก้โค้ด)
   1. DATABASE BACKWARD COMPAT — อย่าแก้ field ชื่อ/โครงสร้างใน Firestore documents
@@ -35,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.68</title>
+<title>F1 Service — v7.69</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1027,8 +1028,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.68";
-const APP_UPDATED_AT = "22 กันยายน 2569 23:04 น. เวลาไทย";
+const APP_VERSION = "7.69";
+const APP_UPDATED_AT = "22 กันยายน 2569 23:26 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3410,19 +3411,29 @@ async function renderNotifList(){
     });
   });
   // เปิดดูแล้ว (แสดงในรายการแจ้งเตือนแล้ว) = ถือว่ารับทราบความคืบหน้าเคลมนั้นแล้ว
-  // ถ้าเคลมยังไม่จบเคส (ยังอยู่ใน DATA.claims) แค่มาร์คว่าอ่านแล้ว เผื่อยังมีความคืบหน้าต่อไปอีก
-  // แต่ถ้าจบเคสไปแล้ว (ย้ายข้อมูลเต็มไป Google Sheet แล้ว ปลอดภัยแล้ว) ให้ลบแจ้งเตือนทิ้งจาก Firestore ไปเลย ไม่ต้องเก็บค้างไว้ (ประหยัดพื้นที่ตามที่ขอ)
+  // Engineer: DATA.claims ว่างเปล่าเสมอ → ห้ามใช้ DATA.claims ตัดสินว่าเคลมหายหรือยัง
+  // ใช้ isEditor() แยก: Sup Product ลบ notice ถ้าเคลมไม่อยู่ใน DATA.claims, Engineer mark read เสมอ
   myClaimNoticesUnread.forEach(n=>{
-    const stillActive = (DATA.claims||[]).some(c=>c.id===n.claimId);
-    if(stillActive){
+    if(isEditor()){
+      // Sup Product โหลด claims ครบ — ถ้าไม่เจอใน DATA.claims แสดงว่าจบเคสหรือถูกลบแล้ว → ลบ notice ทิ้ง
+      const stillActive = (DATA.claims||[]).some(c=>c.id===n.claimId);
+      if(stillActive){
+        n.notifRead = true;
+        fsMarkClaimNoticeRead(n.id).catch(err=>{
+          console.error('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', err);
+          n.notifRead = false; updateNotifBadge();
+        });
+      } else {
+        DATA.claimNotices = (DATA.claimNotices||[]).filter(x=>x.id!==n.id);
+        fsDeleteClaimNotice(n.id);
+      }
+    } else {
+      // Engineer: ไม่โหลด DATA.claims → mark read เสมอ ห้ามลบ notice เพราะไม่รู้ว่าเคลมยังมีอยู่หรือเปล่า
       n.notifRead = true;
       fsMarkClaimNoticeRead(n.id).catch(err=>{
         console.error('บันทึกสถานะอ่านแจ้งเตือนเคลมไม่สำเร็จ:', err);
         n.notifRead = false; updateNotifBadge();
       });
-    } else {
-      DATA.claimNotices = (DATA.claimNotices||[]).filter(x=>x.id!==n.id);
-      fsDeleteClaimNotice(n.id);
     }
   });
   list.querySelectorAll('[data-claim-notice-open]').forEach(row=>{
