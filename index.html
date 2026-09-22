@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.58
-  อัปเดตล่าสุด: 21 กันยายน 2569 23:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.61
+  อัปเดตล่าสุด: 22 กันยายน 2569 15:40 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.58</title>
+<title>F1 — v7.61</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>Firmer Service Center</h1><p id="app-version-label">Version 7.47</p></div>
+        <div class="brand-text"><h1>F1</h1><p id="app-version-label">Version 7.47</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -1002,9 +1002,9 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.58";
-const APP_UPDATED_AT = "21 กันยายน 2569 23:55 น. เวลาไทย";
-document.title = `Firmer Service Center — v${APP_VERSION}`;
+const APP_VERSION = "7.61";
+const APP_UPDATED_AT = "22 กันยายน 2569 15:40 น. เวลาไทย";
+document.title = `F1 — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
   if(brandEl) brandEl.textContent = `Version ${APP_VERSION}`;
@@ -1168,6 +1168,7 @@ let currentQuery=''; let filterCategory='all'; let filterModel='all';
 let docQuery=''; let docFilterCategory='all'; let docFilterModel='all';
 
 let editingErrorId = null;
+let errorDirtyGuard = null; // dirty-check ปุ่ม "บันทึกการแก้ไข" — ใช้เฉพาะตอนแก้ไข Error เดิม ไม่ใช้ตอนเพิ่ม Error ใหม่
 let editingSolutions = [];
 let downModalErrorId = null;
 let downModalCauses = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[''], parts:[''], time:''}];
@@ -1300,6 +1301,34 @@ function wireRequiredFieldReset(el){
   el._invalidResetWired = true;
   const evtName = (el.tagName==='SELECT') ? 'change' : 'input';
   el.addEventListener(evtName, ()=>{ if((el.value||'').trim()) el.classList.remove('field-invalid'); });
+}
+// ===== Dirty-check ปุ่ม "บันทึกการแก้ไข" — ใช้ในฟอร์มแก้ไขทั่วแอป (ตามคำขอ): ปุ่มเริ่มต้นเป็น disabled จนกว่าค่าฟอร์มจะต่างจากตอนเปิดฟอร์มจริง =====
+// snapshotFn คืนค่าอะไรก็ได้ที่ JSON.stringify ได้ (object/array/string) แทนสถานะทั้งหมดของฟอร์ม ณ ขณะนั้น — เทียบกับค่า baseline ที่จับไว้ตอนเปิดฟอร์ม (ตอนข้อมูลยังเป็นของเดิม)
+// ดักฟัง event แบบ delegate ที่ container ห่อฟอร์มเดียว (input/change/click/drop) แทนการผูกทีละช่อง กันตกหล่นเวลาแบบฟอร์มมีแถว/รายการที่เพิ่ม-ลบได้แบบ dynamic (เช่น รายการอะไหล่ ไฟล์แนบ)
+// ใช้ได้กับหลายฟอร์มพร้อมกันเพราะ state (baseline) ถูกเก็บแยกในตัวแปรปิด (closure) ของแต่ละครั้งที่เรียก ไม่ปนกัน
+// keepBaseline: true = อย่ารีเซ็ต baseline ใหม่ (ใช้ตอน container ถูก re-render ซ้ำระหว่างแก้ไขชุดเดิมอยู่ เช่น รายการฟอร์มที่ render ทั้งลิสต์ใหม่ทุกครั้งที่เพิ่ม/ลบแถวย่อย — baseline เก็บไว้ที่ container เอง ไม่ใช่ closure เพื่อให้รอดจากการเรียกฟังก์ชันนี้ซ้ำ)
+function attachEditDirtyGuard(containerEl, saveBtnEl, snapshotFn, keepBaseline){
+  if(!containerEl || !saveBtnEl) return { reset(){}, refresh(){}, disable(){} };
+  function refresh(){
+    try{ saveBtnEl.disabled = (JSON.stringify(snapshotFn()) === containerEl._dirtyGuardBaseline); }
+    catch(e){ saveBtnEl.disabled = false; } // เผื่อ snapshot พังกลางทาง กันปุ่มค้าง disabled ถาวรจนบันทึกไม่ได้เลย (ปลอดภัยไว้ก่อน อนุญาตให้กดบันทึกได้เสมอถ้าเช็คสถานะไม่ได้)
+  }
+  function reset(){ containerEl._dirtyGuardBaseline = JSON.stringify(snapshotFn()); saveBtnEl.disabled = true; }
+  // เก็บ refresh/saveBtnEl ปัจจุบันไว้บน container เอง (เขียนทับได้ทุกครั้งที่เรียกฟังก์ชันนี้ใหม่) — ตัว listener ที่ผูกไว้ครั้งเดียวด้านล่างจะอ่านค่าล่าสุดนี้เสมอ
+  // จำเป็นเพราะ container (เช่น modal เดิม) มักถูกเปิดซ้ำหลายรอบสำหรับข้อมูลคนละชุด (เปิดแก้เคลม A แล้วปิด แล้วเปิดแก้เคลม B) ถ้าผูก listener ใหม่ทุกครั้งจะเป็น closure ค้างของรอบแรกและ baseline ไม่อัปเดตตาม
+  containerEl._dirtyGuardRefresh = refresh;
+  containerEl._dirtyGuardSaveBtn = saveBtnEl;
+  if(!containerEl._dirtyGuardWired){
+    containerEl._dirtyGuardWired = true;
+    ['input','change','click','drop'].forEach(evt=> containerEl.addEventListener(evt, (e)=>{
+      const btn = containerEl._dirtyGuardSaveBtn;
+      if(btn && (e.target===btn || btn.contains(e.target))) return; // ไม่ refresh จาก event ที่มาจากตัวปุ่มบันทึกเอง กันแย่งสถานะ disabled ที่ตัว handler บันทึกตั้งไว้เองระหว่างกำลังบันทึก (race condition)
+      setTimeout(()=>{ if(containerEl._dirtyGuardRefresh) containerEl._dirtyGuardRefresh(); }, 0);
+    }));
+    // setTimeout 0 กันกรณี event ยิงก่อน state จริงๆ จะถูกอัปเดตเสร็จ (เช่น click ปุ่มลบที่ไป splice array แบบ handler เดียวกัน)
+  }
+  if(keepBaseline && containerEl._dirtyGuardBaseline!==undefined) refresh(); else reset();
+  return { reset, refresh, disable(){ saveBtnEl.disabled = true; } };
 }
 // fieldDefs: [{id, label}] หรือ [{el, label}] — คืน array ของช่องที่ยังว่าง [{id/el, label, el}] พร้อมใส่/ล้างกรอบแดงให้เรียบร้อย (ไม่ scroll เอง เผื่อผู้เรียกอยากรวมกับรายการอื่นก่อน)
 function checkRequiredFields(fieldDefs){
@@ -2661,6 +2690,7 @@ async function checkAccessAndLoad(){
 
 /* ===================== NICKNAME (ชื่อเล่น) — ตั้งครั้งแรกที่ login แทนอีเมล/ชื่อบัญชี Google ทุกจุดในแอป — แก้ไขทีหลังได้จากปุ่ม ✏️ ข้างชื่อบน header ===================== */
 let nicknameModalIsFirstTime = true; // true = บังคับตั้งครั้งแรก (ไม่มีปุ่มยกเลิก/ปิด) · false = แก้ไขทีหลัง (ยกเลิกได้)
+let nicknameDirtyGuard = null; // dirty-check ปุ่ม "บันทึก" ชื่อเล่น — ใช้เฉพาะตอนแก้ไขทีหลัง ไม่ใช้ตอนบังคับตั้งครั้งแรก
 function showNicknameModal(isFirstTime){
   nicknameModalIsFirstTime = isFirstTime !== false;
   if(nicknameModalIsFirstTime){
@@ -2677,6 +2707,12 @@ function showNicknameModal(isFirstTime){
     $('nickname-save-btn').textContent = 'บันทึก';
   }
   $('nickname-input').classList.remove('field-invalid');
+  if(nicknameModalIsFirstTime){
+    nicknameDirtyGuard = null;
+    $('nickname-modal')._dirtyGuardRefresh = null; // ปิด hook เดิม (ถ้ามีจากรอบแก้ไขก่อนหน้า) — ครั้งแรกต้องกดบันทึกได้ทันทีที่กรอก ไม่ใช่รอ "เปลี่ยนค่า" (เริ่มจากว่างอยู่แล้ว)
+  } else {
+    nicknameDirtyGuard = attachEditDirtyGuard($('nickname-modal'), $('nickname-save-btn'), ()=>$('nickname-input').value);
+  }
   $('nickname-modal').classList.add('show');
   setTimeout(()=>$('nickname-input').focus(), 50);
 }
@@ -3853,6 +3889,8 @@ function resetErrorForm(){
   $('sup-form-sub').textContent = 'กดเพื่อเปิดฟอร์มกรอกข้อมูล Error พร้อมวิธีแก้ไข';
   const sbtn = $('save-error-btn'); sbtn.disabled=false; sbtn.style.opacity=''; sbtn.style.cursor='';
   sbtn.textContent = 'บันทึก Error';
+  errorDirtyGuard = null;
+  $('add-error-modal')._dirtyGuardRefresh = null; // ปิด hook เดิม (ถ้ามีจากรอบแก้ไขก่อนหน้า) กันมันมาสั่ง disabled ปุ่มระหว่างกรอก Error ใหม่ทั้งที่ไม่ต้องเช็ค dirty
 }
 $('save-error-btn').addEventListener('click', async ()=>{
   const btn = $('save-error-btn');
@@ -3912,6 +3950,17 @@ async function startEditError(id){
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
   editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
   renderSolutionsEditor();
+  errorDirtyGuard = attachEditDirtyGuard($('add-error-modal'), $('save-error-btn'), snapshotErrorEditState);
+}
+// รวบรวมสถานะฟอร์มแก้ไข Error ทั้งหมด (ช่องข้อความ + editingSolutions ซึ่งเป็น array ที่ถูกแก้ไขสดอยู่แล้วจากปุ่มเพิ่ม/ลบ/แก้ในตัวแก้ไขวิธีแก้ไข) ใช้เทียบ dirty-check
+function snapshotErrorEditState(){
+  return {
+    category: $('f-category') ? $('f-category').value : '',
+    model: $('f-model') ? $('f-model').value : '',
+    code: $('f-code') ? $('f-code').value : '',
+    symptom: $('f-symptom') ? $('f-symptom').value : '',
+    solutions: editingSolutions,
+  };
 }
 async function deleteError(id){
   if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
@@ -3985,6 +4034,16 @@ async function rejectPendingError(id){
 
 let editingProposalId = null;
 let editingProposalDraft = { tools:[''], parts:[''] }; // แก้ในสำเนาชั่วคราวก่อน กด "ยกเลิก" แล้วข้อมูลจริงจะไม่ถูกแก้ไปก่อนบันทึก
+let proposalDirtyGuard = null;
+function snapshotProposalEditState(pid){
+  return {
+    title: $('prop-edit-title-'+pid) ? $('prop-edit-title-'+pid).value : '',
+    desc: $('prop-edit-desc-'+pid) ? $('prop-edit-desc-'+pid).value : '',
+    time: $('prop-edit-time-'+pid) ? $('prop-edit-time-'+pid).value : '',
+    tools: editingProposalDraft.tools,
+    parts: editingProposalDraft.parts,
+  };
+}
 function renderProposals(){
   const pending = (DATA.proposals||[]).filter(p=>p.status==='pending').filter(p=>{ const err=DATA.errors.find(e=>e.id===p.errorId); return err && ownerOf(err.category,err.model)===currentSupIdentity; });
   $('proposal-count').textContent = pending.length;
@@ -4054,6 +4113,19 @@ function renderProposals(){
     renderProposals();
     showToast('✓ แก้ไขข้อเสนอแล้ว');
   }));
+  // dirty-check ปุ่ม "บันทึกการแก้ไข" — list re-render ทั้งลิสต์ทุกครั้งที่เพิ่ม/ลบแถวอุปกรณ์/อะไหล่ ระหว่างแก้ไข จึงต้อง "รีเฟรช" การ์ดใหม่ (keepBaseline=true) แทนการรีเซ็ต baseline ทุกครั้ง ยกเว้นตอนเพิ่งเปิดแก้ไขการ์ดนี้ครั้งแรก (เทียบ id เดิมที่เก็บไว้)
+  if(editingProposalId){
+    const saveBtn = list.querySelector(`[data-savepropedit="${editingProposalId}"]`);
+    if(saveBtn){
+      const isSameEditSession = list._dirtyGuardForId === editingProposalId;
+      list._dirtyGuardForId = editingProposalId;
+      proposalDirtyGuard = attachEditDirtyGuard(list, saveBtn, ()=>snapshotProposalEditState(editingProposalId), isSameEditSession);
+    }
+  } else {
+    proposalDirtyGuard = null;
+    list._dirtyGuardRefresh = null;
+    list._dirtyGuardForId = null;
+  }
 }
 async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
@@ -4183,6 +4255,7 @@ $('doclink-list-add-btn').addEventListener('click', ()=>{
 /* ===================== Modal ใส่/แก้ไข เอกสาร 1 รายการ (วางลิงก์ หรือ อัปโหลดไฟล์) ===================== */
 let doclinkContext = null;
 let doclinkMode = 'link'; // 'link' | 'upload'
+let doclinkDirtyGuard = null; // dirty-check ปุ่มบันทึกเอกสาร — ใช้เฉพาะตอนแก้ไขเอกสารเดิม ไม่ใช้ตอนเพิ่มใหม่
 function setDoclinkMode(mode){
   doclinkMode = mode;
   $('doclink-mode-link-btn').className = mode==='link' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
@@ -4223,8 +4296,24 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const saveBtn = $('doclink-save-btn');
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   setDoclinkMode(existing ? 'link' : 'upload'); // เอกสารใหม่ → เปิดโหมดอัปโหลดไฟล์เป็นค่าเริ่มต้น / แก้ไขของเดิม → เปิดโหมดลิงก์ก่อน จะได้เห็นลิงก์เดิมทันที
+  if(existing){
+    doclinkDirtyGuard = attachEditDirtyGuard($('doclink-modal'), saveBtn, snapshotDoclinkEditState);
+  } else {
+    doclinkDirtyGuard = null;
+    $('doclink-modal')._dirtyGuardRefresh = null; // ปิด hook เดิม (ถ้ามีจากรอบแก้ไขก่อนหน้า) กันมันมาสั่ง disabled ปุ่มระหว่างเพิ่มเอกสารใหม่ทั้งที่ไม่ต้องเช็ค dirty
+  }
   $('doclink-modal').classList.add('show');
   setTimeout(()=>$('doclink-title-input').focus(), 50);
+}
+// รวบรวมสถานะฟอร์มแก้ไขเอกสาร (ชื่อ, ลิงก์/โหมด, ไฟล์ที่เลือกใหม่ถ้ามี) ใช้เทียบ dirty-check
+function snapshotDoclinkEditState(){
+  const f = $('doclink-file-input') && $('doclink-file-input').files[0];
+  return {
+    title: $('doclink-title-input') ? $('doclink-title-input').value : '',
+    url: $('doclink-url-input') ? $('doclink-url-input').value : '',
+    mode: doclinkMode,
+    fileName: f ? (f.name+':'+f.size) : null,
+  };
 }
 function closeDocLinkModal(){ $('doclink-modal').classList.remove('show'); doclinkContext = null; }
 $('doclink-modal-close').addEventListener('click', closeDocLinkModal);
@@ -4619,6 +4708,7 @@ function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=
 
 let claimDraft = null;
 let claimEditingId = null;
+let claimDirtyGuard = null; // dirty-check ปุ่ม "บันทึกเคลม" — ใช้เฉพาะตอนแก้ไขเคลมที่มีอยู่แล้ว (claimEditingId ไม่ว่าง) ไม่ใช้ตอนบันทึกเคลมใหม่
 
 function resetClaimDraft(){
   claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemDate:'', fixDate:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
@@ -4630,11 +4720,11 @@ function initClaimDatePickers(){
   if(typeof flatpickr==='undefined') return;
   if(!claimProblemDatePicker){
     claimProblemDatePicker = flatpickr('#claim-f-problemdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false, maxDate:'today',
-      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); } });
+      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); if(claimDirtyGuard) claimDirtyGuard.refresh(); } });
   }
   if(!claimFixDatePicker){
     claimFixDatePicker = flatpickr('#claim-f-fixdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false,
-      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); } });
+      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); if(claimDirtyGuard) claimDirtyGuard.refresh(); } });
   }
 }
 function bangkokISOFromDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
@@ -4962,7 +5052,25 @@ function openClaimModal(existingClaim){
   clearAllClaimFieldInvalid(); // ล้างกรอบแดงค้างจากครั้งก่อน (ถ้ามี) ทุกครั้งที่เปิดฟอร์มใหม่
   wireClaimFieldInvalidReset();
   wireClaimDraftAutosaveListeners();
+  // dirty-check ปุ่ม "บันทึกเคลม" เฉพาะตอนแก้ไขเคลมเดิม (existingClaim) — ตอนบันทึกเคลมใหม่ให้กดได้ตามปกติเสมอ ไม่ต้องรอให้ "เปลี่ยนค่า" ก่อน
+  if(existingClaim){
+    claimDirtyGuard = attachEditDirtyGuard($('claim-modal'), $('claim-save-btn'), snapshotClaimEditState);
+  } else {
+    claimDirtyGuard = null;
+    $('claim-modal')._dirtyGuardRefresh = null; // ปิด hook เดิม (ถ้ามีจากรอบแก้ไขก่อนหน้า) กันมันมาสั่ง disabled ปุ่มระหว่างกรอกเคลมใหม่ทั้งที่ไม่ต้องเช็ค dirty
+    $('claim-save-btn').disabled = false;
+  }
   $('claim-modal').classList.add('show');
+}
+// รวบรวมสถานะปัจจุบันของฟอร์มเคลมทั้งหมด (ช่องข้อความอ่านสดจาก DOM เพราะ claimDraft ช่องพวกนี้จะถูก sync เข้าไปตอนกดบันทึกเท่านั้น ไม่ใช่ระหว่างพิมพ์ — ส่วน parts/attachments/วันที่ sync เข้า claimDraft สดอยู่แล้วใช้ตรงนั้นได้เลย) ใช้เทียบ dirty-check
+function snapshotClaimEditState(){
+  return {
+    fields: CLAIM_DRAFT_AUTOSAVE_FIELD_IDS.map(id=>{ const el=$(id); return el ? el.value : ''; }),
+    problemDate: $('claim-f-problemdate') ? $('claim-f-problemdate').value : '',
+    fixDate: $('claim-f-fixdate') ? $('claim-f-fixdate').value : '',
+    parts: claimDraft ? claimDraft.parts : null,
+    attachments: claimDraft ? claimDraft.attachments : null,
+  };
 }
 $('eng-quick-claim-btn').addEventListener('click', ()=>openClaimModal(null));
 $('claim-modal-close').addEventListener('click', closeClaimModalWithGuard);
@@ -5275,21 +5383,23 @@ function renderClaimsSheetHistoryLink(){
   if(block) block.style.display = 'block';
   const meta = DATA.claimsSheetMeta || { spreadsheetId:null, tabs:{} };
   const heading = `<h2 style="margin-bottom:6px;">🗄️ ฐานข้อมูลประวัติเคลม (Google Sheet)</h2>`;
+  // ลิงก์โฟลเดอร์ Google Drive หลักที่เก็บไฟล์แนบ (รูป/เอกสาร/วีดิโอ) ของเคลมทั้งหมด — ค้างไว้ถาวรท้ายสุดของหน้าคู่กับลิงก์ Sheet ด้านบน (ตามคำขอ)
+  const driveLinkHtml = `<p style="font-size:12.5px;margin-top:6px;"><a href="https://drive.google.com/drive/folders/${DRIVE_ROOT_FOLDER_ID}" target="_blank" rel="noopener">📁 เปิดโฟลเดอร์ Google Drive เก็บไฟล์แนบเคลมทั้งหมด</a></p>`;
   const myTabTitle = (isEditor() && !isSuperAdmin() && currentSupIdentity) ? sanitizeSheetTabName(currentSupIdentity) : null;
   const iHaveMyTabAlready = !myTabTitle || (meta.tabs && meta.tabs[myTabTitle]!==undefined);
   // ยังไม่เคยสร้างสเปรดชีต (หรือ Sup Product คนนี้ยังไม่เคยมีแท็บของตัวเอง) -> เตรียมให้ล่วงหน้าทันที ไม่ต้องรอเคลมจบเคสก่อนแล้ว (ค้างไว้ "กำลังเตรียม..." ระหว่างรอ)
   if(!meta.spreadsheetId || !iHaveMyTabAlready){
-    wrap.innerHTML = `${heading}<p style="font-size:12px;color:var(--text-faint);">⏳ กำลังเตรียม Google Sheet ให้พร้อมเปิดได้ตลอด...</p>`;
+    wrap.innerHTML = `${heading}<p style="font-size:12px;color:var(--text-faint);">⏳ กำลังเตรียม Google Sheet ให้พร้อมเปิดได้ตลอด...</p>${driveLinkHtml}`;
     prepareClaimsSheetLinkAhead();
     return;
   }
   // ลิงก์เดียวกันสำหรับทุกคน ข้อมูลทั้งหมดอยู่ที่สเปรดชีทเดียวกัน ต่างกันแค่แท็บ (Sheet) ที่พาไปเปิดตรงตามสิทธิ์การมองเห็นของแต่ละคน — ค้างไว้ถาวรที่ล่างสุดของหน้า กดเข้าไปเช็คได้ตลอด เหมือนลิงก์เช็ค Database
   if(isSuperAdmin()){
-    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วทั้งหมด (แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>`;
+    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วทั้งหมด (แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>${driveLinkHtml}`;
     return;
   }
   const gid = meta.tabs ? meta.tabs[myTabTitle] : undefined;
-  wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)}</a></p>`;
+  wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)}</a></p>${driveLinkHtml}`;
 }
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
@@ -6514,7 +6624,7 @@ setTimeout(updateModeToggleScrollHint, 200);
     // ไม่มี popup เปิดอยู่เลย -> การกดย้อนกลับครั้งนี้ไปโดน "ด่านกันออกแอป" ที่ตั้งไว้ (exit guard) พอดี -> ถามยืนยันก่อนออกจริง กันกดพลาดหลุดออกแอปไปเฉยๆ
     if(exitGuardArmed){
       exitGuardArmed = false; // ด่านนี้ถูกใช้ไปแล้ว (บริโภค state ที่ pop ไปแล้ว)
-      const wantsExit = confirm('ต้องการออกจากแอป Firmer Service Center หรือไม่?');
+      const wantsExit = confirm('ต้องการออกจากแอป F1 หรือไม่?');
       if(wantsExit){
         // ยืนยันจะออกจริง -> กดย้อนกลับอีกครั้งเพื่อออกจากหน้าเว็บนี้ไปจริงๆ (ตำแหน่ง history ตอนนี้คือก่อนด่านกันออกแอปแล้ว)
         try{ history.back(); }catch(e){}
