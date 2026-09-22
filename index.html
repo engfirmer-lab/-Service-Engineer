@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.61
-  อัปเดตล่าสุด: 22 กันยายน 2569 15:40 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.62
+  อัปเดตล่าสุด: 22 กันยายน 2569 13:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 — v7.61</title>
+<title>F1 Service — v7.62</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>F1</h1><p id="app-version-label">Version 7.47</p></div>
+        <div class="brand-text"><h1>F1 Service</h1><p id="app-version-label">Version 7.47</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -666,14 +666,14 @@
       </div>
       <div class="field-wrap"><label>S/N <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-sn"></div>
       <div class="form-grid two">
-        <div class="field-wrap"><label>Error code <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errcode"></div>
-        <div class="field-wrap"><label>Error message <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errmsg"></div>
-      </div>
-      <div class="form-grid two">
         <div class="field-wrap"><label>วันที่พบปัญหา <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-problemdate" placeholder="เลือกวันที่..." readonly></div>
         <div class="field-wrap"><label>วันที่แก้ไข (ถ้ามี)</label><input type="text" id="claim-f-fixdate" placeholder="เลือกวันที่..." readonly></div>
       </div>
-      <div class="field-wrap"><label>อธิบายปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="ระบุอาการที่พบ เกิดขึ้นตอนไหน..."></textarea></div>
+      <div class="field-wrap"><label>แจ้งอาการเสีย <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="เช่น เคลมอะไหล่ Sample Probe เนื่องจากเข็มโค้งงอ, ปั๊มสูบตัวอย่างเสียทำให้ Alarm E045, ค่า Absorbance ไม่ออกหลังเปลี่ยน Lamp..."></textarea></div>
+      <div class="form-grid two">
+        <div class="field-wrap"><label>Error code <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errcode"></div>
+        <div class="field-wrap"><label>Error message <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errmsg"></div>
+      </div>
       <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
       <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
       <div class="field-wrap"><label>รายการอะไหล่ที่เคลม (ถ้ามี)</label><div id="claim-parts-wrap"></div></div>
@@ -1002,9 +1002,9 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.61";
+const APP_VERSION = "7.62";
 const APP_UPDATED_AT = "22 กันยายน 2569 15:40 น. เวลาไทย";
-document.title = `F1 — v${APP_VERSION}`;
+document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
   if(brandEl) brandEl.textContent = `Version ${APP_VERSION}`;
@@ -5086,7 +5086,7 @@ const CLAIM_REQUIRED_FIELDS = [
   { id:'claim-f-errcode', label:'Error code' },
   { id:'claim-f-errmsg', label:'Error message' },
   { id:'claim-f-problemdate', label:'วันที่พบปัญหา' },
-  { id:'claim-f-problem', label:'อธิบายปัญหาที่พบ' },
+  { id:'claim-f-problem', label:'แจ้งอาการเสีย' },
   { id:'claim-f-solution', label:'วิธีการแก้ไข' },
   { id:'claim-f-jobfactorium', label:'เลข Job Factorium' },
   { id:'claim-f-loan', label:'เลขที่ใบยืม' },
@@ -6624,7 +6624,7 @@ setTimeout(updateModeToggleScrollHint, 200);
     // ไม่มี popup เปิดอยู่เลย -> การกดย้อนกลับครั้งนี้ไปโดน "ด่านกันออกแอป" ที่ตั้งไว้ (exit guard) พอดี -> ถามยืนยันก่อนออกจริง กันกดพลาดหลุดออกแอปไปเฉยๆ
     if(exitGuardArmed){
       exitGuardArmed = false; // ด่านนี้ถูกใช้ไปแล้ว (บริโภค state ที่ pop ไปแล้ว)
-      const wantsExit = confirm('ต้องการออกจากแอป F1 หรือไม่?');
+      const wantsExit = confirm('ต้องการออกจากแอป F1 Service หรือไม่?');
       if(wantsExit){
         // ยืนยันจะออกจริง -> กดย้อนกลับอีกครั้งเพื่อออกจากหน้าเว็บนี้ไปจริงๆ (ตำแหน่ง history ตอนนี้คือก่อนด่านกันออกแอปแล้ว)
         try{ history.back(); }catch(e){}
