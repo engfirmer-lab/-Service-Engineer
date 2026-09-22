@@ -2,15 +2,15 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.55
-  อัปเดตล่าสุด: 21 กันยายน 2569 10:20 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
+  เวอร์ชันปัจจุบัน: 7.58
+  อัปเดตล่าสุด: 21 กันยายน 2569 23:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Firmer Service Center — v7.55</title>
+<title>Firmer Service Center — v7.58</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -661,8 +661,8 @@
       <div class="field-wrap"><label>ผู้เคลม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-claimant"></div>
       <div class="field-wrap"><label>ชื่อสถานที่ <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-site" placeholder="เช่น รพ.ศิริราช"></div>
       <div class="form-grid two">
-        <div class="field-wrap"><label>Product</label><select id="claim-f-category"></select></div>
-        <div class="field-wrap"><label>รุ่น</label><select id="claim-f-model"></select></div>
+        <div class="field-wrap"><label>Product <span style="color:var(--red);">*</span></label><select id="claim-f-category"></select></div>
+        <div class="field-wrap"><label>รุ่น <span style="color:var(--red);">*</span></label><select id="claim-f-model"></select></div>
       </div>
       <div class="field-wrap"><label>S/N <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-sn"></div>
       <div class="form-grid two">
@@ -1002,8 +1002,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.55";
-const APP_UPDATED_AT = "21 กันยายน 2569 10:20 น. เวลาไทย";
+const APP_VERSION = "7.58";
+const APP_UPDATED_AT = "21 กันยายน 2569 23:55 น. เวลาไทย";
 document.title = `Firmer Service Center — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1615,9 +1615,20 @@ async function fsAddDocument(fields){ showLoadingOverlay('กำลังบั�
 async function fsUpdateDocument(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'documents',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); }finally{ hideLoadingOverlay(); } }
 /* ===================== เคลมอะไหล่ ===================== */
-async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
-async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); }finally{ hideLoadingOverlay(); } }
-async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); }finally{ hideLoadingOverlay(); } }
+// แจ้งทุกเครื่องที่เปิดแอปค้างไว้ว่า "รายการเคลมมีการเปลี่ยนแปลง" — ใช้หลักการเดียวกับ meta/appVersion (บวก timestamp ที่เอกสารเล็กๆ 1 ตัว แล้วให้ทุกเครื่องฟังแบบเรียลไทม์แค่เอกสารนี้)
+// ไม่ทำ onSnapshot ฟังทั้ง collection claims โดยตรง เพราะจะเปิด listener ทุกเอกสารพร้อมกันทุกเครื่อง เสี่ยงกินโควต้า Firestore สูงเวลามีคนใช้งานพร้อมกันหลายคน
+// วิธีนี้ต้นทุนคงที่ (อ่าน/ฟังแค่เอกสารเดียว) — พอมีการเปลี่ยนแปลงจริง ค่อยไปดึงรายการเคลมใหม่ทั้งชุดอีกที (ราคาเท่าการกดรีเฟรชเอง แต่เกิดขึ้นอัตโนมัติ)
+// ไม่ await และไม่ throw ออกไป กันไม่ให้การแจ้งเตือนที่ล้มเหลวไปกระทบการบันทึก/แก้ไข/ลบเคลมหลักซึ่งสำคัญกว่า
+function fsBumpClaimsActivity(){
+  try{
+    const sdk = window._firebaseSdk;
+    sdk.setDoc(sdk.doc(db,'meta','claimsActivity'), { updatedAt: Date.now() }, { merge:true })
+      .catch(e=>console.warn('แจ้งเตือนรายการเคลมเปลี่ยนแปลงไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e));
+  }catch(e){ console.warn('แจ้งเตือนรายการเคลมเปลี่ยนแปลงไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e); }
+}
+async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); fsBumpClaimsActivity(); return ref.id; }finally{ hideLoadingOverlay(); } }
+async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); fsBumpClaimsActivity(); }finally{ hideLoadingOverlay(); } }
+async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); fsBumpClaimsActivity(); }finally{ hideLoadingOverlay(); } }
 // แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง — เก็บเป็นเอกสารแยกต่างหาก (claimId เป็น doc id เดียวกับเคลม) ไม่ผูกวงจรชีวิตกับเอกสารเคลมหลัก
 // เรียกทุกครั้งที่ Sup Product เปลี่ยนสถานะ/เลข Service Order ของเคลม เพื่อให้เอกสารนี้ "อยู่รอด" ต่อไปได้แม้เคลมหลักจะถูกลบทิ้งตอนย้ายไป Google Sheet (จบเคส)
 // ไม่ critical ถ้าบันทึกไม่สำเร็จ — แค่ผู้แจ้งจะไม่เห็นแจ้งเตือน ไม่กระทบข้อมูลเคลมหลัก
@@ -2555,6 +2566,53 @@ function showVersionUpdateBanner(serverVersion){
 }
 $('version-update-refresh-btn').addEventListener('click', ()=>location.reload());
 
+/* ===================== เรียลไทม์รายการเคลม/แจ้งเตือน — ไม่ต้องกดรีเฟรชจอเอง ===================== */
+// ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/claimsActivity) แทนการเปิด listener ทั้ง collection claims/claimNotices
+// (ซึ่งจะกินโควต้า Firestore สูงกว่ามากเวลามีผู้ใช้เปิดแอปค้างไว้พร้อมกันหลายคน) — เอกสารนี้ถูก "แตะ" ให้ updatedAt เปลี่ยนทุกครั้งที่มีการเพิ่ม/แก้ไข/ลบเคลม (ดู fsBumpClaimsActivity)
+// พอเอกสารนี้เปลี่ยน ค่อยไปดึงรายการเคลม+แจ้งเตือนล่าสุดมาใหม่ทั้งชุด แล้วรีเฟรชเฉพาะส่วนที่กำลังแสดงอยู่บนจอ
+let _claimsActivityWatchStarted = false;
+let _lastSeenClaimsActivityTs = null; // null = ยังไม่เคยได้รับสแนปช็อตแรกเลย (แยกออกจากกรณี "เอกสารยังไม่เคยถูกสร้าง" ซึ่ง timestamp ก็เป็น null/undefined เหมือนกัน กันสับสนกับ 0)
+function initClaimsRealtimeWatch(){
+  if(_claimsActivityWatchStarted) return;
+  _claimsActivityWatchStarted = true;
+  let receivedFirstSnapshot = false; // ธงแยกต่างหากจากค่า timestamp เอง — กันบั๊ก: ถ้าตอน subscribe เอกสารยังไม่เคยถูกสร้างมาก่อน (ts เป็น undefined) จะไม่มีทางแยกจาก "ยังไม่เคยรับสแนปช็อตแรก" ได้เลยถ้าใช้แค่ค่า timestamp เทียบ
+  try{
+    const sdk = window._firebaseSdk;
+    const actRef = sdk.doc(db,'meta','claimsActivity');
+    sdk.onSnapshot(actRef, (snap)=>{
+      const ts = snap.exists() ? snap.data().updatedAt : null;
+      if(!receivedFirstSnapshot){
+        // สแนปช็อตแรกหลัง subscribe (ไม่ว่าเอกสารจะมีอยู่แล้วหรือยังไม่เคยถูกสร้าง) — แค่บันทึกค่าเริ่มต้นไว้เทียบ ไม่ต้อง refetch ซ้ำ (ข้อมูลตอน login ก็ดึงมาสดอยู่แล้ว)
+        receivedFirstSnapshot = true;
+        _lastSeenClaimsActivityTs = ts;
+        return;
+      }
+      if(ts===_lastSeenClaimsActivityTs) return;
+      _lastSeenClaimsActivityTs = ts;
+      refreshClaimsRealtime();
+    }, (e)=>console.warn('ฟังการเปลี่ยนแปลงรายการเคลมไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
+  }catch(e){ console.warn('เริ่มฟังการเปลี่ยนแปลงรายการเคลมไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+}
+async function refreshClaimsRealtime(){
+  if(!DATA) return; // ยังโหลดข้อมูลหลักไม่เสร็จ ข้ามไปก่อน (จะมีการโหลดสดอยู่แล้วตอน login เสร็จ)
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const claimsSnap = await sdk.getDocs(sdk.collection(db,'claims'));
+    const claims = []; claimsSnap.forEach(d=>claims.push({ id:d.id, ...d.data() }));
+    DATA.claims = claims;
+    if(myUserEmail){
+      const noticeQ = sdk.query(sdk.collection(db,'claimNotices'), sdk.where('submittedBy','==',myUserEmail));
+      const noticeSnap = await sdk.getDocs(noticeQ);
+      const notices = []; noticeSnap.forEach(d=>notices.push({ id:d.id, ...d.data() }));
+      DATA.claimNotices = notices;
+    }
+    // รีเฟรชเฉพาะส่วนที่กำลังแสดงอยู่บนจอตอนนี้ ไม่รีโหลดทั้งหน้า
+    if(currentMode==='sup' && supActiveTab==='claims') renderClaimsView();
+    if(currentMode==='eng' && engActiveTab==='claim') renderEngMyClaimsList();
+    updateNotifBadge();
+  }catch(e){ console.warn('ดึงข้อมูลเคลมล่าสุดไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e); }
+}
+
 async function checkAccessAndLoad(){
   setStatus(true, 'กำลังตรวจสอบสิทธิ์เข้าถึง...');
   try{
@@ -2593,6 +2651,7 @@ async function checkAccessAndLoad(){
   await loadData();
   showSignedInPill(); // อัปเดต pill อีกครั้งหลังโหลดข้อมูล — ตอน sign-in ครั้งแรก nicknamesMap ยังไม่มา เลยต้องรีเฟรชชื่อที่แสดงให้เป็นชื่อเล่นจริง
   initVersionCheck();
+  initClaimsRealtimeWatch();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
@@ -4270,6 +4329,9 @@ async function renderSupView(){
   if(notYetLoaded.length>0){
     $('error-count-summary').innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล...</p>`;
     for(const cat of notYetLoaded){ await ensureErrorsLoadedForCategory(cat); }
+    // แก้บัค: ตอนสลับ Sup Product ครั้งแรกที่ข้อมูล Error ของคนนั้นยังไม่เคยโหลด renderSupStats() ด้านบนจะคำนวณจาก DATA.errors ที่ยังไม่มีข้อมูลใหม่ (นับได้ 0 ผิดพลาด)
+    // ต้องเรียกซ้ำอีกครั้งหลังโหลดข้อมูลเสร็จ ไม่งั้นตัวเลข "Error ที่กรอก (ปริมาณ)" จะค้างผิดจนกว่าจะสลับหน้าไปมา
+    renderSupStats();
   }
   renderProposals(); renderErrorCountSummary();
   if(supActiveTab==='docs') renderSupDocTab();
@@ -4659,15 +4721,15 @@ function validateClaimPartsRows(){
 function populateClaimCategorySelect(){
   const sel = $('claim-f-category');
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  // Product ไม่บังคับกรอกอีกต่อไป (ตามคำขอ) — เพิ่มตัวเลือกว่างไว้บนสุด เผื่อบางเคสยังไม่ทราบ Product ชัดเจนตอนแจ้งปัญหา
-  sel.innerHTML = `<option value="">-- ไม่ระบุ --</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  // Product บังคับกรอก (ตามคำขอ) — ตัวเลือกว่างบนสุดเป็นแค่ placeholder ให้เลือก ไม่ใช่ค่าที่ยอมให้บันทึกได้
+  sel.innerHTML = `<option value="">-- เลือก Product --</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   populateClaimModelSelect();
 }
 function populateClaimModelSelect(){
   const cat = $('claim-f-category').value;
   const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
-  // รุ่น ไม่บังคับกรอกเช่นกัน — เพิ่มตัวเลือกว่างไว้บนสุด
-  $('claim-f-model').innerHTML = `<option value="">-- ไม่ระบุ --</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  // รุ่น บังคับกรอกเช่นกัน — ตัวเลือกว่างบนสุดเป็นแค่ placeholder
+  $('claim-f-model').innerHTML = `<option value="">-- เลือกรุ่น --</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
 }
 $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
@@ -4910,7 +4972,8 @@ $('claim-cancel-btn').addEventListener('click', closeClaimModalWithGuard);
 const CLAIM_REQUIRED_FIELDS = [
   { id:'claim-f-claimant', label:'ผู้เคลม' },
   { id:'claim-f-site', label:'ชื่อสถานที่' },
-  // Product/รุ่น ไม่บังคับกรอกอีกต่อไป (ตามคำขอ) — เว้นว่างไว้ได้ กรณีบางทีแจ้งปัญหายังไม่ทราบรุ่น/Product ชัดเจน
+  { id:'claim-f-category', label:'Product' },
+  { id:'claim-f-model', label:'รุ่น' },
   { id:'claim-f-sn', label:'S/N' },
   { id:'claim-f-errcode', label:'Error code' },
   { id:'claim-f-errmsg', label:'Error message' },
@@ -5422,7 +5485,7 @@ function openClaimDetail(id){
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
     ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;">⚠ เคลมนี้อยู่สถานะจบเคสแล้วแต่ยังค้างอยู่ในแอพ (ครั้งก่อนย้ายไป Sheet ไม่สำเร็จ) — กดปุ่มด้านล่างเพื่อลองย้ายอีกครั้ง</p>` : ''}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
-      ${claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
+      ${canManage && claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
       ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<button class="btn btn-primary btn-sm" id="claim-detail-archive-btn">🗄️ ย้ายไป Sheet เดี๋ยวนี้</button>` : ''}
       ${canManage ? `<button class="btn btn-ghost btn-sm" id="claim-detail-edit-btn">แก้ไข</button><button class="btn btn-ghost btn-sm" id="claim-detail-delete-btn" style="color:var(--red);border-color:var(--red);">ลบ</button>` : ''}
       ${canSelfEdit ? `<button class="btn btn-ghost btn-sm" id="claim-detail-selfedit-btn">✏️ แก้ไข/เพิ่มข้อมูลเคลมนี้</button>` : ''}
