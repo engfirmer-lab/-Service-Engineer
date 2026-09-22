@@ -2,7 +2,7 @@
 <!--
   ===================================================================
   APP VERSION — อัปเดตค่านี้ทุกครั้งที่แก้ไขไฟล์นี้เสร็จแล้วส่งมอบ
-  เวอร์ชันปัจจุบัน: 7.62
+  เวอร์ชันปัจจุบัน: 7.64
   อัปเดตล่าสุด: 22 กันยายน 2569 13:55 น. เวลาไทย (ดึงจากนาฬิการะบบจริงตอนสร้างไฟล์)
   ===================================================================
 -->
@@ -10,7 +10,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.62</title>
+<title>F1 Service — v7.64</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -352,7 +352,7 @@
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <div class="brand">
         <img src="firmer-logo.png" alt="Firmer" class="brand-logo">
-        <div class="brand-text"><h1>F1 Service</h1><p id="app-version-label">Version 7.47</p></div>
+        <div class="brand-text"><h1>F1 Service</h1><p id="app-version-label">Version 7.64</p></div>
       </div>
       <button class="theme-toggle-btn" id="theme-toggle-btn" title="สลับธีมมืด/สว่าง">🌙</button>
       <div class="signed-in-pill" id="signed-in-pill" style="display:none;">
@@ -669,13 +669,13 @@
         <div class="field-wrap"><label>วันที่พบปัญหา <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-problemdate" placeholder="เลือกวันที่..." readonly></div>
         <div class="field-wrap"><label>วันที่แก้ไข (ถ้ามี)</label><input type="text" id="claim-f-fixdate" placeholder="เลือกวันที่..." readonly></div>
       </div>
-      <div class="field-wrap"><label>แจ้งอาการเสีย <span style="color:var(--red);">*</span></label><textarea id="claim-f-problem" placeholder="เช่น เคลมอะไหล่ Sample Probe เนื่องจากเข็มโค้งงอ, ปั๊มสูบตัวอย่างเสียทำให้ Alarm E045, ค่า Absorbance ไม่ออกหลังเปลี่ยน Lamp..."></textarea></div>
+      <div class="field-wrap"><label>แจ้งอาการเสีย <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-problem" placeholder="เช่น Sample Probe โค้งงอ, ปั๊มสูบตัวอย่างเสีย, ค่า Absorbance ไม่ออก"></div>
       <div class="form-grid two">
         <div class="field-wrap"><label>Error code <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errcode"></div>
         <div class="field-wrap"><label>Error message <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-errmsg"></div>
       </div>
+      <div class="field-wrap"><label>อธิบายปัญหาที่พบ <span style="color:var(--red);">*</span></label><textarea id="claim-f-problemdetail" placeholder="อธิบายรายละเอียด เช่น เกิดขึ้นเมื่อไหร่ ตอนไหนบ้าง สภาพการใช้งานก่อนเสีย..."></textarea></div>
       <div class="field-wrap"><label>วิธีการแก้ไข <span style="color:var(--red);">*</span></label><textarea id="claim-f-solution" placeholder="อธิบายวิธีที่ใช้แก้ไขปัญหานี้..."></textarea></div>
-      <div class="field-wrap"><label>จำนวน Count ของปัญหา (ถ้ามี)</label><input type="number" id="claim-f-problemcount"></div>
       <div class="field-wrap"><label>รายการอะไหล่ที่เคลม (ถ้ามี)</label><div id="claim-parts-wrap"></div></div>
       <!-- รายการ Part number/Part name ที่เคยกรอกไว้ก่อนหน้า — ใช้เป็น autocomplete กันพิมพ์ผิด/สะกดไม่ตรงกันระหว่างเคลม -->
       <datalist id="claim-partnum-datalist"></datalist>
@@ -1002,7 +1002,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.62";
+const APP_VERSION = "7.64";
 const APP_UPDATED_AT = "22 กันยายน 2569 15:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -2003,12 +2003,12 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols){
   return res.json();
 }
 function buildClaimSheetRow(c){
-  const partsText = (c.parts||[]).map(p=>`${p.partNumber||''} / ${p.partName||''} / ${p.count||''}`).join(' | ');
+  const partsText = (c.parts||[]).map(p=>`${p.partNumber||''} / ${p.partName||''} / ${(p.qty||p.count||'')} ชิ้น${p.countQty?' / '+p.countQty+' '+(p.countUnit||'Test'):''}`).join(' | ');
   return [
     bangkokDateDDMMYYYYSlash(), c.claimant||'', c.siteName||'', c.category||'', c.model||'', c.serialNumber||'',
     c.problem||'', c.solution||'', c.errorCode||'', c.errorMessage||'',
     isoToDDMMYYYY(c.problemDate)||'', isoToDDMMYYYY(c.fixDate)||'',
-    partsText, c.problemCount||'', c.jobFactorium||'', c.loanSlipNo||'', c.serviceOrderNo||'',
+    partsText, c.jobFactorium||'', c.loanSlipNo||'', c.serviceOrderNo||'',
     claimStatusInfo(c.status).label||c.status||'', c.submitterName||c.submittedBy||'',
     tsToDDMMYYYYGregorian(c.createdAt), c.driveFolderUrl||''
     // วันที่ทั้งหมดในแถวนี้เป็นรูปแบบ วัน/เดือน/ปี แบบ ค.ศ. (Gregorian) ล้วน — ห้ามใช้ toLocaleString('th-TH',...) ในไฟล์นี้อีก เพราะจะได้ปี พ.ศ. ซึ่งผิดตามที่ผู้ใช้ระบุไว้ชัดเจน
@@ -4711,7 +4711,7 @@ let claimEditingId = null;
 let claimDirtyGuard = null; // dirty-check ปุ่ม "บันทึกเคลม" — ใช้เฉพาะตอนแก้ไขเคลมที่มีอยู่แล้ว (claimEditingId ไม่ว่าง) ไม่ใช้ตอนบันทึกเคลมใหม่
 
 function resetClaimDraft(){
-  claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', solution:'', errorCode:'', errorMessage:'', problemDate:'', fixDate:'', problemCount:'', parts:[{partNumber:'',partName:'',count:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
+  claimDraft = { claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', problemDetail:'', solution:'', errorCode:'', errorMessage:'', problemDate:'', fixDate:'', parts:[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
   claimEditingId = null;
 }
 // ตัวเลือกวันที่ในฟอร์มเคลม — บังคับแสดงเป็นปี ค.ศ. (Gregorian) เสมอ ไม่แปลงเป็น พ.ศ. ตามภาษาเครื่อง (ปัญหาที่ input type=date ของเบราว์เซอร์บางตัวบนมือถือไทยทำ)
@@ -4748,24 +4748,37 @@ function refreshClaimPartsDatalist(){
 }
 function renderClaimPartsRows(){
   const wrap = $('claim-parts-wrap');
-  const list = claimDraft.parts.length ? claimDraft.parts : [{partNumber:'',partName:'',count:''}];
+  const list = claimDraft.parts.length ? claimDraft.parts : [{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}];
   wrap.innerHTML = list.map((p,i)=>`
     <div style="background:var(--panel-alt);border-radius:8px;padding:8px;margin-bottom:8px;">
       <div style="display:flex;gap:6px;margin-bottom:6px;">
-        <input type="text" list="claim-partnum-datalist" data-partfield="partNumber" data-idx="${i}" value="${escapeHtml(p.partNumber)}" placeholder="Part number" style="flex:1.2;">
-        <input type="text" list="claim-partname-datalist" data-partfield="partName" data-idx="${i}" value="${escapeHtml(p.partName)}" placeholder="Part name" style="flex:1.5;">
+        <input type="text" list="claim-partnum-datalist" data-partfield="partNumber" data-idx="${i}" value="${escapeHtml(p.partNumber||'')}" placeholder="Part number" style="flex:1.2;">
+        <input type="text" list="claim-partname-datalist" data-partfield="partName" data-idx="${i}" value="${escapeHtml(p.partName||'')}" placeholder="Part name" style="flex:1.5;">
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <input type="number" data-partfield="count" data-idx="${i}" value="${escapeHtml(p.count)}" placeholder="จำนวน *" style="width:90px;">
-        <button type="button" data-partrm="${i}" style="margin-left:auto;background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;">✕</button>
+        <div style="display:flex;align-items:center;gap:4px;flex:1;">
+          <input type="number" data-partfield="qty" data-idx="${i}" value="${escapeHtml((p.qty||'').toString())}" placeholder="จำนวน" style="width:80px;" min="0">
+          <span style="font-size:12px;color:var(--text-faint);white-space:nowrap;">ชิ้น</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex:1;">
+          <input type="number" data-partfield="countQty" data-idx="${i}" value="${escapeHtml((p.countQty||'').toString())}" placeholder="Count" style="width:70px;" min="0">
+          <select data-partfield="countUnit" data-idx="${i}" style="font-size:12.5px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);height:34px;">
+            <option value=""${!p.countUnit?' selected':''}>-- หน่วย --</option>
+            <option value="ไม่มี"${(p.countUnit||'')==='ไม่มี'?' selected':''}>ไม่มี</option>
+            <option value="Test"${(p.countUnit||'')==='Test'?' selected':''}>Test</option>
+            <option value="Times"${(p.countUnit||'')==='Times'?' selected':''}>Times</option>
+            <option value="Hour"${(p.countUnit||'')==='Hour'?' selected':''}>Hour</option>
+          </select>
+        </div>
+        <button type="button" data-partrm="${i}" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:0 4px;">✕</button>
       </div>
     </div>`).join('') + `<button type="button" class="btn btn-ghost btn-sm" id="claim-part-add-btn">+ เพิ่มรายการอะไหล่</button>`;
   wrap.querySelectorAll('[data-partfield]').forEach(el=>{
-    el.addEventListener('input', ()=>{
+    const evtName = el.tagName==='SELECT' ? 'change' : 'input';
+    el.addEventListener(evtName, ()=>{
       const idx=+el.getAttribute('data-idx'); const field=el.getAttribute('data-partfield');
       claimDraft.parts[idx][field]=el.value;
-      if((el.value||'').toString().trim()) el.classList.remove('field-invalid'); // พิมพ์แล้วล้างกรอบแดงทันที (เหมือนช่องอื่นในแอป)
-      // พิมพ์ Part number ตรงกับที่เคยกรอกไว้ก่อนหน้าเป๊ะ ๆ แล้วช่อง Part name ว่างอยู่ -> เติม Part name ให้อัตโนมัติ (กันลืม/พิมพ์ไม่ตรงกัน)
+      if((el.value||'').toString().trim()) el.classList.remove('field-invalid');
       if(field==='partNumber'){
         const known = getKnownPartsMap().get(el.value.trim());
         if(known && !claimDraft.parts[idx].partName){
@@ -4778,9 +4791,9 @@ function renderClaimPartsRows(){
     });
   });
   wrap.querySelectorAll('[data-partrm]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',count:''}]; renderClaimPartsRows(); if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); });
+    btn.addEventListener('click', ()=>{ const idx=+btn.getAttribute('data-partrm'); claimDraft.parts.splice(idx,1); if(claimDraft.parts.length===0) claimDraft.parts=[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}]; renderClaimPartsRows(); if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); });
   });
-  $('claim-part-add-btn').addEventListener('click', ()=>{ claimDraft.parts.push({partNumber:'',partName:'',count:''}); renderClaimPartsRows(); });
+  $('claim-part-add-btn').addEventListener('click', ()=>{ claimDraft.parts.push({partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}); renderClaimPartsRows(); });
 }
 // ตรวจแถวอะไหล่แบบ dynamic: แถวไหนที่เริ่มกรอกแล้ว (มีอย่างน้อย 1 ช่อง) แต่ยังไม่ครบทั้ง Part number/Part name/จำนวน -> ไฮไลต์กรอบแดงเฉพาะช่องที่ขาดของแถวนั้น
 // แถวที่ว่างสนิททั้งแถวไม่ต้องไฮไลต์ (ผู้ใช้อาจไม่ได้ตั้งใจกรอกอะไหล่เลยก็ได้ ถูกกรองทิ้งอัตโนมัติตอนบันทึกอยู่แล้ว)
@@ -4791,19 +4804,23 @@ function validateClaimPartsRows(){
   claimDraft.parts.forEach((p,i)=>{
     const partNumber = (p.partNumber||'').toString().trim();
     const partName = (p.partName||'').toString().trim();
-    const count = (p.count||'').toString().trim();
+    const qty = (p.qty||'').toString().trim();
+    const countQty = (p.countQty||'').toString().trim();
+    const countUnit = (p.countUnit||'').toString().trim();
     const numEl = wrap.querySelector(`[data-partfield="partNumber"][data-idx="${i}"]`);
     const nameEl = wrap.querySelector(`[data-partfield="partName"][data-idx="${i}"]`);
-    const countEl = wrap.querySelector(`[data-partfield="count"][data-idx="${i}"]`);
-    if(!(partNumber || partName || count)){ // แถวว่างสนิท ล้างกรอบแดงเผื่อเคยขึ้นไว้ก่อนหน้า แล้วข้าม
-      if(numEl) numEl.classList.remove('field-invalid');
-      if(nameEl) nameEl.classList.remove('field-invalid');
-      if(countEl) countEl.classList.remove('field-invalid');
+    const qtyEl = wrap.querySelector(`[data-partfield="qty"][data-idx="${i}"]`);
+    const countQtyEl = wrap.querySelector(`[data-partfield="countQty"][data-idx="${i}"]`);
+    const countUnitEl = wrap.querySelector(`[data-partfield="countUnit"][data-idx="${i}"]`);
+    if(!(partNumber || partName || qty || countQty || countUnit)){ // แถวว่างสนิท ล้างกรอบแดง แล้วข้าม
+      [numEl,nameEl,qtyEl,countQtyEl,countUnitEl].forEach(el=>{ if(el) el.classList.remove('field-invalid'); });
       return;
     }
     if(!partNumber && numEl){ numEl.classList.add('field-invalid'); missing.push({ el:numEl, label:`Part number (แถวที่ ${i+1})` }); } else if(numEl) numEl.classList.remove('field-invalid');
     if(!partName && nameEl){ nameEl.classList.add('field-invalid'); missing.push({ el:nameEl, label:`Part name (แถวที่ ${i+1})` }); } else if(nameEl) nameEl.classList.remove('field-invalid');
-    if(!count && countEl){ countEl.classList.add('field-invalid'); missing.push({ el:countEl, label:`จำนวน (แถวที่ ${i+1})` }); } else if(countEl) countEl.classList.remove('field-invalid');
+    if(!qty && qtyEl){ qtyEl.classList.add('field-invalid'); missing.push({ el:qtyEl, label:`จำนวน ชิ้น (แถวที่ ${i+1})` }); } else if(qtyEl) qtyEl.classList.remove('field-invalid');
+    if(!countQty && countQtyEl){ countQtyEl.classList.add('field-invalid'); missing.push({ el:countQtyEl, label:`จำนวน Count (แถวที่ ${i+1})` }); } else if(countQtyEl) countQtyEl.classList.remove('field-invalid');
+    if(!countUnit && countUnitEl){ countUnitEl.classList.add('field-invalid'); missing.push({ el:countUnitEl, label:`หน่วย Count (แถวที่ ${i+1})` }); } else if(countUnitEl) countUnitEl.classList.remove('field-invalid');
   });
   return missing;
 }
@@ -4934,14 +4951,14 @@ function renderClaimAttachGroupRow(groupKey){
 }
 
 // ===== Autosave ร่างฟอร์มเคลม (กันข้อมูลหายกรณีปิดแอป/สลับหน้าจอ/เน็ตหลุดโดยไม่ตั้งใจ) — เก็บเฉพาะข้อมูลตัวหนังสือใน localStorage เท่านั้น (ไม่เก็บไฟล์แนบ เพราะไฟล์ต้องเลือกใหม่จากเครื่องอยู่ดีหลัง reload) =====
-const CLAIM_DRAFT_AUTOSAVE_FIELD_IDS = ['claim-f-claimant','claim-f-site','claim-f-category','claim-f-model','claim-f-sn','claim-f-errcode','claim-f-errmsg','claim-f-problem','claim-f-solution','claim-f-problemcount','claim-f-jobfactorium','claim-f-loan'];
+const CLAIM_DRAFT_AUTOSAVE_FIELD_IDS = ['claim-f-claimant','claim-f-site','claim-f-category','claim-f-model','claim-f-sn','claim-f-errcode','claim-f-errmsg','claim-f-problem','claim-f-problemdetail','claim-f-solution','claim-f-jobfactorium','claim-f-loan'];
 function claimDraftStorageKey(){ return claimEditingId ? ('firmer_claim_draft_edit_'+claimEditingId) : 'firmer_claim_draft_new'; }
 function snapshotClaimFormFromDOM(){
   return {
     claimant: $('claim-f-claimant').value, siteName: $('claim-f-site').value, category: $('claim-f-category').value, model: $('claim-f-model').value,
     serialNumber: $('claim-f-sn').value, errorCode: $('claim-f-errcode').value, errorMessage: $('claim-f-errmsg').value,
     problemDate: (claimDraft&&claimDraft.problemDate)||'', fixDate: (claimDraft&&claimDraft.fixDate)||'',
-    problem: $('claim-f-problem').value, solution: $('claim-f-solution').value, problemCount: $('claim-f-problemcount').value,
+    problem: $('claim-f-problem').value, problemDetail: $('claim-f-problemdetail').value, solution: $('claim-f-solution').value,
     jobFactorium: $('claim-f-jobfactorium').value, loanSlipNo: $('claim-f-loan').value,
     parts: (claimDraft&&claimDraft.parts)?claimDraft.parts.map(p=>({...p})):[],
     savedAt: Date.now(),
@@ -4950,7 +4967,7 @@ function snapshotClaimFormFromDOM(){
 // นับว่ามีข้อมูลควรค่าแก่การเก็บร่าง ถ้ากรอกช่องใดช่องหนึ่งไว้แล้ว (ไม่นับ "ผู้เคลม" เพราะถูก autofill จากชื่อเล่นอยู่แล้วทุกครั้ง ไม่ถือเป็นข้อมูลที่ผู้ใช้กรอกเอง)
 function isClaimDraftMeaningful(snap){
   return !!(snap.siteName || snap.category || snap.model || snap.serialNumber || snap.errorCode || snap.errorMessage
-    || snap.problem || snap.solution || snap.problemDate || snap.fixDate || snap.problemCount
+    || snap.problem || snap.problemDetail || snap.solution || snap.problemDate || snap.fixDate
     || snap.jobFactorium || snap.loanSlipNo || (snap.parts||[]).some(p=>p.partNumber||p.partName));
 }
 let claimDraftAutosaveTimer = null;
@@ -5002,8 +5019,8 @@ function openClaimModal(existingClaim){
     claimDraft = {
       claimant: existingClaim.claimant||'', siteName: existingClaim.siteName||'', category: existingClaim.category||'', model: existingClaim.model||'',
       serialNumber: existingClaim.serialNumber||'', problem: existingClaim.problem||'', solution: existingClaim.solution||'',
-      errorCode: existingClaim.errorCode||'', errorMessage: existingClaim.errorMessage||'', problemDate: existingClaim.problemDate||'', fixDate: existingClaim.fixDate||'', problemCount: existingClaim.problemCount||'',
-      parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({...p})):[{partNumber:'',partName:'',count:''}],
+      errorCode: existingClaim.errorCode||'', errorMessage: existingClaim.errorMessage||'', problemDate: existingClaim.problemDate||'', fixDate: existingClaim.fixDate||'', problemDetail: existingClaim.problemDetail||'',
+      parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({partNumber:p.partNumber||'',partName:p.partName||'',qty:p.qty||p.count||'',countQty:p.countQty||'',countUnit:p.countUnit||''})):[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}],
       loanSlipNo: existingClaim.loanSlipNo||'', jobFactorium: existingClaim.jobFactorium||'', attachments: groupedAtt
     };
     $('claim-modal-title').textContent = 'แก้ไขเคลม/แจ้งปัญหา';
@@ -5021,7 +5038,7 @@ function openClaimModal(existingClaim){
         if(wantsRestore){
           Object.assign(claimDraft, { claimant: saved.claimant, siteName: saved.siteName, category: saved.category, model: saved.model,
             serialNumber: saved.serialNumber, errorCode: saved.errorCode, errorMessage: saved.errorMessage, problemDate: saved.problemDate, fixDate: saved.fixDate,
-            problem: saved.problem, solution: saved.solution, problemCount: saved.problemCount, jobFactorium: saved.jobFactorium, loanSlipNo: saved.loanSlipNo,
+            problem: saved.problem, problemDetail: saved.problemDetail, solution: saved.solution, jobFactorium: saved.jobFactorium, loanSlipNo: saved.loanSlipNo,
             parts: (saved.parts&&saved.parts.length)?saved.parts:claimDraft.parts });
         } else {
           clearPersistedClaimDraft();
@@ -5040,7 +5057,7 @@ function openClaimModal(existingClaim){
   $('claim-f-solution').value = claimDraft.solution;
   $('claim-f-errcode').value = claimDraft.errorCode;
   $('claim-f-errmsg').value = claimDraft.errorMessage;
-  $('claim-f-problemcount').value = claimDraft.problemCount;
+  $('claim-f-problemdetail').value = claimDraft.problemDetail||'';
   $('claim-f-jobfactorium').value = claimDraft.jobFactorium;
   $('claim-f-loan').value = claimDraft.loanSlipNo;
   initClaimDatePickers();
@@ -5083,10 +5100,11 @@ const CLAIM_REQUIRED_FIELDS = [
   { id:'claim-f-category', label:'Product' },
   { id:'claim-f-model', label:'รุ่น' },
   { id:'claim-f-sn', label:'S/N' },
-  { id:'claim-f-errcode', label:'Error code' },
-  { id:'claim-f-errmsg', label:'Error message' },
   { id:'claim-f-problemdate', label:'วันที่พบปัญหา' },
   { id:'claim-f-problem', label:'แจ้งอาการเสีย' },
+  { id:'claim-f-errcode', label:'Error code' },
+  { id:'claim-f-errmsg', label:'Error message' },
+  { id:'claim-f-problemdetail', label:'อธิบายปัญหาที่พบ' },
   { id:'claim-f-solution', label:'วิธีการแก้ไข' },
   { id:'claim-f-jobfactorium', label:'เลข Job Factorium' },
   { id:'claim-f-loan', label:'เลขที่ใบยืม' },
@@ -5124,19 +5142,19 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.model = $('claim-f-model').value;
   claimDraft.serialNumber = $('claim-f-sn').value.trim();
   claimDraft.problem = $('claim-f-problem').value.trim();
+  claimDraft.problemDetail = $('claim-f-problemdetail').value.trim();
   claimDraft.solution = $('claim-f-solution').value.trim();
   claimDraft.errorCode = $('claim-f-errcode').value.trim();
   claimDraft.errorMessage = $('claim-f-errmsg').value.trim();
-  claimDraft.problemCount = $('claim-f-problemcount').value.trim();
   claimDraft.jobFactorium = $('claim-f-jobfactorium').value.trim();
   claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
-  const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), count:(p.count||'').toString().trim()})).filter(p=>p.partNumber||p.partName);
-  const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.count);
+  const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), qty:(p.qty||'').toString().trim(), countQty:(p.countQty||'').toString().trim(), countUnit:(p.countUnit||'').trim()})).filter(p=>p.partNumber||p.partName);
+  const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.qty && p.countQty && p.countUnit);
   const validation = validateClaimRequiredFields();
   if(!validation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+validation.missing.join(', ')); return; }
   const partsInvalid = validateClaimPartsRows();
   if(cleanParts.length !== rawParts.length || partsInvalid.length){
-    showToast('⚠ กรุณากรอก Part number, Part name และจำนวน ให้ครบทุกแถวที่กรอกไว้');
+    showToast('⚠ กรุณากรอก Part number, Part name, จำนวน (ชิ้น), จำนวน Count และหน่วย ให้ครบทุกแถวที่กรอกไว้');
     focusFirstInvalidField(partsInvalid);
     return;
   }
@@ -5173,7 +5191,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     const fields = {
       claimant: claimDraft.claimant, siteName: claimDraft.siteName, category: claimDraft.category, model: claimDraft.model,
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
-      errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemDate: claimDraft.problemDate, fixDate: claimDraft.fixDate||'', problemCount: claimDraft.problemCount,
+      errorCode: claimDraft.errorCode, errorMessage: claimDraft.errorMessage, problemDate: claimDraft.problemDate, fixDate: claimDraft.fixDate||'', problemDetail: claimDraft.problemDetail||'',
       parts: cleanParts, jobFactorium: claimDraft.jobFactorium, loanSlipNo: claimDraft.loanSlipNo,
       attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myDisplayName(),
       driveFolderUrl: `https://drive.google.com/drive/folders/${folderId}`,
@@ -5201,7 +5219,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
 });
 
 function showClaimSuccessSummary(fields){
-  const partsRows = (fields.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
+  const partsRows = (fields.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml((p.qty||'-').toString())} ชิ้น</td><td>${p.countQty?escapeHtml(p.countQty.toString())+' '+escapeHtml(p.countUnit||'Test'):'-'}</td></tr>`).join('');
   const attSummary = CLAIM_ATTACHMENT_GROUPS.map(g=>`${escapeHtml(g.label)}: ${(fields.attachments&&fields.attachments[g.key]?fields.attachments[g.key].length:0)} ไฟล์`).join('<br>');
   $('claim-success-body').innerHTML = `
     <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(fields.claimant)}</div></div>
@@ -5211,10 +5229,10 @@ function showClaimSuccessSummary(fields){
     <div class="meta-item"><div class="k">Error code / message</div><div class="v">${escapeHtml(fields.errorCode)} / ${escapeHtml(fields.errorMessage)}</div></div>
     <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.problemDate)||'-')}</div></div>
     ${fields.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.fixDate))}</div></div>` : ''}
-    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problem)}</div></div>
+    <div class="meta-item"><div class="k">แจ้งอาการเสีย</div><div class="v">${escapeHtml(fields.problem)}</div></div>
+    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problemDetail||'-')}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(fields.solution)}</div></div>
-    ${fields.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(fields.problemCount)}</div></div>` : ''}
-    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
+    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
     <div class="meta-item"><div class="k">เลข Job Factorium</div><div class="v">${escapeHtml(fields.jobFactorium)}</div></div>
     <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(fields.loanSlipNo)}</div></div>
     <div class="meta-item"><div class="k">ไฟล์แนบ</div><div class="v">${attSummary}</div></div>
@@ -5412,7 +5430,7 @@ const CLAIMS_COLUMNS = [
   { key:'problem', label:'อาการ', getValue:c=>c.problem||'-' },
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
-  { key:'partCount', label:'จำนวน', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.count||'-'):['-']) },
+  { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
   { key:'fixDate', label:'วันที่เคลม', getValue:c=>isoToDDMMYYYY(c.fixDate)||'-' },
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
   { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label },
@@ -5504,10 +5522,10 @@ function renderClaimsView(){
   if(claims.length===0 && Object.keys(claimsColumnFilters).length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายการเคลม</p>`; return; }
   const rowsHtml = claims.map(c=>{
     const st = claimStatusInfo(c.status);
-    const parts = (c.parts&&c.parts.length) ? c.parts : [{partNumber:'-',partName:'-',count:'-'}];
+    const parts = (c.parts&&c.parts.length) ? c.parts : [{partNumber:'-',partName:'-',qty:'-'}];
     const partNumbers = parts.map(p=>escapeHtml(p.partNumber||'-')).join('<br>');
     const partNames = parts.map(p=>escapeHtml(p.partName||'-')).join('<br>');
-    const partCounts = parts.map(p=>escapeHtml(p.count||'-')).join('<br>');
+    const partCounts = parts.map(p=>escapeHtml((p.qty||p.count||'-').toString())).join('<br>');
     const symptomFull = c.problem||'';
     const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
     return `<tr data-claimrow="${c.id}">
@@ -5560,7 +5578,7 @@ function openClaimDetail(id){
       renderEngMyClaimsList();
     }
   }
-  const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(p.count||'-')}</td></tr>`).join('');
+  const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml((p.qty||p.count||'-').toString())} ชิ้น</td><td>${p.countQty?escapeHtml(p.countQty.toString())+' '+escapeHtml(p.countUnit||'Test'):'-'}</td></tr>`).join('');
   const claimImageCount = CLAIM_ATTACHMENT_GROUPS.reduce((n,g)=>n+((c.attachments&&c.attachments[g.key])?c.attachments[g.key].filter(a=>a.kind==='image').length:0), 0);
   const attGroupsHtml = CLAIM_ATTACHMENT_GROUPS.map(g=>{
     const items = (c.attachments && c.attachments[g.key]) ? c.attachments[g.key] : [];
@@ -5577,10 +5595,10 @@ function openClaimDetail(id){
     <div class="meta-item"><div class="k">Error message</div><div class="v">${escapeHtml(c.errorMessage||'-')}</div></div>
     <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</div></div>
     ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.fixDate))}</div></div>` : ''}
-    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problem)}</div></div>
+    <div class="meta-item"><div class="k">แจ้งอาการเสีย</div><div class="v">${escapeHtml(c.problem||'-')}</div></div>
+    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problemDetail||'-')}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
-    ${c.problemCount ? `<div class="meta-item"><div class="k">จำนวน Count ของปัญหา</div><div class="v">${escapeHtml(c.problemCount)}</div></div>` : ''}
-    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน</th></tr></thead><tbody>${partsRows}</tbody></table>
+    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
     <div class="meta-item"><div class="k">เลข Job Factorium</div><div class="v">${escapeHtml(c.jobFactorium||'-')}</div></div>
     <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
