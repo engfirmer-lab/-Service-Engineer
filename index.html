@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.70
-  อัปเดตล่าสุด   : 22 กันยายน 2569 23:55 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.72
+  อัปเดตล่าสุด   : 23 กันยายน 2569 10:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -17,9 +17,8 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
-  - Bug: รูป thumbnail ใน attachment preview แสดงเป็น icon แทนรูปจริง (driveImgSrc/CORS)
-  - Hidden item: "(ซ่อนไว้ไม่ให้รกหน้าจอ) เดี๋ยวลบออกไป" — รายละเอียดยังไม่ชัด รอ user ระบุ
-  - Auto-delete Sheet row: เมื่อ Sup Product ลบเคลมที่ถูก "ย้ายไป Sheet" ไปแล้ว ให้ลบแถวใน Google Spreadsheet ด้วย (ปัจจุบันแถวค้างอยู่)
+  - [FIXED] รูป thumbnail ใน attachment preview: เปลี่ยนจาก lh3.googleusercontent.com เป็น drive.google.com/thumbnail?id=...&sz=w200 แก้ CORS/auth issue แล้ว
+  - [FIXED] Auto-delete Sheet row: เมื่อ Sup Product ลบเคลมที่ค้างอยู่ (archive ไป Sheet แล้วแต่ Firestore delete ล้มเหลว) ตอนนี้ลบแถว Sheet ด้วยแล้วผ่าน deleteSheetRowIfTracked() / sheetRowIndex field
   ===================================================================
   CAUTION — ข้อควรระวังสำคัญ (Claude ต้องอ่านทุกครั้งก่อนแก้โค้ด)
   1. DATABASE BACKWARD COMPAT — อย่าแก้ field ชื่อ/โครงสร้างใน Firestore documents
@@ -28,15 +27,16 @@
      Free tier: 20K writes/วัน — ถ้าจะเพิ่มฟีเจอร์ที่เขียนบ่อย ต้องแจ้ง user ก่อนว่าจะเปลืองโควต้า
   3. DRIVE SYNC — ทุกครั้งที่ลบข้อมูลจากแอพ (claim/attachment) ต้องลบไฟล์ใน Google Drive ด้วย
      ห้ามลบแค่ใน Firestore แล้วปล่อย Drive ค้างไว้ — ใช้ driveDeleteFile() เสมอ
-  4. GOOGLE SHEET SYNC — ถ้ามีข้อมูลตกค้างใน Google Sheet (claimsSheetMeta) และมีการลบ claim
-     ต้องระวังว่า Sheet อาจยังมีแถวเก่าค้างอยู่ — ยังไม่มี auto-sync ลบ Sheet row
+  4. GOOGLE SHEET SYNC — เคลมที่ถูก archive จะมี sheetSpreadsheetId/sheetTabTitle/sheetRowIndex เก็บไว้
+     ปุ่ม "ลบ" ของ canManage จะเรียก deleteSheetRowIfTracked() เพื่อลบแถว Sheet ก่อนลบ Firestore
+     เคลมเก่าที่ไม่มี field เหล่านี้จะข้ามการลบ Sheet โดยอัตโนมัติ (backward compat)
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.70</title>
+<title>F1 Service — v7.72</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1028,8 +1028,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.70";
-const APP_UPDATED_AT = "22 กันยายน 2569 23:55 น. เวลาไทย";
+const APP_VERSION = "7.72";
+const APP_UPDATED_AT = "23 กันยายน 2569 10:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2010,12 +2010,19 @@ async function appendClaimRowToSheet(spreadsheetId, rowValues, tabTitle){
   const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
   // ใช้ valueInputOption=RAW (ไม่ใช่ USER_ENTERED) โดยตั้งใจ: กันไม่ให้ Google Sheets ตีความข้อความวันที่ DD/MM/YYYY ของเราเป็น "วันที่จริง" แล้วจัดรูปแบบใหม่ตาม locale ของสเปรดชีต (ถ้าเป็น en_US จะอ่านสลับเป็น MM/DD จนวันที่ผิดเพี้ยนได้)
   // RAW บันทึกทุกค่าเป็นข้อความตามที่ส่งไปเป๊ะๆ การันตีว่าคอลัมน์วันที่จะเป็น DD/MM/YYYY แบบ ค.ศ. ตรงตามที่กำหนดไว้เสมอ ไม่ขึ้นกับ locale ของสเปรดชีต
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values:[rowValues] })
   });
   if(!res.ok) throw new Error('บันทึกแถวลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(res));
-  return res.json();
+  const data = await res.json();
+  // แยกเลขแถว (1-based) จาก updatedRange เช่น "'OwnerName'!A5:T5" → 5
+  // เก็บไว้ใน return value เพื่อให้ archiveClaimToSheetAndDelete บันทึกลงเคลมก่อนลบ
+  // กรณี header row (rowValues === CLAIMS_SHEET_HEADERS) ไม่ได้ใช้ค่านี้ ไม่มีผลข้างเคียง
+  const updatedRange = data.updates && data.updates.updatedRange ? data.updates.updatedRange : '';
+  const rowMatch = updatedRange.match(/:?[A-Z]+(\d+)$/);
+  const rowIndex = rowMatch ? parseInt(rowMatch[1], 10) : null;
+  return { raw: data, rowIndex };
 }
 // จัดรูปแบบแท็บให้ดูง่าย/สวยงาม: แถวหัวตารางตัวหนา พื้นหลังสีน้ำเงิน+ตัวอักษรขาว ตรึงแถวหัวไว้เวลาเลื่อน แถบสีสลับช่วยไล่แถวง่าย
 // มีตัวกรอง (filter) ที่หัวตารางให้กด sort/filter แต่ละคอลัมน์ได้ทันที และปรับความกว้างคอลัมน์ให้พอดีกับข้อความอัตโนมัติ — เรียกครั้งเดียวตอนสร้างแท็บใหม่ (ไม่ critical ถ้าพลาด ไม่กระทบข้อมูล)
@@ -2069,7 +2076,13 @@ async function archiveClaimToSheetAndDelete(c){
     updateLoadingOverlayText(`กำลังเตรียมแท็บของ "${ownerName}"...`);
     const tab = await ensureOwnerSheetTab(sheetId, ownerName);
     updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
-    await appendClaimRowToSheet(sheetId, buildClaimSheetRow(c), tab.title);
+    const appendResult = await appendClaimRowToSheet(sheetId, buildClaimSheetRow(c), tab.title);
+    // บันทึกตำแหน่งแถว Sheet ลงในเคลมก่อนลบ — ถ้าลบจาก Firestore ล้มเหลวและยังค้างอยู่ใน app
+    // Sup Product จะลบด้วยปุ่ม "ลบ" ได้ และแถว Sheet จะถูกลบตามด้วย (backward compat: เคลมเก่าไม่มี field นี้ ไม่มีผลข้างเคียง)
+    if(appendResult.rowIndex){
+      try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
+      catch(e){ console.warn('บันทึก sheetRowIndex ลงเคลมไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e.message); }
+    }
     updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
     await fsDeleteClaim(c.id);
     DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
@@ -2077,6 +2090,36 @@ async function archiveClaimToSheetAndDelete(c){
   } finally {
     hideLoadingOverlay();
   }
+}
+// ลบแถวใน Google Sheet ตามตำแหน่งที่บันทึกไว้ใน sheetRowIndex/sheetTabTitle/sheetSpreadsheetId ของเคลม
+// ใช้ Sheets API batchUpdate → deleteDimension (sheetRowIndex เป็น 1-based; startIndex ของ API เป็น 0-based จึงต้องลบ 1)
+// ไม่ throw ถ้าลบ Sheet ไม่สำเร็จ — Firestore delete จะดำเนินต่อไปเสมอ (Sheet row ค้างได้ ดีกว่า Firestore ค้าง)
+async function deleteSheetRowIfTracked(c){
+  if(!c.sheetSpreadsheetId || !c.sheetTabTitle || !c.sheetRowIndex) return; // ไม่มีข้อมูล row tracking → ข้ามไป (backward compat)
+  try{
+    const token = await ensureDriveAccess();
+    const meta = DATA.claimsSheetMeta || {};
+    const gid = (meta.tabs && meta.tabs[c.sheetTabTitle] !== undefined) ? meta.tabs[c.sheetTabTitle] : null;
+    if(gid === null){
+      // gid ไม่อยู่ใน cache → ดึง sheet list จริงเพื่อหา gid
+      const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${c.sheetSpreadsheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(!getRes.ok){ console.warn('หา gid แท็บ Sheet เพื่อลบแถวไม่สำเร็จ'); return; }
+      const getData = await getRes.json();
+      const found = (getData.sheets||[]).find(s=>s.properties && s.properties.title===c.sheetTabTitle);
+      if(!found){ console.warn('ไม่พบแท็บ "'+c.sheetTabTitle+'" ใน Sheet — ข้ามการลบแถว'); return; }
+      await _deleteSheetRowByGid(token, c.sheetSpreadsheetId, found.properties.sheetId, c.sheetRowIndex);
+    } else {
+      await _deleteSheetRowByGid(token, c.sheetSpreadsheetId, gid, c.sheetRowIndex);
+    }
+  }catch(e){ console.warn('ลบแถว Sheet ไม่สำเร็จ (ข้ามต่อ ไม่กระทบ Firestore):', e.message); }
+}
+async function _deleteSheetRowByGid(token, spreadsheetId, sheetId, rowIndex){
+  // rowIndex เป็น 1-based (เช่น แถว 5 = startIndex:4, endIndex:5)
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId, dimension:'ROWS', startIndex: rowIndex-1, endIndex: rowIndex } } }] })
+  });
+  if(!res.ok) throw new Error('Sheets batchUpdate deleteDimension ล้มเหลว: '+await googleApiErrorMessage(res));
 }
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
 const _findFolderInFlight = new Map();
@@ -2915,7 +2958,7 @@ function nameSummary(names){ if(names.length===0) return ''; if(names.length<=4)
 async function renderTechResults(){
   const list = $('results-list');
   const hasSearchOrFilter = currentQuery.trim()!=='' || filterCategory!=='all' || filterModel!=='all';
-  if(!hasSearchOrFilter){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`; return; }
+  if(!hasSearchOrFilter){ $('result-count').textContent=''; list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการ Error</p></div>`; return; }
 
   if(filterCategory!=='all'){
     if(!loadedErrorCategories.has(filterCategory)){
@@ -3622,7 +3665,7 @@ function renderEngDocResults(){
   const hasSearchOrFilter = docQuery.trim()!=='' || docFilterCategory!=='all' || docFilterModel!=='all';
   if(!hasSearchOrFilter){
     $('doc-result-count').textContent = '';
-    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการเอกสาร ${labelForCount} (ซ่อนไว้ไม่ให้รกหน้าจอ)</p></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการเอกสาร ${labelForCount}</p></div>`;
     return;
   }
   let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
@@ -5663,8 +5706,15 @@ function openClaimDetail(id){
   const attGroupsHtml = CLAIM_ATTACHMENT_GROUPS.map(g=>{
     const items = (c.attachments && c.attachments[g.key]) ? c.attachments[g.key] : [];
     if(items.length===0) return '';
-    // รูปภาพ: ลิงก์ .../file/d/ID/view เปิดเป็น <img src> ตรงๆ ไม่ได้ (โหลดไม่ขึ้น) ต้องแปลงเป็นลิงก์รูปตรงด้วย driveImgSrc ก่อนเสมอ — คลิกรูปแล้วเปิดลิงก์เดิม (view) ในแท็บใหม่ได้ตามปกติ
-    const files = items.map(a=> a.kind==='image' ? `<a href="${a.url}" target="_blank" rel="noopener"><img src="${driveImgSrc(a.url)}" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>` : `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`).join('');
+    // รูปภาพ: ใช้ Google Drive thumbnail URL (sz=w200) แทน lh3.googleusercontent.com ซึ่งต้องการ auth — thumbnail URL ใช้ session cookie ของผู้ใช้ที่ login อยู่ได้เลย ไม่มีปัญหา CORS
+    const files = items.map(a=>{
+      if(a.kind==='image'){
+        const fid = driveFileIdFromUrl(a.url);
+        const thumbSrc = fid ? `https://drive.google.com/thumbnail?id=${fid}&sz=w200` : driveImgSrc(a.url);
+        return `<a href="${a.url}" target="_blank" rel="noopener"><img src="${thumbSrc}" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>`;
+      }
+      return `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`;
+    }).join('');
     return `<div style="margin-bottom:8px;"><div style="font-size:12px;font-weight:600;color:var(--text-faint);margin-bottom:2px;">${escapeHtml(g.label)}</div>${files}</div>`;
   }).join('');
   $('claim-detail-body').innerHTML = `
@@ -5755,7 +5805,11 @@ function openClaimDetail(id){
     $('claim-detail-edit-btn').addEventListener('click', ()=>{ $('claim-detail-modal').classList.remove('show'); openClaimModal(c); });
     $('claim-detail-delete-btn').addEventListener('click', async ()=>{
       if(!confirm('ยืนยันการลบเคลมนี้? ลบแล้วกู้คืนไม่ได้')) return;
-      try{ await fsDeleteClaim(c.id); DATA.claims = DATA.claims.filter(x=>x.id!==c.id); $('claim-detail-modal').classList.remove('show'); renderClaimsView(); showToast('✓ ลบแล้ว'); }
+      try{
+        // ถ้าเคลมนี้เคยถูกย้ายไป Sheet แล้วแต่ลบจาก Firestore ไม่สำเร็จ (ค้างอยู่) — ลบแถว Sheet ก่อน
+        await deleteSheetRowIfTracked(c);
+        await fsDeleteClaim(c.id); DATA.claims = DATA.claims.filter(x=>x.id!==c.id); $('claim-detail-modal').classList.remove('show'); renderClaimsView(); showToast('✓ ลบแล้ว');
+      }
       catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); }
     });
     if($('claim-detail-archive-btn')){
