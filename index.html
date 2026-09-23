@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.82
-  อัปเดตล่าสุด   : 23 กันยายน 2569 15:28 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.83
+  อัปเดตล่าสุด   : 23 กันยายน 2569 15:44 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -558,6 +558,12 @@
         <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
         <div id="dead-links-result" style="margin-top:10px;"></div>
       </div>
+      <div class="panel-block">
+        <h2>ซ่อมลิงก์เก่าใน Google Sheet บันทึกเคลม</h2>
+        <p class="panel-sub">เคลมที่ย้ายไป Sheet ก่อนวันที่ 23 ก.ย. 2569 อาจมีลิงก์รูปสรุปและโฟลเดอร์ Drive แสดงเป็นข้อความ กดเพื่อแปลงให้เป็นลิงก์กดได้ทั้งหมด (แก้เฉพาะ cell ที่มีปัญหา ไม่แตะข้อมูลอื่น)</p>
+        <button class="btn btn-ghost btn-sm" id="fix-hyperlinks-btn">🔗 ซ่อมลิงก์เก่าใน Sheet</button>
+        <div id="fix-hyperlinks-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
+      </div>
     </div>
 
     <div id="sup-tab-claims" style="display:none;">
@@ -1032,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.82";
-const APP_UPDATED_AT = "23 กันยายน 2569 15:28 น. เวลาไทย";
+const APP_VERSION = "7.83";
+const APP_UPDATED_AT = "23 กันยายน 2569 15:44 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2061,13 +2067,13 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
         }},
         fields: 'userEnteredFormat.textFormat'
     }},
-    { autoResizeDimensions: { dimensions: { sheetId: gid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
   ];
-  // requests เฉพาะแท็บใหม่ (addBanding + setBasicFilter error ถ้า apply ซ้ำ)
+  // requests เฉพาะแท็บใหม่ (addBanding + setBasicFilter + autoResize error ถ้า apply ซ้ำ หรือทำให้ผู้ใช้ปรับคอลัมน์เองแล้วถูก reset)
   const newTabRequests = isNewTab ? [
     { addBanding: { bandedRange: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols },
         rowProperties: { headerColor:{ red:0.106, green:0.459, blue:0.816 }, firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.925, green:0.961, blue:1 } } } } },
     { setBasicFilter: { filter: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
+    { autoResizeDimensions: { dimensions: { sheetId: gid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
   ] : [];
   const requests = [...alwaysRequests, ...newTabRequests];
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
@@ -2110,6 +2116,47 @@ function buildClaimSheetRows(c, summaryImageUrl){
     ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
+}
+// ซ่อมแถวเก่าใน Sheet ที่มี =HYPERLINK(...) เป็น text ธรรมดา (archive ก่อน v7.81 ใช้ RAW)
+// อ่านทุกแถวในทุก tab แล้วหา cell R/S (index 17/18) ที่ขึ้นต้นด้วย =HYPERLINK แต่ไม่ใช่ formula จริง
+// แก้ด้วยการเขียนกลับด้วย USER_ENTERED เฉพาะ cell ที่เป็นปัญหา — ไม่แตะข้อมูลอื่น
+async function fixOldHyperlinkCellsInSheet(){
+  const sheetId = await ensureClaimsLogSpreadsheet();
+  const token = await ensureDriveAccess();
+  // ดึงข้อมูลทุก tab
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!metaRes.ok) throw new Error('อ่าน Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(metaRes));
+  const meta = await metaRes.json();
+  const tabs = (meta.sheets||[]).map(s=>s.properties.title);
+  let fixCount = 0;
+  for(const tab of tabs){
+    const range = `'${tab.replace(/'/g,"''")}'!R:S`;
+    const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMULA`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!valRes.ok) continue;
+    const valData = await valRes.json();
+    const rows = valData.values || [];
+    // หา cell ที่เป็น string ขึ้นต้นด้วย =HYPERLINK (ยังไม่ถูก parse เป็น formula)
+    const updates = [];
+    rows.forEach((row, ri)=>{
+      [0,1].forEach((ci, colOffset)=>{
+        const val = row[ci]||'';
+        if(typeof val==='string' && val.startsWith('=HYPERLINK(')){
+          // คำนวณ A1 notation: R=col 18 (R), S=col 19 (S), row = ri+1
+          const colLetter = ci===0 ? 'R' : 'S';
+          updates.push({ range:`'${tab.replace(/'/g,"''")}'!${colLetter}${ri+1}`, values:[[val]] });
+        }
+      });
+    });
+    if(updates.length===0) continue;
+    // เขียนกลับด้วย USER_ENTERED ทีละ cell (batchUpdate values)
+    const batchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
+      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ valueInputOption:'USER_ENTERED', data: updates })
+    });
+    if(!batchRes.ok) console.warn(`ซ่อม hyperlink ใน tab "${tab}" ไม่สำเร็จ:`, await googleApiErrorMessage(batchRes));
+    else fixCount += updates.length;
+  }
+  return fixCount;
 }
 // ลิงก์เปิดแท็บของผู้ดูแลคนหนึ่งใน Google Sheet โดยตรง (ถ้ารู้ gid แล้ว) — ใช้แสดงในหน้ารายการเคลม ให้กดเข้าประวัติเคลมที่จบแล้วของ Product ตัวเองได้ทันที
 function claimsSheetTabLink(spreadsheetId, gid){
@@ -2476,6 +2523,21 @@ async function syncAndCheckDriveDocumentsInner(){
   }
 }
 $('sync-drive-docs-btn').addEventListener('click', syncAndCheckDriveDocuments);
+
+$('fix-hyperlinks-btn').addEventListener('click', async ()=>{
+  const btn = $('fix-hyperlinks-btn');
+  const status = $('fix-hyperlinks-status');
+  btn.disabled = true; btn.style.opacity = '.5';
+  status.textContent = 'กำลังสแกนและซ่อมลิงก์เก่า...';
+  try{
+    const count = await fixOldHyperlinkCellsInSheet();
+    status.textContent = count > 0 ? `✓ ซ่อมลิงก์สำเร็จ ${count} cell — รีโหลด Google Sheet เพื่อดูผล` : '✓ ไม่พบลิงก์ที่ต้องซ่อม (ทุก cell เป็นลิงก์ที่ถูกต้องแล้ว)';
+  } catch(e){
+    status.textContent = '⚠ ซ่อมไม่สำเร็จ: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.style.opacity = '';
+  }
+});
 
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
 async function driveUploadLargeFile(file, filename, parentId, onProgress){
