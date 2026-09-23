@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.93";
-const APP_UPDATED_AT = "23 กันยายน 2569 20:35 น. เวลาไทย";
+const APP_VERSION = "7.92";
+const APP_UPDATED_AT = "23 กันยายน 2569 20:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2014,15 +2014,16 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName){
   finally{ _claimsSheetTabInFlight.delete(tabTitle); }
 }
 // rowsData: array ของ row (array of arrays) — ถ้าส่ง flat array เดียว (header) จะถูก wrap อัตโนมัติ
-async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
+// tabGid: ใส่เมื่อเป็น data rows (ไม่ใช่ header) เพื่อ patch =HYPERLINK() cell ด้วย formulaValue หลัง append
+async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle, tabGid){
   const token = await ensureDriveAccess();
   const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
   // ตรวจว่าเป็น flat array (header) หรือ array of arrays (data rows)
   const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
-  // ใช้ USER_ENTERED เพื่อให้ =HYPERLINK(...) ถูกตีความเป็น formula ใน Sheets
+  // ใช้ RAW เพื่อกัน Sheets parse =HYPERLINK() ผิด — cell R/S จะ patch แยกด้วย formulaValue ด้านล่าง
   // วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows เพื่อกันไม่ให้ Sheets ตีความสลับ MM/DD
   // OVERWRITE แทน INSERT_ROWS เพื่อกัน Sheets copy format จาก header row มาให้แถวข้อมูลใหม่
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE&includeValuesInResponse=false`, {
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=OVERWRITE&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values })
   });
@@ -2032,36 +2033,36 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const updatedRange = data.updates && data.updates.updatedRange ? data.updates.updatedRange : '';
   const rowMatch = updatedRange.match(/[A-Z]+(\d+):/);
   const rowIndex = rowMatch ? parseInt(rowMatch[1], 10) : null;
-  return { raw: data, rowIndex };
-}
 
-// patch =HYPERLINK() cell (คอลัมน์ R=17, S=18) ด้วย formulaValue หลัง applyClaimsSheetFormatting
-// ต้องรันหลัง formatting เสมอ เพราะ repeatCell อาจ reset userEnteredValue ของ cell
-async function patchHyperlinkCells(spreadsheetId, tabGid, rows, rowIndex){
-  if(tabGid === undefined || tabGid === null || !rowIndex) return;
-  const token = await ensureDriveAccess();
-  const formulaRequests = [];
-  rows.forEach((row, vi) => {
-    const sheetRowIndex = rowIndex - 1 + vi; // 0-based
-    [17, 18].forEach(colIdx => {
-      const val = (row[colIdx]||'').toString();
-      if(val.startsWith('=HYPERLINK(')){
-        formulaRequests.push({
-          updateCells: {
-            range: { sheetId: tabGid, startRowIndex: sheetRowIndex, endRowIndex: sheetRowIndex+1, startColumnIndex: colIdx, endColumnIndex: colIdx+1 },
-            rows: [{ values: [{ userEnteredValue: { formulaValue: val } }] }],
-            fields: 'userEnteredValue'
-          }
-        });
-      }
+  // patch =HYPERLINK() cell (คอลัมน์ R=17, S=18) ด้วย formulaValue — ทำให้เป็นลิงก์จริง 100%
+  // ทำเฉพาะเมื่อมี tabGid (data rows) และรู้ rowIndex
+  if(tabGid !== undefined && tabGid !== null && rowIndex){
+    const formulaRequests = [];
+    values.forEach((row, vi) => {
+      const sheetRowIndex = rowIndex - 1 + vi; // 0-based
+      [17, 18].forEach(colIdx => {
+        const val = (row[colIdx]||'').toString();
+        if(val.startsWith('=HYPERLINK(')){
+          formulaRequests.push({
+            updateCells: {
+              range: { sheetId: tabGid, startRowIndex: sheetRowIndex, endRowIndex: sheetRowIndex+1, startColumnIndex: colIdx, endColumnIndex: colIdx+1 },
+              rows: [{ values: [{ userEnteredValue: { formulaValue: val } }] }],
+              fields: 'userEnteredValue'
+            }
+          });
+        }
+      });
     });
-  });
-  if(formulaRequests.length === 0) return;
-  const patchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
-    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ requests: formulaRequests })
-  });
-  if(!patchRes.ok) console.warn('patch formulaValue ไม่สำเร็จ (ไม่กระทบข้อมูล):', await googleApiErrorMessage(patchRes));
+    if(formulaRequests.length > 0){
+      const patchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+        method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ requests: formulaRequests })
+      });
+      if(!patchRes.ok) console.warn('patch formulaValue ไม่สำเร็จ (ไม่กระทบข้อมูล):', await googleApiErrorMessage(patchRes));
+    }
+  }
+
+  return { raw: data, rowIndex };
 }
 // จัดรูปแบบแท็บให้ดูง่าย/สวยงาม: แถวหัวตารางตัวหนา พื้นหลังสีน้ำเงิน+ตัวอักษรขาว ตรึงแถวหัวไว้เวลาเลื่อน แถบสีสลับช่วยไล่แถวง่าย
 // มีตัวกรอง (filter) ที่หัวตารางให้กด sort/filter แต่ละคอลัมน์ได้ทันที และปรับความกว้างคอลัมน์ให้พอดีกับข้อความอัตโนมัติ — เรียกครั้งเดียวตอนสร้างแท็บใหม่ (ไม่ critical ถ้าพลาด ไม่กระทบข้อมูล)
@@ -2249,13 +2250,10 @@ async function archiveClaimToSheetAndDelete(c){
     // 3) สร้างหลายแถว (1 part = 1 แถว) แล้ว append ครั้งเดียว
     updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
     const rows = buildClaimSheetRows(c, summaryImageUrl);
-    const appendResult = await appendClaimRowToSheet(sheetId, rows, tab.title);
+    const appendResult = await appendClaimRowToSheet(sheetId, rows, tab.title, tab.gid);
     // apply formatting ทุกครั้งหลัง append — ครอบคลุมแถวใหม่ที่เพิ่งเขียน (gid ได้จาก tab)
     try{ await applyClaimsSheetFormatting(sheetId, tab.gid, CLAIMS_SHEET_HEADERS.length); }
     catch(fmtErr){ console.warn('จัดรูปแบบ Sheet หลัง append ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
-    // patch HYPERLINK formula หลัง formatting เสมอ — เพราะ repeatCell อาจ reset cell ที่เขียน USER_ENTERED ไว้
-    try{ await patchHyperlinkCells(sheetId, tab.gid, rows, appendResult.rowIndex); }
-    catch(patchErr){ console.warn('patch hyperlink cell ไม่สำเร็จ (ไม่กระทบข้อมูล):', patchErr.message); }
     // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
     if(appendResult.rowIndex){
       try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
