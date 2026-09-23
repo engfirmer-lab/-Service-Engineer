@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.75
-  อัปเดตล่าสุด   : 23 กันยายน 2569 09:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.77
+  อัปเดตล่าสุด   : 23 กันยายน 2569 11:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.75</title>
+<title>F1 Service — v7.77</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -742,6 +742,10 @@
     </div>
   </div>
 
+  <!-- ============ HIDDEN OFFSCREEN AREA สำหรับ render สรุปเคลมก่อน capture เป็น PNG ============ -->
+  <!-- ใช้เมื่อ claim-success-modal ไม่ได้เปิดอยู่ (เช่น ตอนอัปเดตสถานะ) — ไม่โชว์ให้ผู้ใช้เห็น -->
+  <div id="claim-summary-render-area" style="position:fixed;left:-9999px;top:-9999px;width:480px;background:#fff;padding:16px;font-family:'Sarabun',sans-serif;visibility:hidden;pointer-events:none;z-index:-1;"></div>
+
   <!-- ============ NICKNAME MODAL (บังคับกรอกครั้งแรกที่ login / แก้ไขทีหลังได้จากปุ่ม ✏️) ============ -->
   <div class="modal-overlay" id="nickname-modal">
     <div class="modal" style="max-width:400px;">
@@ -1028,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.75";
-const APP_UPDATED_AT = "23 กันยายน 2569 09:20 น. เวลาไทย";
+const APP_VERSION = "7.77";
+const APP_UPDATED_AT = "23 กันยายน 2569 11:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1970,8 +1974,11 @@ async function ensureClaimsLogSpreadsheet(){
 }
 const _claimsSheetTabInFlight = new Map();
 // หา (หรือสร้างใหม่) แท็บย่อยของผู้ดูแลคนหนึ่งในสเปรดชีตกลาง — คืนทั้งชื่อแท็บ (ตัดแต่งแล้ว) และ gid (เลขอ้างอิงแท็บ ใช้ทำลิงก์เปิดตรงแท็บได้)
+// คืนปี ค.ศ. ปัจจุบัน (เขตเวลาไทย) เป็น string เช่น "2026"
+function currentYearAD(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'}).substring(0,4); }
 async function ensureOwnerSheetTab(spreadsheetId, ownerName){
-  const tabTitle = sanitizeSheetTabName(ownerName);
+  const yearStr = currentYearAD();
+  const tabTitle = sanitizeSheetTabName(`${ownerName} - ${yearStr}`);
   // หมายเหตุ: ไม่ return จากแคชทันทีอีกต่อไป — เพราะถ้าผู้ใช้ลบแท็บออกจาก Sheet ตรงๆ แคชจะยังจำ gid เก่าไว้
   // แล้วพอไปเขียนข้อมูลก็จะ fail เพราะแท็บไม่มีแล้ว → ดึง sheet list จริงทุกครั้ง แล้วค่อยตัดสินใจสร้างหรือใช้ของเดิม
   if(_claimsSheetTabInFlight.has(tabTitle)) return _claimsSheetTabInFlight.get(tabTitle);
@@ -2111,9 +2118,17 @@ function claimsSheetTabLink(spreadsheetId, gid){
 async function archiveClaimToSheetAndDelete(c){
   showLoadingOverlay('กำลังบันทึกลง Google Sheet...');
   try{
-    // 1) จับภาพสรุปเคลม (modal ต้องยังเปิดอยู่) → อัปโหลดไป Drive
+    // 1) ใช้รูปสรุปที่ถ่ายไว้แล้ว (จาก updateSummaryImageForClaim ตอนเปลี่ยนสถานะ)
+    //    ถ้ายังไม่มี (เคลมเก่าก่อน v7.76 หรือถ่ายยังไม่ได้) → ถ่ายใหม่จาก hidden div
     updateLoadingOverlayText('กำลังบันทึกรูปสรุป...');
-    const summaryImageUrl = await captureAndUploadSummaryImage(c.driveFolderUrl||'');
+    let summaryImageUrl = c.summaryImageUrl || '';
+    if(!summaryImageUrl){
+      // fallback: ถ่ายใหม่ผ่าน hidden div (backward compat สำหรับเคลมเก่า)
+      try{
+        const imgResult = await updateSummaryImageForClaim(c);
+        summaryImageUrl = imgResult.url || '';
+      } catch(imgErr){ console.warn('ถ่ายรูปสรุปล้มเหลว (ไม่กระทบข้อมูลหลัก):', imgErr.message); }
+    }
     // 2) เตรียมสเปรดชีตและแท็บ
     updateLoadingOverlayText('กำลังบันทึกลง Google Sheet...');
     const sheetId = await ensureClaimsLogSpreadsheet();
@@ -2136,6 +2151,8 @@ async function archiveClaimToSheetAndDelete(c){
     updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
     await fsDeleteClaim(c.id);
     DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
+    // ล้าง cache จำนวนเสร็จสิ้นของปีปัจจุบัน เพื่อให้ Dashboard โหลดค่าใหม่จาก Sheet ในครั้งถัดไป
+    delete _sheetDoneCountCache[currentYearAD()];
     return true;
   } finally {
     hideLoadingOverlay();
@@ -3432,6 +3449,24 @@ async function renderNotifList(){
     }catch(e){}
   }
 
+  // เคลมอะไหล่รอดำเนินการ (Sup Product เท่านั้น) — กดรายการแล้วเปิด detail ได้เลย
+  if(isEditor() && !isSuperAdmin() && currentSupIdentity){
+    const pendingMyClaims = myVisibleClaims().filter(c=>c.status==='pending').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    if(pendingMyClaims.length>0){
+      html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔧 เคลมอะไหล่รอดำเนินการ (${pendingMyClaims.length})</h4>`;
+      html += pendingMyClaims.map(c=>{
+        const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
+        return `<div class="admin-row" data-notif-claim-open="${c.id}" style="cursor:pointer;">
+          <div class="admin-row-main">
+            <span style="font-size:12.5px;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
+            <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
+          </div>
+          <span style="color:var(--amber);font-weight:600;font-size:12px;white-space:nowrap;">ยังไม่เคลม</span>
+        </div>`;
+      }).join('');
+      html += `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>`;
+    }
+  }
   if(pendingReviewErr.length>0 || pendingReviewProp.length>0){
     html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔔 รอคุณตรวจสอบ (ในฐานะ ${escapeHtml(currentSupIdentity)})</h4>`;
     pendingReviewErr.forEach(p=>{
@@ -3549,6 +3584,14 @@ async function renderNotifList(){
           }
         }catch(e){ console.warn('โหลดเคลมไม่สำเร็จ:', e.message); }
       }
+    });
+  });
+  // ผูก event click เคลม pending ในกระดิ่ง Sup Product
+  list.querySelectorAll('[data-notif-claim-open]').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const claimId = row.getAttribute('data-notif-claim-open');
+      $('notif-modal').classList.remove('show');
+      openClaimDetail(claimId);
     });
   });
   updateNotifBadge();
@@ -5421,53 +5464,111 @@ function showClaimSuccessSummary(fields){
   `;
   $('claim-success-modal').classList.add('show');
 }
-// จับภาพหน้าสรุปเคลม → อัปโหลดเป็น PNG ไว้ในโฟลเดอร์ Drive ของเคลมนั้น → คืน URL ดูไฟล์
-// ใช้ตอน archive เพื่อแนบลิงก์รูปสรุปใน Google Sheet คอลัมน์ "รูปสรุปบันทึกเคลม"
+// สร้าง HTML สรุปเคลมจาก claim object (ใช้ได้ทั้งใน modal และ hidden div)
+function buildClaimSummaryHTML(c){
+  const partsRows = (c.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml(((p.qty||p.count||'-')).toString())} ชิ้น</td><td>${p.countQty?escapeHtml(p.countQty.toString())+' '+escapeHtml(p.countUnit||'Test'):'-'}</td></tr>`).join('');
+  const attKeys = CLAIM_ATTACHMENT_GROUPS ? CLAIM_ATTACHMENT_GROUPS.map(g=>`${escapeHtml(g.label)}: ${(c.attachments&&c.attachments[g.key]?c.attachments[g.key].length:0)} ไฟล์`).join('<br>') : '';
+  return `
+    <div style="text-align:center;margin-bottom:14px;">
+      <div style="font-size:36px;line-height:1;">✅</div>
+      <h3 style="color:#2e7d32;margin:8px 0 0;font-family:Sarabun,sans-serif;">บันทึกสำเร็จ</h3>
+    </div>
+    <div class="meta-item"><div class="k">ผู้เคลม</div><div class="v">${escapeHtml(c.claimant||'-')}</div></div>
+    <div class="meta-item"><div class="k">สถานที่</div><div class="v">${escapeHtml(c.siteName||'-')}</div></div>
+    <div class="meta-item"><div class="k">Product / รุ่น</div><div class="v">${escapeHtml(c.category||'-')} / ${escapeHtml(c.model||'-')}</div></div>
+    <div class="meta-item"><div class="k">S/N</div><div class="v">${escapeHtml(c.serialNumber||'-')}</div></div>
+    <div class="meta-item"><div class="k">Error code / message</div><div class="v">${escapeHtml(c.errorCode||'-')} / ${escapeHtml(c.errorMessage||'-')}</div></div>
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</div></div>
+    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">แจ้งอาการเสีย</div><div class="v">${escapeHtml(c.problem||'-')}</div></div>
+    <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problemDetail||'-')}</div></div>
+    <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
+    <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
+    <div class="meta-item"><div class="k">เลข Job Factorium</div><div class="v">${escapeHtml(c.jobFactorium||'-')}</div></div>
+    <div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>
+    ${attKeys ? `<div class="meta-item"><div class="k">ไฟล์แนบ</div><div class="v">${attKeys}</div></div>` : ''}
+  `;
+}
+// ลบไฟล์ใน Drive ตาม fileId (ใช้สำหรับลบรูปสรุปเก่าก่อนอัปโหลดใหม่)
+async function driveDeleteFile(fileId){
+  if(!fileId) return;
+  try{
+    const token = await ensureDriveAccess();
+    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+  } catch(e){ console.warn('driveDeleteFile ล้มเหลว (ไม่กระทบหลัก):', e.message); }
+}
+// จับภาพ element → อัปโหลดเป็น PNG ไปยัง Drive folder → คืน {fileId, url}
+// el: DOM element ที่จะ capture; driveFolderUrl: URL ของโฟลเดอร์ปลายทาง
+async function captureElementAndUploadToDrive(el, driveFolderUrl){
+  if(!el || typeof html2canvas !== 'function'){ console.warn('captureElementAndUploadToDrive: html2canvas ไม่พร้อม'); return {fileId:'',url:''}; }
+  const canvas = await html2canvas(el, { backgroundColor:'#ffffff', scale: 2, useCORS: true });
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+  if(!blob){ console.warn('captureElementAndUploadToDrive: toBlob ล้มเหลว'); return {fileId:'',url:''}; }
+  let folderId = null;
+  if(driveFolderUrl){
+    const m = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    if(m) folderId = m[1];
+  }
+  const token = await ensureDriveAccess();
+  const fileName = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
+  const boundary = 'f1service_boundary_'+Date.now();
+  const metaJson = JSON.stringify({ name: fileName, mimeType:'image/png', ...(folderId ? {parents:[folderId]} : {}) });
+  const meta = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: image/png\r\n\r\n`;
+  const tail = `\r\n--${boundary}--`;
+  const metaBytes = new TextEncoder().encode(meta);
+  const tailBytes = new TextEncoder().encode(tail);
+  const pngBytes = new Uint8Array(await blob.arrayBuffer());
+  const combined = new Uint8Array(metaBytes.length + pngBytes.length + tailBytes.length);
+  combined.set(metaBytes, 0);
+  combined.set(pngBytes, metaBytes.length);
+  combined.set(tailBytes, metaBytes.length + pngBytes.length);
+  const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+    method:'POST',
+    headers:{ Authorization:`Bearer ${token}`, 'Content-Type':`multipart/related; boundary=${boundary}` },
+    body: combined
+  });
+  if(!uploadRes.ok){ console.warn('อัปโหลดรูปสรุปไม่สำเร็จ:', await googleApiErrorMessage(uploadRes)); return {fileId:'',url:''}; }
+  const uploadData = await uploadRes.json();
+  try{
+    await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
+      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ role:'reader', type:'anyone' })
+    });
+  } catch(e){ console.warn('ตั้งสิทธิ์รูปสรุปไม่สำเร็จ:', e.message); }
+  const url = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
+  return { fileId: uploadData.id||'', url };
+}
+// อัปเดตรูปสรุปเคลมใน Drive: ลบรูปเก่า → render ใน hidden div → capture → อัปโหลดใหม่ → บันทึก fileId ลง Firestore
+// ⚠ QUOTA: เขียน Firestore 1 ครั้งต่อการอัปเดตสถานะ (ใช้ quota ~1 write / status change)
+async function updateSummaryImageForClaim(c){
+  // ลบรูปเก่าถ้ามี (ไม่ต้องรอผล — ลบสำเร็จหรือล้มเหลวก็ดำเนินต่อ)
+  if(c.summaryImageFileId){ await driveDeleteFile(c.summaryImageFileId); }
+  // Render สรุปเคลมลงใน hidden div
+  const renderDiv = $('claim-summary-render-area');
+  if(!renderDiv){ console.warn('updateSummaryImageForClaim: ไม่พบ claim-summary-render-area'); return {fileId:'',url:''}; }
+  renderDiv.innerHTML = buildClaimSummaryHTML(c);
+  // รอ 1 frame ให้ browser render เสร็จก่อน capture
+  await new Promise(r => requestAnimationFrame(r));
+  const result = await captureElementAndUploadToDrive(renderDiv, c.driveFolderUrl||'');
+  renderDiv.innerHTML = ''; // เคลียร์หลัง capture
+  if(result.fileId){
+    // บันทึก fileId และ url ลง Firestore — backward compat: เคลมเก่าไม่มี field นี้ ค่า default = ''
+    try{
+      await fsUpdateClaim(c.id, { summaryImageFileId: result.fileId, summaryImageUrl: result.url });
+      c.summaryImageFileId = result.fileId;
+      c.summaryImageUrl = result.url;
+    } catch(e){ console.warn('บันทึก summaryImageFileId ลง Firestore ไม่สำเร็จ:', e.message); }
+  }
+  return result;
+}
+// จับภาพหน้าสรุปเคลมจาก claim-success-capture-area (modal ต้องเปิดอยู่) → อัปโหลด → คืน URL
+// เก็บไว้เพื่อ backward compat กับปุ่ม "บันทึกรูปภาพ" ที่ยังใช้ el นี้อยู่
 async function captureAndUploadSummaryImage(driveFolderUrl){
   const el = $('claim-success-capture-area');
   if(!el || typeof html2canvas !== 'function'){ console.warn('captureAndUploadSummaryImage: html2canvas ไม่พร้อม'); return ''; }
   try{
-    const bg = getComputedStyle(document.querySelector('#claim-success-modal .modal')||document.body).backgroundColor || '#ffffff';
-    const canvas = await html2canvas(el, { backgroundColor: bg, scale: 2, useCORS: true });
-    // แปลง canvas → Blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    if(!blob){ console.warn('captureAndUploadSummaryImage: toBlob ล้มเหลว'); return ''; }
-    // หา folderId จาก driveFolderUrl (รูปแบบ .../folders/FOLDER_ID หรือ ?id=FOLDER_ID)
-    let folderId = null;
-    if(driveFolderUrl){
-      const m = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-      if(m) folderId = m[1];
-    }
-    const token = await ensureDriveAccess();
-    const fileName = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
-    // multipart upload: metadata + binary
-    const boundary = 'f1service_boundary_'+Date.now();
-    const metaJson = JSON.stringify({ name: fileName, mimeType:'image/png', ...(folderId ? {parents:[folderId]} : {}) });
-    // ใช้ FormData แบบ multipart/related
-    const meta = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: image/png\r\n\r\n`;
-    const tail = `\r\n--${boundary}--`;
-    const metaBytes = new TextEncoder().encode(meta);
-    const tailBytes = new TextEncoder().encode(tail);
-    const pngBytes = new Uint8Array(await blob.arrayBuffer());
-    const combined = new Uint8Array(metaBytes.length + pngBytes.length + tailBytes.length);
-    combined.set(metaBytes, 0);
-    combined.set(pngBytes, metaBytes.length);
-    combined.set(tailBytes, metaBytes.length + pngBytes.length);
-    const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
-      method:'POST',
-      headers:{ Authorization:`Bearer ${token}`, 'Content-Type':`multipart/related; boundary=${boundary}`, 'Content-Length': combined.length },
-      body: combined
-    });
-    if(!uploadRes.ok){ console.warn('อัปโหลดรูปสรุปไม่สำเร็จ:', await googleApiErrorMessage(uploadRes)); return ''; }
-    const uploadData = await uploadRes.json();
-    // ทำให้ไฟล์อ่านได้โดยทุกคนที่มีลิงก์
-    try{
-      await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
-        method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ role:'reader', type:'anyone' })
-      });
-    } catch(e){ console.warn('ตั้งสิทธิ์รูปสรุปไม่สำเร็จ (ใช้งานได้เฉพาะเจ้าของ Drive):', e.message); }
-    return uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
+    const result = await captureElementAndUploadToDrive(el, driveFolderUrl);
+    return result.url;
   } catch(e){
     console.warn('captureAndUploadSummaryImage error:', e.message);
     return '';
@@ -5584,14 +5685,89 @@ function renderEngMyClaimsList(){
   });
 }
 
+// Cache ตัวเลข "เสร็จสิ้น" จาก Sheet แยกตามปี — { "2026": 47, "2025": 120 }
+let _sheetDoneCountCache = {};
+let _sheetDoneCountYear = currentYearAD(); // ปีที่กำลังแสดงใน Dashboard
+// อ่านจำนวนแถวใน Sheet ของ Sup คนนี้ สำหรับปีที่ระบุ — ส่งคืน count (ลบหัวตาราง 1 แถว) หรือ null ถ้าอ่านไม่ได้
+async function fetchSheetDoneCount(year){
+  if(!isEditor() || !claimsSheetLinkVisibleToMe()) return null;
+  if(_sheetDoneCountCache[year] !== undefined) return _sheetDoneCountCache[year];
+  try{
+    const sheetId = await ensureClaimsLogSpreadsheet();
+    const token = await ensureDriveAccess();
+    // อ่านแค่คอลัมน์ A ของแท็บปีนั้น — นับ row ที่มีข้อมูล (ลบหัวตาราง 1 แถว)
+    const ownerName = currentSupIdentity || '';
+    const tabTitle = isSuperAdmin() ? null : sanitizeSheetTabName(`${ownerName} - ${year}`);
+    if(!tabTitle && !isSuperAdmin()) return null;
+    let count = 0;
+    if(isSuperAdmin()){
+      // Super Admin: รวมทุกแท็บที่ชื่อลงท้ายด้วย " - {year}"
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(!metaRes.ok) return null;
+      const metaData = await metaRes.json();
+      const yearTabs = (metaData.sheets||[]).filter(s=>s.properties && s.properties.title.endsWith(` - ${year}`));
+      for(const tab of yearTabs){
+        const t = tab.properties.title;
+        const rng = `'${t.replace(/'/g,"''")}'!A:A`;
+        const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rng)}?majorDimension=COLUMNS`, { headers:{ Authorization:`Bearer ${token}` } });
+        if(!r.ok) continue;
+        const d = await r.json();
+        const rows = (d.values && d.values[0]) ? d.values[0].length : 0;
+        count += Math.max(0, rows - 1); // ลบหัวตาราง
+      }
+    } else {
+      const rng = `'${tabTitle.replace(/'/g,"''")}'!A:A`;
+      const r = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rng)}?majorDimension=COLUMNS`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(!r.ok) return null;
+      const d = await r.json();
+      const rows = (d.values && d.values[0]) ? d.values[0].length : 0;
+      count = Math.max(0, rows - 1);
+    }
+    _sheetDoneCountCache[year] = count;
+    return count;
+  } catch(e){ console.warn('fetchSheetDoneCount error:', e.message); return null; }
+}
 function renderClaimsDashboard(){
   const all = myVisibleClaims();
   const count = key => all.filter(c=>c.status===key).length;
+  const canSeeSheet = claimsSheetLinkVisibleToMe();
+  const yr = _sheetDoneCountYear;
+  const cachedCount = _sheetDoneCountCache[yr];
+  // แสดง years ที่ available สำหรับ dropdown (ปีปัจจุบัน + ปีก่อน)
+  const curYr = parseInt(currentYearAD(), 10);
+  const yearOptions = [curYr, curYr-1, curYr-2].map(y=>`<option value="${y}"${y===parseInt(yr,10)?' selected':''}>${y}</option>`).join('');
+  const doneCell = canSeeSheet
+    ? `<div class="stat-card" id="sheet-done-stat-card">
+        <div class="label" style="display:flex;align-items:center;gap:6px;">เสร็จสิ้น (ประวัติ)
+          <select id="sheet-done-year-sel" style="font-size:11px;padding:1px 4px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-main);cursor:pointer;" onclick="event.stopPropagation();">${yearOptions}</select>
+        </div>
+        <div class="value green" id="sheet-done-count-val">${cachedCount !== undefined ? cachedCount : '...'}</div>
+        <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div>
+      </div>`
+    : `<div class="stat-card"><div class="label">เสร็จสิ้น (ในแอป)</div><div class="value green">${count('received')}</div></div>`;
   $('claims-dashboard').innerHTML = `
     <div class="stat-card"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
     <div class="stat-card"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
-    <div class="stat-card"><div class="label">เสร็จสิ้น</div><div class="value green">${count('received')}</div></div>
+    ${doneCell}
   `;
+  // ผูก event dropdown เลือกปี
+  const sel = $('sheet-done-year-sel');
+  if(sel){
+    sel.addEventListener('change', async ()=>{
+      _sheetDoneCountYear = sel.value;
+      const val = $('sheet-done-count-val');
+      if(val) val.textContent = '...';
+      const n = await fetchSheetDoneCount(_sheetDoneCountYear);
+      if(val) val.textContent = n !== null ? n : '-';
+    });
+  }
+  // โหลด background ถ้ายังไม่มี cache
+  if(canSeeSheet && cachedCount === undefined){
+    fetchSheetDoneCount(yr).then(n=>{
+      const val = $('sheet-done-count-val');
+      if(val) val.textContent = n !== null ? n : '-';
+    });
+  }
 }
 // ลิงก์ Google Sheet ของประวัติเคลมที่เสร็จแล้ว (แยกแท็บตามผู้ดูแล Product) — ใช้เฉพาะข้อมูลที่แคชไว้แล้ว ไม่ยิง Sheets API ตอน render (กันหน่วง/ขอสิทธิ์ Drive โดยไม่จำเป็นแค่เข้าหน้ารายการเคลม)
 // true ถ้าคนนี้ควรเห็นลิงก์ Google Sheet เลย (Super Admin เห็นทั้งหมด, Sup Product เห็นเฉพาะแท็บตัวเอง) — Engineer ทั่วไปไม่เห็น
@@ -5897,6 +6073,8 @@ function openClaimDetail(id){
         try{
           await fsUpdateClaim(c.id, {status:newStatus}); c.status = newStatus;
           await fsUpsertClaimNotice(c); // บันทึกแจ้งเตือนสถานะสุดท้ายไว้ก่อนย้าย/ลบเคลมหลัก กันแจ้งเตือนหายไปพร้อมกัน
+          // อัปเดตรูปสรุป (ลบเก่า → ถ่ายใหม่ → อัปโหลด) ก่อน archive — ⚠ +1 Firestore write
+          try{ await updateSummaryImageForClaim(c); } catch(imgErr){ console.warn('อัปเดตรูปสรุปก่อน archive ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
           await archiveClaimToSheetAndDelete(c);
           $('claim-detail-modal').classList.remove('show'); renderClaimsView();
           showToast('✓ อัปเดตสถานะ และย้ายเคลมนี้ไป Google Sheet แล้ว');
@@ -5910,6 +6088,8 @@ function openClaimDetail(id){
       try{
         await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus;
         fsUpsertClaimNotice(c); // แจ้งเตือนผู้แจ้งเคลมว่าสถานะเปลี่ยน
+        // อัปเดตรูปสรุปทุกครั้งที่สถานะเปลี่ยน (ลบเก่า → ถ่ายใหม่ → อัปโหลด) — ⚠ +1 Firestore write
+        try{ await updateSummaryImageForClaim(c); } catch(imgErr){ console.warn('อัปเดตรูปสรุปหลังเปลี่ยนสถานะไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
         renderClaimsView(); showToast('✓ อัปเดตสถานะแล้ว');
       }
       catch(e){ showToast('⚠ อัปเดตไม่สำเร็จ: '+e.message); }
