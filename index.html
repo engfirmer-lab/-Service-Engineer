@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.73</title>
+<title>F1 Service — v7.74</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1910,7 +1910,7 @@ async function googleApiErrorMessage(res){
    สเปรดชีตกลาง 1 ไฟล์ แต่แยกเป็น "แท็บ" (sheet tab) ย่อยตามผู้ดูแล Product — เคลมของ Product ไหน ใครเป็นผู้ดูแล Product นั้น (ownerOf) แถวจะถูกเก็บไว้ในแท็บของคนนั้น
    ทำให้แต่ละ Sup Product เปิดดูประวัติเคลมที่จบแล้วของ Product ตัวเองได้ตรงๆ โดยไม่ปนกับ Product คนอื่น */
 const CLAIMS_SHEET_NAME = 'บันทึกเคลมอะไหล่ (จบเคสแล้ว)';
-const CLAIMS_SHEET_HEADERS = ['วันที่บันทึกลง Sheet','ผู้เคลม','สถานที่','Product','รุ่น','S/N','ปัญหาที่พบ','วิธีการแก้ไข','Error code','Error message','วันที่พบปัญหา','วันที่แก้ไข','อะไหล่ (Part number / Part name / จำนวน)','จำนวน Count ของปัญหา','เลข Job Factorium','เลขที่ใบยืม','เลข Service Order','สถานะสุดท้าย','ผู้บันทึกเคลม','วันที่สร้างเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive'];
+const CLAIMS_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่เคลม','ผู้เคลม','สถานที่','Product','รุ่น','S/N','แจ้งอาการเสีย','Part number','Part name','จำนวนอะไหล่','Service Order','Counter Test','เลขใบยืม','ช่างส่งคืน','ได้รับจากผู้ผลิต','ส่งคืนผู้ผลิต','รูปสรุปบันทึกเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive'];
 let _claimsSheetIdCache = null;
 let _claimsSheetInFlight = null;
 // บันทึก spreadsheetId + gid ของแต่ละแท็บ ลง Firestore (meta/claimsSheet) กันต้องยิง Sheets API ค้นหาใหม่ทุกครั้ง — ไม่ critical ถ้าเขียนไม่สำเร็จ (แค่แคชหาย ต้องหาใหม่รอบหน้า ไม่กระทบข้อมูลเคลม)
@@ -2006,22 +2006,22 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName){
   try{ return await promise; }
   finally{ _claimsSheetTabInFlight.delete(tabTitle); }
 }
-async function appendClaimRowToSheet(spreadsheetId, rowValues, tabTitle){
+// rowsData: array ของ row (array of arrays) — ถ้าส่ง flat array เดียว (header) จะถูก wrap อัตโนมัติ
+async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const token = await ensureDriveAccess();
   const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
+  // ตรวจว่าเป็น flat array (header) หรือ array of arrays (data rows)
+  const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
   // ใช้ valueInputOption=RAW (ไม่ใช่ USER_ENTERED) โดยตั้งใจ: กันไม่ให้ Google Sheets ตีความข้อความวันที่ DD/MM/YYYY ของเราเป็น "วันที่จริง" แล้วจัดรูปแบบใหม่ตาม locale ของสเปรดชีต (ถ้าเป็น en_US จะอ่านสลับเป็น MM/DD จนวันที่ผิดเพี้ยนได้)
-  // RAW บันทึกทุกค่าเป็นข้อความตามที่ส่งไปเป๊ะๆ การันตีว่าคอลัมน์วันที่จะเป็น DD/MM/YYYY แบบ ค.ศ. ตรงตามที่กำหนดไว้เสมอ ไม่ขึ้นกับ locale ของสเปรดชีต
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ values:[rowValues] })
+    body: JSON.stringify({ values })
   });
   if(!res.ok) throw new Error('บันทึกแถวลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(res));
   const data = await res.json();
-  // แยกเลขแถว (1-based) จาก updatedRange เช่น "'OwnerName'!A5:T5" → 5
-  // เก็บไว้ใน return value เพื่อให้ archiveClaimToSheetAndDelete บันทึกลงเคลมก่อนลบ
-  // กรณี header row (rowValues === CLAIMS_SHEET_HEADERS) ไม่ได้ใช้ค่านี้ ไม่มีผลข้างเคียง
+  // แยกเลขแถวแรก (1-based) จาก updatedRange เช่น "'OwnerName'!A5:T7" → 5
   const updatedRange = data.updates && data.updates.updatedRange ? data.updates.updatedRange : '';
-  const rowMatch = updatedRange.match(/:?[A-Z]+(\d+)$/);
+  const rowMatch = updatedRange.match(/[A-Z]+(\d+):/);
   const rowIndex = rowMatch ? parseInt(rowMatch[1], 10) : null;
   return { raw: data, rowIndex };
 }
@@ -2040,6 +2040,12 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols){
         fields: 'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,horizontalAlignment,wrapStrategy)'
     }},
     { updateSheetProperties: { properties:{ sheetId: gid, gridProperties:{ frozenRowCount:1 } }, fields:'gridProperties.frozenRowCount' } },
+    // ข้อความในแถวข้อมูล (แถวที่ 2 เป็นต้นไป) ให้เป็นสีดำเสมอ — กันปัญหาสีขาวที่เกิดจาก banding theme บางรูปแบบ
+    { repeatCell: {
+        range: { sheetId: gid, startRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
+        cell: { userEnteredFormat: { textFormat: { foregroundColor:{ red:0, green:0, blue:0 } } } },
+        fields: 'userEnteredFormat.textFormat.foregroundColor'
+    }},
     { addBanding: { bandedRange: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols },
         rowProperties: { headerColor:{ red:0.106, green:0.459, blue:0.816 }, firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.925, green:0.961, blue:1 } } } } },
     { setBasicFilter: { filter: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
@@ -2052,17 +2058,39 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols){
   if(!res.ok) throw new Error('จัดรูปแบบ Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(res));
   return res.json();
 }
-function buildClaimSheetRow(c){
-  const partsText = (c.parts||[]).map(p=>`${p.partNumber||''} / ${p.partName||''} / ${(p.qty||p.count||'')} ชิ้น${p.countQty?' / '+p.countQty+' '+(p.countUnit||'Test'):''}`).join(' | ');
-  return [
-    bangkokDateDDMMYYYYSlash(), c.claimant||'', c.siteName||'', c.category||'', c.model||'', c.serialNumber||'',
-    c.problem||'', c.solution||'', c.errorCode||'', c.errorMessage||'',
-    isoToDDMMYYYY(c.problemDate)||'', isoToDDMMYYYY(c.fixDate)||'',
-    partsText, c.jobFactorium||'', c.loanSlipNo||'', c.serviceOrderNo||'',
-    claimStatusInfo(c.status).label||c.status||'', c.submitterName||c.submittedBy||'',
-    tsToDDMMYYYYGregorian(c.createdAt), c.driveFolderUrl||''
-    // วันที่ทั้งหมดในแถวนี้เป็นรูปแบบ วัน/เดือน/ปี แบบ ค.ศ. (Gregorian) ล้วน — ห้ามใช้ toLocaleString('th-TH',...) ในไฟล์นี้อีก เพราะจะได้ปี พ.ศ. ซึ่งผิดตามที่ผู้ใช้ระบุไว้ชัดเจน
+// buildClaimSheetRows: คืน array of arrays (1 part = 1 แถว) — ถ้าไม่มี parts เลยให้คืน 1 แถวแบบไม่มี part
+// summaryImageUrl: URL ของรูปสรุปที่อัปโหลดไว้ใน Drive (ใส่ในแถวแรกเท่านั้น)
+// หัวตาราง 19 คอลัมน์: วันที่พบปัญหา | วันที่เคลม | ผู้เคลม | สถานที่ | Product | รุ่น | S/N | แจ้งอาการเสีย | Part number | Part name | จำนวนอะไหล่ | Service Order | Counter Test | เลขใบยืม | ช่างส่งคืน | ได้รับจากผู้ผลิต | ส่งคืนผู้ผลิต | รูปสรุปบันทึกเคลม | ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+function buildClaimSheetRows(c, summaryImageUrl){
+  const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}]; // ถ้าไม่มี part ให้มี 1 แถวว่าง
+  const sharedFirst = [
+    isoToDDMMYYYY(c.problemDate)||'',   // วันที่พบปัญหา
+    bangkokDateDDMMYYYYSlash(),          // วันที่เคลม (วันที่ archive)
+    c.claimant||'',                      // ผู้เคลม
+    c.siteName||'',                      // สถานที่
+    c.category||'',                      // Product
+    c.model||'',                         // รุ่น
+    c.serialNumber||'',                  // S/N
+    c.problem||'',                       // แจ้งอาการเสีย
   ];
+  return parts.map((p, i) => {
+    const partCols = [
+      p.partNumber||'',                  // Part number
+      p.partName||'',                    // Part name
+      p.qty||p.count||'',               // จำนวนอะไหล่
+    ];
+    const sharedLast = i === 0 ? [
+      c.serviceOrderNo||'',              // Service Order
+      p.countQty ? String(p.countQty)+(p.countUnit?' '+p.countUnit:'') : '',  // Counter Test (จาก part แรก)
+      c.loanSlipNo||'',                  // เลขใบยืม
+      '',                                // ช่างส่งคืน (Sup กรอกเอง)
+      '',                                // ได้รับจากผู้ผลิต (Sup กรอกเอง)
+      '',                                // ส่งคืนผู้ผลิต (Sup กรอกเอง)
+      summaryImageUrl||'',              // รูปสรุปบันทึกเคลม
+      c.driveFolderUrl||'',             // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+    ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
+    return [...sharedFirst, ...partCols, ...sharedLast];
+  });
 }
 // ลิงก์เปิดแท็บของผู้ดูแลคนหนึ่งใน Google Sheet โดยตรง (ถ้ารู้ gid แล้ว) — ใช้แสดงในหน้ารายการเคลม ให้กดเข้าประวัติเคลมที่จบแล้วของ Product ตัวเองได้ทันที
 function claimsSheetTabLink(spreadsheetId, gid){
@@ -2072,18 +2100,25 @@ function claimsSheetTabLink(spreadsheetId, gid){
 async function archiveClaimToSheetAndDelete(c){
   showLoadingOverlay('กำลังบันทึกลง Google Sheet...');
   try{
+    // 1) จับภาพสรุปเคลม (modal ต้องยังเปิดอยู่) → อัปโหลดไป Drive
+    updateLoadingOverlayText('กำลังบันทึกรูปสรุป...');
+    const summaryImageUrl = await captureAndUploadSummaryImage(c.driveFolderUrl||'');
+    // 2) เตรียมสเปรดชีตและแท็บ
+    updateLoadingOverlayText('กำลังบันทึกลง Google Sheet...');
     const sheetId = await ensureClaimsLogSpreadsheet();
-    const ownerName = ownerOf(c.category, c.model); // แยกแท็บตามผู้ดูแล Product ของเคลมนี้ — Product ไหนใครดูแล เคลมที่จบแล้วของ Product นั้นจะถูกเก็บไว้ในแท็บของคนนั้น
+    const ownerName = ownerOf(c.category, c.model);
     updateLoadingOverlayText(`กำลังเตรียมแท็บของ "${ownerName}"...`);
     const tab = await ensureOwnerSheetTab(sheetId, ownerName);
+    // 3) สร้างหลายแถว (1 part = 1 แถว) แล้ว append ครั้งเดียว
     updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
-    const appendResult = await appendClaimRowToSheet(sheetId, buildClaimSheetRow(c), tab.title);
-    // บันทึกตำแหน่งแถว Sheet ลงในเคลมก่อนลบ — ถ้าลบจาก Firestore ล้มเหลวและยังค้างอยู่ใน app
-    // Sup Product จะลบด้วยปุ่ม "ลบ" ได้ และแถว Sheet จะถูกลบตามด้วย (backward compat: เคลมเก่าไม่มี field นี้ ไม่มีผลข้างเคียง)
+    const rows = buildClaimSheetRows(c, summaryImageUrl);
+    const appendResult = await appendClaimRowToSheet(sheetId, rows, tab.title);
+    // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
     if(appendResult.rowIndex){
       try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
       catch(e){ console.warn('บันทึก sheetRowIndex ลงเคลมไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e.message); }
     }
+    // 5) ลบออกจาก Firestore
     updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
     await fsDeleteClaim(c.id);
     DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
@@ -5371,6 +5406,58 @@ function showClaimSuccessSummary(fields){
     <div class="meta-item"><div class="k">ไฟล์แนบ</div><div class="v">${attSummary}</div></div>
   `;
   $('claim-success-modal').classList.add('show');
+}
+// จับภาพหน้าสรุปเคลม → อัปโหลดเป็น PNG ไว้ในโฟลเดอร์ Drive ของเคลมนั้น → คืน URL ดูไฟล์
+// ใช้ตอน archive เพื่อแนบลิงก์รูปสรุปใน Google Sheet คอลัมน์ "รูปสรุปบันทึกเคลม"
+async function captureAndUploadSummaryImage(driveFolderUrl){
+  const el = $('claim-success-capture-area');
+  if(!el || typeof html2canvas !== 'function'){ console.warn('captureAndUploadSummaryImage: html2canvas ไม่พร้อม'); return ''; }
+  try{
+    const bg = getComputedStyle(document.querySelector('#claim-success-modal .modal')||document.body).backgroundColor || '#ffffff';
+    const canvas = await html2canvas(el, { backgroundColor: bg, scale: 2, useCORS: true });
+    // แปลง canvas → Blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if(!blob){ console.warn('captureAndUploadSummaryImage: toBlob ล้มเหลว'); return ''; }
+    // หา folderId จาก driveFolderUrl (รูปแบบ .../folders/FOLDER_ID หรือ ?id=FOLDER_ID)
+    let folderId = null;
+    if(driveFolderUrl){
+      const m = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+      if(m) folderId = m[1];
+    }
+    const token = await ensureDriveAccess();
+    const fileName = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
+    // multipart upload: metadata + binary
+    const boundary = 'f1service_boundary_'+Date.now();
+    const metaJson = JSON.stringify({ name: fileName, mimeType:'image/png', ...(folderId ? {parents:[folderId]} : {}) });
+    // ใช้ FormData แบบ multipart/related
+    const meta = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metaJson}\r\n--${boundary}\r\nContent-Type: image/png\r\n\r\n`;
+    const tail = `\r\n--${boundary}--`;
+    const metaBytes = new TextEncoder().encode(meta);
+    const tailBytes = new TextEncoder().encode(tail);
+    const pngBytes = new Uint8Array(await blob.arrayBuffer());
+    const combined = new Uint8Array(metaBytes.length + pngBytes.length + tailBytes.length);
+    combined.set(metaBytes, 0);
+    combined.set(pngBytes, metaBytes.length);
+    combined.set(tailBytes, metaBytes.length + pngBytes.length);
+    const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+      method:'POST',
+      headers:{ Authorization:`Bearer ${token}`, 'Content-Type':`multipart/related; boundary=${boundary}`, 'Content-Length': combined.length },
+      body: combined
+    });
+    if(!uploadRes.ok){ console.warn('อัปโหลดรูปสรุปไม่สำเร็จ:', await googleApiErrorMessage(uploadRes)); return ''; }
+    const uploadData = await uploadRes.json();
+    // ทำให้ไฟล์อ่านได้โดยทุกคนที่มีลิงก์
+    try{
+      await fetch(`https://www.googleapis.com/drive/v3/files/${uploadData.id}/permissions`, {
+        method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ role:'reader', type:'anyone' })
+      });
+    } catch(e){ console.warn('ตั้งสิทธิ์รูปสรุปไม่สำเร็จ (ใช้งานได้เฉพาะเจ้าของ Drive):', e.message); }
+    return uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
+  } catch(e){
+    console.warn('captureAndUploadSummaryImage error:', e.message);
+    return '';
+  }
 }
 // จับภาพหน้าจอสรุปข้อมูล (เฉพาะส่วนสรุป ไม่รวมปุ่มด้านล่าง) แล้วดาวน์โหลดเป็นรูป PNG
 async function downloadClaimSuccessImage(){
