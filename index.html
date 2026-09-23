@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.69
-  อัปเดตล่าสุด   : 22 กันยายน 2569 23:26 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.70
+  อัปเดตล่าสุด   : 22 กันยายน 2569 23:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.69</title>
+<title>F1 Service — v7.70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1028,8 +1028,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.69";
-const APP_UPDATED_AT = "22 กันยายน 2569 23:26 น. เวลาไทย";
+const APP_VERSION = "7.70";
+const APP_UPDATED_AT = "22 กันยายน 2569 23:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1971,13 +1971,12 @@ const _claimsSheetTabInFlight = new Map();
 // หา (หรือสร้างใหม่) แท็บย่อยของผู้ดูแลคนหนึ่งในสเปรดชีตกลาง — คืนทั้งชื่อแท็บ (ตัดแต่งแล้ว) และ gid (เลขอ้างอิงแท็บ ใช้ทำลิงก์เปิดตรงแท็บได้)
 async function ensureOwnerSheetTab(spreadsheetId, ownerName){
   const tabTitle = sanitizeSheetTabName(ownerName);
-  if(DATA.claimsSheetMeta.tabs && DATA.claimsSheetMeta.tabs[tabTitle]!==undefined){
-    return { title: tabTitle, gid: DATA.claimsSheetMeta.tabs[tabTitle] };
-  }
+  // หมายเหตุ: ไม่ return จากแคชทันทีอีกต่อไป — เพราะถ้าผู้ใช้ลบแท็บออกจาก Sheet ตรงๆ แคชจะยังจำ gid เก่าไว้
+  // แล้วพอไปเขียนข้อมูลก็จะ fail เพราะแท็บไม่มีแล้ว → ดึง sheet list จริงทุกครั้ง แล้วค่อยตัดสินใจสร้างหรือใช้ของเดิม
   if(_claimsSheetTabInFlight.has(tabTitle)) return _claimsSheetTabInFlight.get(tabTitle);
   const promise = (async ()=>{
     const token = await ensureDriveAccess();
-    // เช็คของจริงในสเปรดชีตก่อนสร้างซ้ำ เผื่อแท็บนี้มีอยู่แล้วแต่แคชในเครื่อง/Firestore หายไป (เช่นคนละอุปกรณ์ยังไม่เคย sync)
+    // เช็คแท็บจริงใน Spreadsheet ทุกครั้ง — ครอบคลุมทั้งกรณีแคชหาย (คนละอุปกรณ์) และกรณีผู้ใช้ลบแท็บเองแล้วต้องสร้างใหม่
     const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!getRes.ok) throw new Error('อ่านรายชื่อแท็บใน Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
     const getData = await getRes.json();
@@ -1986,6 +1985,7 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName){
     if(existing){
       gid = existing.properties.sheetId;
     } else {
+      // แท็บไม่มีอยู่จริง (ถูกลบหรือยังไม่เคยสร้าง) → สร้างใหม่พร้อมหัวตารางและการจัดรูปแบบ
       const addRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
         method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
         body: JSON.stringify({ requests:[{ addSheet:{ properties:{ title: tabTitle } } }] })
