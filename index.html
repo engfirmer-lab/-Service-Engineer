@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.85
-  อัปเดตล่าสุด   : 23 กันยายน 2569 16:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.86
+  อัปเดตล่าสุด   : 23 กันยายน 2569 16:33 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1038,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.85";
-const APP_UPDATED_AT = "23 กันยายน 2569 16:05 น. เวลาไทย";
+const APP_VERSION = "7.86";
+const APP_UPDATED_AT = "23 กันยายน 2569 16:33 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2068,10 +2068,9 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
         fields: 'userEnteredFormat.textFormat'
     }},
   ];
-  // requests เฉพาะแท็บใหม่ (addBanding + setBasicFilter + autoResize error ถ้า apply ซ้ำ หรือทำให้ผู้ใช้ปรับคอลัมน์เองแล้วถูก reset)
+  // requests เฉพาะแท็บใหม่ (setBasicFilter + autoResize error ถ้า apply ซ้ำ หรือทำให้ผู้ใช้ปรับคอลัมน์เองแล้วถูก reset)
+  // ไม่ใช้ addBanding เพื่อป้องกันสีพื้นหลังไล่ไปถึงแถวว่าง
   const newTabRequests = isNewTab ? [
-    { addBanding: { bandedRange: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols },
-        rowProperties: { headerColor:{ red:0.106, green:0.459, blue:0.816 }, firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.925, green:0.961, blue:1 } } } } },
     { setBasicFilter: { filter: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
     { autoResizeDimensions: { dimensions: { sheetId: gid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
   ] : [];
@@ -2169,14 +2168,15 @@ async function fixOldHyperlinkCellsInSheet(){
     });
     if(updates.length===0) continue;
 
-    // Step 1: Clear cells ก่อน เพื่อให้ Sheets รับรู้ว่าค่าเปลี่ยนใหม่จริงๆ
-    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchClear`, {
+    // Step 1: Write ค่าว่างก่อน (RAW) เพื่อบังคับให้ Sheets ล้าง cell จริงๆ
+    const emptyData = clearRanges.map(r=>({ range: r, values:[['']] }));
+    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ ranges: clearRanges })
+      body: JSON.stringify({ valueInputOption:'RAW', data: emptyData })
     });
     if(!clearRes.ok){ console.warn(`Clear cell ใน tab "${tab.title}" ไม่สำเร็จ:`, await googleApiErrorMessage(clearRes)); continue; }
 
-    // Step 2: Write HYPERLINK formula ด้วย USER_ENTERED
+    // Step 2: Write HYPERLINK formula ด้วย USER_ENTERED (หลัง clear แล้ว Sheets จะ parse formula ใหม่)
     const batchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ valueInputOption:'USER_ENTERED', data: updates })
