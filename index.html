@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.72
-  อัปเดตล่าสุด   : 23 กันยายน 2569 10:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.73
+  อัปเดตล่าสุด   : 23 กันยายน 2569 11:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.72</title>
+<title>F1 Service — v7.73</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1028,8 +1028,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.72";
-const APP_UPDATED_AT = "23 กันยายน 2569 10:30 น. เวลาไทย";
+const APP_VERSION = "7.73";
+const APP_UPDATED_AT = "23 กันยายน 2569 11:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1709,6 +1709,7 @@ async function fsUpsertClaimNotice(claim){
     await sdk.setDoc(sdk.doc(db,'claimNotices', claim.id), {
       claimId: claim.id, submittedBy: claim.submittedBy||'', submitterName: claim.submitterName||'',
       siteName: claim.siteName||'', model: claim.model||'', category: claim.category||'',
+      problem: claim.problem||'',
       status: claim.status, notifRead: false, updatedAt: Date.now(),
     }, { merge: true });
   }catch(e){ console.warn('บันทึกแจ้งเตือนความคืบหน้าเคลมไม่สำเร็จ (ไม่กระทบข้อมูลเคลมหลัก):', e.message); }
@@ -3421,13 +3422,15 @@ async function renderNotifList(){
     html += `<h4 style="font-size:12px;margin:14px 0 8px;color:var(--text-dim);">🔧 ความคืบหน้าเคลมของคุณ</h4>`;
     html += myClaimNoticesUnread.map(n=>{
       const st = claimStatusInfo(n.status);
-      const stillActive = (DATA.claims||[]).some(c=>c.id===n.claimId);
-      return `<div class="admin-row" data-claim-notice-open="${n.claimId}" style="cursor:${stillActive?'pointer':'default'};">
-        <div class="admin-row-main">
-          <span style="font-size:12.5px;">${escapeHtml(n.siteName||'-')} · ${escapeHtml(n.model||'-')}</span>
-          <span style="font-size:11px;color:var(--text-faint);">${stillActive?'':'(ย้ายไป Sheet แล้ว)'}</span>
+      const archivedNote = !(DATA.claims||[]).some(c=>c.id===n.claimId) ? ' <span style="font-size:10.5px;color:var(--text-faint);">(ย้ายไป Sheet แล้ว)</span>' : '';
+      return `<div class="admin-row" data-claim-notice-open="${n.claimId}" style="cursor:pointer;flex-direction:column;align-items:flex-start;gap:2px;">
+        <div class="admin-row-main" style="width:100%;justify-content:space-between;">
+          <span style="font-size:12.5px;font-weight:500;">${escapeHtml(n.siteName||'-')} · ${escapeHtml(n.model||'-')}${archivedNote}</span>
+          <span style="color:${st.color};font-weight:600;font-size:12px;white-space:nowrap;margin-left:8px;">${st.label}</span>
         </div>
-        <span style="color:${st.color};font-weight:600;font-size:12px;">${st.label}</span>
+        <div style="font-size:11.5px;color:var(--text-faint);padding-left:2px;">
+          ผู้เคลม: ${escapeHtml(n.submitterName||n.submittedBy||'-')}${n.problem ? ' · อาการ: '+escapeHtml(n.problem.substring(0,60))+(n.problem.length>60?'…':'') : ''}
+        </div>
       </div>`;
     }).join('');
   }
@@ -3791,6 +3794,13 @@ $('cancel-error-btn').addEventListener('click', closeAddErrorPanel);
 
 function renderSupIdentityOptions(){
   $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+  // Auto-select: ถ้าชื่อที่ตรงกับ email ของตัวเองอยู่ใน SUP_PRODUCTS ให้เลือกอัตโนมัติ
+  // โดย match จาก nicknamesMap ที่ map email → nickname แล้วเทียบกับชื่อใน SUP_PRODUCTS
+  const myNick = myUserEmail ? (nicknamesMap[myUserEmail]||'') : '';
+  const autoMatch = myNick ? SUP_PRODUCTS.find(n=> n===myNick || n.includes(myNick) || myNick.includes(n.replace(/\s*\(.*\)/,'').trim())) : null;
+  if(autoMatch && (!currentSupIdentity || currentSupIdentity===SUP_PRODUCTS[0])){
+    currentSupIdentity = autoMatch;
+  }
   if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
   $('sup-identity').value = currentSupIdentity;
   if($('claims-sup-identity')){ $('claims-sup-identity').innerHTML = $('sup-identity').innerHTML; $('claims-sup-identity').value = currentSupIdentity; }
@@ -5393,7 +5403,8 @@ function myVisibleClaims(){
   if(!DATA.claims) return [];
   if(isSuperAdmin()) return DATA.claims;
   if(isEditor()){ const owned = new Set(myOwnedCategories()); return DATA.claims.filter(c=>owned.has(c.category)); }
-  return DATA.claims.filter(c=>c.submittedBy===myUserEmail);
+  // Engineer: ไม่แสดงเคลมที่ 'done' (ย้ายไป Sheet แล้ว) — ให้ดูจาก claimNotices แทน
+  return DATA.claims.filter(c=>c.submittedBy===myUserEmail && c.status!=='done');
 }
 
 // สถานะเปิด/ปิด บล็อก "เคลมของฉัน" — เริ่มต้นเป็นปิดไว้ก่อนเสมอ (ตามคำขอ กันไม่ให้เกะกะหน้าจอ) กดปุ่มเพื่อเปิด/ปิดได้เอง อยู่ได้ตลอด session
