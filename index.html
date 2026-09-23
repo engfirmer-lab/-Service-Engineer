@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.88
-  อัปเดตล่าสุด   : 23 กันยายน 2569 16:52 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.90
+  อัปเดตล่าสุด   : 23 กันยายน 2569 17:02 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1038,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.88";
-const APP_UPDATED_AT = "23 กันยายน 2569 16:52 น. เวลาไทย";
+const APP_VERSION = "7.90";
+const APP_UPDATED_AT = "23 กันยายน 2569 17:02 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5687,15 +5687,26 @@ async function captureElementAndUploadToDrive(el, driveFolderUrl){
 // อัปเดตรูปสรุปเคลมใน Drive: ลบรูปเก่า → render ใน hidden div → capture → อัปโหลดใหม่ → บันทึก fileId ลง Firestore
 // ⚠ QUOTA: เขียน Firestore 1 ครั้งต่อการอัปเดตสถานะ (ใช้ quota ~1 write / status change)
 async function updateSummaryImageForClaim(c){
-  // ลบรูปเก่าถ้ามี (ไม่ต้องรอผล — ลบสำเร็จหรือล้มเหลวก็ดำเนินต่อ)
-  if(c.summaryImageFileId){ await driveDeleteFile(c.summaryImageFileId); }
+  // ดึง summaryImageFileId จาก DATA.claims ด้วย เพื่อกันกรณี c เป็น draft/copy ที่ไม่มี field นี้
+  const existingClaim = (DATA.claims||[]).find(x=>x.id===c.id);
+  const oldFileId = c.summaryImageFileId || (existingClaim && existingClaim.summaryImageFileId) || '';
+  // ลบรูปเก่าถ้ามี
+  if(oldFileId){ await driveDeleteFile(oldFileId); }
   // Render สรุปเคลมลงใน hidden div
   const renderDiv = $('claim-summary-render-area');
   if(!renderDiv){ console.warn('updateSummaryImageForClaim: ไม่พบ claim-summary-render-area'); return {fileId:'',url:''}; }
   renderDiv.innerHTML = buildClaimSummaryHTML(c);
-  // รอ 1 frame ให้ browser render เสร็จก่อน capture
+  // ต้องทำให้ div visible ชั่วคราว เพราะ html2canvas จับ element ที่ visibility:hidden ไม่ได้ (ได้แค่กระดาษขาว)
+  renderDiv.style.visibility = 'visible';
+  renderDiv.style.zIndex = '9999';
+  // รอ 2 frame + 100ms ให้ browser render font/layout เสร็จก่อน capture
   await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => requestAnimationFrame(r));
+  await new Promise(r => setTimeout(r, 100));
   const result = await captureElementAndUploadToDrive(renderDiv, c.driveFolderUrl||'');
+  // ซ่อนกลับทันทีหลัง capture
+  renderDiv.style.visibility = 'hidden';
+  renderDiv.style.zIndex = '-1';
   renderDiv.innerHTML = ''; // เคลียร์หลัง capture
   if(result.fileId){
     // บันทึก fileId และ url ลง Firestore — backward compat: เคลมเก่าไม่มี field นี้ ค่า default = ''
