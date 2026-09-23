@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.84
-  อัปเดตล่าสุด   : 23 กันยายน 2569 16:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.85
+  อัปเดตล่าสุด   : 23 กันยายน 2569 16:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1038,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.84";
-const APP_UPDATED_AT = "23 กันยายน 2569 16:10 น. เวลาไทย";
+const APP_VERSION = "7.85";
+const APP_UPDATED_AT = "23 กันยายน 2569 16:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2123,37 +2123,65 @@ function buildClaimSheetRows(c, summaryImageUrl){
 async function fixOldHyperlinkCellsInSheet(){
   const sheetId = await ensureClaimsLogSpreadsheet();
   const token = await ensureDriveAccess();
-  // ดึงข้อมูลทุก tab
+  // ดึงข้อมูลทุก tab พร้อม gid
   const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
   if(!metaRes.ok) throw new Error('อ่าน Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(metaRes));
   const meta = await metaRes.json();
-  const tabs = (meta.sheets||[]).map(s=>s.properties.title);
+  const tabs = (meta.sheets||[]).map(s=>({ title: s.properties.title, gid: s.properties.sheetId }));
   let fixCount = 0;
   for(const tab of tabs){
-    const range = `'${tab.replace(/'/g,"''")}'!R:S`;
+    const tabSafe = tab.title.replace(/'/g,"''");
+    const range = `'${tabSafe}'!R:S`;
+    // ดึงค่าแบบ FORMULA เพื่อเห็น =HYPERLINK(... ที่ถูกเก็บเป็น text
     const valRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMULA`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!valRes.ok) continue;
     const valData = await valRes.json();
     const rows = valData.values || [];
-    // หา cell ที่เป็น string ขึ้นต้นด้วย =HYPERLINK (ยังไม่ถูก parse เป็น formula)
+
+    // หา cell ที่ต้องแก้:
+    // 1) =HYPERLINK(... เก็บเป็น text (ก่อน USER_ENTERED)
+    // 2) URL ยาวเปล่าๆ (drive.google.com/...) จากแถวเก่าก่อน v7.81
     const updates = [];
+    const clearRanges = [];
     rows.forEach((row, ri)=>{
-      [0,1].forEach((ci, colOffset)=>{
-        const val = row[ci]||'';
-        if(typeof val==='string' && val.startsWith('=HYPERLINK(')){
-          // คำนวณ A1 notation: R=col 18 (R), S=col 19 (S), row = ri+1
-          const colLetter = ci===0 ? 'R' : 'S';
-          updates.push({ range:`'${tab.replace(/'/g,"''")}'!${colLetter}${ri+1}`, values:[[val]] });
+      [0,1].forEach((ci)=>{
+        const val = (row[ci]||'').toString().trim();
+        if(!val) return;
+        const colLetter = ci===0 ? 'R' : 'S';
+        const label = ci===0 ? 'รูปสรุป' : 'ไฟล์แนบ';
+        const cellRef = `'${tabSafe}'!${colLetter}${ri+1}`;
+        let newFormula = null;
+        if(val.startsWith('=HYPERLINK(')){
+          // เป็น text ยังไม่ถูก parse — แต่อาจมี emoji เก่า ให้ rewrite ใหม่สะอาด
+          // ดึง URL ออกจาก formula เพื่อสร้าง formula ใหม่ที่ไม่มี emoji
+          const urlMatch = val.match(/=HYPERLINK\("([^"]+)"/);
+          if(urlMatch) newFormula = `=HYPERLINK("${urlMatch[1]}","${label}")`;
+          else newFormula = val; // fallback: ใช้ค่าเดิม
+        } else if(val.startsWith('https://drive.google.com/')){
+          // URL ยาวเปล่าๆ จากแถวเก่า → แปลงเป็น HYPERLINK formula
+          newFormula = `=HYPERLINK("${val}","${label}")`;
+        }
+        if(newFormula){
+          clearRanges.push(cellRef);
+          updates.push({ range: cellRef, values:[[newFormula]] });
         }
       });
     });
     if(updates.length===0) continue;
-    // เขียนกลับด้วย USER_ENTERED ทีละ cell (batchUpdate values)
+
+    // Step 1: Clear cells ก่อน เพื่อให้ Sheets รับรู้ว่าค่าเปลี่ยนใหม่จริงๆ
+    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchClear`, {
+      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ ranges: clearRanges })
+    });
+    if(!clearRes.ok){ console.warn(`Clear cell ใน tab "${tab.title}" ไม่สำเร็จ:`, await googleApiErrorMessage(clearRes)); continue; }
+
+    // Step 2: Write HYPERLINK formula ด้วย USER_ENTERED
     const batchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ valueInputOption:'USER_ENTERED', data: updates })
     });
-    if(!batchRes.ok) console.warn(`ซ่อม hyperlink ใน tab "${tab}" ไม่สำเร็จ:`, await googleApiErrorMessage(batchRes));
+    if(!batchRes.ok) console.warn(`ซ่อม hyperlink ใน tab "${tab.title}" ไม่สำเร็จ:`, await googleApiErrorMessage(batchRes));
     else fixCount += updates.length;
   }
   return fixCount;
