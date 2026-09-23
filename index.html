@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.74
-  อัปเดตล่าสุด   : 23 กันยายน 2569 09:03 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.75
+  อัปเดตล่าสุด   : 23 กันยายน 2569 09:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.74</title>
+<title>F1 Service — v7.75</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1028,8 +1028,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.74";
-const APP_UPDATED_AT = "23 กันยายน 2569 09:03 น. เวลาไทย";
+const APP_VERSION = "7.75";
+const APP_UPDATED_AT = "23 กันยายน 2569 09:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1961,7 +1961,7 @@ async function ensureClaimsLogSpreadsheet(){
     DATA.claimsSheetMeta.tabs[DEFAULT_TAB_TITLE] = defaultTabGid;
     await fsSaveClaimsSheetMeta();
     await appendClaimRowToSheet(sheetId, CLAIMS_SHEET_HEADERS, DEFAULT_TAB_TITLE); // เขียนหัวตารางไว้แถวแรกของแท็บสำรอง
-    try{ await applyClaimsSheetFormatting(sheetId, defaultTabGid, CLAIMS_SHEET_HEADERS.length); }
+    try{ await applyClaimsSheetFormatting(sheetId, defaultTabGid, CLAIMS_SHEET_HEADERS.length, true); }
     catch(fmtErr){ console.warn('จัดรูปแบบแท็บสำรองไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
     return sheetId;
   })();
@@ -1995,7 +1995,7 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName){
       const addData = await addRes.json();
       gid = addData.replies[0].addSheet.properties.sheetId;
       await appendClaimRowToSheet(spreadsheetId, CLAIMS_SHEET_HEADERS, tabTitle); // เขียนหัวตารางไว้แถวแรกของแท็บใหม่
-      try{ await applyClaimsSheetFormatting(spreadsheetId, gid, CLAIMS_SHEET_HEADERS.length); }
+      try{ await applyClaimsSheetFormatting(spreadsheetId, gid, CLAIMS_SHEET_HEADERS.length, true); }
       catch(fmtErr){ console.warn(`จัดรูปแบบแท็บ "${tabTitle}" ไม่สำเร็จ (ไม่กระทบข้อมูล):`, fmtErr.message); }
     }
     DATA.claimsSheetMeta.tabs[tabTitle] = gid;
@@ -2027,9 +2027,14 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
 }
 // จัดรูปแบบแท็บให้ดูง่าย/สวยงาม: แถวหัวตารางตัวหนา พื้นหลังสีน้ำเงิน+ตัวอักษรขาว ตรึงแถวหัวไว้เวลาเลื่อน แถบสีสลับช่วยไล่แถวง่าย
 // มีตัวกรอง (filter) ที่หัวตารางให้กด sort/filter แต่ละคอลัมน์ได้ทันที และปรับความกว้างคอลัมน์ให้พอดีกับข้อความอัตโนมัติ — เรียกครั้งเดียวตอนสร้างแท็บใหม่ (ไม่ critical ถ้าพลาด ไม่กระทบข้อมูล)
-async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols){
+// applyClaimsSheetFormatting: เรียกได้ทั้งตอนสร้างแท็บใหม่ และหลัง append ข้อมูลทุกครั้ง
+// แยกเป็น 2 รอบ: รอบแรก (สร้างใหม่) = header + freeze + banding + filter; รอบที่ 2 (ทุกครั้ง) = data text สีดำ + autoResize
+// ถ้า banding มีอยู่แล้ว addBanding จะ error → ใช้ isNewTab flag แยกว่าต้องส่ง addBanding หรือไม่
+async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=false){
   const token = await ensureDriveAccess();
-  const requests = [
+  // requests ที่รันทุกครั้ง (ทั้งแท็บใหม่และแท็บเก่า)
+  const alwaysRequests = [
+    // header row: สีน้ำเงิน ตัวหนา ขาว
     { repeatCell: {
         range: { sheetId: gid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
         cell: { userEnteredFormat: {
@@ -2040,17 +2045,23 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols){
         fields: 'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,horizontalAlignment,wrapStrategy)'
     }},
     { updateSheetProperties: { properties:{ sheetId: gid, gridProperties:{ frozenRowCount:1 } }, fields:'gridProperties.frozenRowCount' } },
-    // ข้อความในแถวข้อมูล (แถวที่ 2 เป็นต้นไป) ให้เป็นสีดำเสมอ — กันปัญหาสีขาวที่เกิดจาก banding theme บางรูปแบบ
+    // data rows: บังคับสีดำ ครอบถึงแถว 10000 ทำให้แถวที่ append ทีหลังได้รับ format ด้วย
     { repeatCell: {
-        range: { sheetId: gid, startRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
-        cell: { userEnteredFormat: { textFormat: { foregroundColor:{ red:0, green:0, blue:0 } } } },
-        fields: 'userEnteredFormat.textFormat.foregroundColor'
+        range: { sheetId: gid, startRowIndex:1, endRowIndex:10000, startColumnIndex:0, endColumnIndex:numCols },
+        cell: { userEnteredFormat: {
+          textFormat: { foregroundColor:{ red:0, green:0, blue:0 }, bold:false },
+        }},
+        fields: 'userEnteredFormat.textFormat'
     }},
+    { autoResizeDimensions: { dimensions: { sheetId: gid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
+  ];
+  // requests เฉพาะแท็บใหม่ (addBanding + setBasicFilter error ถ้า apply ซ้ำ)
+  const newTabRequests = isNewTab ? [
     { addBanding: { bandedRange: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols },
         rowProperties: { headerColor:{ red:0.106, green:0.459, blue:0.816 }, firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.925, green:0.961, blue:1 } } } } },
     { setBasicFilter: { filter: { range: { sheetId: gid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
-    { autoResizeDimensions: { dimensions: { sheetId: gid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
-  ];
+  ] : [];
+  const requests = [...alwaysRequests, ...newTabRequests];
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ requests })
@@ -2113,6 +2124,9 @@ async function archiveClaimToSheetAndDelete(c){
     updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
     const rows = buildClaimSheetRows(c, summaryImageUrl);
     const appendResult = await appendClaimRowToSheet(sheetId, rows, tab.title);
+    // apply formatting ทุกครั้งหลัง append — ครอบคลุมแถวใหม่ที่เพิ่งเขียน (gid ได้จาก tab)
+    try{ await applyClaimsSheetFormatting(sheetId, tab.gid, CLAIMS_SHEET_HEADERS.length); }
+    catch(fmtErr){ console.warn('จัดรูปแบบ Sheet หลัง append ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
     // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
     if(appendResult.rowIndex){
       try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
