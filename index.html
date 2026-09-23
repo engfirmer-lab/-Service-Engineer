@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.79
-  อัปเดตล่าสุด   : 23 กันยายน 2569 14:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.80
+  อัปเดตล่าสุด   : 23 กันยายน 2569 15:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.79</title>
+<title>F1 Service — v7.80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.79";
-const APP_UPDATED_AT = "23 กันยายน 2569 14:30 น. เวลาไทย";
+const APP_VERSION = "7.80";
+const APP_UPDATED_AT = "23 กันยายน 2569 15:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2104,8 +2104,8 @@ function buildClaimSheetRows(c, summaryImageUrl){
       '',                                // ช่างส่งคืน (Sup กรอกเอง)
       '',                                // ได้รับจากผู้ผลิต (Sup กรอกเอง)
       '',                                // ส่งคืนผู้ผลิต (Sup กรอกเอง)
-      summaryImageUrl||'',              // รูปสรุปบันทึกเคลม
-      c.driveFolderUrl||'',             // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+      summaryImageUrl ? `=HYPERLINK("${summaryImageUrl}","🖼 รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม
+      c.driveFolderUrl ? `=HYPERLINK("${c.driveFolderUrl}","📁 ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
     ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
