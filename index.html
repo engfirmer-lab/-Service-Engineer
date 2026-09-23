@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.77
-  อัปเดตล่าสุด   : 23 กันยายน 2569 11:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.78
+  อัปเดตล่าสุด   : 23 กันยายน 2569 11:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.77</title>
+<title>F1 Service — v7.78</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.77";
-const APP_UPDATED_AT = "23 กันยายน 2569 11:30 น. เวลาไทย";
+const APP_VERSION = "7.78";
+const APP_UPDATED_AT = "23 กันยายน 2569 11:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2281,7 +2281,7 @@ async function ensureDocumentFolderPath(category, model, docTypeFolderName){
 async function ensureClaimFolderPath(category, model, claimFolderName){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
-  const year = String(new Date().getFullYear());
+  const year = currentYearAD(); // ใช้เวลาไทย (Bangkok) — ไม่ใช่ UTC
   const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
   const f2 = await driveFindOrCreateFolder('Claim', f1);
   const f3 = await driveFindOrCreateFolder(year, f2);
