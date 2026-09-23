@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.81
-  อัปเดตล่าสุด   : 23 กันยายน 2569 15:08 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.82
+  อัปเดตล่าสุด   : 23 กันยายน 2569 15:28 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.81";
-const APP_UPDATED_AT = "23 กันยายน 2569 15:08 น. เวลาไทย";
+const APP_VERSION = "7.82";
+const APP_UPDATED_AT = "23 กันยายน 2569 15:28 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1871,11 +1871,11 @@ function driveFileIdFromUrl(url){
   for(const re of patterns){ const m = String(url).match(re); if(m && m[1]) return m[1]; }
   return null;
 }
-// ลิงก์ .../file/d/ID/view เปิดเป็นหน้า HTML ของ Drive ใช้เป็น <img src> ตรงๆ ไม่ได้ (โหลดไม่ขึ้น) — ต้องแปลงเป็นลิงก์รูปตรง (lh3.googleusercontent.com) ก่อนเสมอ
+// ลิงก์ .../file/d/ID/view เปิดเป็นหน้า HTML ของ Drive ใช้เป็น <img src> ตรงๆ ไม่ได้ — แปลงเป็น thumbnail URL ที่โหลดได้ด้วย session Google ปัจจุบัน (ไม่ต้องใช้ Bearer token)
 function driveImgSrc(url){
   if(!url) return url;
   const id = driveFileIdFromUrl(url);
-  return id ? `https://lh3.googleusercontent.com/d/${id}` : url;
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w400` : url;
 }
 const _driveFolderCache = new Map(); // แคชโฟลเดอร์ที่เคยหา/สร้างไปแล้วในเซสชันนี้ — กันการค้นหาซ้ำๆ ทุกครั้งที่บันทึก (สาเหตุหลักที่บันทึกวิดีโอ/รูปช้า)
 const _driveFolderInFlight = new Map(); // เก็บ Promise ที่กำลังทำงานอยู่ — กัน Worker หลายตัวพร้อมกันหาโฟลเดอร์เดียวกันแล้วสร้างซ้ำ (race condition ตอนทำงานแบบ parallel)
@@ -5174,7 +5174,8 @@ function renderClaimAttachGroupRow(groupKey){
     const div = document.createElement('div');
     div.className = 'img-thumb';
     if(att.kind==='image'){
-      div.innerHTML = `<img src="${att.dataUrl||att.url}"><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
+      // att.dataUrl = base64 จากไฟล์ใหม่ที่เพิ่งเลือก, att.url = Drive URL ของไฟล์เดิม (ต้องแปลงเป็น thumbnail URL ก่อนใช้ใน <img>)
+      div.innerHTML = `<img src="${att.dataUrl || driveImgSrc(att.url)}"><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
     } else {
       div.innerHTML = `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--panel-alt);border-radius:6px;">📄</div><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
     }
