@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.87
-  อัปเดตล่าสุด   : 23 กันยายน 2569 16:43 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.88
+  อัปเดตล่าสุด   : 23 กันยายน 2569 16:52 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1038,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.87";
-const APP_UPDATED_AT = "23 กันยายน 2569 16:43 น. เวลาไทย";
+const APP_VERSION = "7.88";
+const APP_UPDATED_AT = "23 กันยายน 2569 16:52 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2027,7 +2027,8 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
   // ใช้ USER_ENTERED เพื่อให้ =HYPERLINK(...) ถูกตีความเป็น formula ใน Sheets
   // วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows เพื่อกันไม่ให้ Sheets ตีความสลับ MM/DD
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
+  // OVERWRITE แทน INSERT_ROWS เพื่อกัน Sheets copy format จาก header row มาให้แถวข้อมูลใหม่
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values })
   });
