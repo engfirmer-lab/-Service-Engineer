@@ -1038,8 +1038,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.90";
-const APP_UPDATED_AT = "23 กันยายน 2569 17:02 น. เวลาไทย";
+const APP_VERSION = "7.91";
+const APP_UPDATED_AT = "23 กันยายน 2569 18:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2172,18 +2172,26 @@ async function fixOldHyperlinkCellsInSheet(){
     });
     if(updates.length===0) continue;
 
-    // Step 1: Write ค่าว่างก่อน (RAW) เพื่อบังคับให้ Sheets ล้าง cell จริงๆ
-    const emptyData = clearRanges.map(r=>({ range: r, values:[['']] }));
-    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
-      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ valueInputOption:'RAW', data: emptyData })
-    });
-    if(!clearRes.ok){ console.warn(`Clear cell ใน tab "${tab.title}" ไม่สำเร็จ:`, await googleApiErrorMessage(clearRes)); continue; }
+    // ใช้ spreadsheets.batchUpdate + formulaValue แทน values API
+    // เพราะ formulaValue บอก Sheets ชัดเจนว่า "นี่คือ formula" — ไม่มีทางค้างเป็น string
+    const cellRequests = updates.map(u => {
+      // แปลง range string "'TabName'!R3" → rowIndex/columnIndex
+      const match = u.range.match(/!([A-Z]+)(\d+)$/);
+      if(!match) return null;
+      const col = match[1].split('').reduce((acc,c)=>acc*26+(c.charCodeAt(0)-64),0)-1;
+      const row = parseInt(match[2])-1;
+      return {
+        updateCells: {
+          range: { sheetId: tab.gid, startRowIndex: row, endRowIndex: row+1, startColumnIndex: col, endColumnIndex: col+1 },
+          rows: [{ values: [{ userEnteredValue: { formulaValue: u.values[0][0] } }] }],
+          fields: 'userEnteredValue'
+        }
+      };
+    }).filter(Boolean);
 
-    // Step 2: Write HYPERLINK formula ด้วย USER_ENTERED (หลัง clear แล้ว Sheets จะ parse formula ใหม่)
-    const batchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values:batchUpdate`, {
+    const batchRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ valueInputOption:'USER_ENTERED', data: updates })
+      body: JSON.stringify({ requests: cellRequests })
     });
     if(!batchRes.ok) console.warn(`ซ่อม hyperlink ใน tab "${tab.title}" ไม่สำเร็จ:`, await googleApiErrorMessage(batchRes));
     else fixCount += updates.length;
