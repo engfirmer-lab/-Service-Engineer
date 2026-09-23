@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.78
-  อัปเดตล่าสุด   : 23 กันยายน 2569 11:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.79
+  อัปเดตล่าสุด   : 23 กันยายน 2569 14:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -36,7 +36,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.78</title>
+<title>F1 Service — v7.79</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.78";
-const APP_UPDATED_AT = "23 กันยายน 2569 11:45 น. เวลาไทย";
+const APP_VERSION = "7.79";
+const APP_UPDATED_AT = "23 กันยายน 2569 14:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5424,10 +5424,14 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       }
       await fsUpdateClaim(claimEditingId, fields);
       const c = DATA.claims.find(x=>x.id===claimEditingId); if(c) Object.assign(c, fields);
+      // อัปเดตรูปสรุปเมื่อแก้ไขเคลม — ⚠ +1 Firestore write
+      try{ await updateSummaryImageForClaim({ id:claimEditingId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (แก้ไขเคลม) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
     } else {
       fields.status = 'pending'; fields.createdAt = Date.now(); fields.serviceOrderNo = '';
       const newId = await fsAddClaim(fields);
       DATA.claims.push({ id:newId, ...fields });
+      // สร้างรูปสรุปครั้งแรกทันทีหลังบันทึกเคลมใหม่ — ⚠ +1 Firestore write
+      try{ await updateSummaryImageForClaim({ id:newId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (เคลมใหม่) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
     }
     clearPersistedClaimDraft(); // บันทึกขึ้น Firestore สำเร็จแล้ว ไม่ต้องเก็บร่างไว้อีกต่อไป
     $('claim-modal').classList.remove('show');
