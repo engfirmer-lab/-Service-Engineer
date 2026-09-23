@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.94
-  อัปเดตล่าสุด   : 23 กันยายน 2569 21:36 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.96
+  อัปเดตล่าสุด   : 24 กันยายน 2569 00:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -30,13 +30,17 @@
   4. GOOGLE SHEET SYNC — เคลมที่ถูก archive จะมี sheetSpreadsheetId/sheetTabTitle/sheetRowIndex เก็บไว้
      ปุ่ม "ลบ" ของ canManage จะเรียก deleteSheetRowIfTracked() เพื่อลบแถว Sheet ก่อนลบ Firestore
      เคลมเก่าที่ไม่มี field เหล่านี้จะข้ามการลบ Sheet โดยอัตโนมัติ (backward compat)
+  5. DEAD EVENT LISTENER — ทุกครั้งที่ลบ element ออกจาก HTML ต้องลบ JS addEventListener ที่ผูกกับ element นั้นออกด้วยเสมอ
+     ห้ามปล่อยให้ $('element-id').addEventListener(...) ค้างอยู่ใน JS เมื่อ element ไม่มีใน HTML แล้ว
+     เพราะจะทำให้เกิด TypeError: Cannot read properties of null (reading 'addEventListener') ตั้งแต่โหลดหน้า
+     ทำให้แอพ crash ทั้งหน้าและใช้งานไม่ได้เลย — เกิดขึ้นแล้วใน v7.93 (fix-hyperlinks-btn) แก้ใน v7.94
   ===================================================================
 -->
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.94</title>
+<title>F1 Service — v7.96</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1032,8 +1036,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.94";
-const APP_UPDATED_AT = "23 กันยายน 2569 21:36 น. เวลาไทย";
+const APP_VERSION = "7.96";
+const APP_UPDATED_AT = "24 กันยายน 2569 00:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2019,10 +2023,9 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
   // ตรวจว่าเป็น flat array (header) หรือ array of arrays (data rows)
   const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
-  // ใช้ USER_ENTERED เพื่อให้ =HYPERLINK(...) ถูกตีความเป็น formula ใน Sheets
-  // วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows เพื่อกันไม่ให้ Sheets ตีความสลับ MM/DD
-  // OVERWRITE แทน INSERT_ROWS เพื่อกัน Sheets copy format จาก header row มาให้แถวข้อมูลใหม่
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=OVERWRITE&includeValuesInResponse=false`, {
+  // ใช้ USER_ENTERED เพื่อให้วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows กันไม่ให้ Sheets ตีความสลับ MM/DD
+  // ใช้ INSERT_ROWS เพื่อต่อแถวล่างสุดเสมอ ไม่แทรกระหว่างกลาง (v7.95)
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values })
   });
@@ -2137,8 +2140,8 @@ function buildClaimSheetRows(c, summaryImageUrl){
       '',                                // ช่างส่งคืน (Sup กรอกเอง)
       '',                                // ได้รับจากผู้ผลิต (Sup กรอกเอง)
       '',                                // ส่งคืนผู้ผลิต (Sup กรอกเอง)
-      summaryImageUrl ? `=HYPERLINK("${summaryImageUrl}","รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม
-      c.driveFolderUrl ? `=HYPERLINK("${c.driveFolderUrl}","ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+      summaryImageUrl ? `=HYPERLINK("${summaryImageUrl}";"รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม (ใช้ ; สำหรับ Sheets ภาษาไทย)
+      c.driveFolderUrl ? `=HYPERLINK("${c.driveFolderUrl}";"ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive (ใช้ ; สำหรับ Sheets ภาษาไทย)
     ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
@@ -2253,7 +2256,8 @@ async function archiveClaimToSheetAndDelete(c){
     // apply formatting ทุกครั้งหลัง append — ครอบคลุมแถวใหม่ที่เพิ่งเขียน (gid ได้จาก tab)
     try{ await applyClaimsSheetFormatting(sheetId, tab.gid, CLAIMS_SHEET_HEADERS.length); }
     catch(fmtErr){ console.warn('จัดรูปแบบ Sheet หลัง append ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
-    // patch HYPERLINK formula หลัง formatting เสมอ — เพราะ repeatCell อาจ reset cell ที่เขียน USER_ENTERED ไว้
+    // patch HYPERLINK formula หลัง formatting เสมอ — เพราะ repeatCell อาจ reset userEnteredValue ของ cell
+    // (v7.96) ใช้ ; แทน , ใน =HYPERLINK สำหรับ Sheets ภาษาไทย
     try{ await patchHyperlinkCells(sheetId, tab.gid, rows, appendResult.rowIndex); }
     catch(patchErr){ console.warn('patch hyperlink cell ไม่สำเร็จ (ไม่กระทบข้อมูล):', patchErr.message); }
     // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
