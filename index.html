@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.80
-  อัปเดตล่าสุด   : 23 กันยายน 2569 15:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.81
+  อัปเดตล่าสุด   : 23 กันยายน 2569 15:08 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1032,8 +1032,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.80";
-const APP_UPDATED_AT = "23 กันยายน 2569 15:00 น. เวลาไทย";
+const APP_VERSION = "7.81";
+const APP_UPDATED_AT = "23 กันยายน 2569 15:08 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2019,8 +2019,9 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
   // ตรวจว่าเป็น flat array (header) หรือ array of arrays (data rows)
   const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
-  // ใช้ valueInputOption=RAW (ไม่ใช่ USER_ENTERED) โดยตั้งใจ: กันไม่ให้ Google Sheets ตีความข้อความวันที่ DD/MM/YYYY ของเราเป็น "วันที่จริง" แล้วจัดรูปแบบใหม่ตาม locale ของสเปรดชีต (ถ้าเป็น en_US จะอ่านสลับเป็น MM/DD จนวันที่ผิดเพี้ยนได้)
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
+  // ใช้ USER_ENTERED เพื่อให้ =HYPERLINK(...) ถูกตีความเป็น formula ใน Sheets
+  // วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows เพื่อกันไม่ให้ Sheets ตีความสลับ MM/DD
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values })
   });
@@ -2082,8 +2083,8 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
 function buildClaimSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}]; // ถ้าไม่มี part ให้มี 1 แถวว่าง
   const sharedFirst = [
-    isoToDDMMYYYY(c.problemDate)||'',   // วันที่พบปัญหา
-    bangkokDateDDMMYYYYSlash(),          // วันที่เคลม (วันที่ archive)
+    (isoToDDMMYYYY(c.problemDate)||'') ? `'${isoToDDMMYYYY(c.problemDate)}` : '',   // วันที่พบปัญหา (prefix ' กันไม่ให้ Sheets ตีความวันที่สลับ MM/DD)
+    `'${bangkokDateDDMMYYYYSlash()}`,    // วันที่เคลม (วันที่ archive)
     c.claimant||'',                      // ผู้เคลม
     c.siteName||'',                      // สถานที่
     c.category||'',                      // Product
@@ -2287,6 +2288,33 @@ async function ensureClaimFolderPath(category, model, claimFolderName){
   const f3 = await driveFindOrCreateFolder(year, f2);
   const f4 = await driveFindOrCreateFolder(claimFolderName, f3);
   return f4;
+}
+// ย้ายโฟลเดอร์เคลมเดิมไปอยู่ใต้ path ของ category/model ใหม่ (กรณีแก้ไขเคลมแล้วเปลี่ยน Product/รุ่น)
+// ถ้า category/model ไม่เปลี่ยน → คืน folderId เดิมโดยไม่ทำอะไร
+async function moveClaimFolderIfNeeded(oldClaim, newCategory, newModel, claimFolderIdFromUrl){
+  const oldOwner = ownerOf(oldClaim.category||'', oldClaim.model||'');
+  const newOwner = ownerOf(newCategory, newModel);
+  const oldOwnerName = oldOwner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : oldOwner;
+  const newOwnerName = newOwner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : newOwner;
+  const year = currentYearAD();
+  // หา parent เดิมของโฟลเดอร์เคลม (Owner/Claim/Year)
+  const oldF1 = await findDriveFolder(oldOwnerName, DRIVE_ROOT_FOLDER_ID); if(!oldF1) return claimFolderIdFromUrl;
+  const oldF2 = await findDriveFolder('Claim', oldF1); if(!oldF2) return claimFolderIdFromUrl;
+  const oldF3 = await findDriveFolder(year, oldF2); if(!oldF3) return claimFolderIdFromUrl;
+  // สร้าง parent ใหม่ (Owner/Claim/Year ของ Product ใหม่)
+  const newF1 = await driveFindOrCreateFolder(newOwnerName, DRIVE_ROOT_FOLDER_ID);
+  const newF2 = await driveFindOrCreateFolder('Claim', newF1);
+  const newF3 = await driveFindOrCreateFolder(year, newF2);
+  if(oldF3 === newF3) return claimFolderIdFromUrl; // parent เดิม = ใหม่ ไม่ต้องย้าย
+  try{
+    const token = await ensureDriveAccess();
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${claimFolderIdFromUrl}?addParents=${newF3}&removeParents=${oldF3}`, {
+      method:'PATCH', headers:{ Authorization:`Bearer ${token}` }
+    });
+    if(!res.ok) throw new Error('ย้ายโฟลเดอร์เคลมไม่สำเร็จ ('+res.status+')');
+    console.log('ย้ายโฟลเดอร์เคลมสำเร็จ →', newOwnerName);
+  } catch(e){ console.warn('moveClaimFolderIfNeeded ล้มเหลว (ใช้โฟลเดอร์เดิมต่อ):', e.message); }
+  return claimFolderIdFromUrl; // folderId ไม่เปลี่ยน แค่ย้าย parent
 }
 // สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล — เผื่อเอาไฟล์ไปวางเองใน Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป
 // รันงานหลายอันพร้อมกันแบบจำกัดจำนวน (กันยิง request รัวเกินไปจน Google บล็อกชั่วคราว) เร็วกว่าทำทีละอันมาก
@@ -5379,7 +5407,26 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     // ชื่อโฟลเดอร์ตามข้อกำหนด: DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ — ตัดอาการให้สั้นลงกันชื่อโฟลเดอร์ยาวเกินไป (sanitizeFolderName ตัดความยาวรวมอีกชั้นอยู่แล้ว)
     const symptomShort = claimDraft.problem.slice(0, 40);
     const claimFolderName = sanitizeFolderName(`${bangkokDateDDMMYYYY()}_${claimDraft.claimant}_${claimDraft.siteName}_${claimDraft.model}_${symptomShort}`);
-    const folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+    let folderId;
+    if(claimEditingId){
+      // แก้ไขเคลม: ใช้โฟลเดอร์เดิม — ถ้า Product เปลี่ยนให้ย้ายโฟลเดอร์ ไม่สร้างใหม่ (กันไฟล์ตกค้างใน Drive)
+      const oldClaim = DATA.claims.find(x=>x.id===claimEditingId);
+      const existingFolderUrl = oldClaim && oldClaim.driveFolderUrl;
+      if(existingFolderUrl){
+        const existingFolderId = existingFolderUrl.match(/\/folders\/([A-Za-z0-9_-]+)/)?.[1] || extractDriveFileId(existingFolderUrl);
+        if(existingFolderId){
+          folderId = await moveClaimFolderIfNeeded(oldClaim, claimDraft.category, claimDraft.model, existingFolderId);
+        } else {
+          folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+        }
+      } else {
+        // backward compat: เคลมเก่าก่อน v7.78 ที่ยังไม่มี driveFolderUrl — สร้างโฟลเดอร์ใหม่ตามปกติ
+        folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+      }
+    } else {
+      // เคลมใหม่: สร้างโฟลเดอร์ปกติ
+      folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
+    }
     const uploadedAttachments = emptyClaimAttachments();
     // นับไฟล์ที่ต้องอัปโหลดจริง (ไม่รวมไฟล์เดิมที่แนบไว้แล้วตอนแก้ไขเคลม) เพื่อโชว์ "ไฟล์ที่ n จาก m" ระหว่างอัปโหลด
     const pendingFiles = [];
