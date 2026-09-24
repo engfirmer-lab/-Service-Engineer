@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.97
-  อัปเดตล่าสุด   : 24 กันยายน 2569 07:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.98
+  อัปเดตล่าสุด   : 24 กันยายน 2569 08:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -1036,8 +1036,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.97";
-const APP_UPDATED_AT = "24 กันยายน 2569 07:10 น. เวลาไทย";
+const APP_VERSION = "7.98";
+const APP_UPDATED_AT = "24 กันยายน 2569 08:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2020,22 +2020,26 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName){
 // rowsData: array ของ row (array of arrays) — ถ้าส่ง flat array เดียว (header) จะถูก wrap อัตโนมัติ
 async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const token = await ensureDriveAccess();
-  const range = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!A1` : 'A1';
+  const tabPrefix = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!` : '';
   // ตรวจว่าเป็น flat array (header) หรือ array of arrays (data rows)
   const values = (Array.isArray(rowsData[0])) ? rowsData : [rowsData];
-  // ใช้ USER_ENTERED เพื่อให้วันที่ DD/MM/YYYY ถูก prefix ด้วย ' (apostrophe) ใน buildClaimSheetRows กันไม่ให้ Sheets ตีความสลับ MM/DD
-  // ใช้ INSERT_ROWS เพื่อต่อแถวล่างสุดเสมอ ไม่แทรกระหว่างกลาง (v7.95)
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS&includeValuesInResponse=false`, {
-    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+  // (v7.98) อ่านจำนวนแถวที่มีข้อมูลจริงก่อน แล้ว write ต่อท้ายโดยตรง
+  // แทนการใช้ append API ที่หา "แถวว่างแรก" — ซึ่งจะแทรกกลางถ้ามีแถวถูกลบไป
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(tabPrefix+'A:A')}?majorDimension=COLUMNS`, {
+    headers:{ Authorization:`Bearer ${token}` }
+  });
+  if(!metaRes.ok) throw new Error('อ่านจำนวนแถวใน Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(metaRes));
+  const metaData = await metaRes.json();
+  const existingRows = (metaData.values && metaData.values[0]) ? metaData.values[0].length : 0;
+  const nextRow = existingRows + 1; // แถวถัดจากข้อมูลสุดท้าย (1-based)
+  const writeRange = `${tabPrefix}A${nextRow}`;
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
+    method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values })
   });
   if(!res.ok) throw new Error('บันทึกแถวลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(res));
   const data = await res.json();
-  // แยกเลขแถวแรก (1-based) จาก updatedRange เช่น "'OwnerName'!A5:T7" → 5
-  const updatedRange = data.updates && data.updates.updatedRange ? data.updates.updatedRange : '';
-  const rowMatch = updatedRange.match(/[A-Z]+(\d+):/);
-  const rowIndex = rowMatch ? parseInt(rowMatch[1], 10) : null;
-  return { raw: data, rowIndex };
+  return { raw: data, rowIndex: nextRow };
 }
 
 // patch =HYPERLINK() cell (คอลัมน์ R=17, S=18) ด้วย formulaValue หลัง applyClaimsSheetFormatting
