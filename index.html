@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 7.96
-  อัปเดตล่าสุด   : 24 กันยายน 2569 00:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 7.97
+  อัปเดตล่าสุด   : 24 กันยายน 2569 07:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -40,7 +40,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v7.96</title>
+<title>F1 Service — v7.97</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1036,8 +1036,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "7.96";
-const APP_UPDATED_AT = "24 กันยายน 2569 00:00 น. เวลาไทย";
+const APP_VERSION = "7.97";
+const APP_UPDATED_AT = "24 กันยายน 2569 07:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2253,13 +2253,9 @@ async function archiveClaimToSheetAndDelete(c){
     updateLoadingOverlayText('กำลังบันทึกแถวข้อมูล...');
     const rows = buildClaimSheetRows(c, summaryImageUrl);
     const appendResult = await appendClaimRowToSheet(sheetId, rows, tab.title);
-    // apply formatting ทุกครั้งหลัง append — ครอบคลุมแถวใหม่ที่เพิ่งเขียน (gid ได้จาก tab)
-    try{ await applyClaimsSheetFormatting(sheetId, tab.gid, CLAIMS_SHEET_HEADERS.length); }
-    catch(fmtErr){ console.warn('จัดรูปแบบ Sheet หลัง append ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
-    // patch HYPERLINK formula หลัง formatting เสมอ — เพราะ repeatCell อาจ reset userEnteredValue ของ cell
-    // (v7.96) ใช้ ; แทน , ใน =HYPERLINK สำหรับ Sheets ภาษาไทย
-    try{ await patchHyperlinkCells(sheetId, tab.gid, rows, appendResult.rowIndex); }
-    catch(patchErr){ console.warn('patch hyperlink cell ไม่สำเร็จ (ไม่กระทบข้อมูล):', patchErr.message); }
+    // (v7.97) ไม่รัน applyClaimsSheetFormatting หลัง append อีกต่อไป
+    // เพราะ repeatCell ที่ครอบ row 1-10000 ทำให้ =HYPERLINK() ของแถวเก่าหายทุกครั้งที่มีเคลมใหม่เข้ามา
+    // formatting รันเฉพาะตอนสร้าง tab ใหม่เท่านั้น (isNewTab=true ใน ensureOwnerSheetTab)
     // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
     if(appendResult.rowIndex){
       try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
