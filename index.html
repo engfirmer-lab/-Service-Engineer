@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.10
-  อัปเดตล่าสุด   : 24 กันยายน 2569 20:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.11
+  อัปเดตล่าสุด   : 24 กันยายน 2569 22:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -40,7 +40,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.10</title>
+<title>F1 Service — v8.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -521,61 +521,23 @@
 
       <!-- SUB: ส่งคืนอะไหล่ Office -->
       <div id="eng-rsub-return_parts" style="display:none;">
-        <!-- Sender bar -->
-        <div class="panel-block" style="padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--blue-faint,color-mix(in srgb,var(--accent) 8%,transparent));">
-          <div style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;" id="rp-sender-avatar">?</div>
-          <div>
-            <div style="font-weight:700;font-size:14px;color:var(--accent);" id="rp-sender-name">—</div>
-            <div style="font-size:11px;color:var(--text-faint);">ผู้ส่งคืนอะไหล่ (จากชื่อที่ล็อกอิน)</div>
-          </div>
-        </div>
-
-        <!-- รายการใบเบิก -->
+        <!-- Header + Open Modal button -->
         <div class="panel-block" style="padding:14px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <span style="font-size:16px;">📋</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div>
-              <h2 style="margin:0;font-size:14px;">รายการใบเบิก</h2>
-              <p class="panel-sub" style="margin:0;font-size:11.5px;">เพิ่มได้หลายใบ — แต่ละใบต้องแนบรูปด้วย</p>
+              <h2 style="margin-bottom:2px;font-size:14px;">ส่งคืนอะไหล่ Office</h2>
+              <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">บันทึกการส่งคืนอะไหล่กลับ Office</p>
             </div>
-          </div>
-          <div id="rp-withdrawal-list"></div>
-          <button class="btn btn-ghost btn-sm" id="rp-add-withdrawal-btn" style="margin-top:10px;width:100%;border-style:dashed;">＋ เพิ่มใบเบิก</button>
-        </div>
-
-        <!-- รูปแบบการส่งคืน -->
-        <div class="panel-block" style="padding:14px;">
-          <h2 style="font-size:14px;margin-bottom:10px;">🚚 รูปแบบการส่งคืน <span style="color:var(--red);">*</span></h2>
-          <div id="rp-return-method-group" style="display:flex;flex-direction:column;gap:8px;">
-            <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="self"> <span class="rp-method-icon">🏢</span> ด้วยตนเอง ที่ Office</label>
-            <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="parcel"> <span class="rp-method-icon">📦</span> ส่งพัสดุ</label>
-            <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="truck"> <span class="rp-method-icon">🚐</span> คืนกลับรถ Office</label>
+            <button class="btn btn-primary btn-sm" id="rp-open-modal-btn">📦 ส่งคืนอะไหล่ใหม่</button>
           </div>
         </div>
 
-        <!-- หลักฐานการส่ง -->
-        <div class="panel-block" style="padding:14px;">
-          <h2 style="font-size:14px;margin-bottom:6px;">🧾 หลักฐานการส่ง</h2>
-          <p class="panel-sub" style="margin-bottom:10px;font-size:11.5px;">ใบเสร็จ, รูปถ่าย หรือหลักฐานอื่นๆ (ถ้ามี)</p>
-          <div class="file-dropzone" id="rp-evidence-dropzone" data-key="rp_evidence">
-            <div class="dropzone-inner">
-              <div class="dropzone-icon">📎</div>
-              <div style="font-size:13px;font-weight:600;">แนบหลักฐานการส่ง</div>
-              <div style="font-size:11px;color:var(--text-faint);">รูปภาพ, PDF, วิดีโอ • ไม่เกิน 5 MB</div>
-            </div>
-            <input type="file" accept="image/*,application/pdf,video/*" id="rp-evidence-input" style="display:none;">
+        <!-- My pending returns list -->
+        <div class="panel-block" id="rp-my-returns-block" style="padding:14px;">
+          <h2 style="margin-bottom:10px;font-size:14px;">รายการที่ยังรอตรวจรับ <span class="badge-count" id="rp-my-badge" style="display:none;">0</span></h2>
+          <div id="rp-my-returns-list">
+            <div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">— ยังไม่มีรายการ —</div>
           </div>
-          <div id="rp-evidence-preview" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"></div>
-        </div>
-
-        <!-- หมายเหตุ -->
-        <div style="margin:0 14px 10px;padding:10px 12px;background:var(--warn-faint,color-mix(in srgb,var(--amber) 12%,transparent));border:1px solid var(--amber);border-radius:8px;font-size:12px;color:var(--amber);">
-          ⚠️ ไฟล์ทั้งหมดจะถูกอัปโหลดไปยัง Google Drive ใต้โฟลเดอร์ Return ใน Service Center
-        </div>
-
-        <!-- ปุ่ม Submit -->
-        <div style="padding:0 14px 20px;">
-          <button class="btn btn-primary" id="rp-submit-btn" style="width:100%;padding:14px;font-size:16px;">📤 ส่งข้อมูล</button>
         </div>
       </div>
     </div>
@@ -826,6 +788,72 @@
       <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="claim-save-btn">บันทึกเคลม</button>
         <button class="btn btn-ghost btn-sm" id="claim-cancel-btn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RETURN PARTS MODAL ============ -->
+  <div class="modal-overlay" id="rp-modal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close-x" id="rp-modal-close">✕</button>
+      <h3 style="margin-bottom:14px;">📦 ส่งคืนอะไหล่ Office</h3>
+
+      <!-- Sender bar -->
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:color-mix(in srgb,var(--accent) 8%,transparent);border-radius:10px;margin-bottom:14px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;" id="rp-sender-avatar">?</div>
+        <div>
+          <div style="font-weight:700;font-size:14px;color:var(--accent);" id="rp-sender-name">—</div>
+          <div style="font-size:11px;color:var(--text-faint);">ผู้ส่งคืนอะไหล่ (จากชื่อที่ล็อกอิน)</div>
+        </div>
+      </div>
+
+      <!-- รายการใบเบิก -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:15px;">📋</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;">รายการใบเบิก</div>
+            <div style="font-size:11.5px;color:var(--text-faint);">เพิ่มได้หลายใบ — แต่ละใบต้องแนบรูปด้วย</div>
+          </div>
+        </div>
+        <div id="rp-withdrawal-list"></div>
+        <button class="btn btn-ghost btn-sm" id="rp-add-withdrawal-btn" style="margin-top:8px;width:100%;border-style:dashed;">＋ เพิ่มใบเบิก</button>
+      </div>
+
+      <!-- รูปแบบการส่งคืน -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🚚 รูปแบบการส่งคืน <span style="color:var(--red);">*</span></div>
+        <div id="rp-return-method-group" style="display:flex;flex-direction:column;gap:8px;">
+          <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="self"> <span class="rp-method-icon">🏢</span> ด้วยตนเอง ที่ Office</label>
+          <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="parcel"> <span class="rp-method-icon">📦</span> ส่งพัสดุ</label>
+          <label class="rp-method-opt"><input type="radio" name="rp-return-method" value="truck"> <span class="rp-method-icon">🚐</span> คืนกลับรถ Office</label>
+        </div>
+      </div>
+
+      <!-- หลักฐานการส่ง -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">🧾 หลักฐานการส่ง</div>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-bottom:8px;">ใบเสร็จ, รูปถ่าย หรือหลักฐานอื่นๆ (ถ้ามี)</div>
+        <div class="file-dropzone" id="rp-evidence-dropzone" data-key="rp_evidence">
+          <div class="dropzone-inner">
+            <div class="dropzone-icon">📎</div>
+            <div style="font-size:13px;font-weight:600;">แนบหลักฐานการส่ง</div>
+            <div style="font-size:11px;color:var(--text-faint);">รูปภาพ, PDF, วิดีโอ • ไม่เกิน 5 MB</div>
+          </div>
+          <input type="file" accept="image/*,application/pdf,video/*" id="rp-evidence-input" style="display:none;">
+        </div>
+        <div id="rp-evidence-preview" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+
+      <!-- หมายเหตุ -->
+      <div style="padding:10px 12px;background:color-mix(in srgb,var(--amber) 12%,transparent);border:1px solid var(--amber);border-radius:8px;font-size:12px;color:var(--amber);margin-bottom:16px;">
+        ⚠️ ไฟล์ทั้งหมดจะถูกอัปโหลดไปยัง Google Drive ใต้โฟลเดอร์ Return ใน Service Center
+      </div>
+
+      <!-- ปุ่ม Submit -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="rp-submit-btn" style="flex:1;padding:13px;">📤 ส่งข้อมูล</button>
+        <button class="btn btn-ghost btn-sm" id="rp-modal-cancel-btn">ยกเลิก</button>
       </div>
     </div>
   </div>
@@ -1146,8 +1174,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.10";
-const APP_UPDATED_AT = "24 กันยายน 2569 20:00 น. เวลาไทย";
+const APP_VERSION = "8.11";
+const APP_UPDATED_AT = "24 กันยายน 2569 22:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7325,15 +7353,90 @@ document.querySelectorAll('#eng-record-subtabs button[data-rsub]').forEach(btn=>
   });
 });
 
-/* ---- Init Return Parts tab ---- */
+/* ---- Init Return Parts tab (list view) ---- */
 function initReturnPartsTab(){
+  loadMyReturnParts();
+}
+
+/* ---- Open / Close modal ---- */
+function openReturnPartsModal(){
   // Fill sender info
   const name = myDisplayName();
   $('rp-sender-name').textContent = name || '(ยังไม่ได้ล็อกอิน)';
   $('rp-sender-avatar').textContent = (name||'?').charAt(0).toUpperCase();
-  // Reset form if empty
-  if(rpWithdrawals.length===0) rpAddWithdrawal();
+  // Reset form
+  rpWithdrawals = []; rpEvidenceFile = null; rpWithdrawalIdCounter = 0;
+  rpAddWithdrawal();
   renderWithdrawalList();
+  rpClearEvidence();
+  document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('#rp-return-method-group label').forEach(l=>l.classList.remove('selected'));
+  // Show
+  $('rp-modal').classList.add('show');
+  syncMobileBackTrap();
+}
+function closeReturnPartsModal(){
+  $('rp-modal').classList.remove('show');
+  syncMobileBackTrap();
+}
+
+$('rp-open-modal-btn').addEventListener('click', openReturnPartsModal);
+$('rp-modal-close').addEventListener('click', closeReturnPartsModal);
+$('rp-modal-cancel-btn').addEventListener('click', closeReturnPartsModal);
+$('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeReturnPartsModal(); });
+
+/* ---- Load Engineer's own pending returns ---- */
+async function loadMyReturnParts(){
+  const list = $('rp-my-returns-list');
+  const badge = $('rp-my-badge');
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const snap = await sdk.getDocs(sdk.query(
+      sdk.collection(db,'returnParts'),
+      sdk.where('senderEmail','==',myUserEmail)
+    ));
+    const docs = [];
+    snap.forEach(d=>docs.push({id:d.id,...d.data()}));
+    docs.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+    if(docs.length>0){ badge.textContent=docs.length; badge.style.display='inline'; }
+    else { badge.style.display='none'; }
+
+    if(docs.length===0){
+      list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅<br><span style="font-size:11px;">เมื่อส่งคืนอะไหล่แล้ว รายการจะปรากฏที่นี่จนกว่า Admin จะยืนยัน</span></div>';
+      return;
+    }
+
+    const methodIcon = {self:'🏢',parcel:'📦',truck:'🚐'};
+    const methodClass = {self:'self',parcel:'parcel',truck:'truck'};
+    list.innerHTML = docs.map(d=>{
+      const dateStr = d.createdAt ? new Date(d.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour12:false}) : '-';
+      const wiHtml = (d.withdrawals||[]).map(w=>`
+        <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:4px;">
+          <span>📋</span><span>${escapeHtml(w.num||'-')}</span>
+          <a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">ดูไฟล์</a>
+        </div>`).join('');
+      const evidHtml = d.evidence ? `<a href="${escapeHtml(d.evidence.driveUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 ดูหลักฐาน</a>` : '';
+      const mc = methodClass[d.returnMethod]||'parcel';
+      return `<div class="rp-pending-card">
+        <div class="rp-pending-meta" style="font-size:11px;color:var(--text-faint);margin-bottom:6px;">${dateStr}</div>
+        <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="margin-bottom:6px;"><span class="rp-pending-badge ${mc}">${methodIcon[d.returnMethod]||'📦'} ${escapeHtml(d.returnMethodLabel||d.returnMethod||'-')}</span></div>
+            ${wiHtml}
+            ${evidHtml?`<div style="margin-top:6px;">${evidHtml}</div>`:''}
+            ${d.driveFolder?`<div style="margin-top:4px;"><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-faint);">📁 โฟลเดอร์ Drive</a></div>`:''}
+          </div>
+          <div style="flex-shrink:0;font-size:11px;color:var(--amber);font-weight:600;white-space:nowrap;">⏳ รอตรวจรับ</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
+    badge.style.display='none';
+  }
 }
 
 /* ---- Withdrawal list management ---- */
@@ -7480,7 +7583,7 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
 
     updateLoadingOverlayText('กำลังบันทึกข้อมูล...');
     const methodLabel = {self:'ด้วยตนเอง ที่ Office',parcel:'ส่งพัสดุ',truck:'คืนกลับรถ Office'}[method]||method;
-    const docRef = await fsAddReturnPart({
+    await fsAddReturnPart({
       senderEmail: myUserEmail,
       senderName,
       returnMethod: method,
@@ -7492,14 +7595,9 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
     });
 
     hideLoadingOverlay();
+    closeReturnPartsModal();
     showToast('✓ ส่งข้อมูลเรียบร้อย — Admin จะยืนยันรับอะไหล่เร็วๆ นี้');
-
-    // Reset form
-    rpWithdrawals = []; rpEvidenceFile = null; rpWithdrawalIdCounter = 0;
-    rpAddWithdrawal(); renderWithdrawalList();
-    rpClearEvidence();
-    document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>r.checked=false);
-    document.querySelectorAll('#rp-return-method-group label').forEach(l=>l.classList.remove('selected'));
+    loadMyReturnParts(); // refresh list
 
   }catch(e){
     hideLoadingOverlay();
