@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.11
-  อัปเดตล่าสุด   : 24 กันยายน 2569 22:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.13
+  อัปเดตล่าสุด   : 24 กันยายน 2569 22:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -40,7 +40,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.11</title>
+<title>F1 Service — v8.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -834,20 +834,13 @@
       <div style="margin-bottom:14px;">
         <div style="font-size:14px;font-weight:700;margin-bottom:4px;">🧾 หลักฐานการส่ง</div>
         <div style="font-size:11.5px;color:var(--text-faint);margin-bottom:8px;">ใบเสร็จ, รูปถ่าย หรือหลักฐานอื่นๆ (ถ้ามี)</div>
-        <div class="file-dropzone" id="rp-evidence-dropzone" data-key="rp_evidence">
-          <div class="dropzone-inner">
-            <div class="dropzone-icon">📎</div>
-            <div style="font-size:13px;font-weight:600;">แนบหลักฐานการส่ง</div>
-            <div style="font-size:11px;color:var(--text-faint);">รูปภาพ, PDF, วิดีโอ • ไม่เกิน 5 MB</div>
-          </div>
+        <div class="rp-wi-file-zone" id="rp-evidence-dropzone" data-key="rp_evidence" style="border-radius:10px;padding:14px;">
+          <div style="font-size:22px;margin-bottom:4px;">📸</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px;">แตะเพื่อแนบรูปหลักฐาน</div>
+          <div style="font-size:11px;color:var(--text-faint);">รูปภาพ, PDF, วิดีโอ • ไม่เกิน 5 MB</div>
           <input type="file" accept="image/*,application/pdf,video/*" id="rp-evidence-input" style="display:none;">
         </div>
         <div id="rp-evidence-preview" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"></div>
-      </div>
-
-      <!-- หมายเหตุ -->
-      <div style="padding:10px 12px;background:color-mix(in srgb,var(--amber) 12%,transparent);border:1px solid var(--amber);border-radius:8px;font-size:12px;color:var(--amber);margin-bottom:16px;">
-        ⚠️ ไฟล์ทั้งหมดจะถูกอัปโหลดไปยัง Google Drive ใต้โฟลเดอร์ Return ใน Service Center
       </div>
 
       <!-- ปุ่ม Submit -->
@@ -1174,8 +1167,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.11";
-const APP_UPDATED_AT = "24 กันยายน 2569 22:00 น. เวลาไทย";
+const APP_VERSION = "8.13";
+const APP_UPDATED_AT = "24 กันยายน 2569 22:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7371,13 +7364,11 @@ function openReturnPartsModal(){
   rpClearEvidence();
   document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>r.checked=false);
   document.querySelectorAll('#rp-return-method-group label').forEach(l=>l.classList.remove('selected'));
-  // Show
+  // Show — MutationObserver ใน setupMobileBackButtonClosesPopups จะจัดการ back-trap อัตโนมัติ
   $('rp-modal').classList.add('show');
-  syncMobileBackTrap();
 }
 function closeReturnPartsModal(){
   $('rp-modal').classList.remove('show');
-  syncMobileBackTrap();
 }
 
 $('rp-open-modal-btn').addEventListener('click', openReturnPartsModal);
@@ -7458,7 +7449,7 @@ function renderWithdrawalList(){
         ${rpWithdrawals.length>1?`<button class="rp-wi-remove" onclick="rpRemoveWithdrawal(${w.id})" title="ลบใบเบิกนี้">✕</button>`:''}
       </div>
       <div class="rp-wi-num">
-        <input type="text" placeholder="เลขที่ใบเบิก *" value="${escapeHtml(w.num)}" data-wid="${w.id}" class="rp-wi-num-input" style="flex:1;">
+        <input type="text" placeholder="SPOxxxxxxx *" value="${escapeHtml(w.num)}" data-wid="${w.id}" class="rp-wi-num-input" style="flex:1;">
       </div>
       <div class="rp-wi-file-zone${w.file?` has-file`:''}" data-wid="${w.id}" id="rp-wz-${w.id}">
         ${w.file
