@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.16
-  อัปเดตล่าสุด   : 26 กันยายน 2569 19:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.19
+  อัปเดตล่าสุด   : 26 กันยายน 2569 23:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -40,7 +40,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.16</title>
+<title>F1 Service — v8.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -393,6 +393,19 @@
   .rp-pending-badge.self{background:color-mix(in srgb,var(--green) 15%,transparent);color:var(--green);}
   .rp-pending-badge.parcel{background:color-mix(in srgb,var(--accent) 15%,transparent);color:var(--accent);}
   .rp-pending-badge.truck{background:color-mix(in srgb,var(--amber) 15%,transparent);color:var(--amber);}
+
+  /* Return-part compact card (matches claim-card style) */
+  .rp-card{border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:8px;background:var(--panel);cursor:pointer;transition:border-color .18s;}
+  .rp-card:hover{border-color:var(--accent);}
+  .rp-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+  .rp-card-spo{font-family:'IBM Plex Mono';font-size:12.5px;font-weight:700;color:var(--text);}
+  .rp-card-spo-chip{display:inline-block;background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border-radius:5px;padding:2px 7px;font-size:11.5px;font-family:'IBM Plex Mono';font-weight:600;margin:2px 3px 2px 0;}
+  .rp-card-meta{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:4px;}
+  /* Detail panel that expands inline below a card */
+  .rp-detail-panel{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg);}
+  .rp-detail-section{font-size:13px;margin-bottom:10px;}
+  .rp-detail-label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+  .rp-detail-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -627,15 +640,14 @@
     <div id="sup-tab-claims" style="display:none;">
       <!-- รายการรอตรวจรับ — แสดงสำหรับ Manager / Sup Product / Sup Area -->
       <div class="panel-block" id="rp-manager-panel" style="display:none;border:1.5px solid var(--amber);">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
           <div>
             <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;">0</span></h2>
-            <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืนรายการรอรับทั้งหมด (Admin Service จัดการรับใน Google Sheet โดยตรง)</p>
+            <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
           </div>
-          <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
         </div>
-        <!-- ลิงก์ด่วน: เปิด Google Sheet / Drive -->
-        <div id="rp-manager-links" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <!-- ลิงก์ด่วน: แสดงเสมอ ไม่รอโหลดข้อมูล -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
           <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
             📋 Sheet ส่งคืนอะไหล่
@@ -644,13 +656,23 @@
              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
             📊 Sheet บันทึกเคลมอะไหล่
           </a>
-          <a href="#" target="_blank" rel="noopener"
-             id="rp-drive-link"
+          <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
              style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
             📁 Google Drive F1 Service
           </a>
         </div>
-        <div id="rp-manager-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
+        <!-- รายการรอรับ — ซ่อนไว้ก่อน กดปุ่มถึงจะโหลด -->
+        <div id="rp-manager-toggle-wrap" style="margin-bottom:8px;">
+          <button class="btn btn-ghost btn-sm" id="rp-manager-toggle-btn" style="width:100%;justify-content:center;">
+            📋 ดูรายการรอรับ
+          </button>
+        </div>
+        <div id="rp-manager-list-wrap" style="display:none;">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+            <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
+          </div>
+          <div id="rp-manager-list"></div>
+        </div>
       </div>
 
       <div class="panel-block">
@@ -863,6 +885,48 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="rp-submit-btn" style="flex:1;padding:13px;">📤 ส่งข้อมูล</button>
         <button class="btn btn-ghost btn-sm" id="rp-modal-cancel-btn">ยกเลิก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RETURN PARTS EDIT MODAL ============ -->
+  <div class="modal-overlay" id="rp-edit-modal">
+    <div class="modal" style="max-width:480px;">
+      <button class="modal-close-x" id="rp-edit-modal-close">✕</button>
+      <h3 style="margin-bottom:14px;">✏️ แก้ไขรายการส่งคืน</h3>
+
+      <!-- Return method -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;">🚚 รูปแบบการส่งคืน <span style="color:var(--red);">*</span></div>
+        <div id="rp-edit-method-group" style="display:flex;flex-direction:column;gap:8px;">
+          <label class="rp-method-opt"><input type="radio" name="rp-edit-method" value="self"> <span class="rp-method-icon">🏢</span> ด้วยตนเอง ที่ Office</label>
+          <label class="rp-method-opt"><input type="radio" name="rp-edit-method" value="parcel"> <span class="rp-method-icon">📦</span> ส่งพัสดุ</label>
+          <label class="rp-method-opt"><input type="radio" name="rp-edit-method" value="truck"> <span class="rp-method-icon">🚐</span> คืนกลับรถ Office</label>
+        </div>
+      </div>
+
+      <!-- Withdrawal list -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;">📋 รายการใบเบิก</div>
+        <div id="rp-edit-withdrawal-list"></div>
+        <button class="btn btn-ghost btn-sm" id="rp-edit-add-wi-btn" style="margin-top:6px;width:100%;border-style:dashed;">＋ เพิ่มใบเบิก</button>
+      </div>
+
+      <!-- Evidence -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">🧾 หลักฐานการส่ง</div>
+        <div id="rp-edit-evidence-preview" style="margin-bottom:6px;"></div>
+        <div class="rp-wi-file-zone" id="rp-edit-evidence-dropzone" style="border-radius:10px;padding:14px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:2px;">📸 แตะเพื่อเปลี่ยน/เพิ่มหลักฐาน</div>
+          <div style="font-size:11px;color:var(--text-faint);">รูปภาพ, PDF • ไม่เกิน 5 MB</div>
+          <input type="file" accept="image/*,application/pdf" style="display:none;" id="rp-edit-evidence-input">
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="rp-edit-save-btn" style="flex:1;padding:13px;">💾 บันทึกการแก้ไข</button>
+        <button class="btn btn-ghost btn-sm" id="rp-edit-cancel-btn">ยกเลิก</button>
       </div>
     </div>
   </div>
@@ -1183,8 +1247,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.16";
-const APP_UPDATED_AT = "26 กันยายน 2569 19:30 น. เวลาไทย";
+const APP_VERSION = "8.19";
+const APP_UPDATED_AT = "26 กันยายน 2569 23:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7393,25 +7457,34 @@ $('rp-modal-cancel-btn').addEventListener('click', closeReturnPartsModal);
 $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeReturnPartsModal(); });
 
 /* ---- Google Sheets API helpers for Return Parts ---- */
-/* แยกแท็บตามปี ค.ศ. (AD) — เช่น "2025", "2026" — เหมือนบันทึกเคลมแยกตาม Sup
-   ทุกปีข้อมูลเก็บถาวร ไม่ลบ Admin Service ดูใน Google Sheet ตรงๆ */
+/* แยกแท็บตามปี ค.ศ. + สถานะ:
+   - รอรับ{year}  : ยังรอ Admin ตรวจรับ   เช่น "รอรับ2026"
+   - รับแล้ว{year}: รับเรียบร้อยแล้ว      เช่น "รับแล้ว2026"
+   (backward compat: tab ชื่อปีล้วน เช่น "2026" = รูปแบบเก่า v8.17 ลงมา)
+*/
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
-const RP_SHEET_HEADERS = ['วันที่','ปี ค.ศ.','ชื่อผู้ส่ง','อีเมลผู้ส่ง','ใบเบิก (JSON)','วิธีส่ง','ลิงก์หลักฐาน','โฟลเดอร์ Drive'];
-// Sheet columns: A=วันที่ B=ปีคศ C=ชื่อผู้ส่ง D=อีเมล E=ใบเบิก(JSON) F=วิธีส่ง G=หลักฐาน H=โฟลเดอร์ Drive
+// หัวตารางใหม่ (v8.19): ตรงกับ claims sheet + เพิ่มสถานะ
+const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','สถานะ','โฟลเดอร์ Drive'];
+// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก(text) D=วิธีการส่ง E=รูปใบเบิก(links) F=รูปหลักฐาน G=สถานะ H=โฟลเดอร์ Drive
+// สีหัวตาราง: ม่วงอ่อน (lavender)
+const RP_HEADER_COLOR  = { red: 0.741, green: 0.718, blue: 0.906 }; // #BDB7E7
 
 let _rpSheetIdCache = null;
 let _rpSheetInFlight = null;
-// cache tab gid ตามปี: { "2025": gid, "2026": gid }
+// cache tab gid ตามชื่อ tab: { "รอรับ2026": gid, "รับแล้ว2026": gid }
 const _rpTabGidCache = {};
-let _rpSheetUrl = null; // URL ของ Spreadsheet เพื่อแสดง link ในหน้า Manager
+let _rpSheetUrl = null;
 
 async function rpGetToken(){
   if(!driveAccessToken) driveAccessToken = await ensureDriveAccess();
   return driveAccessToken;
 }
 
-/* หา (หรือสร้างใหม่) Spreadsheet "ส่งคืนอะไหล่ Office" ใน Drive root ของแอป
-   - cache ไว้ใน localStorage กันยิง Drive API ซ้ำทุกครั้ง */
+/* ชื่อ tab สำหรับ "รอรับ" และ "รับแล้ว" */
+function rpWaitingTabName(year){ return `รอรับ${year}`; }
+function rpReceivedTabName(year){ return `รับแล้ว${year}`; }
+
+/* หา (หรือสร้างใหม่) Spreadsheet "ส่งคืนอะไหล่ Office" ใน Drive root ของแอป */
 async function ensureReturnPartsSheet(){
   if(_rpSheetIdCache) return _rpSheetIdCache;
   try{
@@ -7436,26 +7509,24 @@ async function ensureReturnPartsSheet(){
       try{ localStorage.setItem('rp_sheet_id', id); }catch(e){}
       return id;
     }
-    // ยังไม่มี — สร้างใหม่ (แท็บแรกใช้ปีปัจจุบัน)
+    // ยังไม่มี — สร้างใหม่ (แท็บแรก = รอรับ{ปีปัจจุบัน})
     const currentYear = new Date().getFullYear().toString();
+    const waitingTab = rpWaitingTabName(currentYear);
     const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ properties:{ title: RP_SHEET_NAME }, sheets:[
-        { properties:{ title: currentYear, index:0 } }
+        { properties:{ title: waitingTab, index:0 } }
       ]})
     });
     if(!createRes.ok) throw new Error('สร้าง Sheet ส่งคืนอะไหล่ไม่สำเร็จ: '+await googleApiErrorMessage(createRes));
     const created = await createRes.json();
     const sheetId = created.spreadsheetId;
-    _rpTabGidCache[currentYear] = created.sheets[0].properties.sheetId;
+    const tabGid = created.sheets[0].properties.sheetId;
+    _rpTabGidCache[waitingTab] = tabGid;
     // ย้ายเข้าโฟลเดอร์ root ของแอป
     await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
-    // เขียน header แถวแรกของแท็บปีปัจจุบัน
-    const range = encodeURIComponent(currentYear+'!A1');
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
-      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ values:[RP_SHEET_HEADERS] })
-    });
+    // เขียน header + format
+    await rpSetupTabHeader(token, sheetId, waitingTab, tabGid);
     _rpSheetIdCache = sheetId;
     _rpSheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
     try{ localStorage.setItem('rp_sheet_id', sheetId); }catch(e){}
@@ -7466,40 +7537,61 @@ async function ensureReturnPartsSheet(){
   finally{ _rpSheetInFlight = null; }
 }
 
-/* หา (หรือสร้าง) แท็บปีใน Spreadsheet — คืน tab title ที่ใช้ได้ */
-async function ensureRpYearTab(sheetId, year){
-  if(_rpTabGidCache[year] !== undefined) return year;
-  const token = await rpGetToken();
-  // ตรวจว่าแท็บปีนี้มีอยู่แล้วมั้ย
-  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
-  if(metaRes.ok){
-    const metaData = await metaRes.json();
-    const existing = (metaData.sheets||[]).find(s=>s.properties.title===year);
-    if(existing){ _rpTabGidCache[year] = existing.properties.sheetId; return year; }
-  }
-  // ยังไม่มี — สร้างแท็บปีใหม่
-  const addRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
-    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ requests:[{ addSheet:{ properties:{ title: year } } }] })
-  });
-  if(!addRes.ok) throw new Error(`สร้างแท็บ "${year}" ไม่สำเร็จ: `+await googleApiErrorMessage(addRes));
-  const addData = await addRes.json();
-  _rpTabGidCache[year] = addData.replies[0].addSheet.properties.sheetId;
-  // เขียน header แถวแรก
-  const range = encodeURIComponent(year+'!A1');
+/* เขียน header แถวแรก + format สีม่วง + validation สถานะ */
+async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
+  // 1) เขียน header text
+  const range = encodeURIComponent(tabTitle+'!A1');
   await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
     method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values:[RP_SHEET_HEADERS] })
   });
-  showToast(`✓ สร้างแท็บปี ${year} ใน Sheet ส่งคืนอะไหล่แล้ว`);
-  return year;
+  // 2) Format: พื้นหลังม่วงอ่อน, ตัวหนา, freeze row 1, data validation column G (สถานะ)
+  const requests = [
+    // สีพื้นหลัง header
+    { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:8 },
+        cell:{ userEnteredFormat:{ backgroundColor: RP_HEADER_COLOR, textFormat:{ bold:true }, horizontalAlignment:'CENTER' } },
+        fields:'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)' }},
+    // Freeze row 1
+    { updateSheetProperties:{ properties:{ sheetId:tabGid, gridProperties:{ frozenRowCount:1 } }, fields:'gridProperties.frozenRowCount' }},
+    // Data validation column G (สถานะ) — dropdown รอรับ / รับแล้ว
+    { setDataValidation:{ range:{ sheetId:tabGid, startRowIndex:1, endRowIndex:1000, startColumnIndex:6, endColumnIndex:7 },
+        rule:{ condition:{ type:'ONE_OF_LIST', values:[{userEnteredValue:'รอรับ'},{userEnteredValue:'รับแล้ว'}] }, showCustomUi:true, strict:false } }}
+  ];
+  await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ requests })
+  });
+}
+
+/* หา (หรือสร้าง) แท็บใน Spreadsheet */
+async function ensureRpTab(sheetId, tabTitle){
+  if(_rpTabGidCache[tabTitle] !== undefined) return tabTitle;
+  const token = await rpGetToken();
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(metaRes.ok){
+    const metaData = await metaRes.json();
+    const existing = (metaData.sheets||[]).find(s=>s.properties.title===tabTitle);
+    if(existing){ _rpTabGidCache[tabTitle] = existing.properties.sheetId; return tabTitle; }
+  }
+  // สร้างแท็บใหม่
+  const addRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ requests:[{ addSheet:{ properties:{ title: tabTitle } } }] })
+  });
+  if(!addRes.ok) throw new Error(`สร้างแท็บ "${tabTitle}" ไม่สำเร็จ: `+await googleApiErrorMessage(addRes));
+  const addData = await addRes.json();
+  const newGid = addData.replies[0].addSheet.properties.sheetId;
+  _rpTabGidCache[tabTitle] = newGid;
+  await rpSetupTabHeader(token, sheetId, tabTitle, newGid);
+  showToast(`✓ สร้างแท็บ "${tabTitle}" ใน Sheet ส่งคืนอะไหล่แล้ว`);
+  return tabTitle;
 }
 
 async function rpSheetAppendRow(rowData, year){
   const token = await rpGetToken();
   const sheetId = await ensureReturnPartsSheet();
-  const tab = await ensureRpYearTab(sheetId, year);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tab+'!A:H')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const tabTitle = await ensureRpTab(sheetId, rpWaitingTabName(year));
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle+'!A:H')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const resp = await fetch(url, {
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
@@ -7509,41 +7601,243 @@ async function rpSheetAppendRow(rowData, year){
   return await resp.json();
 }
 
-/* อ่านรายการรอรับ — อ่านแท็บปีปัจจุบัน (Engineer ส่วนใหญ่ส่งปีเดียวกัน) */
+/* แปลง row array เป็น object — รองรับทั้งรูปแบบใหม่ (v8.19) และเก่า (v8.17)
+   รูปแบบใหม่: [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก(text), วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive]
+   รูปแบบเก่า: [วันที่, ปีคศ, ชื่อ, email, JSON, วิธีส่ง, หลักฐาน, โฟลเดอร์] */
+function rpParseSheetRow(r, rowIndex, isLegacy){
+  if(isLegacy){
+    // รูปแบบเก่า: detect จาก column B = ปี ค.ศ. 4 หลัก
+    let withdrawals = [];
+    try{ withdrawals = JSON.parse(r[4]||'[]'); }catch(e){}
+    return {
+      rowIndex, isLegacy: true,
+      yearAD: r[1]||'',
+      dateStr: r[0]||'',
+      senderName: r[2]||'',
+      senderEmail: r[3]||'',
+      withdrawals,
+      returnMethodLabel: r[5]||'',
+      evidenceUrl: r[6]||'',
+      driveFolder: r[7]||''
+    };
+  }
+  // รูปแบบใหม่
+  const spoText = r[2]||'';
+  // เลขใบเบิก: เก็บเป็น text คั่นด้วย ", " เช่น "SPO001, SPO002"
+  const spoNums = spoText.split(',').map(s=>s.trim()).filter(Boolean);
+  // รูปใบเบิก: link แยกกันด้วย newline หรือ ", "
+  const wiLinksRaw = r[4]||'';
+  const wiLinks = wiLinksRaw.split(/\n|,\s*/).map(s=>s.trim()).filter(s=>s.startsWith('http'));
+  const withdrawals = spoNums.map((num,i)=>({
+    num,
+    driveUrl: wiLinks[i]||'',
+    fileName: num
+  }));
+  return {
+    rowIndex, isLegacy: false,
+    yearAD: new Date().getFullYear().toString(), // ไม่มีในรูปแบบใหม่ — ใช้ปีปัจจุบันแทน
+    dateStr: r[0]||'',
+    senderName: r[1]||'',
+    senderEmail: '', // ไม่เก็บใน sheet ใหม่
+    withdrawals,
+    returnMethodLabel: r[3]||'',
+    evidenceUrl: r[5]||'',
+    driveFolder: r[7]||''
+  };
+}
+
+/* ตรวจว่า row เป็นรูปแบบเก่า: column B มีปี ค.ศ. 4 หลัก เช่น "2026" */
+function rpIsLegacyRow(r){
+  return /^\d{4}$/.test((r[1]||'').trim());
+}
+
+/* อ่านรายการรอรับ — จาก tab "รอรับ{year}" (ใหม่) หรือ "{year}" (เก่า fallback) */
 async function rpSheetReadWaiting(){
   const token = await rpGetToken();
   const sheetId = await ensureReturnPartsSheet();
   const currentYear = new Date().getFullYear().toString();
-  // ตรวจว่ามีแท็บปีนี้มั้ย — ถ้าไม่มีคือยังไม่มีข้อมูลปีนี้เลย
+  const newTabName = rpWaitingTabName(currentYear);   // "รอรับ2026"
+  const oldTabName = currentYear;                     // "2026" (backward compat)
+
   const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
   if(!metaRes.ok) throw new Error('อ่าน Sheet metadata ไม่สำเร็จ');
   const metaData = await metaRes.json();
   const tabs = (metaData.sheets||[]).map(s=>s.properties.title);
-  if(!tabs.includes(currentYear)) return []; // ยังไม่มีข้อมูลปีนี้
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(currentYear+'!A2:H')}`;
-  const resp = await fetch(url, { headers:{'Authorization':'Bearer '+token} });
-  if(!resp.ok){ const t=await resp.text(); throw new Error('Sheets read failed: '+t); }
-  const json = await resp.json();
-  return (json.values||[]).map(r=>({
-    dateStr:  r[0]||'',
-    yearAD:   r[1]||'',
-    senderName: r[2]||'',
-    senderEmail: r[3]||'',
-    withdrawals: (() => { try{ return JSON.parse(r[4]||'[]'); }catch(e){ return []; } })(),
-    returnMethodLabel: r[5]||'',
-    evidenceUrl: r[6]||'',
-    driveFolder: r[7]||''
-  }));
+
+  const results = [];
+
+  // อ่าน tab ใหม่ก่อน
+  if(tabs.includes(newTabName)){
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(newTabName+'!A2:H')}`;
+    const resp = await fetch(url, { headers:{'Authorization':'Bearer '+token} });
+    if(resp.ok){
+      const json = await resp.json();
+      (json.values||[]).forEach((r,i)=>{
+        results.push(rpParseSheetRow(r, i+2, false));
+      });
+    }
+  }
+  // อ่าน tab เก่า (backward compat) — แยกต่างหาก
+  if(tabs.includes(oldTabName)){
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(oldTabName+'!A2:H')}`;
+    const resp = await fetch(url, { headers:{'Authorization':'Bearer '+token} });
+    if(resp.ok){
+      const json = await resp.json();
+      (json.values||[]).forEach((r,i)=>{
+        if(r.some(c=>c)) results.push(rpParseSheetRow(r, i+2, rpIsLegacyRow(r)));
+      });
+    }
+  }
+
+  return results;
 }
 
-/* ---- Load Engineer's own pending returns (from Sheet "รอรับ") ---- */
+/* ---- Return-part card helpers ---- */
+function rpMethodIcon(label){
+  if(!label) return '📦';
+  if(label.includes('ตนเอง')) return '🏢';
+  if(label.includes('รถ')) return '🚐';
+  return '📦';
+}
+function rpMethodClass(label){
+  if(!label) return 'parcel';
+  if(label.includes('ตนเอง')) return 'self';
+  if(label.includes('รถ')) return 'truck';
+  return 'parcel';
+}
+
+/* Render compact SPO chips for a row */
+function rpSpoChips(withdrawals){
+  if(!withdrawals || withdrawals.length===0) return '<span style="color:var(--text-faint);font-size:11px;">— ไม่มีใบเบิก —</span>';
+  return withdrawals.map(w=>`<span class="rp-card-spo-chip">${escapeHtml(w.num||'-')}</span>`).join('');
+}
+
+/* Open inline detail for a return-parts card
+   containerId = id of the container list div (e.g. 'rp-my-returns-list')
+   d = row object (with rowIndex)
+   canEdit = boolean — Engineer sees edit/delete buttons for own entries
+*/
+let _rpOpenDetailId = null; // "containerId::rowIndex"
+function rpToggleDetail(containerId, d, canEdit){
+  const key = `${containerId}::${d.rowIndex}`;
+  const detailId = `rp-detail-${containerId}-${d.rowIndex}`;
+  const existing = document.getElementById(detailId);
+  if(existing){
+    // already open — close it
+    existing.remove();
+    _rpOpenDetailId = null;
+    return;
+  }
+  // close any previously open detail in this container
+  document.querySelectorAll(`[id^="rp-detail-${containerId}-"]`).forEach(el=>el.remove());
+  _rpOpenDetailId = key;
+
+  const wiHtml = (d.withdrawals||[]).map(w=>`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600;">${escapeHtml(w.num||'-')}</span>
+      ${w.driveUrl?`<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent);">📄 ดูไฟล์</a>`:''}
+    </div>`).join('');
+
+  const mIcon = rpMethodIcon(d.returnMethodLabel);
+  const mCls  = rpMethodClass(d.returnMethodLabel);
+  const editBtn    = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-edit-btn-${d.rowIndex}" style="font-size:12px;">✏️ แก้ไข</button>` : '';
+  const delBtn     = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-del-btn-${d.rowIndex}" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
+  // ปุ่ม "ยืนยันรับแล้ว" — เฉพาะ Manager (isEditor) เห็น, ไม่ใช่ Engineer เจ้าของ
+  const receiveBtn = isEditor() ? `<button class="btn btn-sm" id="rp-receive-btn-${d.rowIndex}" style="font-size:12px;background:color-mix(in srgb,var(--accent) 90%,#fff);color:#fff;">✅ ยืนยันรับแล้ว</button>` : '';
+
+  const panel = document.createElement('div');
+  panel.id = detailId;
+  panel.className = 'rp-detail-panel';
+  panel.innerHTML = `
+    <div class="rp-detail-section">
+      <div class="rp-detail-label">วิธีส่งคืน</div>
+      <span class="rp-pending-badge ${mCls}">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
+    </div>
+    <div class="rp-detail-section">
+      <div class="rp-detail-label">ใบเบิก (SPO)</div>
+      ${wiHtml||'<span style="color:var(--text-faint);font-size:12px;">—</span>'}
+    </div>
+    ${d.evidenceUrl?`<div class="rp-detail-section"><div class="rp-detail-label">หลักฐานการส่ง</div><a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent);">🧾 ดูหลักฐาน</a></div>`:''}
+    ${d.driveFolder?`<div class="rp-detail-section"><div class="rp-detail-label">โฟลเดอร์ Drive</div><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--text-faint);">📁 เปิด Drive</a></div>`:''}
+    <div class="rp-detail-section" style="margin-bottom:0;">
+      <div class="rp-detail-label">วันที่ส่ง</div>
+      <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(d.dateStr)}</span>
+    </div>
+    ${(receiveBtn||editBtn||delBtn)?`<div class="rp-detail-actions">${receiveBtn}${editBtn}${delBtn}</div>`:''}
+  `;
+
+  // Insert panel after the card element
+  const cardEl = document.getElementById(`rp-card-${containerId}-${d.rowIndex}`);
+  if(cardEl && cardEl.parentNode){
+    cardEl.parentNode.insertBefore(panel, cardEl.nextSibling);
+  } else {
+    document.getElementById(containerId).appendChild(panel);
+  }
+
+  // Bind edit/delete buttons
+  if(canEdit){
+    const eb = document.getElementById(`rp-edit-btn-${d.rowIndex}`);
+    const db = document.getElementById(`rp-del-btn-${d.rowIndex}`);
+    if(eb) eb.addEventListener('click', (e)=>{ e.stopPropagation(); rpOpenEditModal(d, containerId); });
+    if(db) db.addEventListener('click', (e)=>{ e.stopPropagation(); rpConfirmDelete(d, containerId); });
+  }
+  // Bind "ยืนยันรับแล้ว" button (Manager only)
+  if(isEditor()){
+    const rb = document.getElementById(`rp-receive-btn-${d.rowIndex}`);
+    if(rb) rb.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      if(!confirm(`ยืนยันการรับอะไหล่จาก ${d.senderName||'?'}\n\nรายการจะถูกย้ายไปแท็บ รับแล้ว${d.yearAD||new Date().getFullYear()} และไม่แสดงในรายการรอรับอีกต่อไป`)) return;
+      showLoadingOverlay('กำลังอัปเดตสถานะ...');
+      try{
+        await rpMoveRowToReceived(d);
+        hideLoadingOverlay();
+        showToast('✓ ยืนยันรับแล้ว — รายการถูกย้ายไปแท็บ รับแล้ว');
+        if(containerId==='rp-manager-list') loadReturnPartsManagerList();
+        else loadMyReturnParts();
+      }catch(err){
+        hideLoadingOverlay();
+        alert('อัปเดตสถานะไม่สำเร็จ: '+(err.message||err));
+      }
+    });
+  }
+}
+
+/* Build card HTML for a single return-parts row */
+function rpBuildCard(d, containerId, canEdit){
+  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
+  const mIcon  = rpMethodIcon(d.returnMethodLabel);
+  const mCls   = rpMethodClass(d.returnMethodLabel);
+  const chips  = rpSpoChips(d.withdrawals);
+  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
+    ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
+  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
+    <div class="rp-card-top">
+      <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
+      <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
+    </div>
+    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
+  </div>`;
+}
+
+/* Attach click listeners to all rp-cards in a container */
+function rpBindCards(containerId, rows, canEdit){
+  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+  document.querySelectorAll(`#${containerId} .rp-card`).forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const ri = +card.getAttribute('data-ri');
+      const d = rowMap.get(ri);
+      if(d) rpToggleDetail(containerId, d, canEdit);
+    });
+  });
+}
+
+/* ---- Load Engineer's own pending returns ---- */
 async function loadMyReturnParts(){
   const list = $('rp-my-returns-list');
   const badge = $('rp-my-badge');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
     const rows = await rpSheetReadWaiting();
-    // กรองเฉพาะของตัวเอง
     const mine = rows.filter(r => r.senderEmail === myUserEmail);
     if(mine.length>0){ badge.textContent=mine.length; badge.style.display='inline'; }
     else { badge.style.display='none'; }
@@ -7552,33 +7846,8 @@ async function loadMyReturnParts(){
       list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅<br><span style="font-size:11px;">เมื่อส่งคืนอะไหล่แล้ว รายการจะปรากฏที่นี่จนกว่า Admin Service จะยืนยัน</span></div>';
       return;
     }
-
-    const methodIcon = (label) => {
-      if(label.includes('ตนเอง')) return '🏢';
-      if(label.includes('รถ')) return '🚐';
-      return '📦';
-    };
-    list.innerHTML = mine.map(d=>{
-      const wiHtml = d.withdrawals.map(w=>`
-        <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:4px;">
-          <span>📋</span><span>${escapeHtml(w.num||'-')}</span>
-          ${w.driveUrl?`<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">ดูไฟล์</a>`:''}
-        </div>`).join('');
-      const evidHtml = d.evidenceUrl ? `<a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 ดูหลักฐาน</a>` : '';
-      const mIcon = methodIcon(d.returnMethodLabel);
-      return `<div class="rp-pending-card">
-        <div class="rp-pending-meta" style="font-size:11px;color:var(--text-faint);margin-bottom:6px;">${escapeHtml(d.dateStr)}</div>
-        <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:0;">
-            <div style="margin-bottom:6px;"><span class="rp-pending-badge parcel">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span></div>
-            ${wiHtml}
-            ${evidHtml?`<div style="margin-top:6px;">${evidHtml}</div>`:''}
-            ${d.driveFolder?`<div style="margin-top:4px;"><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-faint);">📁 โฟลเดอร์ Drive</a></div>`:''}
-          </div>
-          <div style="flex-shrink:0;font-size:11px;color:var(--amber);font-weight:600;white-space:nowrap;">⏳ รอตรวจรับ</div>
-        </div>
-      </div>`;
-    }).join('');
+    list.innerHTML = mine.map(d=>rpBuildCard(d,'rp-my-returns-list',true)).join('');
+    rpBindCards('rp-my-returns-list', mine, true);
   }catch(e){
     list.innerHTML=`<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
     badge.style.display='none';
@@ -7673,16 +7942,21 @@ async function ensureReturnPartsFolderPath(senderName){
   return f3;
 }
 
-/* ---- fsAddReturnPart → เขียนแถวใหม่ลง Google Sheet แท็บปี ค.ศ. ---- */
+/* ---- fsAddReturnPart → เขียนแถวใหม่ลง Google Sheet แท็บ รอรับ{ปี} ---- */
+/* NEW FORMAT (v8.19): [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive] */
 async function fsAddReturnPart(data){
   // data: { senderEmail, senderName, returnMethod, returnMethodLabel, withdrawals, evidence, driveFolder, createdAt }
   const dateObj = new Date(data.createdAt||Date.now());
   const dateStr = dateObj.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour12:false});
-  const yearAD = dateObj.getFullYear().toString();
-  const wiJson = JSON.stringify((data.withdrawals||[]).map(w=>({ num:w.num, driveUrl:w.driveUrl, fileName:w.fileName })));
-  const evidUrl = data.evidence ? data.evidence.driveUrl : '';
-  const row = [dateStr, yearAD, data.senderName||'', data.senderEmail||'', wiJson, data.returnMethodLabel||data.returnMethod||'', evidUrl, data.driveFolder||''];
-  return await rpSheetAppendRow(row, yearAD); // ส่ง yearAD เพื่อเขียนลงแท็บปีที่ถูกต้อง
+  const yearAD  = dateObj.getFullYear().toString();
+  // Col C: เลขที่ใบเบิก — comma-separated SPO numbers
+  const spoText  = (data.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
+  // Col E: รูปใบเบิก — newline-separated Drive links
+  const wiLinks  = (data.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+  const evidUrl  = data.evidence ? data.evidence.driveUrl : '';
+  // NEW 8-column row — no email, no JSON, no yearAD column
+  const row = [dateStr, data.senderName||'', spoText, data.returnMethodLabel||data.returnMethod||'', wiLinks, evidUrl, 'รอรับ', data.driveFolder||''];
+  return await rpSheetAppendRow(row, yearAD); // ส่ง yearAD เพื่อเขียนลงแท็บ รอรับ{ปี}
 }
 
 /* ---- Submit handler ---- */
@@ -7760,24 +8034,23 @@ document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>{
   });
 });
 
-/* ---- Manager/Sup: โหลดรายการ "รอรับ" ทั้งหมดจาก Google Sheet ---- */
-async function loadReturnPartsManager(){
-  if(!isEditor()) return;
-  $('rp-manager-panel').style.display = 'block';
-  // ตั้ง href ลิงก์ด่วน
+/* ---- Manager/Sup: ตั้ง href ลิงก์ด่วน (เรียกทันทีที่ panel โชว์) ---- */
+async function setupRpManagerLinks(){
   $('rp-drive-link').href = `https://drive.google.com/drive/folders/${DRIVE_ROOT_FOLDER_ID}`;
-  // Sheet ส่งคืนอะไหล่ — ได้ URL หลัง ensureReturnPartsSheet() สำเร็จ
   try{
     const rpId = await ensureReturnPartsSheet();
     $('rp-sheet-link').href = `https://docs.google.com/spreadsheets/d/${rpId}/edit`;
-  }catch(e){ /* ถ้า fail ปล่อย href=#, ไม่กระทบการโหลดรายการ */ }
-  // Sheet บันทึกเคลม — ดึงจาก DATA.claimsSheetMeta หรือ ensureClaimsLogSpreadsheet
+  }catch(e){}
   try{
-    const claimsId = DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId
+    const claimsId = DATA && DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId
       ? DATA.claimsSheetMeta.spreadsheetId
       : await ensureClaimsLogSpreadsheet();
     $('rp-claims-sheet-link').href = `https://docs.google.com/spreadsheets/d/${claimsId}/edit`;
-  }catch(e){ /* ถ้า fail ปล่อย href=#, ไม่กระทบ */ }
+  }catch(e){}
+}
+
+/* ---- โหลดรายการ "รอรับ" — เรียกเมื่อกดปุ่มดูรายการ (Manager view) ---- */
+async function loadReturnPartsManagerList(){
   const list = $('rp-manager-list');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
@@ -7788,38 +8061,366 @@ async function loadReturnPartsManager(){
 
     if(rows.length===0){ list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>'; return; }
 
-    const methodIcon = (label) => {
-      if(label.includes('ตนเอง')) return '🏢';
-      if(label.includes('รถ')) return '🚐';
-      return '📦';
-    };
-    list.innerHTML = rows.map(d=>{
-      const wiHtml = d.withdrawals.map(w=>`
-        <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:4px;">
-          <span>📋</span><span>${escapeHtml(w.num||'-')}</span>
-          ${w.driveUrl?`<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--accent);">ดูไฟล์</a>`:''}
-        </div>`).join('');
-      const evidHtml = d.evidenceUrl ? `<a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 ดูหลักฐาน</a>` : '';
-      const mIcon = methodIcon(d.returnMethodLabel);
-      return `<div class="rp-pending-card">
-        <div class="rp-pending-meta">${escapeHtml(d.dateStr)}</div>
-        <div class="rp-pending-row">
-          <div class="rp-pending-info">
-            <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${escapeHtml(d.senderName||d.senderEmail||'-')}</div>
-            <div style="margin-bottom:6px;"><span class="rp-pending-badge parcel">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span></div>
-            ${wiHtml}
-            ${evidHtml?`<div style="margin-top:6px;">${evidHtml}</div>`:''}
-            ${d.driveFolder?`<div style="margin-top:4px;"><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-faint);">📁 โฟลเดอร์ Drive</a></div>`:''}
-          </div>
-        </div>
-      </div>`;
-    }).join('');
+    // Manager sees all; Engineer can edit/delete own entries from this view too
+    list.innerHTML = rows.map(d=>rpBuildCard(d,'rp-manager-list', d.senderEmail===myUserEmail)).join('');
+    rpBindCards('rp-manager-list', rows, false); // canEdit passed per-row inside rpToggleDetail
+    // Re-bind with per-row edit permission
+    const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+    document.querySelectorAll('#rp-manager-list .rp-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const ri = +card.getAttribute('data-ri');
+        const d = rowMap.get(ri);
+        if(d) rpToggleDetail('rp-manager-list', d, d.senderEmail===myUserEmail);
+      });
+    });
   }catch(e){
     list.innerHTML=`<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
   }
 }
 
-$('rp-manager-refresh-btn').addEventListener('click', loadReturnPartsManager);
+function loadReturnPartsManager(){
+  if(!isEditor()) return;
+  $('rp-manager-panel').style.display = 'block';
+  setupRpManagerLinks(); // ตั้ง href ทันที ไม่รอรายการ
+}
+
+// ปุ่ม "ดูรายการรอรับ" — toggle เปิด/ปิด
+$('rp-manager-toggle-btn').addEventListener('click', ()=>{
+  const wrap = $('rp-manager-list-wrap');
+  const btn  = $('rp-manager-toggle-btn');
+  const isOpen = wrap.style.display !== 'none';
+  if(isOpen){
+    wrap.style.display = 'none';
+    btn.textContent = '📋 ดูรายการรอรับ';
+  } else {
+    wrap.style.display = 'block';
+    btn.textContent = '🔼 ซ่อนรายการ';
+    loadReturnPartsManagerList();
+  }
+});
+
+$('rp-manager-refresh-btn').addEventListener('click', loadReturnPartsManagerList);
+
+/* ============================================================
+   RETURN PARTS — Edit & Delete (Engineer สำหรับ entry ของตัวเอง)
+   ============================================================ */
+
+/* ---- Sheet helpers for Return Parts row update/delete ---- */
+async function rpUpdateSheetRow(rowIndex, yearAD, rowData, tabOverride){
+  // rowData = array ตาม RP_SHEET_HEADERS (NEW v8.19): [วันที่บันทึก,ผู้ส่ง,เลขที่ใบเบิก,วิธีการส่ง,รูปใบเบิก,รูปหลักฐาน,สถานะ,โฟลเดอร์ Drive]
+  // tabOverride (optional): ชื่อแท็บที่ต้องการอัปเดตโดยตรง (สำหรับ legacy row ที่อยู่ใน tab "2026")
+  const token = await rpGetToken();
+  const sheetId = await ensureReturnPartsSheet();
+  // ใช้ tabOverride ถ้ามี (legacy) ไม่งั้นใช้ชื่อแท็บใหม่
+  const tabName = tabOverride || rpWaitingTabName(yearAD);
+  const rangeStr = `${tabName}!A${rowIndex}:H${rowIndex}`;
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rangeStr)}?valueInputOption=RAW`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range: rangeStr, majorDimension: 'ROWS', values: [rowData] })
+  });
+  if(!res.ok){ const t=await res.text(); throw new Error('อัปเดตแถว Sheet ไม่สำเร็จ: '+t); }
+}
+
+async function rpDeleteSheetRow(rowIndex, yearAD, tabOverride){
+  // tabOverride: ชื่อแท็บที่รู้แน่ๆ (สำหรับ legacy row) ไม่งั้นจะ fallback หาแท็บใหม่/เก่าอัตโนมัติ
+  const token = await rpGetToken();
+  const sheetId = await ensureReturnPartsSheet();
+  // หา gid ของแท็บ — ลองแท็บใหม่ก่อน ถ้าไม่มีลอง legacy
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!metaRes.ok) throw new Error('อ่าน Sheet metadata ไม่สำเร็จ');
+  const metaData = await metaRes.json();
+  const preferredTab = tabOverride || rpWaitingTabName(yearAD);
+  let tabMeta = (metaData.sheets||[]).find(s=>s.properties.title===preferredTab);
+  // fallback: legacy tab "2026"
+  if(!tabMeta) tabMeta = (metaData.sheets||[]).find(s=>s.properties.title===yearAD);
+  if(!tabMeta) throw new Error('ไม่พบแท็บ '+preferredTab+' ใน Sheet');
+  const gid = tabMeta.properties.sheetId;
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId: gid, dimension:'ROWS', startIndex: rowIndex-1, endIndex: rowIndex } } }] })
+  });
+  if(!res.ok){ const t=await res.text(); throw new Error('ลบแถว Sheet ไม่สำเร็จ: '+t); }
+}
+
+/* ---- Move row from รอรับ{year} → รับแล้ว{year} (Manager action: ยืนยันรับแล้ว) ---- */
+async function rpMoveRowToReceived(d){
+  const token = await rpGetToken();
+  const sheetId = await ensureReturnPartsSheet();
+  const yearAD  = d.yearAD||new Date().getFullYear().toString();
+  const waitingTabName  = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
+  const receivedTabName = rpReceivedTabName(yearAD);
+
+  // 1) สร้าง tab รับแล้ว{ปี} ถ้ายังไม่มี (ใช้ ensureRpTab)
+  await ensureRpTab(sheetId, receivedTabName);
+
+  // 2) สร้าง received row (new format เสมอ)
+  let spoText, wiLinks;
+  if(d.isLegacy){
+    spoText = (d.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
+    wiLinks = (d.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+  } else {
+    spoText = (d.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
+    wiLinks = (d.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+  }
+  const receivedRow = [d.dateStr, d.senderName||'', spoText, d.returnMethodLabel||'', wiLinks, d.evidenceUrl||'', 'รับแล้ว', d.driveFolder||''];
+
+  // 3) append ไปที่ tab รับแล้ว{ปี}
+  const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(receivedTabName+'!A:H')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const appendRes = await fetch(appendUrl, {
+    method:'POST',
+    headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ majorDimension:'ROWS', values:[receivedRow] })
+  });
+  if(!appendRes.ok){ const t=await appendRes.text(); throw new Error('เพิ่มแถว รับแล้ว ไม่สำเร็จ: '+t); }
+
+  // 4) ลบแถวออกจาก tab รอรับ (หรือ legacy tab)
+  await rpDeleteSheetRow(d.rowIndex, yearAD, waitingTabName);
+}
+
+/* ---- Delete Drive folder (same API as delete file) ---- */
+async function rpDeleteDriveFolder(folderUrl){
+  if(!folderUrl) return;
+  const m = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  if(!m) return;
+  const folderId = m[1];
+  const token = await ensureDriveAccess();
+  // Drive API: deleting a folder also deletes its contents
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+  if(!res.ok && res.status!==404) throw new Error('ลบโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+}
+
+/* ---- Confirm & Delete ---- */
+async function rpConfirmDelete(d, containerId){
+  if(!confirm('ยืนยันการลบรายการส่งคืนนี้?\n\nข้อมูลใน Google Sheet และไฟล์ใน Google Drive จะถูกลบถาวร กู้คืนไม่ได้')) return;
+  showLoadingOverlay('กำลังลบข้อมูล...');
+  try{
+    const yearAD = d.yearAD||new Date().getFullYear().toString();
+    // legacy row อยู่ใน tab "2026", new row อยู่ใน tab "รอรับ2026"
+    const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
+    // 1) ลบแถวใน Sheet
+    await rpDeleteSheetRow(d.rowIndex, yearAD, tabOverride);
+    // 2) ลบโฟลเดอร์ Drive (ไฟล์ทั้งหมดในโฟลเดอร์จะถูกลบด้วย)
+    if(d.driveFolder){
+      try{ await rpDeleteDriveFolder(d.driveFolder); }
+      catch(e){ console.warn('ลบโฟลเดอร์ Drive ไม่สำเร็จ (ข้ามต่อ):', e.message); }
+    }
+    hideLoadingOverlay();
+    showToast('✓ ลบรายการเรียบร้อยแล้ว');
+    // Refresh whichever list was open
+    if(containerId==='rp-manager-list') loadReturnPartsManagerList();
+    else loadMyReturnParts();
+  }catch(e){
+    hideLoadingOverlay();
+    alert('ลบไม่สำเร็จ: '+e.message);
+  }
+}
+
+/* ---- Edit Modal (reuse rp-modal overlay, swap content) ---- */
+// เก็บ state ของ row ที่กำลังแก้ไข
+let _rpEditRow = null;
+let _rpEditContainerId = null;
+let rpEditWithdrawals = []; // { id, num, file:null, existingUrl:'', existingFileName:'' }
+let rpEditWithdrawalIdCounter = 0;
+let rpEditEvidenceFile = null;
+let rpEditEvidenceExistingUrl = '';
+
+function rpOpenEditModal(d, containerId){
+  _rpEditRow = d;
+  _rpEditContainerId = containerId;
+  // Pre-fill state from existing row
+  rpEditWithdrawals = (d.withdrawals||[]).map(w=>({
+    id: ++rpEditWithdrawalIdCounter,
+    num: w.num||'',
+    file: null,
+    existingUrl: w.driveUrl||'',
+    existingFileName: w.fileName||w.num||''
+  }));
+  if(rpEditWithdrawals.length===0) rpEditWithdrawals.push({ id: ++rpEditWithdrawalIdCounter, num:'', file:null, existingUrl:'', existingFileName:'' });
+  rpEditEvidenceFile = null;
+  rpEditEvidenceExistingUrl = d.evidenceUrl||'';
+
+  // Pre-select return method
+  const methodVal = _rpMethodLabelToVal(d.returnMethodLabel||'');
+  document.querySelectorAll('input[name="rp-edit-method"]').forEach(r=>{
+    r.checked = (r.value===methodVal);
+    const label = r.closest('label');
+    if(label){ label.classList.toggle('selected', r.checked); }
+  });
+
+  // Pre-render evidence
+  const prevEl = $('rp-edit-evidence-preview');
+  if(prevEl){
+    if(rpEditEvidenceExistingUrl){
+      prevEl.innerHTML = `<a href="${escapeHtml(rpEditEvidenceExistingUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 หลักฐานปัจจุบัน</a>
+      <button class="icon-btn" id="rp-edit-ev-clear" style="margin-left:8px;font-size:11px;">✕ ลบออก</button>`;
+      document.getElementById('rp-edit-ev-clear')?.addEventListener('click', ()=>{ rpEditEvidenceExistingUrl=''; rpEditEvidenceFile=null; prevEl.innerHTML=''; });
+    } else {
+      prevEl.innerHTML = '';
+    }
+  }
+
+  rpEditRenderWithdrawalList();
+  $('rp-edit-modal').classList.add('show');
+}
+
+function _rpMethodLabelToVal(label){
+  if(label.includes('ตนเอง')) return 'self';
+  if(label.includes('รถ')) return 'truck';
+  if(label.includes('พัสดุ')) return 'parcel';
+  return 'parcel';
+}
+
+function rpEditRenderWithdrawalList(){
+  const container = $('rp-edit-withdrawal-list');
+  if(!container) return;
+  container.innerHTML = rpEditWithdrawals.map((w,i)=>`
+    <div class="rp-withdrawal-item" data-ewid="${w.id}" style="margin-bottom:8px;">
+      <div class="rp-wi-header">
+        <span class="rp-wi-label">ใบเบิก #${i+1}</span>
+        ${rpEditWithdrawals.length>1?`<button class="rp-wi-remove" onclick="rpEditRemoveWi(${w.id})">✕</button>`:''}
+      </div>
+      <div class="rp-wi-num">
+        <input type="text" placeholder="SPOxxxxxxx *" value="${escapeHtml(w.num)}" data-ewid="${w.id}" class="rp-edit-wi-num-input" style="flex:1;">
+      </div>
+      <div class="rp-wi-file-zone${w.file?' has-file':''}" data-ewid="${w.id}" id="rp-edit-wz-${w.id}" style="margin-top:4px;">
+        ${w.file
+          ? `📎 ${escapeHtml(w.file.name)} — กดเพื่อเปลี่ยน`
+          : w.existingUrl
+            ? `✅ ${escapeHtml(w.existingFileName||'ไฟล์เดิม')} — <a href="${escapeHtml(w.existingUrl)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11px;">ดู</a> · กดเพื่อเปลี่ยน`
+            : '📸 แตะเพื่อแนบรูปใบเบิก'
+        }
+        <input type="file" accept="image/*,application/pdf" style="display:none;" data-ewid="${w.id}" class="rp-edit-wi-file-input">
+      </div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.rp-edit-wi-num-input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const wid = +e.target.getAttribute('data-ewid');
+      const w = rpEditWithdrawals.find(x=>x.id===wid); if(w) w.num=e.target.value;
+    });
+  });
+  container.querySelectorAll('.rp-wi-file-zone').forEach(zone=>{
+    zone.addEventListener('click', ()=>{ zone.querySelector('.rp-edit-wi-file-input')?.click(); });
+    zone.querySelector('.rp-edit-wi-file-input')?.addEventListener('change', e=>{
+      const wid = +e.target.getAttribute('data-ewid');
+      const w = rpEditWithdrawals.find(x=>x.id===wid);
+      const f = e.target.files[0]; if(!f) return;
+      if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); return; }
+      if(w){ w.file=f; rpEditRenderWithdrawalList(); }
+    });
+  });
+}
+
+window.rpEditRemoveWi = function(id){
+  rpEditWithdrawals = rpEditWithdrawals.filter(w=>w.id!==id);
+  if(rpEditWithdrawals.length===0) rpEditWithdrawals.push({ id:++rpEditWithdrawalIdCounter, num:'', file:null, existingUrl:'', existingFileName:'' });
+  rpEditRenderWithdrawalList();
+};
+
+/* ---- Static event listeners for rp-edit-modal ---- */
+$('rp-edit-modal-close').addEventListener('click', ()=>{ $('rp-edit-modal').classList.remove('show'); });
+$('rp-edit-cancel-btn').addEventListener('click',  ()=>{ $('rp-edit-modal').classList.remove('show'); });
+$('rp-edit-modal').addEventListener('click', e=>{ if(e.target===$('rp-edit-modal')) $('rp-edit-modal').classList.remove('show'); });
+$('rp-edit-add-wi-btn').addEventListener('click', ()=>{
+  rpEditWithdrawals.push({ id: ++rpEditWithdrawalIdCounter, num:'', file:null, existingUrl:'', existingFileName:'' });
+  rpEditRenderWithdrawalList();
+});
+$('rp-edit-evidence-dropzone').addEventListener('click', ()=>$('rp-edit-evidence-input').click());
+$('rp-edit-evidence-input').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); return; }
+  rpEditEvidenceFile = f;
+  rpEditEvidenceExistingUrl = '';
+  $('rp-edit-evidence-preview').innerHTML = `<span style="font-size:12px;color:var(--text-dim);">📎 ${escapeHtml(f.name)}</span>`;
+});
+document.querySelectorAll('input[name="rp-edit-method"]').forEach(r=>{
+  r.addEventListener('change', ()=>{
+    document.querySelectorAll('#rp-edit-method-group label').forEach(l=>l.classList.remove('selected'));
+    if(r.checked) r.closest('label').classList.add('selected');
+  });
+});
+$('rp-edit-save-btn').addEventListener('click', rpEditSave);
+
+async function rpEditSave(){
+  const d = _rpEditRow;
+  if(!d){ alert('ข้อมูลไม่ครบ'); return; }
+
+  const method = (document.querySelector('input[name="rp-edit-method"]:checked')||{}).value||'';
+  if(!method){ alert('กรุณาเลือกรูปแบบการส่งคืน'); return; }
+
+  let valid = true;
+  rpEditWithdrawals.forEach(w=>{ if(!w.num.trim()) valid=false; });
+  if(!valid){ alert('กรุณากรอกเลขที่ใบเบิกทุกรายการ'); return; }
+
+  showLoadingOverlay('กำลังบันทึกการแก้ไข...');
+  try{
+    // Get drive folder id from existing URL
+    const driveFolderUrl = d.driveFolder||'';
+    const folderMatch = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    const folderId = folderMatch ? folderMatch[1] : null;
+
+    // Upload new files for withdrawals that changed
+    const token = await ensureDriveAccess();
+    const newWithdrawals = [];
+    for(let i=0;i<rpEditWithdrawals.length;i++){
+      const w = rpEditWithdrawals[i];
+      updateLoadingOverlayText(`กำลังประมวลผลใบเบิก ${i+1}/${rpEditWithdrawals.length}...`);
+      if(w.file && folderId){
+        // Upload new file
+        const safeNum = sanitizeFolderName(w.num||`withdrawal-${i+1}`);
+        const ext = w.file.name.split('.').pop();
+        const fname = `ใบเบิก_${safeNum}.${ext}`;
+        const fileId = await driveUploadFile(w.file, fname, w.file.type||'application/octet-stream', folderId);
+        const url = `https://drive.google.com/file/d/${fileId}/view`;
+        newWithdrawals.push({ num: w.num.trim(), driveFileId: fileId, driveUrl: url, fileName: fname });
+      } else if(w.existingUrl){
+        // Keep existing file reference
+        const existingW = (d.withdrawals||[]).find(x=>x.num===w.num) || (d.withdrawals||[])[i];
+        newWithdrawals.push({ num: w.num.trim(), driveFileId: existingW?.driveFileId||'', driveUrl: w.existingUrl, fileName: w.existingFileName });
+      } else {
+        newWithdrawals.push({ num: w.num.trim(), driveFileId: '', driveUrl: '', fileName: '' });
+      }
+    }
+
+    // Upload new evidence if changed
+    let newEvidUrl = rpEditEvidenceExistingUrl||'';
+    if(rpEditEvidenceFile && folderId){
+      updateLoadingOverlayText('กำลังอัปโหลดหลักฐาน...');
+      const ext2 = rpEditEvidenceFile.name.split('.').pop();
+      const fname2 = `หลักฐาน_${bangkokDateFolder()}.${ext2}`;
+      const fileId2 = await driveUploadFile(rpEditEvidenceFile, fname2, rpEditEvidenceFile.type||'application/octet-stream', folderId);
+      newEvidUrl = `https://drive.google.com/file/d/${fileId2}/view`;
+    } else if(!rpEditEvidenceExistingUrl){
+      newEvidUrl = '';
+    }
+
+    const methodLabel = {self:'ด้วยตนเอง ที่ Office',parcel:'ส่งพัสดุ',truck:'คืนกลับรถ Office'}[method]||method;
+    const yearAD = d.yearAD||new Date().getFullYear().toString();
+    // NEW FORMAT (v8.19): [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive]
+    const spoText   = newWithdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
+    const wiLinks   = newWithdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+    const statusVal = 'รอรับ'; // edit ไม่เปลี่ยนสถานะ
+    const updatedRow = [d.dateStr, d.senderName, spoText, methodLabel, wiLinks, newEvidUrl, statusVal, driveFolderUrl];
+    // legacy row อยู่ใน tab "2026", new row อยู่ใน tab "รอรับ2026"
+    const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
+
+    updateLoadingOverlayText('กำลังอัปเดต Google Sheet...');
+    await rpUpdateSheetRow(d.rowIndex, yearAD, updatedRow, tabOverride);
+
+    hideLoadingOverlay();
+    $('rp-edit-modal').classList.remove('show');
+    showToast('✓ แก้ไขเรียบร้อย');
+    if(_rpEditContainerId==='rp-manager-list') loadReturnPartsManagerList();
+    else loadMyReturnParts();
+  }catch(e){
+    hideLoadingOverlay();
+    console.error('rpEditSave error',e);
+    alert('บันทึกไม่สำเร็จ: '+(e.message||e));
+  }
+}
 
 /* ---- Hook into sup-tab-claims show ---- */
 (function patchSupClaimsTab(){
