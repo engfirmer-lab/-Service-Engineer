@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.22
+  เวอร์ชันปัจจุบัน : 8.23
   อัปเดตล่าสุด   : 27 กันยายน 2569 08:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.22</title>
+<title>F1 Service — v8.23</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -450,7 +450,7 @@
       <button id="mode-sup">Sup Product</button>
       <button id="mode-owner">จัดการ Product</button>
       <button id="mode-access">จัดการสิทธิ์</button>
-      <button id="mode-mgr">Manager</button>
+      <button id="mode-mgr">Dashboard</button>
       <button id="mode-backup">Export/Backup</button>
     </div>
     <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
@@ -1263,8 +1263,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.22";
-const APP_UPDATED_AT = "27 กันยายน 2569 08:25 น. เวลาไทย";
+const APP_VERSION = "8.23";
+const APP_UPDATED_AT = "27 กันยายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2959,7 +2959,7 @@ function initGis(){
   if(FIREBASE_CONFIG.apiKey.includes('PASTE_FROM')){ $('gsi-config-warning').style.display='block'; return false; }
   if(!window.google || !window.google.accounts) return false;
   if(!_gisInitialized){
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGisCredential, auto_select:false });
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGisCredential, auto_select:true });
     _gisInitialized = true;
   }
   $('g_id_signin_container').innerHTML = '';
