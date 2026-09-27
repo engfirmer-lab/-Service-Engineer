@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.23
+  เวอร์ชันปัจจุบัน : 8.24
   อัปเดตล่าสุด   : 27 กันยายน 2569 08:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.23</title>
+<title>F1 Service — v8.24</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -654,43 +654,6 @@
     </div>
 
     <div id="sup-tab-claims" style="display:none;">
-      <!-- รายการรอตรวจรับ — แสดงสำหรับ Manager / Sup Product / Sup Area -->
-      <div class="panel-block" id="rp-manager-panel" style="display:none;border:1.5px solid var(--amber);">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-          <div>
-            <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;">0</span></h2>
-            <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
-          </div>
-        </div>
-        <!-- ลิงก์ด่วน: แสดงเสมอ ไม่รอโหลดข้อมูล -->
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-          <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-            📋 Sheet ส่งคืนอะไหล่
-          </a>
-          <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-            📊 Sheet บันทึกเคลมอะไหล่
-          </a>
-          <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-            📁 Google Drive F1 Service
-          </a>
-        </div>
-        <!-- รายการรอรับ — ซ่อนไว้ก่อน กดปุ่มถึงจะโหลด -->
-        <div id="rp-manager-toggle-wrap" style="margin-bottom:8px;">
-          <button class="btn btn-ghost btn-sm" id="rp-manager-toggle-btn" style="width:100%;justify-content:center;">
-            📋 ดูรายการรอรับ
-          </button>
-        </div>
-        <div id="rp-manager-list-wrap" style="display:none;">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
-            <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
-          </div>
-          <div id="rp-manager-list"></div>
-        </div>
-      </div>
-
       <div class="panel-block">
         <p class="panel-sub">สรุปเคลม/แจ้งปัญหาที่ Engineer และ Sup Product บันทึกเข้ามา — หน้านี้สำหรับดูและติดตามสถานะเท่านั้น (บันทึกเคลมใหม่ได้จากแท็บ Engineer)</p>
       </div>
@@ -1072,19 +1035,70 @@
   <!-- ============ MANAGER VIEW ============ -->
   <div id="view-mgr" style="display:none;">
     <div class="desktop-hint">🖥️ Dashboard ภาพรวม — สำหรับ Engineer Manager</div>
-    <div class="panel-block">
-      <h2>ข้อมูล Troubleshoot</h2>
-      <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — Manager ดูแล้วตีความเอง</p>
-      <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
-      <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
-      <div style="overflow-x:auto;"><table id="mgr-table"></table></div>
+
+    <!-- รายการรอตรวจรับอะไหล่ -->
+    <div class="panel-block" style="border:1.5px solid var(--amber);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div>
+          <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;">0</span></h2>
+          <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
+        </div>
+      </div>
+      <!-- ลิงก์ด่วน: แสดงเสมอ ไม่รอโหลดข้อมูล -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+          📋 Sheet ส่งคืนอะไหล่
+        </a>
+        <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+          📊 Sheet บันทึกเคลมอะไหล่
+        </a>
+        <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+          📁 Google Drive F1 Service
+        </a>
+      </div>
+      <!-- รายการรอรับ — ซ่อนไว้ก่อน กดปุ่มถึงจะโหลด -->
+      <div id="rp-manager-toggle-wrap" style="margin-bottom:8px;">
+        <button class="btn btn-ghost btn-sm" id="rp-manager-toggle-btn" style="width:100%;justify-content:center;">
+          📋 ดูรายการรอรับ
+        </button>
+      </div>
+      <div id="rp-manager-list-wrap" style="display:none;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+          <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
+        </div>
+        <div id="rp-manager-list"></div>
+      </div>
     </div>
+
+    <!-- ข้อมูล Troubleshoot -->
     <div class="panel-block">
-      <h2>ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
+      <h2>📊 ข้อมูล Troubleshoot</h2>
+      <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — ดูแล้วตีความเอง</p>
+      <div id="mgr-trbl-toggle-wrap" style="margin-bottom:8px;">
+        <button class="btn btn-ghost btn-sm" id="mgr-trbl-toggle-btn" style="width:100%;justify-content:center;">📋 แสดงข้อมูล Troubleshoot</button>
+      </div>
+      <div id="mgr-trbl-content" style="display:none;">
+        <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+        <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
+        <div style="overflow-x:auto;"><table id="mgr-table"></table></div>
+      </div>
+    </div>
+
+    <!-- ความครบถ้วนของเอกสาร -->
+    <div class="panel-block">
+      <h2>📄 ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
       <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
-      <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
-      <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
-      <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
+      <div id="mgr-doc-toggle-wrap" style="margin-bottom:8px;">
+        <button class="btn btn-ghost btn-sm" id="mgr-doc-toggle-btn" style="width:100%;justify-content:center;">📋 แสดงข้อมูลเอกสาร</button>
+      </div>
+      <div id="mgr-doc-content" style="display:none;">
+        <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+        <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
+        <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
+      </div>
     </div>
   </div>
 
@@ -1263,8 +1277,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.23";
-const APP_UPDATED_AT = "27 กันยายน 2569 10:00 น. เวลาไทย";
+const APP_VERSION = "8.24";
+const APP_UPDATED_AT = "27 กันยายน 2569 10:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3252,7 +3266,8 @@ function switchMode(mode){
   if(mode==='sup') renderSupView();
   if(mode==='access') renderAccessView();
   if(mode==='owner') renderOwnerView();
-  if(mode==='mgr') loadAllErrorsThenRenderMgr();
+  // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
+  if(mode==='mgr') setupRpManagerLinks(); // ตั้ง href ลิงก์ด่วนเท่านั้น
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
 }
 async function loadAllErrorsThenRenderMgr(){
@@ -8105,7 +8120,7 @@ async function loadReturnPartsManagerList(){
 
 function loadReturnPartsManager(){
   if(!isEditor()) return;
-  $('rp-manager-panel').style.display = 'block';
+  // rp-manager-panel ย้ายไปอยู่ใน Dashboard แล้ว — ไม่ต้อง show/hide
   setupRpManagerLinks(); // ตั้ง href ทันที ไม่รอรายการ
 }
 
@@ -8143,6 +8158,38 @@ $('rp-manager-toggle-btn').addEventListener('click', ()=>{
 });
 
 $('rp-manager-refresh-btn').addEventListener('click', loadReturnPartsManagerList);
+
+// Dashboard — ปุ่ม toggle Troubleshoot
+let _mgrTrblLoaded = false;
+$('mgr-trbl-toggle-btn').addEventListener('click', ()=>{
+  const content = $('mgr-trbl-content');
+  const btn = $('mgr-trbl-toggle-btn');
+  const isOpen = content.style.display !== 'none';
+  if(isOpen){
+    content.style.display = 'none';
+    btn.textContent = '📋 แสดงข้อมูล Troubleshoot';
+  } else {
+    content.style.display = 'block';
+    btn.textContent = '🔼 ซ่อน';
+    if(!_mgrTrblLoaded){ loadAllErrorsThenRenderMgr(); _mgrTrblLoaded = true; }
+  }
+});
+
+// Dashboard — ปุ่ม toggle เอกสาร
+let _mgrDocLoaded = false;
+$('mgr-doc-toggle-btn').addEventListener('click', ()=>{
+  const content = $('mgr-doc-content');
+  const btn = $('mgr-doc-toggle-btn');
+  const isOpen = content.style.display !== 'none';
+  if(isOpen){
+    content.style.display = 'none';
+    btn.textContent = '📋 แสดงข้อมูลเอกสาร';
+  } else {
+    content.style.display = 'block';
+    btn.textContent = '🔼 ซ่อน';
+    if(!_mgrDocLoaded){ loadAllErrorsThenRenderMgr(); _mgrDocLoaded = true; }
+  }
+});
 
 /* ============================================================
    RETURN PARTS — Edit & Delete (Engineer สำหรับ entry ของตัวเอง)
