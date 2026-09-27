@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.31
-  อัปเดตล่าสุด   : 27 กันยายน 2569 14:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.32
+  อัปเดตล่าสุด   : 27 กันยายน 2569 14:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.31</title>
+<title>F1 Service — v8.32</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1298,8 +1298,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.31";
-const APP_UPDATED_AT = "27 กันยายน 2569 14:30 น. เวลาไทย";
+const APP_VERSION = "8.32";
+const APP_UPDATED_AT = "27 กันยายน 2569 14:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5627,7 +5627,8 @@ function openClaimModal(existingClaim){
     if(savedRaw){
       const saved = JSON.parse(savedRaw);
       if(isClaimDraftMeaningful(saved)){
-        const wantsRestore = confirm('พบข้อมูลที่กรอกค้างไว้ก่อนหน้า (ยังไม่ได้บันทึก)\nต้องการกู้คืนข้อมูลนี้กลับมาหรือไม่?');
+        const savedDate = saved.savedAt ? new Date(saved.savedAt).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+        const wantsRestore = confirm(`📝 มีแบบร่างที่บันทึกไว้${savedDate?' ('+savedDate+')':''}\n\nโหลดแบบร่างต่อไหม?\n\n(กด "ตกลง" = โหลดต่อ / "ยกเลิก" = เริ่มใหม่)`);
         if(wantsRestore){
           Object.assign(claimDraft, { claimant: saved.claimant, siteName: saved.siteName, category: saved.category, model: saved.model,
             serialNumber: saved.serialNumber, errorCode: saved.errorCode, errorMessage: saved.errorMessage, problemDate: saved.problemDate, fixDate: saved.fixDate,
