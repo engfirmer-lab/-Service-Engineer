@@ -3,14 +3,19 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.20
-  อัปเดตล่าสุด   : 27 กันยายน 2569 08:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.21
+  อัปเดตล่าสุด   : 27 กันยายน 2569 08:15 น. เวลาไทย
   ===================================================================
-  DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์)
+  DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
-  2. อัปเดต APP_VERSION และ APP_UPDATED_AT ใน JS ให้ตรงกับเวอร์ชันและเวลาไทยจริง
-  3. อัปเดต comment block นี้ (เวอร์ชันปัจจุบัน + อัปเดตล่าสุด) ให้ตรงกันด้วย
-  4. อัปเดต <title> ให้ตรงกันด้วย
+  2. อัปเดต APP_VERSION และ APP_UPDATED_AT ใน JS → grep "APP_VERSION = " ยืนยันก่อนส่ง
+  3. อัปเดต comment block นี้ (เวอร์ชันปัจจุบัน + อัปเดตล่าสุด) ให้ตรงกัน
+  4. อัปเดต <title> → grep "<title>" ยืนยันก่อนส่ง
+  ─── VERIFY CHECKLIST (Claude ต้อง grep ยืนยัน 3 จุดนี้ก่อน SendUserFile ทุกครั้ง) ───
+  grep: APP_VERSION = "X.XX"   → ต้องตรงกับเวอร์ชันใหม่
+  grep: <title>F1 Service — vX.XX</title>  → ต้องตรงกับเวอร์ชันใหม่
+  grep: เวอร์ชันปัจจุบัน : X.XX  → ต้องตรงกับเวอร์ชันใหม่
+  ห้ามส่งไฟล์ถ้า 3 จุดนี้ยังไม่ตรงกัน
   ===================================================================
   ROLE REFERENCE
   - canManage = isEditor() = Sup Product — เห็นทุกอย่าง แก้ไข/ลบได้
@@ -40,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.20</title>
+<title>F1 Service — v8.21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -555,9 +560,9 @@
         <div class="panel-block" id="rp-my-returns-block" style="padding:14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
             <h2 style="font-size:14px;margin:0;">รายการที่ยังรอตรวจรับ <span class="badge-count" id="rp-my-badge" style="display:none;">0</span></h2>
-            <button class="btn btn-ghost btn-sm" id="rp-my-toggle-btn" style="font-size:12px;white-space:nowrap;">🔼 ซ่อน</button>
+            <button class="btn btn-ghost btn-sm" id="rp-my-toggle-btn" style="font-size:12px;white-space:nowrap;">📋 แสดงรายการ</button>
           </div>
-          <div id="rp-my-returns-wrap">
+          <div id="rp-my-returns-wrap" style="display:none;">
             <div id="rp-my-returns-list">
               <div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">— ยังไม่มีรายการ —</div>
             </div>
@@ -1258,8 +1263,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.20";
-const APP_UPDATED_AT = "27 กันยายน 2569 08:05 น. เวลาไทย";
+const APP_VERSION = "8.21";
+const APP_UPDATED_AT = "27 กันยายน 2569 08:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2050,6 +2055,7 @@ const GOOGLE_CLIENT_ID = "652851518589-9jdarip7ndm82967s3bkllnbcj9hmuvh.apps.goo
 /* ===================== GOOGLE DRIVE — เก็บรูปภาพ/เอกสารจริง ===================== */
 const DRIVE_ROOT_FOLDER_ID = "1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu"; // โฟลเดอร์ "Service Center"
 let driveAccessToken = null;
+let driveTokenExpiry = 0; // timestamp ms ที่ token จะหมดอายุ
 let driveTokenClient = null;
 function initDriveTokenClient(){
   if(driveTokenClient) return;
@@ -2061,14 +2067,20 @@ function initDriveTokenClient(){
 }
 function ensureDriveAccess(){
   return new Promise((resolve, reject)=>{
-    if(driveAccessToken){ resolve(driveAccessToken); return; }
+    // reuse token ถ้ายังไม่หมดอายุ (เผื่อ 3 นาทีล่วงหน้า)
+    if(driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000){
+      resolve(driveAccessToken); return;
+    }
+    driveAccessToken = null; // clear token เก่าที่หมดอายุแล้ว
     initDriveTokenClient();
-    showToast('กำลังขอสิทธิ์เข้าถึง Google Drive เพื่ออัปโหลดรูปภาพ...');
     driveTokenClient.callback = (resp)=>{
       if(resp.error){ reject(new Error(resp.error)); return; }
       driveAccessToken = resp.access_token;
+      // Google token อายุ 3600 วินาที — เก็บเวลาหมดอายุไว้
+      driveTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
       resolve(driveAccessToken);
     };
+    // prompt:'' = silent refresh ถ้า session ยังอยู่ ไม่ต้อง login ซ้ำ
     driveTokenClient.requestAccessToken({ prompt: '' });
   });
 }
