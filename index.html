@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.28
-  อัปเดตล่าสุด   : 27 กันยายน 2569 11:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.29
+  อัปเดตล่าสุด   : 27 กันยายน 2569 11:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.28</title>
+<title>F1 Service — v8.29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -426,7 +426,16 @@
   /* Detail panel that expands inline below a card */
   .rp-detail-panel{border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;background:var(--bg);}
   .rp-detail-section{font-size:13px;margin-bottom:10px;}
-  .rp-detail-label{font-size:11px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+  .rp-detail-label{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  /* thumbnail grid ในการ์ด */
+  .rp-thumb-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  .rp-thumb-item{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:2px solid var(--border);cursor:pointer;flex-shrink:0;background:var(--panel-alt);}
+  .rp-thumb-item img{width:100%;height:100%;object-fit:cover;display:block;}
+  .rp-thumb-item:hover{border-color:var(--accent);}
+  .rp-thumb-item .rp-thumb-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:9.5px;text-align:center;padding:2px 3px;line-height:1.3;}
+  .rp-thumb-file{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel-alt);font-size:12px;color:var(--text);cursor:pointer;}
+  .rp-thumb-file:hover{border-color:var(--accent);color:var(--accent);}
+  .rp-spo-num{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
   .rp-detail-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1288,8 +1297,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.28";
-const APP_UPDATED_AT = "27 กันยายน 2569 11:10 น. เวลาไทย";
+const APP_VERSION = "8.29";
+const APP_UPDATED_AT = "27 กันยายน 2569 11:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7798,11 +7807,23 @@ function rpToggleDetail(containerId, d, canEdit){
   document.querySelectorAll(`[id^="rp-detail-${containerId}-"]`).forEach(el=>el.remove());
   _rpOpenDetailId = key;
 
-  const wiHtml = (d.withdrawals||[]).map(w=>`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-      <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600;">${escapeHtml(w.num||'-')}</span>
-      ${w.driveUrl?`<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" style="font-size:11.5px;color:var(--accent);">📄 ดูไฟล์</a>`:''}
-    </div>`).join('');
+  // helper: สร้าง thumbnail URL จาก Drive file URL
+  function rpDriveThumb(url, sz){ const fid=driveFileIdFromUrl(url); return fid?`https://drive.google.com/thumbnail?id=${fid}&sz=${sz||'w200'}`:''; }
+
+  // สะสม URL รูปทั้งหมดสำหรับ lightbox (ใบเบิก + หลักฐาน)
+  const allImgUrls = [];
+  const wiHtml = (d.withdrawals||[]).map(w=>{
+    const thumb = w.driveUrl ? rpDriveThumb(w.driveUrl,'w300') : '';
+    const fullUrl = w.driveUrl ? `https://drive.google.com/thumbnail?id=${driveFileIdFromUrl(w.driveUrl)}&sz=w1200` : '';
+    if(fullUrl) allImgUrls.push(fullUrl);
+    const imgIdx = allImgUrls.length - 1;
+    return `<div style="margin-bottom:8px;">
+      <div class="rp-spo-num">${escapeHtml(w.num||'-')}</div>
+      ${thumb
+        ? `<div class="rp-thumb-row"><div class="rp-thumb-item" data-lbidx="${imgIdx}"><img src="${thumb}" alt="ใบเบิก" loading="lazy"><div class="rp-thumb-label">ใบเบิก</div></div></div>`
+        : (w.driveUrl ? `<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" class="rp-thumb-file">📄 ดูไฟล์ใบเบิก</a>` : '')}
+    </div>`;
+  }).join('');
 
   const mIcon = rpMethodIcon(d.returnMethodLabel);
   const mCls  = rpMethodClass(d.returnMethodLabel);
@@ -7810,6 +7831,17 @@ function rpToggleDetail(containerId, d, canEdit){
   const delBtn     = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-del-btn-${d.rowIndex}" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
   // ปุ่ม "ยืนยันรับแล้ว" — เฉพาะ Manager (isEditor) เห็น, ไม่ใช่ Engineer เจ้าของ
   const receiveBtn = isEditor() ? `<button class="btn btn-sm" id="rp-receive-btn-${d.rowIndex}" style="font-size:12px;background:color-mix(in srgb,var(--accent) 90%,#fff);color:#fff;">✅ ยืนยันรับแล้ว</button>` : '';
+
+  // เตรียม evidence thumbnail
+  const evThumb = d.evidenceUrl ? rpDriveThumb(d.evidenceUrl,'w300') : '';
+  const evFull  = d.evidenceUrl ? `https://drive.google.com/thumbnail?id=${driveFileIdFromUrl(d.evidenceUrl)}&sz=w1200` : '';
+  if(evFull) allImgUrls.push(evFull);
+  const evIdx = allImgUrls.length - 1;
+  const evHtml = d.evidenceUrl
+    ? (evThumb
+        ? `<div class="rp-thumb-row"><div class="rp-thumb-item" data-lbidx="${evIdx}"><img src="${evThumb}" alt="หลักฐาน" loading="lazy"><div class="rp-thumb-label">หลักฐาน</div></div></div>`
+        : `<a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" class="rp-thumb-file">🧾 ดูหลักฐาน</a>`)
+    : '';
 
   const panel = document.createElement('div');
   panel.id = detailId;
@@ -7823,8 +7855,8 @@ function rpToggleDetail(containerId, d, canEdit){
       <div class="rp-detail-label">ใบเบิก (SPO)</div>
       ${wiHtml||'<span style="color:var(--text-faint);font-size:12px;">—</span>'}
     </div>
-    ${d.evidenceUrl?`<div class="rp-detail-section"><div class="rp-detail-label">หลักฐานการส่ง</div><a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent);">🧾 ดูหลักฐาน</a></div>`:''}
-    ${d.driveFolder?`<div class="rp-detail-section"><div class="rp-detail-label">โฟลเดอร์ Drive</div><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--text-faint);">📁 เปิด Drive</a></div>`:''}
+    ${evHtml?`<div class="rp-detail-section"><div class="rp-detail-label">หลักฐานการส่ง</div>${evHtml}</div>`:''}
+    ${d.driveFolder?`<div class="rp-detail-section"><div class="rp-detail-label">โฟลเดอร์ Drive</div><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">📁 เปิด Drive</a></div>`:''}
     <div class="rp-detail-section" style="margin-bottom:0;">
       <div class="rp-detail-label">วันที่ส่ง</div>
       <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(d.dateStr)}</span>
@@ -7839,6 +7871,15 @@ function rpToggleDetail(containerId, d, canEdit){
   } else {
     document.getElementById(containerId).appendChild(panel);
   }
+
+  // Bind lightbox on thumbnail clicks
+  panel.querySelectorAll('.rp-thumb-item[data-lbidx]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      e.stopPropagation();
+      const idx = +el.getAttribute('data-lbidx');
+      openLightbox(allImgUrls, idx);
+    });
+  });
 
   // Bind edit/delete buttons
   if(canEdit){
