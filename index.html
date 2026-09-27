@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.24
+  เวอร์ชันปัจจุบัน : 8.26
   อัปเดตล่าสุด   : 27 กันยายน 2569 08:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.24</title>
+<title>F1 Service — v8.26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1277,8 +1277,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.24";
-const APP_UPDATED_AT = "27 กันยายน 2569 10:15 น. เวลาไทย";
+const APP_VERSION = "8.26";
+const APP_UPDATED_AT = "27 กันยายน 2569 10:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7576,22 +7576,38 @@ async function ensureReturnPartsSheet(){
   finally{ _rpSheetInFlight = null; }
 }
 
-/* เขียน header แถวแรก + format สีม่วง + validation สถานะ */
+/* เขียน header แถวแรก + format (เหมือน Sheet บันทึกเคลม: น้ำเงิน, ขาว, banding, filter, auto resize) */
 async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
+  const numCols = RP_SHEET_HEADERS.length; // 8 คอลัมน์
   // 1) เขียน header text
   const range = encodeURIComponent(tabTitle+'!A1');
   await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
     method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values:[RP_SHEET_HEADERS] })
   });
-  // 2) Format: พื้นหลังม่วงอ่อน, ตัวหนา, freeze row 1, data validation column G (สถานะ)
+  // 2) Format: น้ำเงิน + ขาว + bold (เหมือน Claims sheet), freeze row 1, banding, filter, auto resize, data validation
   const requests = [
-    // สีพื้นหลัง header
-    { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:8 },
-        cell:{ userEnteredFormat:{ backgroundColor: RP_HEADER_COLOR, textFormat:{ bold:true }, horizontalAlignment:'CENTER' } },
-        fields:'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment)' }},
+    // header row: สีม่วงเข้ม ตัวหนา ขาว (ต่างจาก Claims ที่เป็นน้ำเงิน — กันสับสน)
+    { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
+        cell:{ userEnteredFormat:{
+          backgroundColor:{ red:0.380, green:0.275, blue:0.647 }, // #6146A5 ม่วง
+          textFormat:{ bold:true, foregroundColor:{ red:1, green:1, blue:1 } },
+          verticalAlignment:'MIDDLE', horizontalAlignment:'CENTER', wrapStrategy:'WRAP'
+        }},
+        fields:'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,horizontalAlignment,wrapStrategy)' }},
     // Freeze row 1
     { updateSheetProperties:{ properties:{ sheetId:tabGid, gridProperties:{ frozenRowCount:1 } }, fields:'gridProperties.frozenRowCount' }},
+    // data rows: ตัวดำ (ปล่อยให้ banding จัดสีพื้นหลัง)
+    { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:1, endRowIndex:10000, startColumnIndex:0, endColumnIndex:numCols },
+        cell:{ userEnteredFormat:{ textFormat:{ foregroundColor:{ red:0, green:0, blue:0 }, bold:false } }},
+        fields:'userEnteredFormat.textFormat' }},
+    // Banding: แถวขาว / ม่วงอ่อน (ต่างจาก Claims ที่เป็นฟ้าอ่อน)
+    { addBanding:{ bandedRange:{ range:{ sheetId:tabGid, startRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
+        rowProperties:{ firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.937, green:0.918, blue:0.980 } } } } },
+    // Basic filter (dropdown กรอง)
+    { setBasicFilter:{ filter:{ range:{ sheetId:tabGid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
+    // Auto resize columns
+    { autoResizeDimensions:{ dimensions:{ sheetId:tabGid, dimension:'COLUMNS', startIndex:0, endIndex:numCols } } },
     // Data validation column G (สถานะ) — dropdown รอรับ / รับแล้ว
     { setDataValidation:{ range:{ sheetId:tabGid, startRowIndex:1, endRowIndex:1000, startColumnIndex:6, endColumnIndex:7 },
         rule:{ condition:{ type:'ONE_OF_LIST', values:[{userEnteredValue:'รอรับ'},{userEnteredValue:'รับแล้ว'}] }, showCustomUi:true, strict:false } }}
