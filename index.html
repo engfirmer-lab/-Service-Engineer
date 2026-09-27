@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.26
-  อัปเดตล่าสุด   : 27 กันยายน 2569 08:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.27
+  อัปเดตล่าสุด   : 27 กันยายน 2569 11:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.26</title>
+<title>F1 Service — v8.27</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -274,6 +274,9 @@
   /* กรอบแดง — ใช้ไฮไลต์ช่องที่จำเป็นแต่ยังไม่กรอกตอนกดบันทึกฟอร์มเคลม */
   input[type=text].field-invalid, select.field-invalid, textarea.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 1px var(--red);}
   .file-dropzone.field-invalid{border-style:solid;border-color:var(--red);background:rgba(224,73,73,.06);}
+  .rp-wi-file-zone.field-invalid{border-style:solid!important;border-color:var(--red)!important;background:rgba(224,73,73,.06)!important;}
+  .rp-wi-num input.field-invalid{border-color:var(--red)!important;box-shadow:0 0 0 1px var(--red);}
+  #rp-return-method-group.field-invalid{border:1.5px solid var(--red);border-radius:8px;padding:6px;background:rgba(224,73,73,.04);}
 
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{text-align:left;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;padding:9px 10px;border-bottom:1px solid var(--border);}
@@ -1277,8 +1280,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.26";
-const APP_UPDATED_AT = "27 กันยายน 2569 10:35 น. เวลาไทย";
+const APP_VERSION = "8.27";
+const APP_UPDATED_AT = "27 กันยายน 2569 11:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8016,17 +8019,59 @@ async function fsAddReturnPart(data){
 
 /* ---- Submit handler ---- */
 $('rp-submit-btn').addEventListener('click', async ()=>{
-  // Validate
-  const method = (document.querySelector('input[name="rp-return-method"]:checked')||{}).value || '';
-  let valid = true;
   if(!myUserEmail){ alert('กรุณาล็อกอินก่อน'); return; }
+
+  // ===== Validate — ไฮไลต์กรอบแดง + เด้งไปจุดแรกที่ผิด =====
+  let firstInvalidEl = null;
+  const markInvalid = (el) => {
+    el.classList.add('field-invalid');
+    if(!firstInvalidEl) firstInvalidEl = el;
+  };
+  const clearInvalid = (el) => el.classList.remove('field-invalid');
+
+  // 1) เลขที่ใบเบิก + รูปใบเบิก (dynamic list)
+  const container = $('rp-withdrawal-list');
   rpWithdrawals.forEach(w=>{
-    if(!w.num.trim()){ valid=false; }
-    if(!w.file){ valid=false; }
+    const numInput = container.querySelector(`.rp-wi-num-input[data-wid="${w.id}"]`);
+    const fileZone = container.querySelector(`#rp-wz-${w.id}`);
+    if(numInput){
+      if(!w.num.trim()){
+        markInvalid(numInput);
+        numInput.addEventListener('input', ()=>clearInvalid(numInput), {once:true});
+      } else clearInvalid(numInput);
+    }
+    if(fileZone){
+      if(!w.file){
+        markInvalid(fileZone);
+        fileZone.addEventListener('click', ()=>{ setTimeout(()=>{ if(w.file) clearInvalid(fileZone); },300); });
+      } else clearInvalid(fileZone);
+    }
   });
-  if(!valid){ alert('กรุณากรอกเลขที่ใบเบิก และแนบรูปใบเบิกทุกใบ'); return; }
-  if(!method){ alert('กรุณาเลือกรูปแบบการส่งคืน'); return; }
-  if(!rpEvidenceFile){ alert('กรุณาแนบหลักฐานการส่ง (รูปภาพหรือ PDF) ก่อนส่ง'); return; }
+
+  // 2) วิธีการส่ง (radio group)
+  const method = (document.querySelector('input[name="rp-return-method"]:checked')||{}).value || '';
+  const methodGroup = $('rp-return-method-group');
+  if(!method){
+    markInvalid(methodGroup);
+    document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>{
+      r.addEventListener('change', ()=>clearInvalid(methodGroup), {once:true});
+    });
+  } else clearInvalid(methodGroup);
+
+  // 3) หลักฐานการส่ง (evidence dropzone)
+  const evidenceZone = $('rp-evidence-dropzone');
+  if(!rpEvidenceFile){
+    markInvalid(evidenceZone);
+    $('rp-evidence-input').addEventListener('change', ()=>{ setTimeout(()=>{ if(rpEvidenceFile) clearInvalid(evidenceZone); },200); }, {once:true});
+    evidenceZone.addEventListener('drop', ()=>{ setTimeout(()=>{ if(rpEvidenceFile) clearInvalid(evidenceZone); },200); }, {once:true});
+  } else clearInvalid(evidenceZone);
+
+  // หยุดถ้ามีจุดไม่ผ่าน
+  if(firstInvalidEl){
+    firstInvalidEl.scrollIntoView({behavior:'smooth', block:'center'});
+    if(typeof firstInvalidEl.focus === 'function') firstInvalidEl.focus();
+    return;
+  }
 
   showLoadingOverlay('กำลังเตรียมอัปโหลด...');
   try{
