@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.21
-  อัปเดตล่าสุด   : 27 กันยายน 2569 08:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.22
+  อัปเดตล่าสุด   : 27 กันยายน 2569 08:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.21</title>
+<title>F1 Service — v8.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1263,8 +1263,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.21";
-const APP_UPDATED_AT = "27 กันยายน 2569 08:15 น. เวลาไทย";
+const APP_VERSION = "8.22";
+const APP_UPDATED_AT = "27 กันยายน 2569 08:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7451,7 +7451,8 @@ document.querySelectorAll('#eng-record-subtabs button[data-rsub]').forEach(btn=>
 
 /* ---- Init Return Parts tab (list view) ---- */
 function initReturnPartsTab(){
-  loadMyReturnParts();
+  // ไม่โหลดรายการอัตโนมัติ — รอให้ user กด "📋 แสดงรายการ" ก่อน
+  // เพื่อไม่ให้ขอ Google OAuth token ทันทีที่เปิด tab
 }
 
 /* ---- Open / Close modal ---- */
@@ -7499,8 +7500,8 @@ const _rpTabGidCache = {};
 let _rpSheetUrl = null;
 
 async function rpGetToken(){
-  if(!driveAccessToken) driveAccessToken = await ensureDriveAccess();
-  return driveAccessToken;
+  // reuse ensureDriveAccess ซึ่งมีการเช็ค expiry แล้ว
+  return await ensureDriveAccess();
 }
 
 /* ชื่อ tab สำหรับ "รอรับ" และ "รับแล้ว" */
@@ -8110,6 +8111,8 @@ function loadReturnPartsManager(){
 
 // ปุ่ม "ดูรายการรอรับ" — toggle เปิด/ปิด
 // Toggle "รายการที่ยังรอตรวจรับ" (Engineer own list)
+// โหลดรายการครั้งแรกเมื่อกดแสดง — ไม่โหลดอัตโนมัติตอนเปิด tab
+let _rpMyListLoaded = false;
 $('rp-my-toggle-btn').addEventListener('click', ()=>{
   const wrap = $('rp-my-returns-wrap');
   const btn  = $('rp-my-toggle-btn');
@@ -8120,6 +8123,8 @@ $('rp-my-toggle-btn').addEventListener('click', ()=>{
   } else {
     wrap.style.display = 'block';
     btn.textContent = '🔼 ซ่อน';
+    // โหลดครั้งแรกเมื่อกดแสดง หรือ reload ทุกครั้งที่เปิด
+    loadMyReturnParts();
   }
 });
 
