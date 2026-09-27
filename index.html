@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.32
-  อัปเดตล่าสุด   : 27 กันยายน 2569 14:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.33
+  อัปเดตล่าสุด   : 27 กันยายน 2569 14:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.32</title>
+<title>F1 Service — v8.33</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1298,8 +1298,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.32";
-const APP_UPDATED_AT = "27 กันยายน 2569 14:50 น. เวลาไทย";
+const APP_VERSION = "8.33";
+const APP_UPDATED_AT = "27 กันยายน 2569 14:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7575,11 +7575,18 @@ function openReturnPartsModal(){
 function closeReturnPartsModal(){
   $('rp-modal').classList.remove('show');
 }
+function closeReturnPartsModalWithGuard(){
+  if($('rp-modal').classList.contains('show') && rpGetDraft()){
+    const ok = confirm('มีข้อมูลที่ยังไม่ได้บันทึก ต้องการออกจากฟอร์มนี้หรือไม่?\n(ระบบบันทึกร่างไว้ให้แล้ว กลับมาเปิดฟอร์มนี้ใหม่จะกู้คืนให้อัตโนมัติ)');
+    if(!ok) return;
+  }
+  closeReturnPartsModal();
+}
 
 $('rp-open-modal-btn').addEventListener('click', openReturnPartsModal);
-$('rp-modal-close').addEventListener('click', closeReturnPartsModal);
-$('rp-modal-cancel-btn').addEventListener('click', closeReturnPartsModal);
-$('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeReturnPartsModal(); });
+$('rp-modal-close').addEventListener('click', closeReturnPartsModalWithGuard);
+$('rp-modal-cancel-btn').addEventListener('click', closeReturnPartsModalWithGuard);
+$('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeReturnPartsModalWithGuard(); });
 
 /* ---- Google Sheets API helpers for Return Parts ---- */
 /* แยกแท็บตามปี ค.ศ. + สถานะ:
