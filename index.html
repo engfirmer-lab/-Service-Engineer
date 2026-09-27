@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.29
-  อัปเดตล่าสุด   : 27 กันยายน 2569 11:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.31
+  อัปเดตล่าสุด   : 27 กันยายน 2569 14:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.29</title>
+<title>F1 Service — v8.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -436,7 +436,8 @@
   .rp-thumb-file{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel-alt);font-size:12px;color:var(--text);cursor:pointer;}
   .rp-thumb-file:hover{border-color:var(--accent);color:var(--accent);}
   .rp-spo-num{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
-  .rp-detail-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .rp-detail-actions{display:flex;gap:8px;margin-top:12px;}
+  .rp-detail-actions .btn{flex:1;justify-content:center;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1297,8 +1298,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.29";
-const APP_UPDATED_AT = "27 กันยายน 2569 11:45 น. เวลาไทย";
+const APP_VERSION = "8.31";
+const APP_UPDATED_AT = "27 กันยายน 2569 14:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7490,20 +7491,84 @@ function initReturnPartsTab(){
   // เพื่อไม่ให้ขอ Google OAuth token ทันทีที่เปิด tab
 }
 
+/* ===== Draft autosave — ส่งคืนอะไหล่ (localStorage เท่านั้น ไม่กระทบ Firestore quota) =====
+   เก็บเฉพาะข้อมูลตัวหนังสือ (SPO numbers + วิธีการส่ง) ไม่เก็บไฟล์แนบ (ต้องเลือกใหม่จากเครื่องอยู่ดี)
+*/
+const RP_DRAFT_KEY = 'firmer_rp_draft';
+let _rpDraftTimer = null;
+function rpSaveDraft(){
+  try{
+    const method = (document.querySelector('input[name="rp-return-method"]:checked')||{}).value||'';
+    const draft = {
+      savedAt: Date.now(),
+      method,
+      withdrawalNums: rpWithdrawals.map(w=>w.num||'')
+    };
+    const meaningful = method || draft.withdrawalNums.some(n=>n.trim());
+    if(meaningful) localStorage.setItem(RP_DRAFT_KEY, JSON.stringify(draft));
+    else localStorage.removeItem(RP_DRAFT_KEY);
+  }catch(e){}
+}
+function rpScheduleDraftSave(){
+  clearTimeout(_rpDraftTimer);
+  _rpDraftTimer = setTimeout(rpSaveDraft, 600);
+}
+function rpClearDraft(){ try{ localStorage.removeItem(RP_DRAFT_KEY); }catch(e){} }
+function rpGetDraft(){ try{ const r=localStorage.getItem(RP_DRAFT_KEY); return r?JSON.parse(r):null; }catch(e){ return null; } }
+function rpWireDraftListeners(){
+  // วิธีการส่ง
+  document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>{
+    r.addEventListener('change', rpScheduleDraftSave);
+  });
+  // SPO number inputs (delegate จาก container เพราะ render ใหม่เรื่อยๆ)
+  const wl = $('rp-withdrawal-list');
+  if(wl && !wl._rpDraftWired){
+    wl._rpDraftWired = true;
+    wl.addEventListener('input', e=>{ if(e.target.classList.contains('rp-wi-num-input')) rpScheduleDraftSave(); });
+  }
+}
+function rpRestoreDraft(draft){
+  // วิธีการส่ง
+  if(draft.method){
+    const r = document.querySelector(`input[name="rp-return-method"][value="${draft.method}"]`);
+    if(r){ r.checked=true; r.closest('label')?.classList.add('selected'); }
+  }
+  // SPO numbers
+  if(draft.withdrawalNums && draft.withdrawalNums.length){
+    rpWithdrawals = []; rpWithdrawalIdCounter = 0;
+    draft.withdrawalNums.forEach(num=>{
+      rpWithdrawals.push({ id: ++rpWithdrawalIdCounter, num: num||'', file:null });
+    });
+    if(rpWithdrawals.length===0) rpWithdrawals.push({ id: ++rpWithdrawalIdCounter, num:'', file:null });
+    renderWithdrawalList();
+    rpWireDraftListeners();
+  }
+}
+
 /* ---- Open / Close modal ---- */
 function openReturnPartsModal(){
   // Fill sender info
   const name = myDisplayName();
   $('rp-sender-name').textContent = name || '(ยังไม่ได้ล็อกอิน)';
   $('rp-sender-avatar').textContent = (name||'?').charAt(0).toUpperCase();
-  // Reset form
+  // Reset form ก่อน
   rpWithdrawals = []; rpEvidenceFile = null; rpWithdrawalIdCounter = 0;
   rpAddWithdrawal();
   renderWithdrawalList();
   rpClearEvidence();
   document.querySelectorAll('input[name="rp-return-method"]').forEach(r=>r.checked=false);
   document.querySelectorAll('#rp-return-method-group label').forEach(l=>l.classList.remove('selected'));
-  // Show — MutationObserver ใน setupMobileBackButtonClosesPopups จะจัดการ back-trap อัตโนมัติ
+  // Wire draft autosave listeners
+  rpWireDraftListeners();
+  // ตรวจว่ามี draft ค้างอยู่ไหม
+  const draft = rpGetDraft();
+  if(draft){
+    const savedDate = draft.savedAt ? new Date(draft.savedAt).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const restore = confirm(`📝 มีแบบร่างที่บันทึกไว้${savedDate?' ('+savedDate+')':''}\n\nโหลดแบบร่างต่อไหม?\n\n(กด "ตกลง" = โหลดต่อ / "ยกเลิก" = เริ่มใหม่)`);
+    if(restore) rpRestoreDraft(draft);
+    else rpClearDraft();
+  }
+  // Show
   $('rp-modal').classList.add('show');
 }
 function closeReturnPartsModal(){
@@ -7829,8 +7894,7 @@ function rpToggleDetail(containerId, d, canEdit){
   const mCls  = rpMethodClass(d.returnMethodLabel);
   const editBtn    = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-edit-btn-${d.rowIndex}" style="font-size:12px;">✏️ แก้ไข</button>` : '';
   const delBtn     = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-del-btn-${d.rowIndex}" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
-  // ปุ่ม "ยืนยันรับแล้ว" — เฉพาะ Manager (isEditor) เห็น, ไม่ใช่ Engineer เจ้าของ
-  const receiveBtn = isEditor() ? `<button class="btn btn-sm" id="rp-receive-btn-${d.rowIndex}" style="font-size:12px;background:color-mix(in srgb,var(--accent) 90%,#fff);color:#fff;">✅ ยืนยันรับแล้ว</button>` : '';
+  // ปุ่ม "ยืนยันรับแล้ว" — ถูกย้ายไปอยู่บนการ์ดหลักแทน (ไม่แสดงใน detail panel)
 
   // เตรียม evidence thumbnail
   const evThumb = d.evidenceUrl ? rpDriveThumb(d.evidenceUrl,'w300') : '';
@@ -7861,7 +7925,7 @@ function rpToggleDetail(containerId, d, canEdit){
       <div class="rp-detail-label">วันที่ส่ง</div>
       <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(d.dateStr)}</span>
     </div>
-    ${(receiveBtn||editBtn||delBtn)?`<div class="rp-detail-actions">${receiveBtn}${editBtn}${delBtn}</div>`:''}
+    ${(editBtn||delBtn)?`<div class="rp-detail-actions">${editBtn}${delBtn}</div>`:''}
   `;
 
   // Insert panel after the card element
@@ -7888,11 +7952,38 @@ function rpToggleDetail(containerId, d, canEdit){
     if(eb) eb.addEventListener('click', (e)=>{ e.stopPropagation(); rpOpenEditModal(d, containerId); });
     if(db) db.addEventListener('click', (e)=>{ e.stopPropagation(); rpConfirmDelete(d, containerId); });
   }
-  // Bind "ยืนยันรับแล้ว" button (Manager only)
-  if(isEditor()){
-    const rb = document.getElementById(`rp-receive-btn-${d.rowIndex}`);
-    if(rb) rb.addEventListener('click', async (e)=>{
+}
+
+/* Build card HTML for a single return-parts row */
+function rpBuildCard(d, containerId, canEdit){
+  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
+  const mIcon  = rpMethodIcon(d.returnMethodLabel);
+  const mCls   = rpMethodClass(d.returnMethodLabel);
+  const chips  = rpSpoChips(d.withdrawals);
+  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
+    ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
+  const confirmRow = isEditor()
+    ? `<div style="margin-top:10px;"><button class="btn btn-sm rp-card-confirm-btn" data-ri="${d.rowIndex}" data-cid="${containerId}" style="width:100%;justify-content:center;background:var(--green);color:#fff;font-size:12.5px;font-weight:600;">✅ ยืนยันรับแล้ว</button></div>` : '';
+  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
+    <div class="rp-card-top">
+      <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
+      <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
+    </div>
+    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
+    ${confirmRow}
+  </div>`;
+}
+
+/* Attach click listeners to all rp-cards in a container */
+function rpBindCards(containerId, rows, canEdit){
+  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+  // Bind "ยืนยันรับแล้ว" buttons (Manager only)
+  document.querySelectorAll(`#${containerId} .rp-card-confirm-btn`).forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
+      const ri = +btn.getAttribute('data-ri');
+      const d = rowMap.get(ri);
+      if(!d) return;
       if(!confirm(`ยืนยันการรับอะไหล่จาก ${d.senderName||'?'}\n\nรายการจะถูกย้ายไปแท็บ รับแล้ว${d.yearAD||new Date().getFullYear()} และไม่แสดงในรายการรอรับอีกต่อไป`)) return;
       showLoadingOverlay('กำลังอัปเดตสถานะ...');
       try{
@@ -7906,29 +7997,8 @@ function rpToggleDetail(containerId, d, canEdit){
         alert('อัปเดตสถานะไม่สำเร็จ: '+(err.message||err));
       }
     });
-  }
-}
-
-/* Build card HTML for a single return-parts row */
-function rpBuildCard(d, containerId, canEdit){
-  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
-  const mIcon  = rpMethodIcon(d.returnMethodLabel);
-  const mCls   = rpMethodClass(d.returnMethodLabel);
-  const chips  = rpSpoChips(d.withdrawals);
-  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
-    ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
-  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
-    <div class="rp-card-top">
-      <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
-      <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
-    </div>
-    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
-  </div>`;
-}
-
-/* Attach click listeners to all rp-cards in a container */
-function rpBindCards(containerId, rows, canEdit){
-  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+  });
+  // Bind card click → expand detail
   document.querySelectorAll(`#${containerId} .rp-card`).forEach(card=>{
     card.addEventListener('click', ()=>{
       const ri = +card.getAttribute('data-ri');
@@ -8006,6 +8076,7 @@ function renderWithdrawalList(){
     inp.addEventListener('input', e=>{
       const wid = +e.target.getAttribute('data-wid');
       const w = rpWithdrawals.find(x=>x.id===wid); if(w) w.num=e.target.value;
+      rpScheduleDraftSave();
     });
   });
 
@@ -8225,6 +8296,7 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
     });
 
     hideLoadingOverlay();
+    rpClearDraft(); // ลบ draft หลัง submit สำเร็จ
     closeReturnPartsModal();
     showToast('✓ ส่งข้อมูลเรียบร้อย — Admin จะยืนยันรับอะไหล่เร็วๆ นี้');
     loadMyReturnParts(); // refresh list
