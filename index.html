@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.33
-  อัปเดตล่าสุด   : 27 กันยายน 2569 14:55 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.34
+  อัปเดตล่าสุด   : 27 กันยายน 2569 16:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.33</title>
+<title>F1 Service — v8.34</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1298,8 +1298,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.33";
-const APP_UPDATED_AT = "27 กันยายน 2569 14:55 น. เวลาไทย";
+const APP_VERSION = "8.34";
+const APP_UPDATED_AT = "27 กันยายน 2569 16:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7735,30 +7735,77 @@ async function ensureRpTab(sheetId, tabTitle){
   return tabTitle;
 }
 
-async function rpSheetAppendRow(rowData, year){
+/* Insert rows at specific position (1-based rowIndex) in a Sheet tab
+   ใช้ batchUpdate insertDimension + update ข้อมูล */
+async function rpSheetInsertRowsAt(rowIndex, rows, yearAD, tabOverride){
   const token = await rpGetToken();
   const sheetId = await ensureReturnPartsSheet();
-  const tabTitle = await ensureRpTab(sheetId, rpWaitingTabName(year));
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabTitle+'!A:H')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const tabName = tabOverride || rpWaitingTabName(yearAD);
+  // Get gid
+  const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!metaRes.ok) throw new Error('อ่าน Sheet metadata ไม่สำเร็จ');
+  const metaData = await metaRes.json();
+  const tabMeta = (metaData.sheets||[]).find(s=>s.properties.title===tabName);
+  if(!tabMeta) throw new Error('ไม่พบแท็บ '+tabName);
+  const gid = tabMeta.properties.sheetId;
+  const startIdx = rowIndex - 1; // 0-based
+  // 1) Insert empty rows
+  const insertRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method:'POST',
+    headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ requests:[{ insertDimension:{ range:{ sheetId:gid, dimension:'ROWS', startIndex:startIdx, endIndex:startIdx+rows.length }, inheritFromBefore:false } }] })
+  });
+  if(!insertRes.ok){ const t=await insertRes.text(); throw new Error('แทรกแถว Sheet ไม่สำเร็จ: '+t); }
+  // 2) Write data into inserted rows
+  const rangeStr = `${tabName}!A${rowIndex}:G${rowIndex+rows.length-1}`;
+  const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rangeStr)}?valueInputOption=USER_ENTERED`, {
+    method:'PUT',
+    headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ range: rangeStr, majorDimension:'ROWS', values: rows })
+  });
+  if(!putRes.ok){ const t=await putRes.text(); throw new Error('เขียนข้อมูลแถวใหม่ไม่สำเร็จ: '+t); }
+}
+
+/* rowsData = array of row arrays; appends all rows in one call */
+async function rpSheetAppendRow(rowsData, year, tabOverride){
+  const token = await rpGetToken();
+  const sheetId = await ensureReturnPartsSheet();
+  const tabName = tabOverride || rpWaitingTabName(year);
+  await ensureRpTab(sheetId, tabName);
+  const rows = Array.isArray(rowsData[0]) ? rowsData : [rowsData]; // support single row or array of rows
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(tabName+'!A:G')}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
   const resp = await fetch(url, {
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body: JSON.stringify({ values:[rowData] })
+    body: JSON.stringify({ values: rows })
   });
   if(!resp.ok){ const t=await resp.text(); throw new Error('Sheets append failed: '+t); }
   return await resp.json();
 }
 
-/* แปลง row array เป็น object — รองรับทั้งรูปแบบใหม่ (v8.19) และเก่า (v8.17)
-   รูปแบบใหม่: [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก(text), วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive]
-   รูปแบบเก่า: [วันที่, ปีคศ, ชื่อ, email, JSON, วิธีส่ง, หลักฐาน, โฟลเดอร์] */
+/* แปลง row array เป็น object — รองรับทั้งรูปแบบใหม่ (v8.34) และเก่า (v8.17/v8.19)
+   รูปแบบใหม่ (v8.34): 7 cols, 1 row per SPO
+     First row:  [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, =HYPERLINK(รูปใบเบิก), =HYPERLINK(รูปหลักฐาน), สถานะ]
+     Extra rows: ['', '', เลขที่ใบเบิก(ถัดไป), '', =HYPERLINK(รูปใบเบิก), '', '']
+   รูปแบบกลาง (v8.19): [วันที่บันทึก, ผู้ส่ง, เลขใบเบิก(comma-sep), วิธีส่ง, รูปใบเบิก(newline-sep), รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive]
+   รูปแบบเก่า (v8.17): [วันที่, ปีคศ, ชื่อ, email, JSON, วิธีส่ง, หลักฐาน, โฟลเดอร์] */
+
+/* ดึง URL จริงออกจาก =HYPERLINK("url";"label") หรือ raw URL */
+function rpExtractUrl(cell){
+  if(!cell) return '';
+  const m = cell.match(/=HYPERLINK\("([^"]+)"/i);
+  if(m) return m[1];
+  if(cell.startsWith('http')) return cell;
+  return '';
+}
+
+/* แปลง single raw row เป็น partial object (ใช้ภายใน rpGroupSheetRows เท่านั้น) */
 function rpParseSheetRow(r, rowIndex, isLegacy){
   if(isLegacy){
-    // รูปแบบเก่า: detect จาก column B = ปี ค.ศ. 4 หลัก
     let withdrawals = [];
     try{ withdrawals = JSON.parse(r[4]||'[]'); }catch(e){}
     return {
-      rowIndex, isLegacy: true,
+      rowIndex, rowCount:1, isLegacy: true,
       yearAD: r[1]||'',
       dateStr: r[0]||'',
       senderName: r[2]||'',
@@ -7769,29 +7816,78 @@ function rpParseSheetRow(r, rowIndex, isLegacy){
       driveFolder: r[7]||''
     };
   }
-  // รูปแบบใหม่
-  const spoText = r[2]||'';
-  // เลขใบเบิก: เก็บเป็น text คั่นด้วย ", " เช่น "SPO001, SPO002"
-  const spoNums = spoText.split(',').map(s=>s.trim()).filter(Boolean);
-  // รูปใบเบิก: link แยกกันด้วย newline หรือ ", "
-  const wiLinksRaw = r[4]||'';
-  const wiLinks = wiLinksRaw.split(/\n|,\s*/).map(s=>s.trim()).filter(s=>s.startsWith('http'));
-  const withdrawals = spoNums.map((num,i)=>({
-    num,
-    driveUrl: wiLinks[i]||'',
-    fileName: num
-  }));
+  // v8.19 format: Col B has senderName (not year), SPO comma-sep in Col C, URLs in Col E (newline-sep)
+  const isV819 = (r[2]||'').includes(',') || (r[4]||'').includes('\n') || (!(r[4]||'').startsWith('=HYPERLINK') && (r[4]||'').startsWith('http'));
+  if(isV819){
+    const spoText = r[2]||'';
+    const spoNums = spoText.split(',').map(s=>s.trim()).filter(Boolean);
+    const wiLinksRaw = r[4]||'';
+    const wiLinks = wiLinksRaw.split(/\n|,\s*/).map(s=>s.trim()).filter(s=>s.startsWith('http'));
+    const withdrawals = spoNums.map((num,i)=>({ num, driveUrl: wiLinks[i]||'', fileName: num }));
+    return {
+      rowIndex, rowCount:1, isLegacy: false,
+      yearAD: new Date().getFullYear().toString(),
+      dateStr: r[0]||'', senderName: r[1]||'', senderEmail: '',
+      withdrawals, returnMethodLabel: r[3]||'',
+      evidenceUrl: rpExtractUrl(r[5]||''),
+      driveFolder: r[7]||''
+    };
+  }
+  // v8.34 first row — single SPO
   return {
-    rowIndex, isLegacy: false,
-    yearAD: new Date().getFullYear().toString(), // ไม่มีในรูปแบบใหม่ — ใช้ปีปัจจุบันแทน
-    dateStr: r[0]||'',
-    senderName: r[1]||'',
-    senderEmail: '', // ไม่เก็บใน sheet ใหม่
-    withdrawals,
+    rowIndex, rowCount:1, isLegacy: false,
+    yearAD: new Date().getFullYear().toString(),
+    dateStr: r[0]||'', senderName: r[1]||'', senderEmail: '',
+    withdrawals: [{ num: r[2]||'', driveUrl: rpExtractUrl(r[4]||''), fileName: r[2]||'' }],
     returnMethodLabel: r[3]||'',
-    evidenceUrl: r[5]||'',
-    driveFolder: r[7]||''
+    evidenceUrl: rpExtractUrl(r[5]||''),
+    driveFolder: '' // ไม่มีใน v8.34 sheet — จะไม่อ่านจาก sheet
   };
+}
+
+/* จับกลุ่ม raw rows จาก Sheet ที่เป็น v8.34 multi-row (1 SPO per row)
+   หลักการ: row แรกของกลุ่มมี Col B (senderName) ไม่ว่าง; row ถัดไปมี Col B ว่าง + Col A ว่าง = continuation */
+function rpGroupSheetRows(rawRows, baseRowIndex){
+  // rawRows = [[...], [...], ...] from Sheets API (A2:G or A2:H)
+  // baseRowIndex = 2 (row 1 is header)
+  const result = [];
+  let i = 0;
+  while(i < rawRows.length){
+    const r = rawRows[i];
+    const absRowIndex = baseRowIndex + i;
+    const isLeg = rpIsLegacyRow(r);
+    if(isLeg){
+      result.push(rpParseSheetRow(r, absRowIndex, true));
+      i++; continue;
+    }
+    // Check if this is a "first row" (has senderName in Col B)
+    const senderName = (r[1]||'').trim();
+    if(!senderName){
+      // orphan continuation row — skip or treat as standalone
+      i++; continue;
+    }
+    // This is a first row — build entry
+    const entry = rpParseSheetRow(r, absRowIndex, false);
+    entry.rowCount = 1;
+    // Collect continuation rows (Col A empty AND Col B empty)
+    let j = i + 1;
+    while(j < rawRows.length){
+      const nr = rawRows[j];
+      if((nr[0]||'').trim() === '' && (nr[1]||'').trim() === ''){
+        // continuation row: Col C = SPO num, Col E = รูปใบเบิก HYPERLINK
+        const spoNum = (nr[2]||'').trim();
+        const wiUrl = rpExtractUrl(nr[4]||'');
+        if(spoNum){
+          entry.withdrawals.push({ num: spoNum, driveUrl: wiUrl, fileName: spoNum });
+        }
+        entry.rowCount++;
+        j++;
+      } else break;
+    }
+    result.push(entry);
+    i = j;
+  }
+  return result;
 }
 
 /* ตรวจว่า row เป็นรูปแบบเก่า: column B มีปี ค.ศ. 4 หลัก เช่น "2026" */
@@ -7814,18 +7910,17 @@ async function rpSheetReadWaiting(){
 
   const results = [];
 
-  // อ่าน tab ใหม่ก่อน
+  // อ่าน tab ใหม่ก่อน (v8.34: A2:G — 7 cols)
   if(tabs.includes(newTabName)){
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(newTabName+'!A2:H')}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(newTabName+'!A2:G')}`;
     const resp = await fetch(url, { headers:{'Authorization':'Bearer '+token} });
     if(resp.ok){
       const json = await resp.json();
-      (json.values||[]).forEach((r,i)=>{
-        results.push(rpParseSheetRow(r, i+2, false));
-      });
+      const grouped = rpGroupSheetRows(json.values||[], 2);
+      grouped.forEach(d=>results.push(d));
     }
   }
-  // อ่าน tab เก่า (backward compat) — แยกต่างหาก
+  // อ่าน tab เก่า (backward compat) — แยกต่างหาก (ยังอ่าน A:H เพราะอาจมี Col H เก่า)
   if(tabs.includes(oldTabName)){
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(oldTabName+'!A2:H')}`;
     const resp = await fetch(url, { headers:{'Authorization':'Bearer '+token} });
@@ -8189,20 +8284,35 @@ async function ensureReturnPartsFolderPath(senderName){
 }
 
 /* ---- fsAddReturnPart → เขียนแถวใหม่ลง Google Sheet แท็บ รอรับ{ปี} ---- */
-/* NEW FORMAT (v8.19): [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive] */
+/* NEW FORMAT (v8.34): 7 cols, 1 row per SPO
+   First row:  [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก(1st), วิธีการส่ง, =HYPERLINK(รูปใบเบิก1), =HYPERLINK(รูปหลักฐาน), สถานะ]
+   Extra rows: ['', '', เลขที่ใบเบิก(ถัดไป), '', =HYPERLINK(รูปใบเบิกN), '', ''] */
 async function fsAddReturnPart(data){
   // data: { senderEmail, senderName, returnMethod, returnMethodLabel, withdrawals, evidence, driveFolder, createdAt }
   const dateObj = new Date(data.createdAt||Date.now());
   const dateStr = dateObj.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour12:false});
   const yearAD  = dateObj.getFullYear().toString();
-  // Col C: เลขที่ใบเบิก — comma-separated SPO numbers
-  const spoText  = (data.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
-  // Col E: รูปใบเบิก — newline-separated Drive links
-  const wiLinks  = (data.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
-  const evidUrl  = data.evidence ? data.evidence.driveUrl : '';
-  // NEW 8-column row — no email, no JSON, no yearAD column
-  const row = [dateStr, data.senderName||'', spoText, data.returnMethodLabel||data.returnMethod||'', wiLinks, evidUrl, 'รอรับ', data.driveFolder||''];
-  return await rpSheetAppendRow(row, yearAD); // ส่ง yearAD เพื่อเขียนลงแท็บ รอรับ{ปี}
+  const withdrawals = (data.withdrawals||[]);
+  const evidUrl = data.evidence ? data.evidence.driveUrl : '';
+  const evidCell = evidUrl ? `=HYPERLINK("${evidUrl}";"หลักฐาน")` : '';
+  const methodLabel = data.returnMethodLabel||data.returnMethod||'';
+
+  // Build rows: 1 per SPO
+  const rows = withdrawals.map((w, i) => {
+    const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
+    if(i===0){
+      // First row: all shared fields
+      return [dateStr, data.senderName||'', w.num||'', methodLabel, wiCell, evidCell, 'รอรับ'];
+    } else {
+      // Continuation rows: blank shared fields
+      return ['', '', w.num||'', '', wiCell, '', ''];
+    }
+  });
+  // ถ้าไม่มี withdrawal เลย ให้สร้าง 1 row ว่าง
+  if(rows.length===0){
+    rows.push([dateStr, data.senderName||'', '', methodLabel, '', evidCell, 'รอรับ']);
+  }
+  return await rpSheetAppendRow(rows, yearAD); // ส่ง yearAD เพื่อเขียนลงแท็บ รอรับ{ปี}
 }
 
 /* ---- Submit handler ---- */
@@ -8447,14 +8557,13 @@ $('mgr-doc-toggle-btn').addEventListener('click', ()=>{
 
 /* ---- Sheet helpers for Return Parts row update/delete ---- */
 async function rpUpdateSheetRow(rowIndex, yearAD, rowData, tabOverride){
-  // rowData = array ตาม RP_SHEET_HEADERS (NEW v8.19): [วันที่บันทึก,ผู้ส่ง,เลขที่ใบเบิก,วิธีการส่ง,รูปใบเบิก,รูปหลักฐาน,สถานะ,โฟลเดอร์ Drive]
-  // tabOverride (optional): ชื่อแท็บที่ต้องการอัปเดตโดยตรง (สำหรับ legacy row ที่อยู่ใน tab "2026")
+  // rowData = array 7 cols (v8.34): [วันที่บันทึก,ผู้ส่ง,เลขที่ใบเบิก,วิธีการส่ง,รูปใบเบิก,รูปหลักฐาน,สถานะ]
+  // tabOverride (optional): ชื่อแท็บ
   const token = await rpGetToken();
   const sheetId = await ensureReturnPartsSheet();
-  // ใช้ tabOverride ถ้ามี (legacy) ไม่งั้นใช้ชื่อแท็บใหม่
   const tabName = tabOverride || rpWaitingTabName(yearAD);
-  const rangeStr = `${tabName}!A${rowIndex}:H${rowIndex}`;
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rangeStr)}?valueInputOption=RAW`, {
+  const rangeStr = `${tabName}!A${rowIndex}:G${rowIndex}`;
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(rangeStr)}?valueInputOption=USER_ENTERED`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ range: rangeStr, majorDimension: 'ROWS', values: [rowData] })
@@ -8462,61 +8571,67 @@ async function rpUpdateSheetRow(rowIndex, yearAD, rowData, tabOverride){
   if(!res.ok){ const t=await res.text(); throw new Error('อัปเดตแถว Sheet ไม่สำเร็จ: '+t); }
 }
 
+/* ลบ 1 แถว (backward compat) */
 async function rpDeleteSheetRow(rowIndex, yearAD, tabOverride){
-  // tabOverride: ชื่อแท็บที่รู้แน่ๆ (สำหรับ legacy row) ไม่งั้นจะ fallback หาแท็บใหม่/เก่าอัตโนมัติ
+  return rpDeleteSheetRows(rowIndex, 1, yearAD, tabOverride);
+}
+
+/* ลบ N แถวต่อเนื่อง startRowIndex (1-based Sheet row, e.g. 2) จำนวน rowCount แถว */
+async function rpDeleteSheetRows(startRowIndex, rowCount, yearAD, tabOverride){
+  if(!rowCount || rowCount < 1) return;
   const token = await rpGetToken();
   const sheetId = await ensureReturnPartsSheet();
-  // หา gid ของแท็บ — ลองแท็บใหม่ก่อน ถ้าไม่มีลอง legacy
   const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
   if(!metaRes.ok) throw new Error('อ่าน Sheet metadata ไม่สำเร็จ');
   const metaData = await metaRes.json();
   const preferredTab = tabOverride || rpWaitingTabName(yearAD);
   let tabMeta = (metaData.sheets||[]).find(s=>s.properties.title===preferredTab);
-  // fallback: legacy tab "2026"
   if(!tabMeta) tabMeta = (metaData.sheets||[]).find(s=>s.properties.title===yearAD);
   if(!tabMeta) throw new Error('ไม่พบแท็บ '+preferredTab+' ใน Sheet');
   const gid = tabMeta.properties.sheetId;
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId: gid, dimension:'ROWS', startIndex: rowIndex-1, endIndex: rowIndex } } }] })
+    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId: gid, dimension:'ROWS', startIndex: startRowIndex-1, endIndex: startRowIndex-1+rowCount } } }] })
   });
   if(!res.ok){ const t=await res.text(); throw new Error('ลบแถว Sheet ไม่สำเร็จ: '+t); }
 }
 
-/* ---- Move row from รอรับ{year} → รับแล้ว{year} (Manager action: ยืนยันรับแล้ว) ---- */
+/* ---- Move row(s) from รอรับ{year} → รับแล้ว{year} (Manager action: ยืนยันรับแล้ว) ---- */
 async function rpMoveRowToReceived(d){
-  const token = await rpGetToken();
-  const sheetId = await ensureReturnPartsSheet();
   const yearAD  = d.yearAD||new Date().getFullYear().toString();
   const waitingTabName  = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
   const receivedTabName = rpReceivedTabName(yearAD);
 
-  // 1) สร้าง tab รับแล้ว{ปี} ถ้ายังไม่มี (ใช้ ensureRpTab)
+  // 1) สร้าง tab รับแล้ว{ปี} ถ้ายังไม่มี
+  const sheetId = await ensureReturnPartsSheet();
   await ensureRpTab(sheetId, receivedTabName);
 
-  // 2) สร้าง received row (new format เสมอ)
-  let spoText, wiLinks;
+  // 2) สร้าง received rows (v8.34 multi-row format, สถานะ = รับแล้ว)
+  const withdrawals = d.withdrawals||[];
+  let receivedRows;
   if(d.isLegacy){
-    spoText = (d.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
-    wiLinks = (d.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+    // legacy: collapse to single row (old format)
+    const spoText = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
+    const wiLinks = withdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+    receivedRows = [[d.dateStr, d.senderName||'', spoText, d.returnMethodLabel||'', wiLinks, d.evidenceUrl||'', 'รับแล้ว']];
   } else {
-    spoText = (d.withdrawals||[]).map(w=>w.num||'').filter(Boolean).join(', ');
-    wiLinks = (d.withdrawals||[]).map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+    // v8.34: 1 row per SPO (same as waiting format, สถานะ = รับแล้ว)
+    const evidCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
+    receivedRows = withdrawals.map((w, i) => {
+      const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
+      if(i===0) return [d.dateStr, d.senderName||'', w.num||'', d.returnMethodLabel||'', wiCell, evidCell, 'รับแล้ว'];
+      else       return ['', '', w.num||'', '', wiCell, '', ''];
+    });
+    if(receivedRows.length===0) receivedRows = [[d.dateStr, d.senderName||'', '', d.returnMethodLabel||'', '', evidCell, 'รับแล้ว']];
   }
-  const receivedRow = [d.dateStr, d.senderName||'', spoText, d.returnMethodLabel||'', wiLinks, d.evidenceUrl||'', 'รับแล้ว', d.driveFolder||''];
 
   // 3) append ไปที่ tab รับแล้ว{ปี}
-  const appendUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(receivedTabName+'!A:H')}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
-  const appendRes = await fetch(appendUrl, {
-    method:'POST',
-    headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ majorDimension:'ROWS', values:[receivedRow] })
-  });
-  if(!appendRes.ok){ const t=await appendRes.text(); throw new Error('เพิ่มแถว รับแล้ว ไม่สำเร็จ: '+t); }
+  await rpSheetAppendRow(receivedRows, yearAD, receivedTabName);
 
-  // 4) ลบแถวออกจาก tab รอรับ (หรือ legacy tab)
-  await rpDeleteSheetRow(d.rowIndex, yearAD, waitingTabName);
+  // 4) ลบแถว(ทั้งหมด) ออกจาก tab รอรับ (ลบ rowCount แถว)
+  const rowCount = d.rowCount||1;
+  await rpDeleteSheetRows(d.rowIndex, rowCount, yearAD, waitingTabName);
 }
 
 /* ---- Delete Drive folder (same API as delete file) ---- */
@@ -8539,8 +8654,8 @@ async function rpConfirmDelete(d, containerId){
     const yearAD = d.yearAD||new Date().getFullYear().toString();
     // legacy row อยู่ใน tab "2026", new row อยู่ใน tab "รอรับ2026"
     const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
-    // 1) ลบแถวใน Sheet
-    await rpDeleteSheetRow(d.rowIndex, yearAD, tabOverride);
+    // 1) ลบแถว(ทั้งหมด) ใน Sheet (rowCount = จำนวน SPO rows ของ entry นี้)
+    await rpDeleteSheetRows(d.rowIndex, d.rowCount||1, yearAD, tabOverride);
     // 2) ลบโฟลเดอร์ Drive (ไฟล์ทั้งหมดในโฟลเดอร์จะถูกลบด้วย)
     if(d.driveFolder){
       try{ await rpDeleteDriveFolder(d.driveFolder); }
@@ -8739,16 +8854,30 @@ async function rpEditSave(){
 
     const methodLabel = {self:'ด้วยตนเอง ที่ Office',parcel:'ส่งพัสดุ',truck:'คืนกลับรถ Office'}[method]||method;
     const yearAD = d.yearAD||new Date().getFullYear().toString();
-    // NEW FORMAT (v8.19): [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, สถานะ, โฟลเดอร์ Drive]
-    const spoText   = newWithdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
-    const wiLinks   = newWithdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
-    const statusVal = 'รอรับ'; // edit ไม่เปลี่ยนสถานะ
-    const updatedRow = [d.dateStr, d.senderName, spoText, methodLabel, wiLinks, newEvidUrl, statusVal, driveFolderUrl];
-    // legacy row อยู่ใน tab "2026", new row อยู่ใน tab "รอรับ2026"
     const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
 
     updateLoadingOverlayText('กำลังอัปเดต Google Sheet...');
-    await rpUpdateSheetRow(d.rowIndex, yearAD, updatedRow, tabOverride);
+    if(d.isLegacy){
+      // legacy: single row update (old format)
+      const spoText = newWithdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
+      const wiLinks = newWithdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+      const updatedRow = [d.dateStr, d.senderName, spoText, methodLabel, wiLinks, newEvidUrl, 'รอรับ'];
+      await rpUpdateSheetRow(d.rowIndex, yearAD, updatedRow, tabOverride);
+    } else {
+      // v8.34: delete old rows + append new rows (handles row count change)
+      const evidCell = newEvidUrl ? `=HYPERLINK("${newEvidUrl}";"หลักฐาน")` : '';
+      const newRows = newWithdrawals.map((w, i) => {
+        const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
+        if(i===0) return [d.dateStr, d.senderName||'', w.num||'', methodLabel, wiCell, evidCell, 'รอรับ'];
+        else       return ['', '', w.num||'', '', wiCell, '', ''];
+      });
+      if(newRows.length===0) newRows.push([d.dateStr, d.senderName||'', '', methodLabel, '', evidCell, 'รอรับ']);
+      const oldRowCount = d.rowCount||1;
+      // ลบ old rows ก่อน แล้ว insert new rows ที่ตำแหน่งเดิม
+      await rpDeleteSheetRows(d.rowIndex, oldRowCount, yearAD, tabOverride);
+      // หลังลบแล้ว insert ที่แถวก่อน rowIndex (index shifted — ใช้ insertAt)
+      await rpSheetInsertRowsAt(d.rowIndex, newRows, yearAD, tabOverride);
+    }
 
     hideLoadingOverlay();
     $('rp-edit-modal').classList.remove('show');
