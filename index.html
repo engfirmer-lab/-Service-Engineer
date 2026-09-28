@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.39
-  อัปเดตล่าสุด   : 28 กันยายน 2569 08:49 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.41
+  อัปเดตล่าสุด   : 28 กันยายน 2569 10:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.39</title>
+<title>F1 Service — v8.41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1153,27 +1153,31 @@
         </div>
         <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
         <div id="mgr-rp-collapse-body" style="display:none;margin-top:10px;">
-          <!-- ลิงก์ด่วน -->
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-            <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-              📋 Sheet ส่งคืนอะไหล่
-            </a>
-            <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-              📊 Sheet บันทึกเคลมอะไหล่
-            </a>
-            <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-              📁 Google Drive F1 Service
-            </a>
-          </div>
           <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
             <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
           </div>
           <div id="rp-manager-list-wrap">
             <div id="rp-manager-list"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- v8.40 — ลิงก์ด่วน อยู่ล่างสุดของ section งานคงค้างเสมอ -->
+      <div class="panel-block" style="margin-top:8px;">
+        <h2 style="font-size:13px;margin:0 0 10px;color:var(--text-faint);">🔗 ลิงก์ด่วน</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+            📋 Sheet ส่งคืนอะไหล่
+          </a>
+          <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+            📊 Sheet บันทึกเคลมอะไหล่
+          </a>
+          <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+            📁 Google Drive F1 Service
+          </a>
         </div>
       </div>
 
@@ -1355,8 +1359,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.39";
-const APP_UPDATED_AT = "28 กันยายน 2569 08:49 น. เวลาไทย";
+const APP_VERSION = "8.41";
+const APP_UPDATED_AT = "28 กันยายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6287,14 +6291,9 @@ async function renderEngMyWorkRpSection(){
     if(mine.length===0){
       rpEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอ ✅</div>';
     } else {
-      rpEl.innerHTML = mine.map(d=>`
-        <div class="admin-row" style="flex-direction:column;align-items:flex-start;">
-          <div class="admin-row-main" style="width:100%;justify-content:space-between;">
-            <span style="font-size:12.5px;">📦 ${escapeHtml(d.withdrawals.map(w=>w.num).join(', ')||'-')}</span>
-            <span style="color:var(--amber);font-weight:600;font-size:12px;">รอรับ</span>
-          </div>
-          <span style="font-size:11px;color:var(--text-faint);">${escapeHtml(d.dateStr||'')} · ${escapeHtml(d.returnMethodLabel||d.returnMethod||'-')}</span>
-        </div>`).join('');
+      // v8.41 — ใช้ rpBuildCard + rpBindCards เหมือนกับ tab ส่งคืนอะไหล่ → กดดูรายละเอียด, แก้ไข, ลบได้
+      rpEl.innerHTML = mine.map(d=>rpBuildCard(d,'eng-mywork-rp-list',true)).join('');
+      rpBindCards('eng-mywork-rp-list', mine, true);
     }
   } catch(e){
     if(rpBadge) rpBadge.style.display = 'none';
@@ -7863,7 +7862,7 @@ const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ช�
 const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','สถานะ','โฟลเดอร์ Drive'];
 // Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก(text) D=วิธีการส่ง E=รูปใบเบิก(links) F=รูปหลักฐาน G=สถานะ H=โฟลเดอร์ Drive
 // สีหัวตาราง: ม่วงอ่อน (lavender)
-const RP_HEADER_COLOR  = { red: 0.741, green: 0.718, blue: 0.906 }; // #BDB7E7
+const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
 
 let _rpSheetIdCache = null;
 let _rpSheetInFlight = null;
@@ -7944,11 +7943,11 @@ async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
   });
   // 2) Format: น้ำเงิน + ขาว + bold (เหมือน Claims sheet), freeze row 1, banding, filter, auto resize, data validation
   const requests = [
-    // header row: สีม่วงเข้ม ตัวหนา ขาว (ต่างจาก Claims ที่เป็นน้ำเงิน — กันสับสน)
+    // v8.40 — header row: พื้นขาว ตัวดำ หนา (ไม่มีสีพื้นหลัง — ให้ตารางดูสะอาด)
     { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
         cell:{ userEnteredFormat:{
-          backgroundColor:{ red:0.380, green:0.275, blue:0.647 }, // #6146A5 ม่วง
-          textFormat:{ bold:true, foregroundColor:{ red:1, green:1, blue:1 } },
+          backgroundColor:{ red:1, green:1, blue:1 }, // ขาว
+          textFormat:{ bold:true, foregroundColor:{ red:0, green:0, blue:0 } }, // ดำ
           verticalAlignment:'MIDDLE', horizontalAlignment:'CENTER', wrapStrategy:'WRAP'
         }},
         fields:'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,horizontalAlignment,wrapStrategy)' }},
@@ -7958,9 +7957,9 @@ async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
     { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:1, endRowIndex:10000, startColumnIndex:0, endColumnIndex:numCols },
         cell:{ userEnteredFormat:{ textFormat:{ foregroundColor:{ red:0, green:0, blue:0 }, bold:false } }},
         fields:'userEnteredFormat.textFormat' }},
-    // Banding: แถวขาว / ม่วงอ่อน (ต่างจาก Claims ที่เป็นฟ้าอ่อน)
+    // v8.40 — Banding: แถวขาว / เทาอ่อน (ไม่มีสีม่วง)
     { addBanding:{ bandedRange:{ range:{ sheetId:tabGid, startRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
-        rowProperties:{ firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.937, green:0.918, blue:0.980 } } } } },
+        rowProperties:{ firstBandColor:{ red:1, green:1, blue:1 }, secondBandColor:{ red:0.941, green:0.941, blue:0.941 } } } } },
     // Basic filter (dropdown กรอง)
     { setBasicFilter:{ filter:{ range:{ sheetId:tabGid, startRowIndex:0, startColumnIndex:0, endColumnIndex:numCols } } } },
     // Auto resize columns
@@ -8926,6 +8925,7 @@ async function rpConfirmDelete(d, containerId){
     showToast('✓ ลบรายการเรียบร้อยแล้ว');
     // Refresh whichever list was open
     if(containerId==='rp-manager-list') loadReturnPartsManagerList();
+    else if(containerId==='eng-mywork-rp-list') renderEngMyWorkRpSection(); // v8.41
     else loadMyReturnParts();
   }catch(e){
     hideLoadingOverlay();
@@ -9144,6 +9144,7 @@ async function rpEditSave(){
     $('rp-edit-modal').classList.remove('show');
     showToast('✓ แก้ไขเรียบร้อย');
     if(_rpEditContainerId==='rp-manager-list') loadReturnPartsManagerList();
+    else if(_rpEditContainerId==='eng-mywork-rp-list') renderEngMyWorkRpSection(); // v8.41
     else loadMyReturnParts();
   }catch(e){
     hideLoadingOverlay();
