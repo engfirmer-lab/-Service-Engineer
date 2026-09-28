@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.58
-  อัปเดตล่าสุด   : 28 กันยายน 2569 23:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.59
+  อัปเดตล่าสุด   : 28 กันยายน 2569 23:38 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.58</title>
+<title>F1 Service — v8.59</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1483,8 +1483,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.58";
-const APP_UPDATED_AT = "28 กันยายน 2569 23:20 น. เวลาไทย";
+const APP_VERSION = "8.59";
+const APP_UPDATED_AT = "28 กันยายน 2569 23:38 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8192,8 +8192,8 @@ $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeR
 */
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
 // v8.50: หัวตารางใหม่ — เพิ่ม 3 คอลัมน์ตรวจรับ (ประวัติ หลัง Admin Service ยืนยันรับ)
-const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','วันที่ตรวจรับ','ผู้ตรวจรับ','ผลการประเมิน','คะแนน'];
-// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก D=วิธีการส่ง E=รูปใบเบิก F=รูปหลักฐาน G=วันที่ตรวจรับ H=ผู้ตรวจรับ I=ผลการประเมิน J=คะแนน (v8.57)
+const RP_SHEET_HEADERS = ['วันที่บันทึก','วันที่ตรวจรับ','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','ผู้ตรวจรับ','ผลการประเมิน','คะแนน'];
+// Columns: A=วันที่บันทึก B=วันที่ตรวจรับ C=ผู้ส่ง D=เลขที่ใบเบิก E=วิธีการส่ง F=รูปใบเบิก G=รูปหลักฐาน H=ผู้ตรวจรับ I=ผลการประเมิน J=คะแนน (v8.59 — ย้าย วันที่ตรวจรับ มาถัดจาก วันที่บันทึก)
 // สีหัวตาราง: ม่วงอ่อน (lavender)
 const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
 
@@ -8276,10 +8276,10 @@ async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
   });
   // 2) Format: น้ำเงิน + ขาว + bold (เหมือน Claims sheet), freeze row 1, banding, filter, auto resize, data validation
   const requests = [
-    // v8.40 — header row: พื้นขาว ตัวดำ หนา (ไม่มีสีพื้นหลัง — ให้ตารางดูสะอาด)
+    // v8.59 — header row: พื้นชมพูอ่อน ตัวดำ หนา
     { repeatCell:{ range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:numCols },
         cell:{ userEnteredFormat:{
-          backgroundColor:{ red:1, green:1, blue:1 }, // ขาว
+          backgroundColor:{ red:0.957, green:0.8, blue:0.8 }, // ชมพูอ่อน #F4CCCC
           textFormat:{ bold:true, foregroundColor:{ red:0, green:0, blue:0 } }, // ดำ
           verticalAlignment:'MIDDLE', horizontalAlignment:'CENTER', wrapStrategy:'WRAP'
         }},
@@ -8377,6 +8377,33 @@ async function rpSheetAppendRow(rowsData, year, tabOverride){
   });
   if(!resp.ok){ const t=await resp.text(); throw new Error('Sheets append failed: '+t); }
   return await resp.json();
+}
+
+/* v8.59 — เซ็ต rich text หลายลิงก์ในเซลล์เดียว (ใช้กับคอลัมน์ "รูปใบเบิก" เวลามีหลายใบเบิก)
+   items = [{label, url}, ...] — HYPERLINK() ปกติรวมหลายอันในเซลล์เดียวไม่ได้ (concat แล้วกลายเป็นข้อความล้วน)
+   ต้องใช้ updateCells + textFormatRuns เซ็ต rich text ตรงๆ ถึงจะมีหลายลิงก์คลิกแยกกันได้ในเซลล์เดียว */
+async function rpSetMultiLinkCell(sheetId, tabGid, rowIndex0, colIndex0, items){
+  let text = ''; const runs = [];
+  items.forEach((it,idx)=>{
+    const start = text.length;
+    text += it.label;
+    runs.push({ startIndex: start, format: { link:{ uri: it.url }, foregroundColor:{ red:0.06, green:0.35, blue:0.71 }, underline:true } });
+    runs.push({ startIndex: text.length, format: {} }); // reset ก่อนตัวคั่น/จบข้อความ กันสไตล์ลิงก์ไหลต่อ
+    if(idx < items.length-1) text += ', ';
+  });
+  const token = await rpGetToken();
+  const requests = [{
+    updateCells:{
+      range:{ sheetId:tabGid, startRowIndex:rowIndex0, endRowIndex:rowIndex0+1, startColumnIndex:colIndex0, endColumnIndex:colIndex0+1 },
+      rows:[{ values:[{ userEnteredValue:{ stringValue:text }, textFormatRuns:runs }] }],
+      fields:'userEnteredValue,textFormatRuns'
+    }
+  }];
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ requests })
+  });
+  if(!res.ok) throw new Error('เซ็ต rich text ลิงก์หลายไฟล์ไม่สำเร็จ: '+await res.text());
 }
 
 /* แปลง row array เป็น object — รองรับทั้งรูปแบบใหม่ (v8.34) และเก่า (v8.17/v8.19)
@@ -9572,34 +9599,68 @@ async function rpConfirmReceive(d, evalResults, score){
   const withdrawals = d.withdrawals||[];
   const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ') || '-';
 
-  // สร้าง HYPERLINK cell สำหรับใบเบิก (ถ้ามีหลายใบเบิกใช้ลิงก์แรก; ถ้าหลายใบเบิกรวม URL)
+  // v8.59 — ใบเบิกใบเดียว: ใช้ HYPERLINK ปกติ (คลิกได้ทันที ไม่ต้องเรียก API เพิ่ม)
+  // หลายใบเบิก: HYPERLINK เดียวรวมหลาย URL ไม่ได้ (Sheets จะแปลงเป็นข้อความล้วนตอน concat) —
+  // เว้นคอลัมน์นี้ว่างไว้ก่อน แล้วค่อยเซ็ต rich text (ลิงก์แยกทีละไฟล์ในเซลล์เดียว) ทับทีหลังด้วย updateCells
   let wiCell = '';
   if(withdrawals.length===1 && withdrawals[0].driveUrl){
     wiCell = `=HYPERLINK("${withdrawals[0].driveUrl}";"รูปใบเบิก")`;
-  } else if(withdrawals.length>1){
-    // หลายใบเบิก: ใส่ URL แต่ละอัน
-    wiCell = withdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
   }
   const evCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
   const evalStr = evalResults.length>0 ? evalResults.join(' / ') : 'เรียบร้อยสมบูรณ์';
   const scoreVal = (typeof score === 'number') ? score : 5;
 
-  // 10 cols: วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, วันที่ตรวจรับ, ผู้ตรวจรับ, ผลการประเมิน, คะแนน (v8.57)
-  const row = [recordDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiveDate, receiverName, evalStr, scoreVal];
+  // 10 cols (v8.59 — วันที่ตรวจรับ ย้ายมาอยู่ถัดจาก วันที่บันทึก):
+  // วันที่บันทึก, วันที่ตรวจรับ, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, ผู้ตรวจรับ, ผลการประเมิน, คะแนน
+  const row = [recordDate, receiveDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiverName, evalStr, scoreVal];
 
   // 2) append ไปที่ Sheet ประวัติ (ใช้ tab 'ประวัติRP' หรือ 'HistoryRP' — สร้างถ้ายังไม่มี)
   const sheetId = await ensureReturnPartsSheet();
   const histTabName = `ประวัติRP${nowDate.getFullYear()}`;
   await ensureRpTab(sheetId, histTabName);
-  // ตรวจสอบว่ามี header แล้วหรือยัง
+  // ตรวจสอบว่า header ตรงกับ RP_SHEET_HEADERS ปัจจุบันไหม (v8.59 — เขียนทับทุกครั้งที่ไม่ตรง กันแท็บเก่าจากเวอร์ชันก่อนหน้า
+  // ที่ลำดับคอลัมน์ไม่ตรงกัน เช่น ตอนย้าย "วันที่ตรวจรับ" มาไว้คอลัมน์ B — ถ้าไม่ทำแบบนี้ แถวเก่ากับ header เก่าจะค้างไม่ตรงกับแถวใหม่ตลอดไป)
   const token = await rpGetToken();
   const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1:J1')}`, { headers:{Authorization:`Bearer ${token}`} });
   const headerData = await headerRes.json();
-  const hasHeader = headerData.values && headerData.values[0] && headerData.values[0].length>0;
-  if(!hasHeader){
-    await rpSheetAppendRow([RP_SHEET_HEADERS], nowDate.getFullYear().toString(), histTabName);
+  const currentHeader = (headerData.values && headerData.values[0]) || [];
+  const headerMatches = currentHeader.length===RP_SHEET_HEADERS.length && RP_SHEET_HEADERS.every((h,i)=>currentHeader[i]===h);
+  if(!headerMatches){
+    // เขียนทับแถว header (ไม่กระทบแถวข้อมูลที่มีอยู่แล้ว — ถ้าเป็นแท็บเก่าที่มีข้อมูลลำดับคอลัมน์เดิมอยู่ก่อนหน้า ต้องไปจัดเรียงคอลัมน์ของแถวเก่าเองด้วยมือ)
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1')}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values:[RP_SHEET_HEADERS] })
+    });
+    // เซ็ตสีพื้นหลัง header เป็นชมพูอ่อนด้วย (เผื่อเป็นแท็บเก่าที่หัวยังเป็นขาวจากโค้ดเวอร์ชันก่อน v8.59)
+    try{
+      const tabGid = _rpTabGidCache[histTabName];
+      if(tabGid!==undefined){
+        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+          method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+          body: JSON.stringify({ requests:[{ repeatCell:{
+            range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:RP_SHEET_HEADERS.length },
+            cell:{ userEnteredFormat:{ backgroundColor:{ red:0.957, green:0.8, blue:0.8 }, textFormat:{ bold:true, foregroundColor:{red:0,green:0,blue:0} } } },
+            fields:'userEnteredFormat(backgroundColor,textFormat)'
+          }}] })
+        });
+      }
+    }catch(e){ console.warn('เซ็ตสี header ไม่สำเร็จ (ข้าม):', e.message); }
   }
-  await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
+  const appendResult = await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
+
+  // v8.59 — หลายใบเบิก: เซ็ต rich text ลิงก์แยกทีละไฟล์ทับในคอลัมน์ "รูปใบเบิก" (col F, index 5)
+  if(withdrawals.length>1){
+    try{
+      const updatedRange = appendResult && appendResult.updates && appendResult.updates.updatedRange;
+      const rowMatch = updatedRange && updatedRange.match(/![A-Z]+(\d+):/);
+      if(rowMatch){
+        const rowIndex0 = parseInt(rowMatch[1],10) - 1;
+        const tabGid = _rpTabGidCache[histTabName];
+        const items = withdrawals.map((w,i)=>({ label: w.num ? `ใบเบิก ${w.num}` : `ไฟล์ ${i+1}`, url: w.driveUrl||'' })).filter(it=>it.url);
+        if(tabGid!==undefined && items.length>0) await rpSetMultiLinkCell(sheetId, tabGid, rowIndex0, 5, items);
+      }
+    }catch(e){ console.warn('เซ็ตลิงก์รูปใบเบิกหลายไฟล์ไม่สำเร็จ (ข้าม — ยังบันทึกแถวสำเร็จปกติ):', e.message); }
+  }
 
   // 3) ลบ Drive files ทีละไฟล์
   const fileIds = d.driveFileIds || [];
