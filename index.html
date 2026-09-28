@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.59
-  อัปเดตล่าสุด   : 28 กันยายน 2569 23:38 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.60
+  อัปเดตล่าสุด   : 28 กันยายน 2569 23:59 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,11 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [TODO] ตัด limit 5MB ออกให้หมดทุกจุดอัปโหลด (เอกสาร, Certificate, รูป/วิดีโอใน error, ส่งคืนอะไหล่ ฯลฯ) ยกเว้นจุดเดียวที่ยังคงไว้ที่ 5MB คือ "เคลมอะไหล่" (claim) เท่านั้น — ยังไม่ได้แก้ รอทำทีหลัง
+  - [FIXED v8.60] Pull-to-refresh บั๊ก: rp-eval-modal / eng-resp-modal / cert-score-modal ใช้ style.display แทน class .show ทำให้ตัวจับ pull-to-refresh หลอกว่าไม่มี modal เปิดอยู่ — แก้เป็น classList.add/remove('show') ทั้งหมดแล้ว
+  - [FIXED v8.60] "พื้นที่รับผิดชอบของฉัน" เปลี่ยนชื่อเป็น "รุ่นเครื่องที่ดูแล" (Engineer)
+  - [FIXED v8.60] แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น แบบ accordion (ซ่อนไว้ก่อน กดเปิดทีละ Category) อัปโหลดได้แม้ไม่ได้อยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล"
+  - [FIXED v8.60] Sup Product กำหนดได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน/ผู้ผลิต/ทั้งคู่/ไม่บังคับ — Engineer เห็นเป็นป้าย 📌 ในแท็บ Certificate ของตัวเอง (เก็บที่ meta/certRequirements)
   - [FIXED] รูป thumbnail ใน attachment preview: เปลี่ยนจาก lh3.googleusercontent.com เป็น drive.google.com/thumbnail?id=...&sz=w200 แก้ CORS/auth issue แล้ว
   - [FIXED] Auto-delete Sheet row: เมื่อ Sup Product ลบเคลมที่ค้างอยู่ (archive ไป Sheet แล้วแต่ Firestore delete ล้มเหลว) ตอนนี้ลบแถว Sheet ด้วยแล้วผ่าน deleteSheetRowIfTracked() / sheetRowIndex field
   ===================================================================
@@ -45,7 +50,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.59</title>
+<title>F1 Service — v8.60</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -624,20 +629,20 @@
       <div id="doc-results-list"></div>
     </div>
 
-    <!-- v8.58 — แท็บ Certificate ของ Engineer -->
+    <!-- v8.60 — แท็บ Certificate ของ Engineer -->
     <div id="eng-tab-cert" style="display:none;">
       <div class="panel-block" style="padding:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div>
-            <h2 style="margin-bottom:2px;font-size:14px;">พื้นที่รับผิดชอบของฉัน</h2>
-            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">เลือก Product/รุ่นที่คุณรับผิดชอบไว้ก่อน ระบบจะเปิดช่องอัปโหลด Cer ให้เฉพาะรุ่นที่เลือก</p>
+            <h2 style="margin-bottom:2px;font-size:14px;">รุ่นเครื่องที่ดูแล</h2>
+            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ไว้ระบุว่าคุณดูแลรุ่นไหนบ้าง (ไม่กระทบการอัปโหลด Cer — อัปโหลดรุ่นไหนก็ได้แม้ไม่ได้ดูแล)</p>
           </div>
-          <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขพื้นที่รับผิดชอบ</button>
+          <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขรุ่นเครื่องที่ดูแล</button>
         </div>
       </div>
       <div class="panel-block">
         <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต — ไฟล์ไม่เกิน 5 MB</p>
+        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต (ไฟล์ไม่เกิน 5 MB) — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -687,6 +692,11 @@
         <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
         <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
         <div style="overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:8px;"><table id="sup-doc-matrix"></table></div>
+      </div>
+      <div class="panel-block">
+        <h2>กำหนดรุ่นที่ต้องมี Certificate</h2>
+        <p class="panel-sub">เลือกได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน / ผู้ผลิต / ทั้งคู่ / หรือไม่บังคับเลย — Engineer จะเห็นเป็นป้าย 📌 เตือนในแท็บ Certificate ของเขา</p>
+        <div id="sup-cert-req-list"></div>
       </div>
       <div class="panel-block">
         <h2>Google Drive Database</h2>
@@ -1321,7 +1331,7 @@
   </div>
 
   <!-- modal ประเมินผลการตรวจรับ RP (Admin Service) -->
-  <div class="modal-overlay" id="rp-eval-modal" style="display:none;">
+  <div class="modal-overlay" id="rp-eval-modal">
     <div class="modal" style="max-width:460px;">
       <button class="modal-close-x" id="rp-eval-modal-close">✕</button>
       <h3>ประเมินผลการตรวจรับ</h3>
@@ -1343,10 +1353,10 @@
   </div>
 
   <!-- v8.58 — modal เลือกพื้นที่รับผิดชอบ (Engineer) -->
-  <div class="modal-overlay" id="eng-resp-modal" style="display:none;">
+  <div class="modal-overlay" id="eng-resp-modal">
     <div class="modal" style="max-width:520px;max-height:80vh;overflow:auto;">
       <button class="modal-close-x" id="eng-resp-modal-close">✕</button>
-      <h3>เลือก Product/รุ่นที่คุณรับผิดชอบ</h3>
+      <h3>เลือกรุ่นเครื่องที่ดูแล</h3>
       <p class="panel-sub">ติ๊กเลือกได้หลายรุ่น — เลือกไว้ครั้งเดียว แก้ไขทีหลังได้ตลอด</p>
       <div id="eng-resp-checklist" style="margin:14px 0;"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -1357,7 +1367,7 @@
   </div>
 
   <!-- v8.58 — modal ให้คะแนน Certificate (Manager) -->
-  <div class="modal-overlay" id="cert-score-modal" style="display:none;">
+  <div class="modal-overlay" id="cert-score-modal">
     <div class="modal" style="max-width:420px;">
       <button class="modal-close-x" id="cert-score-modal-close">✕</button>
       <h3>ให้คะแนน Certificate</h3>
@@ -1483,8 +1493,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.59";
-const APP_UPDATED_AT = "28 กันยายน 2569 23:38 น. เวลาไทย";
+const APP_VERSION = "8.60";
+const APP_UPDATED_AT = "28 กันยายน 2569 23:59 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1636,8 +1646,10 @@ function seedData(){
 }
 
 let DATA = null;
-let myResponsibility = []; // [{category, model}] พื้นที่รับผิดชอบของ Engineer ที่ login อยู่ (v8.58)
+let myResponsibility = []; // [{category, model}] รุ่นเครื่องที่ดูแลของ Engineer ที่ login อยู่ (v8.58) — ใช้แค่แสดงผล ไม่ใช้กั้นการอัปโหลด Cer (v8.60)
 let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
+let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
+let _engCertOpenCats = new Set(); // Category ไหนเปิด accordion อยู่บ้างในแท็บ Certificate ของ Engineer (v8.60)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
@@ -4643,7 +4655,7 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
     $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
     $('sup-tab-claims').style.display = supActiveTab==='claims' ? 'block':'none';
     $('sup-tab-cert').style.display = supActiveTab==='cert' ? 'block':'none';
-    if(supActiveTab==='docs') renderSupDocMatrix();
+    if(supActiveTab==='docs'){ renderSupDocMatrix(); renderSupCertReqList(); }
     if(supActiveTab==='claims') renderClaimsView();
     if(supActiveTab==='cert') renderSupCertTab();
   });
@@ -5405,7 +5417,7 @@ async function renderSupView(){
     renderSupStats();
   }
   renderProposals(); renderErrorCountSummary();
-  if(supActiveTab==='docs') renderSupDocMatrix();
+  if(supActiveTab==='docs'){ renderSupDocMatrix(); renderSupCertReqList(); }
   if(supActiveTab==='claims') renderClaimsView();
 }
 
@@ -8696,7 +8708,7 @@ function rpToggleDetail(containerId, d, canEdit){
       });
       $('eval-other-text').value = '';
       $('eval-other-text').style.display = 'none';
-      $('rp-eval-modal').style.display = 'flex';
+      $('rp-eval-modal').classList.add('show');
     });
   }
 }
@@ -9261,6 +9273,20 @@ async function fsListAllCertificates(){
   const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out;
 }
 
+// v8.60 — meta/certRequirements: Sup Product กำหนดว่ารุ่นไหนต้องมีใบ Cer แบบไหนบ้าง
+async function fsLoadCertRequirements(){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDoc(sdk.doc(db,'meta','certRequirements'));
+  certRequirements = snap.exists() ? (snap.data().requirements||{}) : {};
+}
+async function fsSaveCertRequirement(category, model, value){
+  await fsLoadCertRequirements(); // อ่านล่าสุดก่อน merge กันชนกับคนอื่นที่แก้พร้อมกัน
+  const key = category+'|'+model;
+  if(value){ certRequirements[key] = value; } else { delete certRequirements[key]; }
+  await initFirebase(); const sdk = window._firebaseSdk;
+  await sdk.setDoc(sdk.doc(db,'meta','certRequirements'), { requirements: certRequirements }, { merge:true });
+}
+
 // ---- UI: Engineer — modal เลือกพื้นที่รับผิดชอบ ----
 function renderEngRespChecklist(){
   const wrap = $('eng-resp-checklist');
@@ -9287,9 +9313,9 @@ $('eng-resp-open-btn').addEventListener('click', async ()=>{
   showLoadingOverlay('กำลังโหลด...');
   try{ await fsLoadMyResponsibility(); } finally { hideLoadingOverlay(); }
   renderEngRespChecklist();
-  $('eng-resp-modal').style.display = 'flex';
+  $('eng-resp-modal').classList.add('show');
 });
-function closeEngRespModal(){ $('eng-resp-modal').style.display='none'; }
+function closeEngRespModal(){ $('eng-resp-modal').classList.remove('show'); }
 $('eng-resp-modal-close').addEventListener('click', closeEngRespModal);
 $('eng-resp-cancel-btn').addEventListener('click', closeEngRespModal);
 $('eng-resp-modal').addEventListener('click', e=>{ if(e.target===$('eng-resp-modal')) closeEngRespModal(); });
@@ -9311,39 +9337,64 @@ function certStatusBadge(cert){
   if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${cert.score}/5</span>`;
   return `<span style="color:var(--amber);font-size:12px;">⏳ รอ Manager ตรวจ</span>`;
 }
+function certReqBadgeHtml(category, model){
+  const req = certRequirements[category+'|'+model];
+  if(!req) return '';
+  const label = req==='internal' ? 'ต้องมี Cer ภายใน' : req==='manufacturer' ? 'ต้องมี Cer ผู้ผลิต' : 'ต้องมี Cer ทั้งภายใน+ผู้ผลิต';
+  return `<span style="font-size:11px;color:var(--amber);font-weight:600;margin-left:6px;">📌 ${label}</span>`;
+}
+function engCertModelRowHtml(category, model, certMap){
+  const internal = certMap[category+'|'+model+'|internal'];
+  const manu = certMap[category+'|'+model+'|manufacturer'];
+  return `<div style="padding:10px 12px;border-top:1px solid var(--border);">
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px;">${escapeHtml(model)}${certReqBadgeHtml(category,model)}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:13px;">📋 Cer ภายใน &nbsp; ${certStatusBadge(internal)}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${internal ? `<a href="${escapeHtml(internal.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${internal?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="internal" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px dashed var(--border);padding-top:8px;">
+        <div style="font-size:13px;">🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+// v8.60 — แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น (accordion กดเปิดทีละ Category) — อัปโหลดได้ไม่ว่าจะอยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล" หรือไม่ก็ตาม
 async function renderEngCertTab(){
   const wrap = $('eng-cert-list');
   wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-  await fsLoadMyResponsibility();
-  if(myResponsibility.length===0){
-    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่ได้เลือกพื้นที่รับผิดชอบ — กด "เลือก/แก้ไขพื้นที่รับผิดชอบ" ด้านบนก่อน</div>`;
-    return;
-  }
+  await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
   const myCerts = await fsListCertificatesByOwner(myUserEmail);
   const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
-  wrap.innerHTML = myResponsibility.slice().sort((a,b)=>naturalSort(a.category+a.model,b.category+b.model)).map(({category,model})=>{
-    const internal = certMap[category+'|'+model+'|internal'];
-    const manu = certMap[category+'|'+model+'|manufacturer'];
-    return `<div class="panel-block" style="padding:12px;margin-bottom:10px;">
-      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${escapeHtml(category)} — ${escapeHtml(model)}</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          <div>📋 Cer ภายใน &nbsp; ${certStatusBadge(internal)}</div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            ${internal ? `<a href="${escapeHtml(internal.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
-            <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${internal?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="internal" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);padding-top:10px;">
-          <div>🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
-          <div style="display:flex;gap:6px;align-items:center;">
-            ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
-            <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
-          </div>
-        </div>
+  const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+  const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
+  wrap.innerHTML = cats.map(cat=>{
+    const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
+    if(models.length===0) return '';
+    const isOpen = _engCertOpenCats.has(cat);
+    const myCountInCat = models.filter(m=>myModelSet.has(cat+'|'+m)).length;
+    return `<div class="panel-block" style="padding:0;margin-bottom:8px;overflow:hidden;">
+      <div class="eng-cert-cat-header" data-cat="${escapeHtml(cat)}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:12px;">
+        <div style="font-weight:600;font-size:13.5px;">${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></div>
+        <span style="font-size:12px;color:var(--text-faint);">${isOpen?'▲ ซ่อน':'▼ แสดง'}</span>
       </div>
+      ${isOpen ? models.map(m=>engCertModelRowHtml(cat,m,certMap)).join('') : ''}
     </div>`;
   }).join('');
+  document.querySelectorAll('.eng-cert-cat-header').forEach(header=>{
+    header.addEventListener('click', ()=>{
+      const cat = header.getAttribute('data-cat');
+      if(_engCertOpenCats.has(cat)) _engCertOpenCats.delete(cat); else _engCertOpenCats.add(cat);
+      renderEngCertTab();
+    });
+  });
   wireCertUploadInputs();
 }
 
@@ -9375,6 +9426,47 @@ async function renderSupCertTab(){
     </div>`;
   }).join('');
   wireCertUploadInputs();
+}
+
+// v8.60 — UI: Sup Product กำหนดว่ารุ่นไหนต้องมีใบ Cer แบบไหนบ้าง
+async function renderSupCertReqList(){
+  const wrap = $('sup-cert-req-list');
+  if(!wrap) return;
+  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+  await fsLoadCertRequirements();
+  const myModels = [];
+  Object.keys(DATA.categories||{}).sort(naturalSort).forEach(cat=>{
+    (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort).forEach(m=> myModels.push({category:cat, model:m}));
+  });
+  if(myModels.length===0){
+    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่คุณดูแล</div>`;
+    return;
+  }
+  wrap.innerHTML = myModels.map(({category,model})=>{
+    const cur = certRequirements[category+'|'+model] || '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--border);">
+      <div style="font-size:13.5px;"><b>${escapeHtml(category)}</b> — ${escapeHtml(model)}</div>
+      <select class="sup-cert-req-select" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);">
+        <option value="" ${cur===''?'selected':''}>ไม่บังคับ</option>
+        <option value="internal" ${cur==='internal'?'selected':''}>ต้องมี Cer ภายใน</option>
+        <option value="manufacturer" ${cur==='manufacturer'?'selected':''}>ต้องมี Cer ผู้ผลิต</option>
+        <option value="both" ${cur==='both'?'selected':''}>ต้องมีทั้งภายใน+ผู้ผลิต</option>
+      </select>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.sup-cert-req-select').forEach(sel=>{
+    sel.addEventListener('change', async e=>{
+      const category = sel.getAttribute('data-cat');
+      const model = sel.getAttribute('data-model');
+      const value = e.target.value;
+      sel.disabled = true;
+      try{
+        await fsSaveCertRequirement(category, model, value);
+        showToast('✓ บันทึกแล้ว');
+      }catch(err){ alert('บันทึกไม่สำเร็จ: '+err.message); }
+      finally{ sel.disabled = false; }
+    });
+  });
 }
 
 // ผูก event ให้ input[type=file] ของ Certificate ทุกอัน (เรียกซ้ำได้ทุกครั้งที่ render ใหม่)
@@ -9436,11 +9528,11 @@ async function renderMgrCertList(){
       $('cert-score-info').innerHTML = `<b>${escapeHtml(cert.ownerName||cert.ownerEmail)}</b> (${roleLabel})<br>${escapeHtml(cert.category)} / ${escapeHtml(cert.model)} — Cer${certTypeLabel(cert.certType)}`;
       $('cert-score-select').value = '5';
       $('cert-score-note').value = '';
-      $('cert-score-modal').style.display = 'flex';
+      $('cert-score-modal').classList.add('show');
     });
   });
 }
-function closeCertScoreModal(){ $('cert-score-modal').style.display='none'; _certScoreDoc=null; }
+function closeCertScoreModal(){ $('cert-score-modal').classList.remove('show'); _certScoreDoc=null; }
 $('cert-score-modal-close').addEventListener('click', closeCertScoreModal);
 $('cert-score-cancel-btn').addEventListener('click', closeCertScoreModal);
 $('cert-score-modal').addEventListener('click', e=>{ if(e.target===$('cert-score-modal')) closeCertScoreModal(); });
@@ -9852,7 +9944,7 @@ $('rp-edit-cancel-btn').addEventListener('click',  ()=>{ $('rp-edit-modal').clas
 $('rp-edit-modal').addEventListener('click', e=>{ if(e.target===$('rp-edit-modal')) $('rp-edit-modal').classList.remove('show'); });
 
 /* ---- v8.57: rp-eval-modal (Admin Service ประเมินผลตรวจรับ) ---- */
-function closeRpEvalModal(){ $('rp-eval-modal').style.display = 'none'; _rpEvalDoc = null; }
+function closeRpEvalModal(){ $('rp-eval-modal').classList.remove('show'); _rpEvalDoc = null; }
 $('rp-eval-modal-close').addEventListener('click', closeRpEvalModal);
 $('rp-eval-cancel-btn').addEventListener('click',  closeRpEvalModal);
 $('rp-eval-modal').addEventListener('click', e=>{ if(e.target===$('rp-eval-modal')) closeRpEvalModal(); });
