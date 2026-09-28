@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.42
-  อัปเดตล่าสุด   : 28 กันยายน 2569 10:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.43
+  อัปเดตล่าสุด   : 28 กันยายน 2569 11:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.42</title>
+<title>F1 Service — v8.43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -830,7 +830,14 @@
       <datalist id="claim-partnum-datalist"></datalist>
       <datalist id="claim-partname-datalist"></datalist>
       <div class="field-wrap"><label>เลข Job Factorium <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-jobfactorium"></div>
-      <div class="field-wrap"><label>เลขที่ใบยืม <span style="color:var(--red);">*</span></label><input type="text" id="claim-f-loan" placeholder="SPOxxxxxxx"></div>
+      <div class="field-wrap">
+        <label>เลขที่ใบยืม <span style="color:var(--red);">*</span></label>
+        <div style="display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);">
+          <span style="padding:0 10px;font-weight:700;font-size:15px;color:var(--fg);background:var(--bg2,var(--bg));border-right:1.5px solid var(--border);white-space:nowrap;line-height:40px;height:40px;display:flex;align-items:center;">SPO</span>
+          <input type="text" id="claim-f-loan" placeholder="กรอกเฉพาะตัวเลข เช่น 0001234" inputmode="numeric" style="border:none;border-radius:0;flex:1;box-shadow:none;background:transparent;padding:0 10px;height:40px;font-size:15px;">
+        </div>
+        <div style="font-size:11px;color:var(--fg2);margin-top:3px;">เช่น 0001234 → บันทึกเป็น SPO0001234</div>
+      </div>
       <div id="claim-attach-groups"></div>
       <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="claim-save-btn">บันทึกเคลม</button>
@@ -1342,8 +1349,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.42";
-const APP_UPDATED_AT = "28 กันยายน 2569 10:30 น. เวลาไทย";
+const APP_VERSION = "8.43";
+const APP_UPDATED_AT = "28 กันยายน 2569 11:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5738,7 +5745,7 @@ function openClaimModal(existingClaim){
   $('claim-f-errmsg').value = claimDraft.errorMessage;
   $('claim-f-problemdetail').value = claimDraft.problemDetail||'';
   $('claim-f-jobfactorium').value = claimDraft.jobFactorium;
-  $('claim-f-loan').value = claimDraft.loanSlipNo;
+  $('claim-f-loan').value = (claimDraft.loanSlipNo||'').replace(/^SPO/i,'');
   initClaimDatePickers();
   if(claimProblemDatePicker){ if(claimDraft.problemDate) claimProblemDatePicker.setDate(claimDraft.problemDate, false); else claimProblemDatePicker.clear(); }
   if(claimFixDatePicker){ if(claimDraft.fixDate) claimFixDatePicker.setDate(claimDraft.fixDate, false); else claimFixDatePicker.clear(); }
@@ -5826,7 +5833,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
   claimDraft.errorCode = $('claim-f-errcode').value.trim();
   claimDraft.errorMessage = $('claim-f-errmsg').value.trim();
   claimDraft.jobFactorium = $('claim-f-jobfactorium').value.trim();
-  claimDraft.loanSlipNo = $('claim-f-loan').value.trim();
+  const _loanRaw = $('claim-f-loan').value.trim();
+  claimDraft.loanSlipNo = _loanRaw ? ('SPO' + _loanRaw.replace(/^SPO/i,'')) : '';
   const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), qty:(p.qty||'').toString().trim(), countQty:(p.countQty||'').toString().trim(), countUnit:(p.countUnit||'').trim()})).filter(p=>p.partNumber||p.partName);
   const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.qty && p.countQty && p.countUnit);
   const validation = validateClaimRequiredFields();
@@ -7778,7 +7786,7 @@ $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeR
 */
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
 // หัวตารางใหม่ (v8.19): ตรงกับ claims sheet + เพิ่มสถานะ
-const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','สถานะ','โฟลเดอร์ Drive'];
+const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','สถานะ'];
 // Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก(text) D=วิธีการส่ง E=รูปใบเบิก(links) F=รูปหลักฐาน G=สถานะ H=โฟลเดอร์ Drive
 // สีหัวตาราง: ม่วงอ่อน (lavender)
 const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
@@ -7853,7 +7861,7 @@ async function ensureReturnPartsSheet(){
 
 /* เขียน header แถวแรก + format (เหมือน Sheet บันทึกเคลม: น้ำเงิน, ขาว, banding, filter, auto resize) */
 async function rpSetupTabHeader(token, sheetId, tabTitle, tabGid){
-  const numCols = RP_SHEET_HEADERS.length; // 8 คอลัมน์
+  const numCols = RP_SHEET_HEADERS.length; // 7 คอลัมน์ (v8.43: ตัด col H โฟลเดอร์ Drive ออก)
   // 1) เขียน header text
   const range = encodeURIComponent(tabTitle+'!A1');
   await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?valueInputOption=USER_ENTERED`, {
@@ -8319,8 +8327,12 @@ function renderWithdrawalList(){
         <span class="rp-wi-label">ใบเบิก #${i+1}</span>
         ${rpWithdrawals.length>1?`<button class="rp-wi-remove" onclick="rpRemoveWithdrawal(${w.id})" title="ลบใบเบิกนี้">✕</button>`:''}
       </div>
-      <div class="rp-wi-num">
-        <input type="text" placeholder="SPOxxxxxxx *" value="${escapeHtml(w.num)}" data-wid="${w.id}" class="rp-wi-num-input" style="flex:1;">
+      <div class="rp-wi-num" style="flex-direction:column;align-items:stretch;gap:4px;">
+        <div style="display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);">
+          <span style="padding:0 10px;font-weight:700;font-size:15px;color:var(--fg);background:var(--bg2,var(--bg));border-right:1.5px solid var(--border);white-space:nowrap;line-height:40px;height:40px;display:flex;align-items:center;">SPO</span>
+          <input type="text" placeholder="กรอกเฉพาะตัวเลข *" inputmode="numeric" value="${escapeHtml((w.num||'').replace(/^SPO/i,''))}" data-wid="${w.id}" class="rp-wi-num-input" style="border:none;border-radius:0;flex:1;box-shadow:none;background:transparent;padding:0 10px;height:40px;font-size:15px;">
+        </div>
+        <div style="font-size:11px;color:var(--fg2);">เช่น 0001234 → บันทึกเป็น SPO0001234</div>
       </div>
       <div class="rp-wi-file-zone${w.file?` has-file`:''}" data-wid="${w.id}" id="rp-wz-${w.id}">
         ${w.file
@@ -8345,7 +8357,8 @@ function renderWithdrawalList(){
   container.querySelectorAll('.rp-wi-num-input').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const wid = +e.target.getAttribute('data-wid');
-      const w = rpWithdrawals.find(x=>x.id===wid); if(w) w.num=e.target.value;
+      const w = rpWithdrawals.find(x=>x.id===wid);
+      if(w){ const raw = e.target.value.replace(/^SPO/i,''); w.num = raw ? ('SPO'+raw) : ''; }
       rpScheduleDraftSave();
     });
   });
@@ -8457,7 +8470,9 @@ async function ensureReturnPartsFolderPath(senderName){
 async function fsAddReturnPart(data){
   // data: { senderEmail, senderName, returnMethod, returnMethodLabel, withdrawals, evidence, driveFolder, createdAt }
   const dateObj = new Date(data.createdAt||Date.now());
-  const dateStr = dateObj.toLocaleString('th-TH',{timeZone:'Asia/Bangkok',hour12:false});
+  // v8.43: วันที่เฉพาะ DD/MM/YYYY (ค.ศ.) ไม่มีเวลา
+  const _bk = new Date(dateObj.toLocaleString('en-US',{timeZone:'Asia/Bangkok'}));
+  const dateStr = `${String(_bk.getDate()).padStart(2,'0')}/${String(_bk.getMonth()+1).padStart(2,'0')}/${_bk.getFullYear()}`;
   const yearAD  = dateObj.getFullYear().toString();
   const withdrawals = (data.withdrawals||[]);
   const evidUrl = data.evidence ? data.evidence.driveUrl : '';
@@ -8883,8 +8898,12 @@ function rpEditRenderWithdrawalList(){
         <span class="rp-wi-label">ใบเบิก #${i+1}</span>
         ${rpEditWithdrawals.length>1?`<button class="rp-wi-remove" onclick="rpEditRemoveWi(${w.id})">✕</button>`:''}
       </div>
-      <div class="rp-wi-num">
-        <input type="text" placeholder="SPOxxxxxxx *" value="${escapeHtml(w.num)}" data-ewid="${w.id}" class="rp-edit-wi-num-input" style="flex:1;">
+      <div class="rp-wi-num" style="flex-direction:column;align-items:stretch;gap:4px;">
+        <div style="display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);">
+          <span style="padding:0 10px;font-weight:700;font-size:15px;color:var(--fg);background:var(--bg2,var(--bg));border-right:1.5px solid var(--border);white-space:nowrap;line-height:40px;height:40px;display:flex;align-items:center;">SPO</span>
+          <input type="text" placeholder="กรอกเฉพาะตัวเลข *" inputmode="numeric" value="${escapeHtml((w.num||'').replace(/^SPO/i,''))}" data-ewid="${w.id}" class="rp-edit-wi-num-input" style="border:none;border-radius:0;flex:1;box-shadow:none;background:transparent;padding:0 10px;height:40px;font-size:15px;">
+        </div>
+        <div style="font-size:11px;color:var(--fg2);">เช่น 0001234 → บันทึกเป็น SPO0001234</div>
       </div>
       <div class="rp-wi-file-zone${w.file?' has-file':''}" data-ewid="${w.id}" id="rp-edit-wz-${w.id}" style="margin-top:4px;">
         ${w.file
@@ -8901,7 +8920,8 @@ function rpEditRenderWithdrawalList(){
   container.querySelectorAll('.rp-edit-wi-num-input').forEach(inp=>{
     inp.addEventListener('input', e=>{
       const wid = +e.target.getAttribute('data-ewid');
-      const w = rpEditWithdrawals.find(x=>x.id===wid); if(w) w.num=e.target.value;
+      const w = rpEditWithdrawals.find(x=>x.id===wid);
+      if(w){ const raw = e.target.value.replace(/^SPO/i,''); w.num = raw ? ('SPO'+raw) : ''; }
     });
   });
   container.querySelectorAll('.rp-wi-file-zone').forEach(zone=>{
