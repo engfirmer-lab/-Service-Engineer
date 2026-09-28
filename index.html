@@ -3129,14 +3129,27 @@ function ensureSignedIn(callback){
   $('gsi-overlay').classList.add('show');
   initGisWithRetry(15, 300);
 }
-$('change-name-btn').addEventListener('click', async ()=>{
-  // v8.50: เคลียร์ localStorage ทั้งหมดก่อน signOut — รีเซ็ตแคชสิทธิ์และข้อมูลเก่าทุกอย่างสำหรับการ login ครั้งถัดไป
+// ล้างแคช auth ทั้งหมด — localStorage + IndexedDB (Firebase เก็บ token จริงไว้ใน IndexedDB)
+// ต้องเรียกก่อน signOut ทุกครั้ง กันอาการ "สลับ account แล้วยังเห็นข้อมูลเดิม"
+async function clearAllAuthCache(){
   try{ localStorage.clear(); }catch(e){}
+  try{ sessionStorage.clear(); }catch(e){}
+  // ล้าง IndexedDB ทุก database ที่เบราว์เซอร์รู้จัก (Firebase Auth เก็บ token ไว้ที่นี่)
+  try{
+    const dbs = await indexedDB.databases();
+    await Promise.all(dbs.map(d=> new Promise(res=>{
+      const req = indexedDB.deleteDatabase(d.name);
+      req.onsuccess = req.onerror = req.onblocked = ()=>res();
+    })));
+  }catch(e){}
+}
+$('change-name-btn').addEventListener('click', async ()=>{
+  await clearAllAuthCache();
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 // ปุ่มออกจากระบบตอนหน้าจอ "รอสิทธิ์เข้าถึง" — เผื่อกดขอสิทธิ์ผิดบัญชี จะได้ออกแล้วเข้าใหม่ด้วยบัญชีอื่นได้เลย ไม่ต้องรอ
 $('access-request-logout-btn').addEventListener('click', async ()=>{
-  try{ localStorage.clear(); }catch(e){}
+  await clearAllAuthCache();
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 
@@ -3397,6 +3410,7 @@ async function checkAccessAndLoad(){
     initRpRealtimeWatch();
     $('gsi-overlay').classList.remove('show');
     $('access-request-overlay').classList.remove('show');
+    setStatus(false, ''); // ล้าง "กำลังตรวจสอบสิทธิ์..." ที่ค้างอยู่
     if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal();
     switchMode('admin-service');
     return;
