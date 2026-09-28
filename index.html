@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.35
-  อัปเดตล่าสุด   : 27 กันยายน 2569 18:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.39
+  อัปเดตล่าสุด   : 28 กันยายน 2569 08:49 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.35</title>
+<title>F1 Service — v8.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -469,8 +469,7 @@
     <div class="mode-toggle" id="mode-toggle">
       <button id="mode-eng" class="active">Engineer</button>
       <button id="mode-sup">Sup Product</button>
-      <button id="mode-owner">จัดการ Product</button>
-      <button id="mode-access">จัดการสิทธิ์</button>
+      <button id="mode-settings">⚙️ ตั้งค่าระบบ</button>
       <button id="mode-mgr">Dashboard</button>
       <button id="mode-backup">Export/Backup</button>
     </div>
@@ -492,17 +491,12 @@
 
   <!-- ============ ENGINEER VIEW ============ -->
   <div id="view-eng" class="narrow">
+    <!-- v8.37 — Tab bar ใหม่: 4 แท็บหลัก ย่อรวม doc-type เข้า เอกสาร Service -->
     <div class="subtab-bar" id="eng-subtabs">
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
+      <button data-tab="service_docs">📁 เอกสาร Service</button>
       <button data-tab="my_work">📌 งานของฉัน<span class="badge-count" id="eng-mywork-badge" style="display:none;margin-left:4px;">0</span></button>
       <button data-tab="claim">📋 บันทึกข้อมูล</button>
-      <button data-tab="service_manual">📘 Service Manual</button>
-      <button data-tab="spare_part">🔧 Spare Part</button>
-      <button data-tab="install_checklist">📋 Install Checklist</button>
-      <button data-tab="pm_checklist">🗓️ PM Checklist</button>
-      <button data-tab="protocol">📜 Protocol</button>
-      <button data-tab="diagram">📐 Diagram</button>
-      <button data-tab="video">🎬 Video</button>
     </div>
 
     <div id="eng-tab-trbl">
@@ -593,21 +587,38 @@
       </div>
     </div>
 
-    <!-- งานของฉัน tab (v8.35) -->
+    <!-- งานของฉัน tab (v8.37 — collapsible sections) -->
     <div id="eng-tab-my-work" style="display:none;">
-      <!-- เคลมอะไหล่รอ approve -->
+      <!-- Section 1: เคลมอะไหล่รอ approve — collapsible -->
       <div class="panel-block" id="eng-mywork-claims-block" style="padding:14px;">
-        <h2 style="font-size:14px;margin:0 0 10px;">📋 เคลมอะไหล่รอ approve</h2>
-        <div id="eng-mywork-claims-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="eng-mywork-claims-header">
+          <h2 style="font-size:14px;margin:0;">📋 เคลมอะไหล่รอ approve <span class="badge-count" id="eng-mywork-claims-badge" style="display:none;margin-left:4px;">0</span></h2>
+          <button class="btn btn-ghost btn-sm" id="eng-mywork-claims-toggle-btn" style="white-space:nowrap;">▾ แสดง</button>
+        </div>
+        <div id="eng-mywork-claims-list" style="margin-top:10px;display:none;"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
-      <!-- ส่งคืนอะไหล่รอรับ -->
+      <!-- Section 2: ส่งคืนอะไหล่รอรับ — collapsible -->
       <div class="panel-block" id="eng-mywork-rp-block" style="padding:14px;">
-        <h2 style="font-size:14px;margin:0 0 10px;">📦 ส่งคืนอะไหล่รอรับ</h2>
-        <div id="eng-mywork-rp-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="eng-mywork-rp-header">
+          <h2 style="font-size:14px;margin:0;">📦 ส่งคืนอะไหล่รอรับ <span class="badge-count" id="eng-mywork-rp-badge" style="display:none;margin-left:4px;">0</span></h2>
+          <button class="btn btn-ghost btn-sm" id="eng-mywork-rp-toggle-btn" style="white-space:nowrap;">▾ แสดง</button>
+        </div>
+        <div id="eng-mywork-rp-list" style="margin-top:10px;display:none;"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
 
     <div id="eng-tab-docs" style="display:none;">
+      <!-- v8.37 — sub-tabs ประเภทเอกสาร (แยกออกมาจาก eng-subtabs หลัก) -->
+      <div class="subtab-bar" id="eng-doctype-subtabs" style="margin-bottom:6px;">
+        <button data-doctype="service_manual" class="active">📘 Service Manual</button>
+        <button data-doctype="spare_part">🔧 Spare Part</button>
+        <button data-doctype="install_checklist">📋 Install</button>
+        <button data-doctype="pm_checklist">🗓️ PM</button>
+        <button data-doctype="protocol">📜 Protocol</button>
+        <button data-doctype="diagram">📐 Diagram</button>
+        <button data-doctype="video">🎬 Video</button>
+      </div>
+      <!-- sub-sub-tabs สำหรับ video และ diagram -->
       <div class="subtab-bar" id="eng-video-subtabs" style="display:none;margin-bottom:10px;">
         <button data-vsub="training" class="active">🎓 Training</button>
         <button data-vsub="alignment">📐 Alignment</button>
@@ -965,9 +976,18 @@
         </div>
         <div id="claim-success-body"></div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:16px;">
+      <!-- ปุ่มหลัก -->
+      <div style="display:flex;gap:8px;margin-top:16px;" id="claim-success-btn-main">
         <button class="btn btn-ghost" id="claim-success-download-btn" style="flex:1;">⬇ บันทึกรูปภาพ</button>
         <button class="btn btn-primary" id="claim-success-close-btn" style="flex:1;">ปิด</button>
+      </div>
+      <!-- ยืนยันก่อนปิด (v8.37 — แทน confirm()) -->
+      <div id="claim-success-save-confirm" style="display:none;margin-top:12px;background:var(--bg-sub,#f5f5f5);border-radius:10px;padding:12px 14px;">
+        <p style="font-size:13px;margin:0 0 10px;color:var(--text-main);">บันทึกรูปภาพสรุปข้อมูลก่อนปิดหรือไม่?</p>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="claim-success-nosave-btn" style="flex:1;">ไม่บันทึก</button>
+          <button class="btn btn-primary" id="claim-success-dosave-btn" style="flex:1;">บันทึก</button>
+        </div>
       </div>
     </div>
   </div>
@@ -987,10 +1007,18 @@
     </div>
   </div>
 
-  <!-- ============ ACCESS VIEW (จัดการสิทธิ์เข้าถึง) ============ -->
-  <div id="view-access" style="display:none;">
-    <div class="desktop-hint">🔐 หน้านี้จัดการว่าใครเข้าระบบได้บ้าง และใครแก้ไขข้อมูลได้บ้าง</div>
+  <!-- ============ SETTINGS VIEW (v8.37 — รวม จัดการสิทธิ์ + จัดการ Product) ============ -->
+  <div id="view-settings" style="display:none;">
+    <div class="desktop-hint">⚙️ ตั้งค่าระบบ — จัดการสิทธิ์ผู้ใช้และ Product ทั้งหมด (เฉพาะ Editor)</div>
 
+    <!-- Sub-tabs -->
+    <div class="subtab-bar" id="settings-subtabs" style="margin-bottom:14px;">
+      <button data-stab="access" class="active">🔐 สิทธิ์ผู้ใช้</button>
+      <button data-stab="owner">🗂️ Product & Category</button>
+    </div>
+
+    <!-- Sub-page: สิทธิ์ผู้ใช้ (เดิมคือ view-access) -->
+    <div id="settings-tab-access">
     <div class="panel-block" id="access-requests-panel" style="display:none;">
       <h2>คำขอสิทธิ์เข้าถึงที่รอการอนุมัติ <span class="badge-count" id="access-request-count">0</span></h2>
       <p class="panel-sub">เฉพาะ Super Admin (Visanu) เท่านั้นที่อนุมัติ/ปฏิเสธคำขอได้</p>
@@ -1015,11 +1043,11 @@
       </div>
       <div id="perm-user-list"></div>
     </div>
-  </div>
+    </div><!-- /settings-tab-access -->
 
-  <!-- ============ OWNER VIEW (ผู้รับผิดชอบ Product) ============ -->
-  <div id="view-owner" style="display:none;">
-    <div class="desktop-hint">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — เข้าถึงได้เฉพาะผู้ดูแลระบบ (Editor)</div>
+    <!-- Sub-page: Product & Category (เดิมคือ view-owner) -->
+    <div id="settings-tab-owner" style="display:none;">
+    <div class="desktop-hint" style="margin-bottom:10px;">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — เข้าถึงได้เฉพาะผู้ดูแลระบบ (Editor)</div>
 
     <div class="panel-block">
       <h2>จัดการรายชื่อ Sup Product</h2>
@@ -1066,82 +1094,89 @@
       </div>
       <div id="cat-model-manage"></div>
     </div>
-  </div>
+    </div><!-- /settings-tab-owner -->
+  </div><!-- /view-settings -->
 
   <!-- ============ MANAGER VIEW ============ -->
   <div id="view-mgr" style="display:none;">
     <div class="desktop-hint">🖥️ Dashboard ภาพรวม — สำหรับ Engineer Manager</div>
 
-    <!-- รายการรอดำเนินการ (v8.35) — เคลมค้างรออนุมัติแยกตาม Sup Product -->
-    <div class="panel-block" style="border:1.5px solid var(--amber);">
-      <h2 style="font-size:14px;margin:0 0 6px;">🔔 รายการรอดำเนินการ</h2>
-      <p class="panel-sub" style="margin:0 0 10px;font-size:11.5px;">เคลมอะไหล่ที่ยังไม่ถูกดำเนินการ แยกตาม Sup Product</p>
-      <div id="mgr-pending-claims-list"><div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">กำลังโหลด...</div></div>
+    <!-- Sub-tab bar (v8.36) -->
+    <div id="mgr-subtabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;">
+      <button class="btn btn-ghost btn-sm active" data-mgrtab="summary" style="white-space:nowrap;">📊 สรุปข้อมูล</button>
+      <button class="btn btn-ghost btn-sm" data-mgrtab="pending" style="white-space:nowrap;">🔔 งานค้างทั้งหมด <span class="badge-count" id="mgr-pending-total-badge" style="display:none;margin-left:4px;">0</span></button>
     </div>
 
-    <!-- รายการรอตรวจรับอะไหล่ -->
-    <div class="panel-block" style="border:1.5px solid var(--amber);">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
-        <div>
-          <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;">0</span></h2>
-          <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
+    <!-- Sub-page 1: สรุปข้อมูล -->
+    <div id="mgr-sub-summary">
+      <!-- ข้อมูล Troubleshoot — แสดงทันที ไม่ต้องกดดู -->
+      <div class="panel-block">
+        <h2>📊 ข้อมูล Troubleshoot</h2>
+        <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — ดูแล้วตีความเอง</p>
+        <div id="mgr-trbl-content">
+          <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+          <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
+          <div style="overflow-x:auto;"><table id="mgr-table"></table></div>
         </div>
       </div>
-      <!-- ลิงก์ด่วน: แสดงเสมอ ไม่รอโหลดข้อมูล -->
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-          📋 Sheet ส่งคืนอะไหล่
-        </a>
-        <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-          📊 Sheet บันทึกเคลมอะไหล่
-        </a>
-        <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
-           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
-          📁 Google Drive F1 Service
-        </a>
-      </div>
-      <!-- รายการรอรับ — ซ่อนไว้ก่อน กดปุ่มถึงจะโหลด -->
-      <div id="rp-manager-toggle-wrap" style="margin-bottom:8px;">
-        <button class="btn btn-ghost btn-sm" id="rp-manager-toggle-btn" style="width:100%;justify-content:center;">
-          📋 ดูรายการรอรับ
-        </button>
-      </div>
-      <div id="rp-manager-list-wrap" style="display:none;">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
-          <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
+
+      <!-- ความครบถ้วนของเอกสาร — แสดงทันที ไม่ต้องกดดู -->
+      <div class="panel-block">
+        <h2>📄 ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
+        <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
+        <div id="mgr-doc-content">
+          <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
+          <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
+          <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
         </div>
-        <div id="rp-manager-list"></div>
       </div>
     </div>
 
-    <!-- ข้อมูล Troubleshoot -->
-    <div class="panel-block">
-      <h2>📊 ข้อมูล Troubleshoot</h2>
-      <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — ดูแล้วตีความเอง</p>
-      <div id="mgr-trbl-toggle-wrap" style="margin-bottom:8px;">
-        <button class="btn btn-ghost btn-sm" id="mgr-trbl-toggle-btn" style="width:100%;justify-content:center;">📋 แสดงข้อมูล Troubleshoot</button>
-      </div>
-      <div id="mgr-trbl-content" style="display:none;">
-        <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
-        <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
-        <div style="overflow-x:auto;"><table id="mgr-table"></table></div>
-      </div>
-    </div>
+    <!-- Sub-page 2: งานค้างทั้งหมด -->
+    <div id="mgr-sub-pending" style="display:none;">
 
-    <!-- ความครบถ้วนของเอกสาร -->
-    <div class="panel-block">
-      <h2>📄 ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
-      <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
-      <div id="mgr-doc-toggle-wrap" style="margin-bottom:8px;">
-        <button class="btn btn-ghost btn-sm" id="mgr-doc-toggle-btn" style="width:100%;justify-content:center;">📋 แสดงข้อมูลเอกสาร</button>
+      <!-- รายการรอดำเนินการ — collapsible, ซ่อนไว้ก่อน -->
+      <div class="panel-block" style="border:1.5px solid var(--amber);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="mgr-claims-collapse-header">
+          <h2 style="font-size:14px;margin:0;">🔔 รายการรอดำเนินการ <span class="badge-count" id="mgr-claims-pending-badge" style="display:none;margin-left:4px;">0</span></h2>
+          <span id="mgr-claims-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
+        </div>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">เคลมอะไหล่ที่ยังไม่ถูกดำเนินการ แยกตาม Sup Product</p>
+        <div id="mgr-pending-claims-list" style="display:none;margin-top:10px;"><div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">กำลังโหลด...</div></div>
       </div>
-      <div id="mgr-doc-content" style="display:none;">
-        <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
-        <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
-        <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
+
+      <!-- รายการรอตรวจรับอะไหล่ — collapsible, ซ่อนไว้ก่อน -->
+      <div class="panel-block" style="border:1.5px solid var(--amber);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="mgr-rp-collapse-header">
+          <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
+          <span id="mgr-rp-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
+        </div>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
+        <div id="mgr-rp-collapse-body" style="display:none;margin-top:10px;">
+          <!-- ลิงก์ด่วน -->
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <a id="rp-sheet-link" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+              📋 Sheet ส่งคืนอะไหล่
+            </a>
+            <a id="rp-claims-sheet-link" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+              📊 Sheet บันทึกเคลมอะไหล่
+            </a>
+            <a id="rp-drive-link" href="#" target="_blank" rel="noopener"
+               style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:6px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);">
+              📁 Google Drive F1 Service
+            </a>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+            <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
+          </div>
+          <div id="rp-manager-list-wrap">
+            <div id="rp-manager-list"></div>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -1320,8 +1355,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.35";
-const APP_UPDATED_AT = "27 กันยายน 2569 18:30 น. เวลาไทย";
+const APP_VERSION = "8.39";
+const APP_UPDATED_AT = "28 กันยายน 2569 08:49 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3290,27 +3325,38 @@ function requestModeSwitch(mode){
   switchMode(mode);
 }
 
+// v8.37 — ตั้งค่าระบบ sub-tab switch (สิทธิ์ผู้ใช้ | Product & Category)
+let _settingsSubActive = 'access';
+function switchSettingsSubTab(tab){
+  _settingsSubActive = tab;
+  $('settings-tab-access').style.display = tab==='access' ? 'block' : 'none';
+  $('settings-tab-owner').style.display  = tab==='owner'  ? 'block' : 'none';
+  document.querySelectorAll('#settings-subtabs button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-stab')===tab));
+  if(tab==='access') renderAccessView();
+  if(tab==='owner')  renderOwnerView();
+}
+document.querySelectorAll('#settings-subtabs button').forEach(b=>{
+  b.addEventListener('click', ()=>switchSettingsSubTab(b.getAttribute('data-stab')));
+});
+
 function switchMode(mode){
   if(!DATA){ window._pendingModeSwitch = mode; showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...'); return; }
   closeErrorDetail();
   currentMode = mode;
-  $('view-eng').style.display = mode==='eng' ? 'block':'none';
-  $('view-sup').style.display = mode==='sup' ? 'block':'none';
-  $('view-access').style.display = mode==='access' ? 'block':'none';
-  $('view-owner').style.display = mode==='owner' ? 'block':'none';
-  $('view-mgr').style.display = mode==='mgr' ? 'block':'none';
-  $('view-backup').style.display = mode==='backup' ? 'block':'none';
-  $('mode-eng').classList.toggle('active', mode==='eng');
-  $('mode-sup').classList.toggle('active', mode==='sup');
-  $('mode-access').classList.toggle('active', mode==='access');
-  $('mode-owner').classList.toggle('active', mode==='owner');
-  $('mode-mgr').classList.toggle('active', mode==='mgr');
-  $('mode-backup').classList.toggle('active', mode==='backup');
+  $('view-eng').style.display      = mode==='eng'      ? 'block':'none';
+  $('view-sup').style.display      = mode==='sup'      ? 'block':'none';
+  $('view-settings').style.display = mode==='settings' ? 'block':'none';
+  $('view-mgr').style.display      = mode==='mgr'      ? 'block':'none';
+  $('view-backup').style.display   = mode==='backup'   ? 'block':'none';
+  $('mode-eng').classList.toggle('active',      mode==='eng');
+  $('mode-sup').classList.toggle('active',      mode==='sup');
+  $('mode-settings').classList.toggle('active', mode==='settings');
+  $('mode-mgr').classList.toggle('active',      mode==='mgr');
+  $('mode-backup').classList.toggle('active',   mode==='backup');
   if(mode==='sup') renderSupView();
-  if(mode==='access') renderAccessView();
-  if(mode==='owner') renderOwnerView();
+  if(mode==='settings') switchSettingsSubTab(_settingsSubActive); // โหลด sub-tab ที่ active ล่าสุด
   // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
-  if(mode==='mgr'){ setupRpManagerLinks(); renderMgrPendingClaims(); } // ตั้ง href ลิงก์ด่วนเท่านั้น + แสดงรายการรอดำเนินการ (v8.35)
+  if(mode==='mgr'){ setupRpManagerLinks(); updateMgrPendingBadge(); switchMgrSubTab('summary'); } // v8.36: เปิด tab สรุปข้อมูล + โหลดข้อมูล
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
 }
 async function loadAllErrorsThenRenderMgr(){
@@ -3318,12 +3364,13 @@ async function loadAllErrorsThenRenderMgr(){
   if(remaining.length>0){ $('mgr-table').innerHTML = `<tbody><tr><td style="color:var(--text-faint);font-size:12.5px;">⏳ กำลังโหลดข้อมูลทั้งหมด (Manager ต้องดูภาพรวมของทุกคน)...</td></tr></tbody>`; }
   await ensureAllErrorsLoaded();
   renderMgrView();
-  renderMgrPendingClaims();
+  updateMgrPendingBadge();
+  // หาก tab งานค้าง active อยู่ด้วยให้ render ด้วย
+  if(_mgrSubActive==='pending') renderMgrPendingClaims();
 }
 $('mode-eng').addEventListener('click', ()=>requestModeSwitch('eng'));
 $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
-$('mode-access').addEventListener('click', ()=>requestModeSwitch('access'));
-$('mode-owner').addEventListener('click', ()=>requestModeSwitch('owner'));
+$('mode-settings').addEventListener('click', ()=>requestModeSwitch('settings')); // v8.37
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
 $('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
 
@@ -3352,30 +3399,42 @@ function renderAll(){
   updateNotifBadge();
   updateEngMyWorkBadge();
   if(currentMode==='sup') renderSupView();
-  if(currentMode==='owner') renderOwnerView();
-  if(currentMode==='mgr'){ renderMgrView(); renderMgrPendingClaims(); }
+  if(currentMode==='settings') switchSettingsSubTab(_settingsSubActive); // v8.37
+  if(currentMode==='mgr'){ renderMgrView(); updateMgrPendingBadge(); if(_mgrSubActive==='pending') renderMgrPendingClaims(); }
 }
 
 /* ===================== ENGINEER SUB-TABS ===================== */
 let engVideoSubtype = 'training'; // ใช้ร่วมกันสำหรับทุกประเภทเอกสารที่มีประเภทย่อย (video, diagram, ...) — เก็บค่าของแท็บที่กำลังเปิดอยู่ตอนนั้น
+// v8.37 — eng-subtabs: 4 แท็บหลัก (trbl | my_work | service_docs | claim)
+function _engShowTab(tab){
+  $('eng-tab-trbl').style.display   = tab==='trbl'         ? 'block' : 'none';
+  $('eng-tab-claim').style.display  = tab==='claim'        ? 'block' : 'none';
+  $('eng-tab-docs').style.display   = tab==='service_docs' ? 'block' : 'none';
+  $('eng-tab-my-work').style.display= tab==='my_work'      ? 'block' : 'none';
+}
 document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
     engActiveTab = btn.getAttribute('data-tab');
-    if(engActiveTab==='trbl'){ $('eng-tab-trbl').style.display='block'; $('eng-tab-claim').style.display='none'; $('eng-tab-docs').style.display='none'; $('eng-tab-my-work').style.display='none'; }
-    else if(engActiveTab==='claim'){ $('eng-tab-trbl').style.display='none'; $('eng-tab-claim').style.display='block'; $('eng-tab-docs').style.display='none'; $('eng-tab-my-work').style.display='none'; }
-    else if(engActiveTab==='my_work'){ $('eng-tab-trbl').style.display='none'; $('eng-tab-claim').style.display='none'; $('eng-tab-docs').style.display='none'; $('eng-tab-my-work').style.display='block'; renderEngMyWorkTab(); }
-    else{
-      $('eng-tab-trbl').style.display='none'; $('eng-tab-claim').style.display='none'; $('eng-tab-docs').style.display='block'; $('eng-tab-my-work').style.display='none'; engDocTypeActive = engActiveTab;
-      $('eng-video-subtabs').style.display = engActiveTab==='video' ? 'flex' : 'none';
-      $('eng-diagram-subtabs').style.display = engActiveTab==='diagram' ? 'flex' : 'none';
-      if(docTypeHasSubtypes(engActiveTab)){
-        const firstSubBar = engActiveTab==='video' ? $('eng-video-subtabs') : $('eng-diagram-subtabs');
-        firstSubBar.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active', i===0));
-        engVideoSubtype = subtypesFor(engActiveTab)[0].key;
-      }
-      renderDocFilterEng(); renderEngDocResults();
+    _engShowTab(engActiveTab);
+    if(engActiveTab==='my_work') renderEngMyWorkTab();
+    if(engActiveTab==='service_docs'){ renderDocFilterEng(); renderEngDocResults(); }
+    if(engActiveTab==='claim') renderEngMyClaimsList && renderEngMyClaimsList();
+  });
+});
+// v8.37 — eng-doctype-subtabs: แท็บประเภทเอกสาร (อยู่ภายใน eng-tab-docs)
+document.querySelectorAll('#eng-doctype-subtabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#eng-doctype-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    engDocTypeActive = btn.getAttribute('data-doctype');
+    $('eng-video-subtabs').style.display   = engDocTypeActive==='video'   ? 'flex' : 'none';
+    $('eng-diagram-subtabs').style.display = engDocTypeActive==='diagram' ? 'flex' : 'none';
+    if(docTypeHasSubtypes(engDocTypeActive)){
+      const firstSubBar = engDocTypeActive==='video' ? $('eng-video-subtabs') : $('eng-diagram-subtabs');
+      firstSubBar.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('active', i===0));
+      engVideoSubtype = subtypesFor(engDocTypeActive)[0].key;
     }
+    renderDocFilterEng(); renderEngDocResults();
   });
 });
 document.querySelectorAll('#eng-video-subtabs button, #eng-diagram-subtabs button').forEach(btn=>{
@@ -3861,12 +3920,21 @@ async function renderNotifList(){
       html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔧 เคลมอะไหล่รอดำเนินการ (${pendingMyClaims.length})</h4>`;
       html += pendingMyClaims.map(c=>{
         const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
-        return `<div class="admin-row" data-notif-claim-open="${c.id}" style="cursor:pointer;">
-          <div class="admin-row-main">
-            <span style="font-size:12.5px;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
-            <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
+        const partInfo = c.parts && c.parts.length>0
+          ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${p.count||1}`).join(', ')
+          : '';
+        const sn = c.serialNumber ? ` · S/N ${escapeHtml(c.serialNumber)}` : '';
+        return `<div class="admin-row" data-notif-claim-open="${c.id}" style="cursor:pointer;flex-direction:column;align-items:flex-start;">
+          <div class="admin-row-main" style="width:100%;justify-content:space-between;">
+            <span style="font-size:12.5px;font-weight:600;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}${sn}</span>
+            <span style="font-size:11px;color:var(--text-faint);white-space:nowrap;margin-left:8px;">${dateStr}</span>
           </div>
-          <span style="color:var(--amber);font-weight:600;font-size:12px;white-space:nowrap;">ยังไม่เคลม</span>
+          ${c.problem ? `<div style="font-size:11.5px;color:var(--text-dim);margin-top:2px;">🔧 ${escapeHtml(c.problem)}</div>` : ''}
+          ${partInfo ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">📦 ${partInfo}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            <span style="font-size:11px;color:var(--text-faint);">โดย: ${escapeHtml(c.submitterName||'-')}</span>
+            <span style="color:var(--amber);font-weight:600;font-size:11.5px;">ยังไม่เคลม →</span>
+          </div>
         </div>`;
       }).join('');
       html += `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>`;
@@ -6040,11 +6108,22 @@ async function downloadClaimSuccessImage(){
   }
 }
 $('claim-success-download-btn').addEventListener('click', ()=>{ downloadClaimSuccessImage(); });
-$('claim-success-close-btn').addEventListener('click', async ()=>{
-  // ถามก่อนปิดว่าต้องการบันทึกรูปภาพสรุปข้อมูลไว้ก่อนหรือไม่ — กด OK = บันทึกแล้วค่อยปิด, กด Cancel = ปิดเลยไม่บันทึก
-  const wantsSave = confirm('ต้องการบันทึกรูปภาพสรุปข้อมูลหรือไม่?');
-  if(wantsSave){ await downloadClaimSuccessImage(); }
+// v8.37 — แทน confirm() ด้วย custom inline buttons
+function _claimSuccessCloseModal(){
   $('claim-success-modal').classList.remove('show');
+  // reset state
+  $('claim-success-save-confirm').style.display='none';
+  $('claim-success-btn-main').style.display='flex';
+}
+$('claim-success-close-btn').addEventListener('click', ()=>{
+  // แสดง inline confirm แทน native confirm()
+  $('claim-success-btn-main').style.display='none';
+  $('claim-success-save-confirm').style.display='block';
+});
+$('claim-success-nosave-btn').addEventListener('click', ()=>{ _claimSuccessCloseModal(); });
+$('claim-success-dosave-btn').addEventListener('click', async ()=>{
+  await downloadClaimSuccessImage();
+  _claimSuccessCloseModal();
 });
 
 // ใครเห็นเคลมไหนบ้าง: Super Admin เห็นหมด, Sup Product (Editor) เห็นเฉพาะ Product ที่ตัวเองดูแล, Engineer ทั่วไปเห็นเฉพาะที่ตัวเองบันทึก
@@ -6132,39 +6211,79 @@ function renderEngMyClaimsList(){
   });
 }
 
-/* ===================== งานของฉัน (v8.35) ===================== */
+/* ===================== งานของฉัน (v8.37 — collapsible) ===================== */
+// สถานะ collapse ของแต่ละ section (ซ่อนไว้ก่อนเป็น default)
+let _myworkClaimsOpen = false;
+let _myworkRpOpen = false;
+
+function _setMyworkClaimsOpen(open){
+  _myworkClaimsOpen = open;
+  const el = $('eng-mywork-claims-list');
+  const btn = $('eng-mywork-claims-toggle-btn');
+  if(el) el.style.display = open ? 'block' : 'none';
+  if(btn) btn.textContent = open ? '▴ ซ่อน' : '▾ แสดง';
+}
+function _setMyworkRpOpen(open){
+  _myworkRpOpen = open;
+  const el = $('eng-mywork-rp-list');
+  const btn = $('eng-mywork-rp-toggle-btn');
+  if(el) el.style.display = open ? 'block' : 'none';
+  if(btn) btn.textContent = open ? '▴ ซ่อน' : '▾ แสดง';
+}
+
+// bind collapsible headers (ต้องเรียกหลัง DOM ready — ผูกครั้งเดียว)
+(function bindMyworkCollapse(){
+  const claimsHdr = $('eng-mywork-claims-header');
+  const rpHdr = $('eng-mywork-rp-header');
+  if(claimsHdr) claimsHdr.addEventListener('click', ()=>{ _setMyworkClaimsOpen(!_myworkClaimsOpen); if(_myworkClaimsOpen) renderEngMyWorkClaimsSection(); });
+  if(rpHdr) rpHdr.addEventListener('click', ()=>{ _setMyworkRpOpen(!_myworkRpOpen); if(_myworkRpOpen) renderEngMyWorkRpSection(); });
+})();
+
 async function renderEngMyWorkTab(){
   if(!myUserEmail || !DATA) return;
-  const claimsEl = $('eng-mywork-claims-list');
-  const rpEl = $('eng-mywork-rp-list');
-  const badge = $('eng-mywork-badge');
+  // render content ใน section ที่เปิดอยู่เท่านั้น (ประหยัด Sheet read)
+  if(_myworkClaimsOpen) renderEngMyWorkClaimsSection();
+  if(_myworkRpOpen) await renderEngMyWorkRpSection();
+  // update tab badge (claims only — fast, no Sheet read)
+  updateEngMyWorkBadge();
+}
 
-  // --- Section 1: เคลมอะไหล่รอ approve ---
+function renderEngMyWorkClaimsSection(){
+  const claimsEl = $('eng-mywork-claims-list');
+  if(!claimsEl || !myUserEmail || !DATA) return;
   const pendingClaims = (DATA.claims||[]).filter(c=>c.submittedBy===myUserEmail && c.status==='pending').sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  // อัปเดต badge ย่อย
+  const claimBadge = $('eng-mywork-claims-badge');
+  if(claimBadge){ claimBadge.style.display = pendingClaims.length>0?'inline':'none'; claimBadge.textContent = pendingClaims.length; }
   if(pendingClaims.length===0){
     claimsEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอ ✅</div>';
-  } else {
-    claimsEl.innerHTML = pendingClaims.map(c=>{
-      const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
-      return `<div class="admin-row" data-claim-open="${c.id}" style="cursor:pointer;">
-        <div class="admin-row-main">
-          <span style="font-size:12.5px;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
-          <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
-        </div>
-        <span style="color:var(--amber);font-weight:600;font-size:12px;">รอ approve</span>
-      </div>`;
-    }).join('');
-    claimsEl.querySelectorAll('[data-claim-open]').forEach(row=>{
-      row.addEventListener('click', ()=>openClaimDetail(row.getAttribute('data-claim-open')));
-    });
+    return;
   }
+  claimsEl.innerHTML = pendingClaims.map(c=>{
+    const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
+    return `<div class="admin-row" data-claim-open="${c.id}" style="cursor:pointer;">
+      <div class="admin-row-main">
+        <span style="font-size:12.5px;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
+        <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
+      </div>
+      <span style="color:var(--amber);font-weight:600;font-size:12px;">รอ approve</span>
+    </div>`;
+  }).join('');
+  claimsEl.querySelectorAll('[data-claim-open]').forEach(row=>{
+    row.addEventListener('click', ()=>openClaimDetail(row.getAttribute('data-claim-open')));
+  });
+}
 
-  // --- Section 2: ส่งคืนอะไหล่รอรับ ---
+async function renderEngMyWorkRpSection(){
+  const rpEl = $('eng-mywork-rp-list');
+  const rpBadge = $('eng-mywork-rp-badge');
+  if(!rpEl) return;
   rpEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
     const rows = await rpSheetReadWaiting();
     const myName = myDisplayName();
     const mine = rows.filter(r=> myName && r.senderName && r.senderName.trim()===myName.trim());
+    if(rpBadge){ rpBadge.style.display = mine.length>0?'inline':'none'; rpBadge.textContent = mine.length; }
     if(mine.length===0){
       rpEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอ ✅</div>';
     } else {
@@ -6177,16 +6296,9 @@ async function renderEngMyWorkTab(){
           <span style="font-size:11px;color:var(--text-faint);">${escapeHtml(d.dateStr||'')} · ${escapeHtml(d.returnMethodLabel||d.returnMethod||'-')}</span>
         </div>`).join('');
     }
-    // Update badge: total pending items
-    const total = pendingClaims.length + mine.length;
-    if(total>0){ badge.style.display='inline'; badge.textContent=total; }
-    else { badge.style.display='none'; }
   } catch(e){
+    if(rpBadge) rpBadge.style.display = 'none';
     rpEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px;">โหลดรายการส่งคืนไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
-    // Badge still shows claims count
-    const total = pendingClaims.length;
-    if(total>0){ badge.style.display='inline'; badge.textContent=total; }
-    else { badge.style.display='none'; }
   }
 }
 
@@ -7112,11 +7224,20 @@ function renderMgrView(){
   renderMgrColsPanel('mgr-doc-cols-panel', 'doc', docColNames, renderMgrView);
 }
 
-/* ===================== MANAGER: รายการรอดำเนินการ (v8.35) ===================== */
+/* ===================== MANAGER: รายการรอดำเนินการ (v8.36) ===================== */
+function updateMgrPendingBadge(){
+  if(!DATA || !DATA.claims) return;
+  const count = (DATA.claims||[]).filter(c=>c.status==='pending').length;
+  const badge = $('mgr-claims-pending-badge');
+  const totalBadge = $('mgr-pending-total-badge');
+  if(badge){ badge.style.display = count>0?'inline':'none'; badge.textContent = count; }
+  if(totalBadge){ totalBadge.style.display = count>0?'inline':'none'; totalBadge.textContent = count; }
+}
 function renderMgrPendingClaims(){
   const el = $('mgr-pending-claims-list');
   if(!el || !DATA || !DATA.claims) return;
   const pending = (DATA.claims||[]).filter(c=>c.status==='pending').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  updateMgrPendingBadge();
   if(pending.length===0){
     el.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">ไม่มีรายการค้างอยู่ ✅</div>';
     return;
@@ -7133,17 +7254,29 @@ function renderMgrPendingClaims(){
       <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px;">${escapeHtml(owner)} (${claims.length} รายการ)</div>`;
     html += claims.map(c=>{
       const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
-      return `<div class="admin-row" style="margin-bottom:4px;">
-        <div class="admin-row-main">
-          <span style="font-size:12.5px;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
+      // แสดง part info เพื่อบอกว่าเคลมอะไร
+      const partInfo = c.parts && c.parts.length>0
+        ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${p.count||1}`).join(', ')
+        : '';
+      return `<div class="admin-row" data-claim-open="${c.id}" style="margin-bottom:4px;cursor:pointer;flex-direction:column;align-items:flex-start;">
+        <div class="admin-row-main" style="width:100%;justify-content:space-between;">
+          <span style="font-size:12.5px;font-weight:600;">${escapeHtml(c.siteName||'-')} · ${escapeHtml(c.model||'-')}</span>
           <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
         </div>
-        <span style="color:var(--amber);font-weight:600;font-size:12px;">รอ</span>
+        ${c.problem ? `<div style="font-size:11.5px;color:var(--text-dim);margin-top:2px;">🔧 ${escapeHtml(c.problem)}</div>` : ''}
+        ${partInfo ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">📦 ${partInfo}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:11px;color:var(--text-faint);">โดย: ${escapeHtml(c.submitterName||'-')}</span>
+          <span style="color:var(--amber);font-weight:600;font-size:11.5px;">รอดำเนินการ</span>
+        </div>
       </div>`;
     }).join('');
     html += '</div>';
   });
   el.innerHTML = html;
+  el.querySelectorAll('[data-claim-open]').forEach(row=>{
+    row.addEventListener('click', ()=>openClaimDetail(row.getAttribute('data-claim-open')));
+  });
 }
 
 /* ===================== BACKUP / EXPORT ===================== */
@@ -8128,7 +8261,9 @@ function rpToggleDetail(containerId, d, canEdit){
   const mCls  = rpMethodClass(d.returnMethodLabel);
   const editBtn    = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-edit-btn-${d.rowIndex}" style="font-size:12px;">✏️ แก้ไข</button>` : '';
   const delBtn     = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-del-btn-${d.rowIndex}" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
-  // ปุ่ม "ยืนยันรับแล้ว" — ถูกย้ายไปอยู่บนการ์ดหลักแทน (ไม่แสดงใน detail panel)
+  // v8.37 — ปุ่ม "ยืนยันรับแล้ว" ย้ายจาก card มาอยู่ใน detail panel (isEditor = Sup/Admin เท่านั้น)
+  const confirmBtn = isEditor()
+    ? `<button class="btn btn-sm rp-card-confirm-btn" data-ri="${d.rowIndex}" data-cid="${containerId}" style="width:100%;justify-content:center;background:var(--green);color:#fff;font-size:12.5px;font-weight:600;margin-top:10px;">✅ ยืนยันรับแล้ว</button>` : '';
 
   // เตรียม evidence thumbnail
   const evThumb = d.evidenceUrl ? rpDriveThumb(d.evidenceUrl,'w300') : '';
@@ -8160,6 +8295,7 @@ function rpToggleDetail(containerId, d, canEdit){
       <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(d.dateStr)}</span>
     </div>
     ${(editBtn||delBtn)?`<div class="rp-detail-actions">${editBtn}${delBtn}</div>`:''}
+    ${confirmBtn}
   `;
 
   // Insert panel after the card element
@@ -8186,38 +8322,11 @@ function rpToggleDetail(containerId, d, canEdit){
     if(eb) eb.addEventListener('click', (e)=>{ e.stopPropagation(); rpOpenEditModal(d, containerId); });
     if(db) db.addEventListener('click', (e)=>{ e.stopPropagation(); rpConfirmDelete(d, containerId); });
   }
-}
-
-/* Build card HTML for a single return-parts row */
-function rpBuildCard(d, containerId, canEdit){
-  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
-  const mIcon  = rpMethodIcon(d.returnMethodLabel);
-  const mCls   = rpMethodClass(d.returnMethodLabel);
-  const chips  = rpSpoChips(d.withdrawals);
-  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
-    ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
-  const confirmRow = isEditor()
-    ? `<div style="margin-top:10px;"><button class="btn btn-sm rp-card-confirm-btn" data-ri="${d.rowIndex}" data-cid="${containerId}" style="width:100%;justify-content:center;background:var(--green);color:#fff;font-size:12.5px;font-weight:600;">✅ ยืนยันรับแล้ว</button></div>` : '';
-  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
-    <div class="rp-card-top">
-      <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
-      <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
-    </div>
-    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
-    ${confirmRow}
-  </div>`;
-}
-
-/* Attach click listeners to all rp-cards in a container */
-function rpBindCards(containerId, rows, canEdit){
-  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
-  // Bind "ยืนยันรับแล้ว" buttons (Manager only)
-  document.querySelectorAll(`#${containerId} .rp-card-confirm-btn`).forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
+  // v8.37 — Bind "ยืนยันรับแล้ว" button ใน detail panel (Manager/Sup เท่านั้น)
+  if(isEditor()){
+    const cfBtn = panel.querySelector('.rp-card-confirm-btn');
+    if(cfBtn) cfBtn.addEventListener('click', async (e)=>{
       e.stopPropagation();
-      const ri = +btn.getAttribute('data-ri');
-      const d = rowMap.get(ri);
-      if(!d) return;
       if(!confirm(`ยืนยันการรับอะไหล่จาก ${d.senderName||'?'}\n\nรายการจะถูกย้ายไปแท็บ รับแล้ว${d.yearAD||new Date().getFullYear()} และไม่แสดงในรายการรอรับอีกต่อไป`)) return;
       showLoadingOverlay('กำลังอัปเดตสถานะ...');
       try{
@@ -8231,8 +8340,32 @@ function rpBindCards(containerId, rows, canEdit){
         alert('อัปเดตสถานะไม่สำเร็จ: '+(err.message||err));
       }
     });
-  });
-  // Bind card click → expand detail
+  }
+}
+
+/* Build card HTML for a single return-parts row */
+function rpBuildCard(d, containerId, canEdit){
+  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
+  const mIcon  = rpMethodIcon(d.returnMethodLabel);
+  const mCls   = rpMethodClass(d.returnMethodLabel);
+  const chips  = rpSpoChips(d.withdrawals);
+  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
+    ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
+  // v8.37 — "ยืนยันรับแล้ว" ย้ายไปอยู่ใน detail panel แล้ว (ไม่แสดงบน card)
+  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
+    <div class="rp-card-top">
+      <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
+      <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
+    </div>
+    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
+  </div>`;
+}
+
+/* Attach click listeners to all rp-cards in a container */
+/* v8.37 — "ยืนยันรับแล้ว" ย้ายไปอยู่ใน rpToggleDetail() detail panel แล้ว ไม่ต้อง bind ที่นี่อีก */
+function rpBindCards(containerId, rows, canEdit){
+  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+  // Bind card click → expand detail (ปุ่ม ยืนยันรับแล้ว อยู่ใน detail panel — bind โดย rpToggleDetail)
   document.querySelectorAll(`#${containerId} .rp-card`).forEach(card=>{
     card.addEventListener('click', ()=>{
       const ri = +card.getAttribute('data-ri');
@@ -8635,53 +8768,49 @@ $('rp-my-toggle-btn').addEventListener('click', ()=>{
   }
 });
 
-$('rp-manager-toggle-btn').addEventListener('click', ()=>{
-  const wrap = $('rp-manager-list-wrap');
-  const btn  = $('rp-manager-toggle-btn');
-  const isOpen = wrap.style.display !== 'none';
-  if(isOpen){
-    wrap.style.display = 'none';
-    btn.textContent = '📋 ดูรายการรอรับ';
-  } else {
-    wrap.style.display = 'block';
-    btn.textContent = '🔼 ซ่อนรายการ';
-    loadReturnPartsManagerList();
-  }
-});
+// (v8.36) rp-manager-toggle-btn ถูกย้ายไปเป็น collapsible header แล้ว — ไม่มีปุ่มนี้อีก
 
 $('rp-manager-refresh-btn').addEventListener('click', loadReturnPartsManagerList);
 
-// Dashboard — ปุ่ม toggle Troubleshoot
-let _mgrTrblLoaded = false;
-$('mgr-trbl-toggle-btn').addEventListener('click', ()=>{
-  const content = $('mgr-trbl-content');
-  const btn = $('mgr-trbl-toggle-btn');
-  const isOpen = content.style.display !== 'none';
-  if(isOpen){
-    content.style.display = 'none';
-    btn.textContent = '📋 แสดงข้อมูล Troubleshoot';
-  } else {
-    content.style.display = 'block';
-    btn.textContent = '🔼 ซ่อน';
-    if(!_mgrTrblLoaded){ loadAllErrorsThenRenderMgr(); _mgrTrblLoaded = true; }
+// Dashboard — v8.36 sub-tab switching
+let _mgrSubActive = 'summary';
+let _mgrDataLoaded = false;
+
+function switchMgrSubTab(tab){
+  _mgrSubActive = tab;
+  $('mgr-sub-summary').style.display = tab==='summary' ? 'block' : 'none';
+  $('mgr-sub-pending').style.display = tab==='pending' ? 'block' : 'none';
+  document.querySelectorAll('#mgr-subtabs [data-mgrtab]').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-mgrtab')===tab);
+  });
+  if(!_mgrDataLoaded){ loadAllErrorsThenRenderMgr(); _mgrDataLoaded = true; }
+  if(tab==='pending'){
+    renderMgrPendingClaims();
+    updateMgrPendingBadge();
   }
+}
+
+document.querySelectorAll('#mgr-subtabs [data-mgrtab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchMgrSubTab(btn.getAttribute('data-mgrtab')));
 });
 
-// Dashboard — ปุ่ม toggle เอกสาร
-let _mgrDocLoaded = false;
-$('mgr-doc-toggle-btn').addEventListener('click', ()=>{
-  const content = $('mgr-doc-content');
-  const btn = $('mgr-doc-toggle-btn');
-  const isOpen = content.style.display !== 'none';
-  if(isOpen){
-    content.style.display = 'none';
-    btn.textContent = '📋 แสดงข้อมูลเอกสาร';
-  } else {
-    content.style.display = 'block';
-    btn.textContent = '🔼 ซ่อน';
-    if(!_mgrDocLoaded){ loadAllErrorsThenRenderMgr(); _mgrDocLoaded = true; }
-  }
+// Dashboard — collapsible รายการรอดำเนินการ
+let _mgrClaimsOpen = false;
+$('mgr-claims-collapse-header').addEventListener('click', ()=>{
+  _mgrClaimsOpen = !_mgrClaimsOpen;
+  $('mgr-pending-claims-list').style.display = _mgrClaimsOpen ? 'block' : 'none';
+  $('mgr-claims-collapse-icon').textContent = _mgrClaimsOpen ? '▲ ซ่อน' : '▼ แสดง';
 });
+
+// Dashboard — collapsible รายการรอตรวจรับอะไหล่
+let _mgrRpOpen = false;
+$('mgr-rp-collapse-header').addEventListener('click', ()=>{
+  _mgrRpOpen = !_mgrRpOpen;
+  $('mgr-rp-collapse-body').style.display = _mgrRpOpen ? 'block' : 'none';
+  $('mgr-rp-collapse-icon').textContent = _mgrRpOpen ? '▲ ซ่อน' : '▼ แสดง';
+  if(_mgrRpOpen && !_mgrRpListLoaded){ loadReturnPartsManagerList(); _mgrRpListLoaded = true; }
+});
+let _mgrRpListLoaded = false;
 
 /* ============================================================
    RETURN PARTS — Edit & Delete (Engineer สำหรับ entry ของตัวเอง)
