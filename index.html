@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.52
-  อัปเดตล่าสุด   : 28 กันยายน 2569 21:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.55
+  อัปเดตล่าสุด   : 28 กันยายน 2569 21:51 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.52</title>
+<title>F1 Service — v8.55</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -496,7 +496,7 @@
     <div class="subtab-bar" id="eng-subtabs">
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
       <button data-tab="service_docs">📁 เอกสาร Service</button>
-      <button data-tab="my_work">📌 งานของฉัน<span class="badge-count" id="eng-mywork-badge" style="display:none;margin-left:4px;">0</span></button>
+      <button data-tab="my_work">📌 เช็คสถานะ<span class="badge-count" id="eng-mywork-badge" style="display:none;margin-left:4px;">0</span></button>
       <button data-tab="claim">📋 บันทึกข้อมูล</button>
     </div>
 
@@ -1144,7 +1144,12 @@
         </div>
         <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
         <div id="mgr-rp-collapse-body" style="display:none;margin-top:10px;">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <div style="display:flex;flex:1;min-width:180px;align-items:center;gap:6px;background:var(--surface2,rgba(0,0,0,.06));border:1px solid var(--border);border-radius:8px;padding:5px 10px;">
+              <span style="color:var(--text-faint);">🔍</span>
+              <input id="rp-manager-search" type="text" placeholder="ค้นหาชื่อหรือเลขใบเบิก..." style="border:none;background:transparent;outline:none;font-size:13px;color:var(--text);width:100%;">
+              <button id="rp-manager-search-clear" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:13px;padding:0;">✕</button>
+            </div>
             <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
           </div>
           <div id="rp-manager-list-wrap">
@@ -1257,6 +1262,17 @@
     <div class="panel-block">
       <h2>รายการรอตรวจรับ</h2>
       <p class="panel-sub">รายการส่งคืนอะไหล่ที่ Engineer ส่งมา รอการตรวจรับและประเมิน</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="display:flex;flex:1;min-width:180px;align-items:center;gap:6px;background:var(--surface2,rgba(0,0,0,.06));border:1px solid var(--border);border-radius:8px;padding:5px 10px;">
+          <span style="color:var(--text-faint);">🔍</span>
+          <input id="admin-rp-search" type="text" placeholder="ค้นหาชื่อหรือเลขใบเบิก..." style="border:none;background:transparent;outline:none;font-size:13px;color:var(--text);width:100%;">
+          <button id="admin-rp-search-clear" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:13px;padding:0;">✕</button>
+        </div>
+        <a id="admin-rp-sheet-link" href="#" target="_blank" rel="noopener"
+           style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:6px 10px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;">
+          📋 ดูประวัติใน Sheet
+        </a>
+      </div>
       <div id="admin-service-rp-list">
         <div style="color:var(--text-faint);font-size:13px;padding:16px 0;">⏳ กำลังโหลด...</div>
       </div>
@@ -1382,8 +1398,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.52";
-const APP_UPDATED_AT = "28 กันยายน 2569 21:20 น. เวลาไทย";
+const APP_VERSION = "8.55";
+const APP_UPDATED_AT = "28 กันยายน 2569 21:51 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8923,6 +8939,40 @@ async function setupRpManagerLinks(){
 
 /* ---- โหลดรายการ "รอรับ" — เรียกเมื่อกดปุ่มดูรายการ (Manager view) ---- */
 // v8.50: โหลดจาก Firestore returnParts (status=pending) แทน Google Sheet
+// v8.53: เพิ่ม search bar — กรอง client-side ไม่เปลือง Firestore quota
+let _mgrRpAllRows = []; // cache rows ไว้ filter ซ้ำโดยไม่ต้อง fetch ใหม่
+
+function rpMatchSearch(d, q){
+  if(!q) return true;
+  const kw = q.trim().toLowerCase();
+  if(!kw) return true;
+  if((d.senderName||'').toLowerCase().includes(kw)) return true;
+  if((d.withdrawals||[]).some(w=>(w.num||'').toLowerCase().includes(kw))) return true;
+  return false;
+}
+
+function rpRenderManagerFiltered(){
+  const list = $('rp-manager-list');
+  if(!list) return;
+  const q = ($('rp-manager-search')||{}).value||'';
+  const filtered = _mgrRpAllRows.filter(d=>rpMatchSearch(d,q));
+  if(filtered.length===0){
+    list.innerHTML = q
+      ? `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่พบรายการที่ตรงกับ "${escapeHtml(q)}"</div>`
+      : '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(d=>rpBuildCard(d,'rp-manager-list', isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail)).join('');
+  const rowMap = new Map(_mgrRpAllRows.map(d=>[d.id, d]));
+  document.querySelectorAll('#rp-manager-list .rp-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const id = card.getAttribute('data-ri');
+      const d = rowMap.get(id);
+      if(d) rpToggleDetail('rp-manager-list', d, isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail);
+    });
+  });
+}
+
 async function loadReturnPartsManagerList(){
   const list = $('rp-manager-list');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
@@ -8933,25 +8983,29 @@ async function loadReturnPartsManagerList(){
     const snap = await sdk.getDocs(q);
     const rows = [];
     snap.forEach(d=>rows.push({ id:d.id, ...d.data() }));
-    // เรียงล่าสุดก่อน
     rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+    _mgrRpAllRows = rows;
 
     const badge = $('rp-manager-badge');
     if(rows.length>0){ badge.textContent=rows.length; badge.style.display='inline'; }
     else badge.style.display='none';
 
-    if(rows.length===0){ list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>'; return; }
-
-    // Manager/AdminService เห็นทั้งหมด; Engineer เห็นของตัวเองแก้ไขได้
-    list.innerHTML = rows.map(d=>rpBuildCard(d,'rp-manager-list', isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail)).join('');
-    const rowMap = new Map(rows.map(d=>[d.id, d]));
-    document.querySelectorAll('#rp-manager-list .rp-card').forEach(card=>{
-      card.addEventListener('click', ()=>{
-        const id = card.getAttribute('data-ri');
-        const d = rowMap.get(id);
-        if(d) rpToggleDetail('rp-manager-list', d, isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail);
+    // วาง search listener (ครั้งแรกที่โหลด)
+    const searchEl = $('rp-manager-search');
+    const clearBtn = $('rp-manager-search-clear');
+    if(searchEl && !searchEl._rpSearchBound){
+      searchEl._rpSearchBound = true;
+      searchEl.addEventListener('input', ()=>{
+        if(clearBtn) clearBtn.style.display = searchEl.value ? 'block' : 'none';
+        rpRenderManagerFiltered();
       });
-    });
+      if(clearBtn) clearBtn.addEventListener('click', ()=>{
+        searchEl.value=''; clearBtn.style.display='none'; rpRenderManagerFiltered();
+      });
+    }
+
+    rpRenderManagerFiltered();
   }catch(e){
     list.innerHTML=`<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
   }
@@ -9010,6 +9064,31 @@ $('mgr-rp-collapse-header').addEventListener('click', ()=>{
 let _mgrRpListLoaded = false;
 
 /* ---- v8.50: Admin Service — แสดงรายการรอตรวจรับ ---- */
+// v8.53: เพิ่ม search bar — กรอง client-side
+let _adminRpAllRows = [];
+
+function rpRenderAdminFiltered(){
+  const listEl = $('admin-service-rp-list');
+  if(!listEl) return;
+  const q = ($('admin-rp-search')||{}).value||'';
+  const filtered = _adminRpAllRows.filter(d=>rpMatchSearch(d,q));
+  if(filtered.length===0){
+    listEl.innerHTML = q
+      ? `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่พบรายการที่ตรงกับ "${escapeHtml(q)}"</div>`
+      : '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>';
+    return;
+  }
+  listEl.innerHTML = filtered.map(d=>rpBuildCard(d,'admin-service-rp-list',true)).join('');
+  const rowMap = new Map(_adminRpAllRows.map(d=>[d.id, d]));
+  listEl.querySelectorAll('.rp-card').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const id = card.getAttribute('data-ri');
+      const d = rowMap.get(id);
+      if(d) rpToggleDetail('admin-service-rp-list', d, true);
+    });
+  });
+}
+
 async function renderAdminServiceView(){
   const listEl = $('admin-service-rp-list');
   if(!listEl) return;
@@ -9022,19 +9101,31 @@ async function renderAdminServiceView(){
     const rows = [];
     snap.forEach(doc=>rows.push({ id:doc.id, ...doc.data() }));
     rows.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // เก่าสุดก่อน — ลำดับการรับ
-    if(rows.length===0){
-      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>';
-      return;
-    }
-    listEl.innerHTML = rows.map(d=>rpBuildCard(d,'admin-service-rp-list',true)).join('');
-    const rowMap = new Map(rows.map(d=>[d.id, d]));
-    listEl.querySelectorAll('.rp-card').forEach(card=>{
-      card.addEventListener('click', ()=>{
-        const id = card.getAttribute('data-ri');
-        const d = rowMap.get(id);
-        if(d) rpToggleDetail('admin-service-rp-list', d, true);
+
+    _adminRpAllRows = rows;
+
+    // ตั้ง link Sheet ประวัติ
+    try{
+      const rpId = await ensureReturnPartsSheet();
+      const lnk = $('admin-rp-sheet-link');
+      if(lnk) lnk.href = `https://docs.google.com/spreadsheets/d/${rpId}/edit`;
+    }catch(_){}
+
+    // วาง search listener (ครั้งแรกที่โหลด)
+    const searchEl = $('admin-rp-search');
+    const clearBtn = $('admin-rp-search-clear');
+    if(searchEl && !searchEl._rpSearchBound){
+      searchEl._rpSearchBound = true;
+      searchEl.addEventListener('input', ()=>{
+        if(clearBtn) clearBtn.style.display = searchEl.value ? 'block' : 'none';
+        rpRenderAdminFiltered();
       });
-    });
+      if(clearBtn) clearBtn.addEventListener('click', ()=>{
+        searchEl.value=''; clearBtn.style.display='none'; rpRenderAdminFiltered();
+      });
+    }
+
+    rpRenderAdminFiltered();
   }catch(e){
     listEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
   }
