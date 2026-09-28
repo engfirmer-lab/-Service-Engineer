@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.41
-  อัปเดตล่าสุด   : 28 กันยายน 2569 10:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.42
+  อัปเดตล่าสุด   : 28 กันยายน 2569 10:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.41</title>
+<title>F1 Service — v8.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -550,13 +550,7 @@
             <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">+ แจ้ง/เคลม ปัญหา</button>
           </div>
         </div>
-        <div class="panel-block" id="eng-my-claims-block" style="padding:14px;display:none;">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;cursor:pointer;" id="eng-my-claims-header">
-            <div><h2 style="margin-bottom:2px;font-size:14px;">เคลมของฉัน<span id="eng-my-claims-badge" class="badge-count" style="display:none;margin-left:6px;">0</span></h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ติดตามสถานะเคลมที่คุณส่งไป — แก้ไข/เพิ่มข้อมูลได้เองตราบใดที่ยังไม่ถูกย้ายไป Google Sheet</p></div>
-            <button class="btn btn-ghost btn-sm" id="eng-my-claims-toggle-btn">▾ แสดง</button>
-          </div>
-          <div id="eng-my-claims-list" style="margin-top:10px;display:none;"></div>
-        </div>
+        <!-- v8.42 — รายการเคลมย้ายไปอยู่ใน แท็บ งานของฉัน ทั้งหมดแล้ว -->
       </div>
 
       <!-- SUB: ส่งคืนอะไหล่ Office -->
@@ -572,18 +566,7 @@
           </div>
         </div>
 
-        <!-- My pending returns list -->
-        <div class="panel-block" id="rp-my-returns-block" style="padding:14px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
-            <h2 style="font-size:14px;margin:0;">รายการที่ยังรอตรวจรับ <span class="badge-count" id="rp-my-badge" style="display:none;">0</span></h2>
-            <button class="btn btn-ghost btn-sm" id="rp-my-toggle-btn" style="font-size:12px;white-space:nowrap;">📋 แสดงรายการ</button>
-          </div>
-          <div id="rp-my-returns-wrap" style="display:none;">
-            <div id="rp-my-returns-list">
-              <div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">— ยังไม่มีรายการ —</div>
-            </div>
-          </div>
-        </div>
+        <!-- v8.42 — รายการรอตรวจรับย้ายไปอยู่ใน แท็บ งานของฉัน ทั้งหมดแล้ว -->
       </div>
     </div>
 
@@ -1359,8 +1342,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.41";
-const APP_UPDATED_AT = "28 กันยายน 2569 10:00 น. เวลาไทย";
+const APP_VERSION = "8.42";
+const APP_UPDATED_AT = "28 กันยายน 2569 10:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6139,80 +6122,16 @@ function myVisibleClaims(){
   return DATA.claims.filter(c=>c.submittedBy===myUserEmail && c.status!=='done');
 }
 
-// สถานะเปิด/ปิด บล็อก "เคลมของฉัน" — เริ่มต้นเป็นปิดไว้ก่อนเสมอ (ตามคำขอ กันไม่ให้เกะกะหน้าจอ) กดปุ่มเพื่อเปิด/ปิดได้เอง อยู่ได้ตลอด session
-let engMyClaimsExpanded = false;
-$('eng-my-claims-header').addEventListener('click', (e)=>{
-  engMyClaimsExpanded = !engMyClaimsExpanded;
-  const wrap = $('eng-my-claims-list');
-  const btn = $('eng-my-claims-toggle-btn');
-  wrap.style.display = engMyClaimsExpanded ? 'block' : 'none';
-  btn.textContent = engMyClaimsExpanded ? '▴ ซ่อน' : '▾ แสดง';
-});
+// v8.42 — eng-my-claims-block ถูกย้ายไปอยู่ใน งานของฉัน แล้ว — ไม่มี DOM element นี้อีก
+let engMyClaimsExpanded = false; // ยังคงไว้เพื่อไม่ให้ JS อื่นพัง
 
-// รายการ "เคลมของฉัน" ที่ผู้แจ้งเห็นได้จากหน้า Engineer โดยตรง (ไม่ต้องมีสิทธิ์ Sup Product/Editor) — ต่างจาก myVisibleClaims() ตรงที่รวมทั้งเคลมที่ยังอยู่ในแอป (คลิกดู/แก้ไขได้เต็ม)
-// และเคลมที่จบเคสไปแล้ว (เหลือแค่แจ้งเตือนสรุปสถานะสุดท้ายจาก claimNotices เพราะข้อมูลเต็มถูกย้ายไป Google Sheet แล้ว — พอผู้แจ้งกดดูแล้วจะลบแจ้งเตือนนี้ทิ้งเลย กันไม่ให้ Firestore ค้างข้อมูลที่ไม่จำเป็นแล้ว)
+// v8.42 — renderEngMyClaimsList: รายการย้ายไปอยู่ใน งานของฉัน แล้ว
+// ฟังก์ชันนี้ยังคงไว้เพื่อ trigger updateNotifBadge และ renderEngMyWorkClaimsSection (ถ้า tab นั้นเปิดอยู่)
 function renderEngMyClaimsList(){
-  const block = $('eng-my-claims-block');
-  const wrap = $('eng-my-claims-list');
-  const badge = $('eng-my-claims-badge');
-  if(!wrap || !block) return;
-  wrap.style.display = engMyClaimsExpanded ? 'block' : 'none';
-  $('eng-my-claims-toggle-btn').textContent = engMyClaimsExpanded ? '▴ ซ่อน' : '▾ แสดง';
-  if(!myUserEmail || !DATA){ block.style.display='none'; return; }
-  const activeMine = (DATA.claims||[]).filter(c=>c.submittedBy===myUserEmail);
-  const activeIds = new Set(activeMine.map(c=>c.id));
-  const noticesById = new Map((DATA.claimNotices||[]).map(n=>[n.claimId, n]));
-  const archivedNotices = (DATA.claimNotices||[]).filter(n=>!activeIds.has(n.claimId));
-  if(activeMine.length===0 && archivedNotices.length===0){ block.style.display='none'; wrap.innerHTML=''; return; }
-  block.style.display='block';
-
-  const items = [];
-  activeMine.forEach(c=>{
-    const notice = noticesById.get(c.id);
-    items.push({ id:c.id, noticeId: notice?notice.id:null, siteName:c.siteName, model:c.model, status:c.status,
-      unread: !!(notice && !notice.notifRead), ts: c.createdAt||0, clickable:true, archived:false });
-  });
-  archivedNotices.forEach(n=>{
-    items.push({ id:n.claimId, noticeId:n.id, siteName:n.siteName, model:n.model, status:n.status,
-      unread: !n.notifRead, ts: n.updatedAt||0, clickable:false, archived:true });
-  });
-  items.sort((a,b)=>b.ts-a.ts);
-
-  let unreadCount = 0;
-  wrap.innerHTML = items.map(it=>{
-    if(it.unread) unreadCount++;
-    const st = claimStatusInfo(it.status);
-    const dateStr = it.ts ? new Date(it.ts).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
-    const dataAttr = it.clickable ? `data-claim-open="${it.id}"` : `data-notice-dismiss="${it.noticeId||''}"`;
-    const bg = it.unread ? 'background:rgba(232,163,61,.08);' : '';
-    const archivedNote = it.archived ? ` <span style="color:var(--text-faint);font-size:10.5px;">(ย้ายไป Sheet แล้ว)</span>` : '';
-    return `<div class="admin-row" ${dataAttr} style="cursor:pointer;${bg}">
-      <div class="admin-row-main">
-        <span style="font-size:12.5px;">${it.unread?'🔔 ':''}${escapeHtml(it.siteName||'-')} · ${escapeHtml(it.model||'-')}${archivedNote}</span>
-        <span style="font-size:11px;color:var(--text-faint);">${dateStr}</span>
-      </div>
-      <span style="color:${st.color};font-weight:600;font-size:12px;">${st.label}</span>
-    </div>`;
-  }).join('');
-
-  if(badge){
-    if(unreadCount>0){ badge.style.display='inline-block'; badge.textContent=unreadCount; }
-    else{ badge.style.display='none'; }
-  }
-
-  wrap.querySelectorAll('[data-claim-open]').forEach(row=>{
-    row.addEventListener('click', ()=>openClaimDetail(row.getAttribute('data-claim-open')));
-  });
-  wrap.querySelectorAll('[data-notice-dismiss]').forEach(row=>{
-    row.addEventListener('click', ()=>{
-      const noticeId = row.getAttribute('data-notice-dismiss');
-      // เคลมนี้จบเคสและย้ายข้อมูลเต็มไป Google Sheet แล้ว (ปลอดภัยแล้ว) — พอผู้แจ้งกดดู/ปิดแจ้งเตือนนี้ ลบทิ้งจาก Firestore ไปเลย ไม่ต้องแค่มาร์คว่าอ่านแล้วเหมือนเดิม กันไม่ให้ค้างเปลืองพื้นที่
-      DATA.claimNotices = (DATA.claimNotices||[]).filter(n=>n.id!==noticeId);
-      fsDeleteClaimNotice(noticeId);
-      renderEngMyClaimsList();
-      updateNotifBadge();
-    });
-  });
+  updateNotifBadge();
+  updateEngMyWorkBadge();
+  // refresh งานของฉัน section ถ้ากำลังแสดงอยู่
+  if(_myworkClaimsOpen) renderEngMyWorkClaimsSection();
 }
 
 /* ===================== งานของฉัน (v8.37 — collapsible) ===================== */
@@ -8375,27 +8294,11 @@ function rpBindCards(containerId, rows, canEdit){
 }
 
 /* ---- Load Engineer's own pending returns ---- */
+// v8.42 — rp-my-returns-list ถูกย้ายไปอยู่ใน งานของฉัน แล้ว
+// ฟังก์ชันนี้ยังคงไว้เพื่อใช้ refresh รายการใน งานของฉัน (eng-mywork-rp-list)
 async function loadMyReturnParts(){
-  const list = $('rp-my-returns-list');
-  const badge = $('rp-my-badge');
-  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
-  try{
-    const rows = await rpSheetReadWaiting();
-    const myName = myDisplayName();
-    const mine = rows.filter(r => myName && r.senderName && r.senderName.trim()===myName.trim());
-    if(mine.length>0){ badge.textContent=mine.length; badge.style.display='inline'; }
-    else { badge.style.display='none'; }
-
-    if(mine.length===0){
-      list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅<br><span style="font-size:11px;">เมื่อส่งคืนอะไหล่แล้ว รายการจะปรากฏที่นี่จนกว่า Admin Service จะยืนยัน</span></div>';
-      return;
-    }
-    list.innerHTML = mine.map(d=>rpBuildCard(d,'rp-my-returns-list',true)).join('');
-    rpBindCards('rp-my-returns-list', mine, true);
-  }catch(e){
-    list.innerHTML=`<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
-    badge.style.display='none';
-  }
+  // ถ้ามี eng-mywork-rp-list แสดงอยู่ ให้ refresh ด้วย
+  if(_myworkRpOpen) await renderEngMyWorkRpSection();
 }
 
 /* ---- Withdrawal list management ---- */
@@ -8748,24 +8651,7 @@ function loadReturnPartsManager(){
   setupRpManagerLinks(); // ตั้ง href ทันที ไม่รอรายการ
 }
 
-// ปุ่ม "ดูรายการรอรับ" — toggle เปิด/ปิด
-// Toggle "รายการที่ยังรอตรวจรับ" (Engineer own list)
-// โหลดรายการครั้งแรกเมื่อกดแสดง — ไม่โหลดอัตโนมัติตอนเปิด tab
-let _rpMyListLoaded = false;
-$('rp-my-toggle-btn').addEventListener('click', ()=>{
-  const wrap = $('rp-my-returns-wrap');
-  const btn  = $('rp-my-toggle-btn');
-  const isOpen = wrap.style.display !== 'none';
-  if(isOpen){
-    wrap.style.display = 'none';
-    btn.textContent = '📋 แสดงรายการ';
-  } else {
-    wrap.style.display = 'block';
-    btn.textContent = '🔼 ซ่อน';
-    // โหลดครั้งแรกเมื่อกดแสดง หรือ reload ทุกครั้งที่เปิด
-    loadMyReturnParts();
-  }
-});
+// v8.42 — rp-my-returns-block ถูกย้ายไปอยู่ใน งานของฉัน แล้ว — ไม่มีปุ่ม/wrapper นี้อีก
 
 // (v8.36) rp-manager-toggle-btn ถูกย้ายไปเป็น collapsible header แล้ว — ไม่มีปุ่มนี้อีก
 
