@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.43
-  อัปเดตล่าสุด   : 28 กันยายน 2569 11:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.50
+  อัปเดตล่าสุด   : 28 กันยายน 2569 14:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.43</title>
+<title>F1 Service — v8.50</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -472,6 +472,7 @@
       <button id="mode-settings">⚙️ ตั้งค่าระบบ</button>
       <button id="mode-mgr">Dashboard</button>
       <button id="mode-backup">Export/Backup</button>
+      <button id="mode-admin-service" style="display:none;">📦 ตรวจรับอะไหล่</button>
     </div>
     <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
   </div>
@@ -1026,8 +1027,8 @@
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
         <input type="email" id="new-perm-email-input" placeholder="อีเมล Google เช่น somchai@gmail.com" style="flex:1;min-width:220px;">
         <select id="new-perm-role-select">
-          <option value="approved">ผู้ใช้ทั่วไป</option>
-          <option value="editor">แก้ไขข้อมูล (Editor)</option>
+          <option value="approved">Engineer (ผู้ใช้ทั่วไป)</option>
+          <option value="editor">แก้ไขข้อมูล / Sup Product</option>
         </select>
         <button class="btn btn-primary btn-sm" id="add-perm-email-btn">+ เพิ่มสิทธิ์</button>
       </div>
@@ -1249,6 +1250,38 @@
     </div>
   </div>
   <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.47 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
+
+  <!-- ===== หน้า Admin Service: ตรวจรับอะไหล่ ===== -->
+  <div id="view-admin-service" style="display:none;">
+    <div class="desktop-hint">📦 ตรวจรับอะไหล่คืน Office — Admin Service เท่านั้น</div>
+    <div class="panel-block">
+      <h2>รายการรอตรวจรับ</h2>
+      <p class="panel-sub">รายการส่งคืนอะไหล่ที่ Engineer ส่งมา รอการตรวจรับและประเมิน</p>
+      <div id="admin-service-rp-list">
+        <div style="color:var(--text-faint);font-size:13px;padding:16px 0;">⏳ กำลังโหลด...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- modal ประเมินผลการตรวจรับ RP (Admin Service) -->
+  <div class="modal-overlay" id="rp-eval-modal" style="display:none;">
+    <div class="modal" style="max-width:460px;">
+      <button class="modal-close-x" id="rp-eval-modal-close">✕</button>
+      <h3>ประเมินผลการตรวจรับ</h3>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">เลือกผลการประเมินได้มากกว่า 1 ข้อ</p>
+      <div id="rp-eval-checklist" style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="เรียบร้อยสมบูรณ์" id="eval-ok"> <span>✅ เรียบร้อยสมบูรณ์</span></label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="กรอกรายละเอียดไม่ครบ" id="eval-incomplete"> <span>⚠️ กรอกรายละเอียดไม่ครบ</span></label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="แพ็คไม่เรียบร้อย" id="eval-pack"> <span>📦 แพ็คไม่เรียบร้อย</span></label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="อะไหล่ไม่ครบ" id="eval-parts"> <span>🔧 อะไหล่ไม่ครบ</span></label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="เอกสารไม่ครบ" id="eval-docs"> <span>📄 เอกสารไม่ครบ</span></label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" id="rp-eval-cancel-btn">ยกเลิก</button>
+        <button class="btn btn-primary btn-sm" id="rp-eval-confirm-btn">✅ ยืนยันรับ</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1349,8 +1382,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.43";
-const APP_UPDATED_AT = "28 กันยายน 2569 11:45 น. เวลาไทย";
+const APP_VERSION = "8.50";
+const APP_UPDATED_AT = "28 กันยายน 2569 14:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1566,6 +1599,8 @@ let myUserName = null;
 let myUserEmail = null;
 const SUPER_ADMIN_EMAIL = 'engfirmer@gmail.com'; // ผู้ดูแลสูงสุดตายตัว — แก้ไขได้เสมอแม้รายชื่ออื่นจะถูกลบผิดพลาด (บังคับใช้จริงที่ Firestore Rules ไม่ใช่ตรงนี้)
 let adminEmails = []; // รายชื่ออีเมลที่แก้ไขข้อมูลได้ (โหลดจาก Firestore)
+let managerEmails = []; // รายชื่ออีเมล Manager (สิทธิ์เหมือน Super Admin) (โหลดจาก Firestore meta/managerEmails)
+let adminServiceEmails = []; // รายชื่ออีเมล Admin Service (ตรวจรับอะไหล่) (โหลดจาก Firestore meta/adminServiceEmails)
 let approvedUsers = []; // รายชื่ออีเมลที่มีสิทธิ์เข้าถึง (อ่าน) ระบบได้ (โหลดจาก Firestore)
 let myVotes = {};
 let nicknamesMap = {}; // email(lowercase) -> nickname ที่ผู้ใช้ตั้งไว้ครั้งแรกที่ login (แทนชื่อ/อีเมลบัญชี Google ทุกจุดในแอป)
@@ -1775,6 +1810,20 @@ function ownerOf(category, model){
 function pendingDownCount(errorId){ return (DATA.proposals||[]).filter(p=>p.errorId===errorId && p.status==='pending').length; }
 
 /* ===================== LOAD / SAVE (Firestore) ===================== */
+// โหลด nicknames อย่างเดียว (สำหรับ Admin Service ที่ไม่ต้องการข้อมูล claims/documents/etc.)
+async function loadNicknames(){
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const nickSnap = await sdk.getDocs(sdk.collection(db,'nicknames'));
+    nicknamesMap = {}; myNicknameDocId = null;
+    nickSnap.forEach(d=>{
+      const nd = d.data();
+      if(nd && nd.email){ nicknamesMap[nd.email.toLowerCase()] = nd.nickname; if(myUserEmail && nd.email.toLowerCase()===myUserEmail) myNicknameDocId = d.id; }
+    });
+  }catch(e){ console.warn('โหลด nicknames ไม่สำเร็จ:', e.message); }
+}
+
 async function loadData(){
   setStatus(true,'กำลังโหลดข้อมูล...');
   await initFirebase();
@@ -1916,6 +1965,8 @@ async function ensureAllErrorsLoaded(){
 }
 async function fsSaveSupProducts(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS }); }finally{ hideLoadingOverlay(); } }
 async function fsSaveAdminEmails(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','adminEmails'), { emails: adminEmails }); }finally{ hideLoadingOverlay(); } }
+async function fsSaveManagerEmails(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','managerEmails'), { emails: managerEmails }); }finally{ hideLoadingOverlay(); } }
+async function fsSaveAdminServiceEmails(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','adminServiceEmails'), { emails: adminServiceEmails }); }finally{ hideLoadingOverlay(); } }
 async function fsSaveApprovedUsers(){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','approvedUsers'), { emails: approvedUsers }); }finally{ hideLoadingOverlay(); } }
 async function fsSubmitAccessRequest(){ showLoadingOverlay('กำลังส่งคำขอ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.addDoc(sdk.collection(db,'accessRequests'), { uid:myGoogleId, email:myUserEmail, name:myUserName, status:'pending', requestedAt:Date.now() }); }finally{ hideLoadingOverlay(); } }
 async function fsGetMyAccessRequest(){ await initFirebase(); const sdk=window._firebaseSdk; const q = sdk.query(sdk.collection(db,'accessRequests'), sdk.where('uid','==',myGoogleId)); const snap = await sdk.getDocs(q); if(snap.empty) return null; let latest=null; snap.forEach(d=>{ const v={id:d.id, ...d.data()}; if(!latest || v.requestedAt>latest.requestedAt) latest=v; }); return latest; }
@@ -2025,6 +2076,14 @@ function fsBumpClaimsActivity(){
     sdk.setDoc(sdk.doc(db,'meta','claimsActivity'), { updatedAt: Date.now() }, { merge:true })
       .catch(e=>console.warn('แจ้งเตือนรายการเคลมเปลี่ยนแปลงไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e));
   }catch(e){ console.warn('แจ้งเตือนรายการเคลมเปลี่ยนแปลงไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e); }
+}
+// v8.50: RP Activity — แจ้งทุก onSnapshot listener ว่ามีการเปลี่ยนแปลง returnParts
+function fsBumpRpActivity(){
+  try{
+    const sdk = window._firebaseSdk;
+    sdk.setDoc(sdk.doc(db,'meta','rpActivity'), { updatedAt: Date.now() }, { merge:true })
+      .catch(e=>console.warn('แจ้งเตือน RP activity ไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e));
+  }catch(e){ console.warn('แจ้งเตือน RP activity ไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e); }
 }
 async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); fsBumpClaimsActivity(); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); fsBumpClaimsActivity(); }finally{ hideLoadingOverlay(); } }
@@ -3071,10 +3130,13 @@ function ensureSignedIn(callback){
   initGisWithRetry(15, 300);
 }
 $('change-name-btn').addEventListener('click', async ()=>{
+  // v8.50: เคลียร์ localStorage ทั้งหมดก่อน signOut — รีเซ็ตแคชสิทธิ์และข้อมูลเก่าทุกอย่างสำหรับการ login ครั้งถัดไป
+  try{ localStorage.clear(); }catch(e){}
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 // ปุ่มออกจากระบบตอนหน้าจอ "รอสิทธิ์เข้าถึง" — เผื่อกดขอสิทธิ์ผิดบัญชี จะได้ออกแล้วเข้าใหม่ด้วยบัญชีอื่นได้เลย ไม่ต้องรอ
 $('access-request-logout-btn').addEventListener('click', async ()=>{
+  try{ localStorage.clear(); }catch(e){}
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 
@@ -3207,21 +3269,105 @@ async function refreshClaimsRealtime(){
   }catch(e){ console.warn('ดึงข้อมูลเคลมล่าสุดไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e); }
 }
 
+// v8.50: RP Realtime Watch — ใช้ onSnapshot บน meta/rpActivity (เหมือน claimsActivity) ประหยัดโควต้า
+let _rpActivityWatchStarted = false;
+let _lastSeenRpActivityTs = null;
+function initRpRealtimeWatch(){
+  if(_rpActivityWatchStarted) return;
+  _rpActivityWatchStarted = true;
+  let receivedFirstSnapshot = false;
+  try{
+    const sdk = window._firebaseSdk;
+    const rpActRef = sdk.doc(db,'meta','rpActivity');
+    sdk.onSnapshot(rpActRef, (snap)=>{
+      const ts = snap.exists() ? snap.data().updatedAt : null;
+      if(!receivedFirstSnapshot){
+        receivedFirstSnapshot = true;
+        _lastSeenRpActivityTs = ts;
+        return;
+      }
+      if(ts===_lastSeenRpActivityTs) return;
+      _lastSeenRpActivityTs = ts;
+      // รีเฟรช RP ในหน้าที่เกี่ยวข้อง
+      if(currentMode==='admin-service') renderAdminServiceView();
+      if(currentMode==='mgr') updateMgrPendingBadge();
+      if(currentMode==='eng') renderEngMyWorkRpSection();
+    }, (e)=>console.warn('ฟังการเปลี่ยนแปลง RP ไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
+  }catch(e){ console.warn('เริ่มฟังการเปลี่ยนแปลง RP ไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+}
+
+function updateModeButtonVisibility(){
+  // กำหนดว่า role ปัจจุบันคืออะไร
+  const adminSvcOnly = isAdminService() && !isSuperAdmin() && !isManager() && !isEditor();
+  const engineerOnly = isApproved() && !isEditor() && !isAdminService() && !isManager() && !isSuperAdmin();
+  const highPriv     = isSuperAdmin() || isManager() || isEditor(); // เห็นทุก button
+
+  // mode buttons (IDs ต้องตรงกับ HTML)
+  const btnEng          = $('mode-eng');
+  const btnSup          = $('mode-sup');
+  const btnMgr          = $('mode-mgr');
+  const btnSettings     = $('mode-settings');
+  const btnBackup       = $('mode-backup');
+  const btnAdminService = $('mode-admin-service');
+
+  if(adminSvcOnly){
+    // Admin Service: เห็นแค่ mode-admin-service
+    if(btnEng)          btnEng.style.display          = 'none';
+    if(btnSup)          btnSup.style.display          = 'none';
+    if(btnMgr)          btnMgr.style.display          = 'none';
+    if(btnSettings)     btnSettings.style.display     = 'none';
+    if(btnBackup)       btnBackup.style.display       = 'none';
+    if(btnAdminService) btnAdminService.style.display = '';
+  } else if(engineerOnly){
+    // Engineer ทั่วไป: ซ่อน mgr/settings/backup/admin-service
+    if(btnEng)          btnEng.style.display          = '';
+    if(btnSup)          btnSup.style.display          = 'none';
+    if(btnMgr)          btnMgr.style.display          = 'none';
+    if(btnSettings)     btnSettings.style.display     = 'none';
+    if(btnBackup)       btnBackup.style.display       = 'none';
+    if(btnAdminService) btnAdminService.style.display = 'none';
+  } else {
+    // Editor / Manager / SuperAdmin: เห็นทุก button รวม admin-service
+    if(btnEng)          btnEng.style.display          = '';
+    if(btnSup)          btnSup.style.display          = '';
+    if(btnMgr)          btnMgr.style.display          = '';
+    if(btnSettings)     btnSettings.style.display     = '';
+    if(btnBackup)       btnBackup.style.display       = '';
+    if(btnAdminService) btnAdminService.style.display = '';
+  }
+}
+
 async function checkAccessAndLoad(){
   setStatus(true, 'กำลังตรวจสอบสิทธิ์เข้าถึง...');
   try{
     await initFirebase();
     const sdk = window._firebaseSdk;
-    const [adminDoc, approvedDoc] = await Promise.all([
+    const [adminDoc, approvedDoc, managerDoc, adminServiceDoc] = await Promise.all([
       sdk.getDoc(sdk.doc(db,'meta','adminEmails')),
       sdk.getDoc(sdk.doc(db,'meta','approvedUsers')),
+      sdk.getDoc(sdk.doc(db,'meta','managerEmails')),
+      sdk.getDoc(sdk.doc(db,'meta','adminServiceEmails')),
     ]);
     if(adminDoc.exists() && Array.isArray(adminDoc.data().emails)){
       adminEmails = adminDoc.data().emails;
     } else {
-      adminEmails = ['v.sombatpattanakul@gmail.com', 'wanchai.p125@gmail.com'];
+      adminEmails = ['v.sombatpattanakul@gmail.com'];
       try{ await sdk.setDoc(sdk.doc(db,'meta','adminEmails'), { emails: adminEmails }); }
       catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อ Editor เริ่มต้นไม่ได้ (ต้องให้ Super Admin เปิดแอปก่อนครั้งแรก):', bootstrapErr); }
+    }
+    if(managerDoc.exists() && Array.isArray(managerDoc.data().emails)){
+      managerEmails = managerDoc.data().emails;
+    } else {
+      managerEmails = ['wanchai.p125@gmail.com'];
+      try{ await sdk.setDoc(sdk.doc(db,'meta','managerEmails'), { emails: managerEmails }); }
+      catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อ Manager เริ่มต้นไม่ได้:', bootstrapErr); }
+    }
+    if(adminServiceDoc.exists() && Array.isArray(adminServiceDoc.data().emails)){
+      adminServiceEmails = adminServiceDoc.data().emails;
+    } else {
+      adminServiceEmails = ['jacksiam49@gmail.com'];
+      try{ await sdk.setDoc(sdk.doc(db,'meta','adminServiceEmails'), { emails: adminServiceEmails }); }
+      catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อ Admin Service เริ่มต้นไม่ได้:', bootstrapErr); }
     }
     if(approvedDoc.exists() && Array.isArray(approvedDoc.data().emails)){
       approvedUsers = approvedDoc.data().emails;
@@ -3242,11 +3388,27 @@ async function checkAccessAndLoad(){
     return;
   }
 
+  // Admin Service: ข้ามการโหลดข้อมูลหลัก (claim/etc.) ให้โหลดเฉพาะสิ่งที่จำเป็นสำหรับหน้าตรวจรับ
+  if(isAdminService() && !isSuperAdmin()){
+    await loadNicknames();
+    showSignedInPill();
+    updateModeButtonVisibility();
+    initVersionCheck();
+    initRpRealtimeWatch();
+    $('gsi-overlay').classList.remove('show');
+    $('access-request-overlay').classList.remove('show');
+    if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal();
+    switchMode('admin-service');
+    return;
+  }
+
   await loadData();
   showSignedInPill(); // อัปเดต pill อีกครั้งหลังโหลดข้อมูล — ตอน sign-in ครั้งแรก nicknamesMap ยังไม่มา เลยต้องรีเฟรชชื่อที่แสดงให้เป็นชื่อเล่นจริง
+  updateModeButtonVisibility();
   fsCleanupOldLogs(); // ลบ activityLogs > 45 วัน แบบ background — ไม่ await เพื่อไม่ให้ชะลอหน้าจอ
   initVersionCheck();
   initClaimsRealtimeWatch();
+  initRpRealtimeWatch();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
@@ -3334,24 +3496,30 @@ document.querySelectorAll('#settings-subtabs button').forEach(b=>{
 });
 
 function switchMode(mode){
-  if(!DATA){ window._pendingModeSwitch = mode; showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...'); return; }
-  closeErrorDetail();
+  // Admin Service: บังคับอยู่แค่หน้าตรวจรับอะไหล่ — ไม่มี DATA โหลดให้ ข้ามการเช็ค DATA guard
+  const isAdminSvcOnly = isAdminService() && !isSuperAdmin();
+  if(!DATA && !isAdminSvcOnly){ window._pendingModeSwitch = mode; showToast('⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...'); return; }
+  if(!DATA) { /* Admin Service อาจยังไม่มี DATA */ }
+  if(!isAdminSvcOnly){ closeErrorDetail(); }
   currentMode = mode;
-  $('view-eng').style.display      = mode==='eng'      ? 'block':'none';
-  $('view-sup').style.display      = mode==='sup'      ? 'block':'none';
-  $('view-settings').style.display = mode==='settings' ? 'block':'none';
-  $('view-mgr').style.display      = mode==='mgr'      ? 'block':'none';
-  $('view-backup').style.display   = mode==='backup'   ? 'block':'none';
-  $('mode-eng').classList.toggle('active',      mode==='eng');
-  $('mode-sup').classList.toggle('active',      mode==='sup');
-  $('mode-settings').classList.toggle('active', mode==='settings');
-  $('mode-mgr').classList.toggle('active',      mode==='mgr');
-  $('mode-backup').classList.toggle('active',   mode==='backup');
+  $('view-eng').style.display           = mode==='eng'           ? 'block':'none';
+  $('view-sup').style.display           = mode==='sup'           ? 'block':'none';
+  $('view-settings').style.display      = mode==='settings'      ? 'block':'none';
+  $('view-mgr').style.display           = mode==='mgr'           ? 'block':'none';
+  $('view-backup').style.display        = mode==='backup'        ? 'block':'none';
+  $('view-admin-service').style.display = mode==='admin-service' ? 'block':'none';
+  $('mode-eng').classList.toggle('active',           mode==='eng');
+  $('mode-sup').classList.toggle('active',           mode==='sup');
+  $('mode-settings').classList.toggle('active',      mode==='settings');
+  $('mode-mgr').classList.toggle('active',           mode==='mgr');
+  $('mode-backup').classList.toggle('active',        mode==='backup');
+  $('mode-admin-service').classList.toggle('active', mode==='admin-service');
   if(mode==='sup') renderSupView();
   if(mode==='settings') switchSettingsSubTab(_settingsSubActive); // โหลด sub-tab ที่ active ล่าสุด
   // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
   if(mode==='mgr'){ setupRpManagerLinks(); updateMgrPendingBadge(); switchMgrSubTab('summary'); } // v8.36: เปิด tab สรุปข้อมูล + โหลดข้อมูล
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
+  if(mode==='admin-service'){ renderAdminServiceView(); }
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -3367,6 +3535,7 @@ $('mode-sup').addEventListener('click', ()=>requestModeSwitch('sup'));
 $('mode-settings').addEventListener('click', ()=>requestModeSwitch('settings')); // v8.37
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
 $('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
+$('mode-admin-service').addEventListener('click', ()=>switchMode('admin-service'));
 
 /* ===================== แถบเลื่อนเล็กๆ ด้านล่างเมนู บอกตำแหน่งซ้าย-ขวาที่กำลังดูอยู่ ===================== */
 function updateModeToggleScrollHint(){
@@ -5122,10 +5291,12 @@ function isNameInUse(name){
   const modelOwners = Object.values(DATA.owners.modelOverrides||{});
   return catOwners.includes(name) || modelOwners.includes(name);
 }
-function isSuperAdmin(){ return myUserEmail === SUPER_ADMIN_EMAIL; }
+function isSuperAdmin(){ return myUserEmail === SUPER_ADMIN_EMAIL || (myUserEmail && managerEmails.includes(myUserEmail)); }
+function isManager(){ return isSuperAdmin(); } // Manager มีสิทธิ์เหมือน Super Admin
+function isAdminService(){ return myUserEmail && adminServiceEmails.includes(myUserEmail); } // ตรวจรับอะไหล่เท่านั้น
 // เช็คสิทธิ์ฝั่งหน้าเว็บ (UX เท่านั้น) — การบังคับใช้จริงอยู่ที่ Firestore Rules เสมอ ต่อให้ข้ามจุดนี้ก็เขียนข้อมูลจริงไม่ได้อยู่ดี
 function isEditor(){ return isSuperAdmin() || (myUserEmail && adminEmails.includes(myUserEmail)); }
-function isApproved(){ return isEditor() || (myUserEmail && approvedUsers.includes(myUserEmail)); }
+function isApproved(){ return isEditor() || isAdminService() || (myUserEmail && approvedUsers.includes(myUserEmail)); }
 /* ===================== หน้าจอขอสิทธิ์เข้าถึง (สำหรับคนที่ยังไม่ได้รับอนุมัติ) ===================== */
 async function renderAccessRequestScreen(){
   $('access-request-overlay').classList.add('show');
@@ -5195,7 +5366,8 @@ async function renderAccessRequestsPanel(){
   }));
 }
 
-/* ===================== จัดการสิทธิ์ผู้ใช้งานแบบแยกชั้น — Super Admin / แก้ไขข้อมูล / ผู้ใช้ทั่วไป ===================== */
+/* ===================== จัดการสิทธิ์ผู้ใช้งานแบบแยกชั้น — v8.50 ===================== */
+// Tiers: Super Admin (hardcoded) > Manager (managerEmails) > Editor (adminEmails) > AdminService (adminServiceEmails) > Engineer (approvedUsers)
 function renderUnifiedPermissionList(){
   const noteEl = $('perm-list-note');
   const canEdit = isSuperAdmin();
@@ -5207,17 +5379,30 @@ function renderUnifiedPermissionList(){
   $('add-perm-email-btn').disabled = !canEdit;
   $('add-perm-email-btn').style.opacity = canEdit ? '1' : '.4';
 
+  const managers = managerEmails.slice().sort(naturalSort);
   const editors = adminEmails.slice().sort(naturalSort);
+  const adminServices = adminServiceEmails.slice().sort(naturalSort);
   const approved = approvedUsers.slice().sort(naturalSort);
+
+  // row สำหรับ Manager/AdminService ที่ Super Admin จัดการเองได้
+  function specialRowHtml(email, tier){
+    const nick = nicknamesMap[email.toLowerCase()];
+    const label = nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
+    return `<div class="admin-row">
+      <div class="admin-row-main"><span style="font-size:13px;">${label}</span></div>
+      ${canEdit ? `<button class="icon-btn danger" data-delspecial="${escapeHtml(email)}" data-tier="${tier}">ลบ</button>` : ''}
+    </div>`;
+  }
 
   function userRowHtml(email, role){
     const nick = nicknamesMap[email.toLowerCase()];
+    const label = nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">${nick?`👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>`:`✉️ ${escapeHtml(email)}`}</span></div>
+      <div class="admin-row-main"><span style="font-size:13px;">${label}</span></div>
       <div style="display:flex;gap:6px;align-items:center;">
         <select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">
-          <option value="approved" ${role==='approved'?'selected':''}>ผู้ใช้ทั่วไป</option>
-          <option value="editor" ${role==='editor'?'selected':''}>แก้ไขข้อมูล</option>
+          <option value="approved" ${role==='approved'?'selected':''}>Engineer</option>
+          <option value="editor" ${role==='editor'?'selected':''}>แก้ไขข้อมูล (Sup)</option>
         </select>
         <button class="icon-btn danger" data-delperm="${escapeHtml(email)}" ${canEdit?'':'disabled style="opacity:.35;cursor:not-allowed;"'}>ลบ</button>
       </div>
@@ -5225,21 +5410,40 @@ function renderUnifiedPermissionList(){
   }
 
   const list = $('perm-user-list');
+  const managerExpanded = expandedPermTiers.has('manager');
   const editorExpanded = expandedPermTiers.has('editor');
+  const adminSvcExpanded = expandedPermTiers.has('adminService');
   const approvedExpanded = expandedPermTiers.has('approved');
+
   list.innerHTML = `
     <h3 style="font-size:13px;margin:0 0 8px;color:var(--amber);">⭐ Super Admin (1 คน)</h3>
     <div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(SUPER_ADMIN_EMAIL)}</span><span class="mono" style="font-size:10.5px;color:var(--amber);">แก้ไม่ได้ — ตายตัวในโค้ด</span></div>
+      <div class="admin-row-main"><span style="font-size:13px;">✉️ ${escapeHtml(SUPER_ADMIN_EMAIL)}</span><span class="mono" style="font-size:10.5px;color:var(--amber);">ตายตัวในโค้ด</span></div>
     </div>
 
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;">
+      <h3 data-toggleperm="manager" style="font-size:13px;margin:0;color:var(--amber);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-faint);">${managerExpanded?'▲':'▼'}</span> 🌟 Manager (สิทธิ์เหมือน Super Admin) — ${managers.length} คน
+      </h3>
+      ${canEdit ? `<button class="icon-btn" data-addspecial="manager" style="font-size:11px;">+ เพิ่ม</button>` : ''}
+    </div>
+    ${managerExpanded ? (managers.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : managers.map(e=>specialRowHtml(e,'manager')).join('')) : ''}
+
     <h3 data-toggleperm="editor" style="font-size:13px;margin:20px 0 8px;color:var(--green);cursor:pointer;display:flex;align-items:center;gap:6px;">
-      <span style="font-size:11px;color:var(--text-faint);">${editorExpanded?'▲':'▼'}</span> 🔧 แก้ไขข้อมูล (Editor) — ${editors.length} คน
+      <span style="font-size:11px;color:var(--text-faint);">${editorExpanded?'▲':'▼'}</span> 🔧 แก้ไขข้อมูล / Sup Product — ${editors.length} คน
     </h3>
     ${editorExpanded ? (editors.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : editors.map(email=>userRowHtml(email,'editor')).join('')) : ''}
 
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;">
+      <h3 data-toggleperm="adminService" style="font-size:13px;margin:0;color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <span style="font-size:11px;color:var(--text-faint);">${adminSvcExpanded?'▲':'▼'}</span> 📦 Admin Service (ตรวจรับอะไหล่) — ${adminServices.length} คน
+      </h3>
+      ${canEdit ? `<button class="icon-btn" data-addspecial="adminService" style="font-size:11px;">+ เพิ่ม</button>` : ''}
+    </div>
+    ${adminSvcExpanded ? (adminServices.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : adminServices.map(e=>specialRowHtml(e,'adminService')).join('')) : ''}
+
     <h3 data-toggleperm="approved" style="font-size:13px;margin:20px 0 8px;color:var(--text-dim);cursor:pointer;display:flex;align-items:center;gap:6px;">
-      <span style="font-size:11px;color:var(--text-faint);">${approvedExpanded?'▲':'▼'}</span> 👤 ผู้ใช้ทั่วไป — ${approved.length} คน
+      <span style="font-size:11px;color:var(--text-faint);">${approvedExpanded?'▲':'▼'}</span> 👤 Engineer / ผู้ใช้ทั่วไป — ${approved.length} คน
     </h3>
     ${approvedExpanded ? (approved.length===0 ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มี</p>` : approved.map(email=>userRowHtml(email,'approved')).join('')) : ''}
   `;
@@ -5248,6 +5452,49 @@ function renderUnifiedPermissionList(){
     const tier = el.getAttribute('data-toggleperm');
     if(expandedPermTiers.has(tier)) expandedPermTiers.delete(tier); else expandedPermTiers.add(tier);
     renderUnifiedPermissionList();
+  }));
+
+  // เพิ่ม Manager / Admin Service
+  list.querySelectorAll('[data-addspecial]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    if(!isSuperAdmin()) return;
+    const tier = btn.getAttribute('data-addspecial');
+    const email = prompt(`กรอกอีเมล${tier==='manager'?'Manager':'Admin Service'}ที่ต้องการเพิ่ม:`);
+    if(!email || !email.includes('@')) return;
+    const raw = email.trim().toLowerCase();
+    if(tier==='manager'){
+      if(managerEmails.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
+      managerEmails = [...managerEmails, raw];
+      try{ await fsSaveManagerEmails(); }catch(e){ managerEmails.pop(); showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+      fsWriteLog(`เพิ่ม Manager: ${raw}`);
+    } else {
+      if(adminServiceEmails.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
+      adminServiceEmails = [...adminServiceEmails, raw];
+      try{ await fsSaveAdminServiceEmails(); }catch(e){ adminServiceEmails.pop(); showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+      fsWriteLog(`เพิ่ม Admin Service: ${raw}`);
+    }
+    renderUnifiedPermissionList();
+    showToast(`✓ เพิ่มสิทธิ์แล้ว`);
+  }));
+
+  // ลบ Manager / Admin Service
+  list.querySelectorAll('[data-delspecial]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    if(!isSuperAdmin()) return;
+    const email = btn.getAttribute('data-delspecial');
+    const tier = btn.getAttribute('data-tier');
+    if(!confirm(`ยืนยันการลบสิทธิ์ ${tier==='manager'?'Manager':'Admin Service'} ของ ${email}?`)) return;
+    if(tier==='manager'){
+      const prev = [...managerEmails];
+      managerEmails = managerEmails.filter(e=>e!==email);
+      try{ await fsSaveManagerEmails(); }catch(e){ managerEmails=prev; showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+      fsWriteLog(`ลบ Manager: ${email}`);
+    } else {
+      const prev = [...adminServiceEmails];
+      adminServiceEmails = adminServiceEmails.filter(e=>e!==email);
+      try{ await fsSaveAdminServiceEmails(); }catch(e){ adminServiceEmails=prev; showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
+      fsWriteLog(`ลบ Admin Service: ${email}`);
+    }
+    renderUnifiedPermissionList();
+    showToast('ลบสิทธิ์แล้ว');
   }));
 
   list.querySelectorAll('[data-permrole]').forEach(sel=>sel.addEventListener('change', async ()=>{
@@ -5265,8 +5512,8 @@ function renderUnifiedPermissionList(){
     try{ await Promise.all([fsSaveAdminEmails(), fsSaveApprovedUsers()]); }
     catch(e){ adminEmails = prevAdmin; approvedUsers = prevApproved; showToast('⚠ เปลี่ยนสิทธิ์ไม่สำเร็จ: '+e.message); renderUnifiedPermissionList(); return; }
     renderUnifiedPermissionList();
-    fsWriteLog(`ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'ผู้ใช้ทั่วไป'}`);
-    showToast(`✓ ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'ผู้ใช้ทั่วไป'} แล้ว`);
+    fsWriteLog(`ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'Engineer'}`);
+    showToast(`✓ ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'Engineer'} แล้ว`);
   }));
   list.querySelectorAll('[data-delperm]').forEach(b=>b.addEventListener('click', async ()=>{
     if(!isSuperAdmin()) return;
@@ -5287,14 +5534,14 @@ $('add-perm-email-btn').addEventListener('click', async ()=>{
   const raw = $('new-perm-email-input').value.trim().toLowerCase();
   const role = $('new-perm-role-select').value;
   if(!raw || !raw.includes('@')){ showToast('⚠ กรุณากรอกอีเมลให้ถูกต้อง'); return; }
-  if(raw===SUPER_ADMIN_EMAIL || adminEmails.includes(raw) || approvedUsers.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
+  if(raw===SUPER_ADMIN_EMAIL || managerEmails.includes(raw) || adminEmails.includes(raw) || adminServiceEmails.includes(raw) || approvedUsers.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
   const prevAdmin = [...adminEmails]; const prevApproved = [...approvedUsers];
   if(role==='editor'){ adminEmails = [...adminEmails, raw]; } else { approvedUsers = [...approvedUsers, raw]; }
   try{ await Promise.all([fsSaveAdminEmails(), fsSaveApprovedUsers()]); }
   catch(e){ adminEmails = prevAdmin; approvedUsers = prevApproved; showToast('⚠ เพิ่มไม่สำเร็จ: '+e.message); return; }
   $('new-perm-email-input').value = '';
   renderUnifiedPermissionList();
-  fsWriteLog(`เพิ่มสิทธิ์ให้ ${raw} เป็น ${role==='editor'?'แก้ไขข้อมูล':'ผู้ใช้ทั่วไป'}`);
+  fsWriteLog(`เพิ่มสิทธิ์ให้ ${raw} เป็น ${role==='editor'?'แก้ไขข้อมูล':'Engineer'}`);
   showToast('✓ เพิ่มสิทธิ์แล้ว');
 });
 function renderSupNameList(){
@@ -6205,22 +6452,35 @@ function renderEngMyWorkClaimsSection(){
   });
 }
 
+// v8.50: อ่านจาก Firestore returnParts กรองเฉพาะของ Engineer คนนี้
 async function renderEngMyWorkRpSection(){
   const rpEl = $('eng-mywork-rp-list');
   const rpBadge = $('eng-mywork-rp-badge');
   if(!rpEl) return;
   rpEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
-    const rows = await rpSheetReadWaiting();
-    const myName = myDisplayName();
-    const mine = rows.filter(r=> myName && r.senderName && r.senderName.trim()===myName.trim());
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const q = sdk.query(sdk.collection(db,'returnParts'), sdk.where('senderEmail','==',myUserEmail), sdk.where('status','==','pending'));
+    const snap = await sdk.getDocs(q);
+    const mine = [];
+    snap.forEach(d=>mine.push({ id:d.id, ...d.data() }));
+    mine.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
     if(rpBadge){ rpBadge.style.display = mine.length>0?'inline':'none'; rpBadge.textContent = mine.length; }
     if(mine.length===0){
       rpEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอ ✅</div>';
     } else {
-      // v8.41 — ใช้ rpBuildCard + rpBindCards เหมือนกับ tab ส่งคืนอะไหล่ → กดดูรายละเอียด, แก้ไข, ลบได้
       rpEl.innerHTML = mine.map(d=>rpBuildCard(d,'eng-mywork-rp-list',true)).join('');
-      rpBindCards('eng-mywork-rp-list', mine, true);
+      // bind click events (no rpBindCards — use data-ri=d.id)
+      const rowMap = new Map(mine.map(d=>[d.id, d]));
+      rpEl.querySelectorAll('.rp-card').forEach(card=>{
+        card.addEventListener('click', ()=>{
+          const id = card.getAttribute('data-ri');
+          const d = rowMap.get(id);
+          if(d) rpToggleDetail('eng-mywork-rp-list', d, true);
+        });
+      });
     }
   } catch(e){
     if(rpBadge) rpBadge.style.display = 'none';
@@ -7151,13 +7411,28 @@ function renderMgrView(){
 }
 
 /* ===================== MANAGER: รายการรอดำเนินการ (v8.36) ===================== */
-function updateMgrPendingBadge(){
-  if(!DATA || !DATA.claims) return;
-  const count = (DATA.claims||[]).filter(c=>c.status==='pending').length;
+// v8.50: นับทั้ง claims pending + RP pending จาก Firestore
+async function updateMgrPendingBadge(){
+  const claimsCount = DATA && DATA.claims ? (DATA.claims||[]).filter(c=>c.status==='pending').length : 0;
   const badge = $('mgr-claims-pending-badge');
   const totalBadge = $('mgr-pending-total-badge');
-  if(badge){ badge.style.display = count>0?'inline':'none'; badge.textContent = count; }
-  if(totalBadge){ totalBadge.style.display = count>0?'inline':'none'; totalBadge.textContent = count; }
+  if(badge){ badge.style.display = claimsCount>0?'inline':'none'; badge.textContent = claimsCount; }
+
+  // นับ RP pending จาก Firestore
+  let rpCount = 0;
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const q = sdk.query(sdk.collection(db,'returnParts'), sdk.where('status','==','pending'));
+    const snap = await sdk.getDocs(q);
+    rpCount = snap.size;
+    // อัปเดต badge ใน collapsible header
+    const rpBadge = $('rp-manager-badge');
+    if(rpBadge){ rpBadge.style.display = rpCount>0?'inline':'none'; rpBadge.textContent = rpCount; }
+  }catch(e){ /* ไม่กระทบการแสดงผล */ }
+
+  const total = claimsCount + rpCount;
+  if(totalBadge){ totalBadge.style.display = total>0?'inline':'none'; totalBadge.textContent = total; }
 }
 function renderMgrPendingClaims(){
   const el = $('mgr-pending-claims-list');
@@ -7785,9 +8060,9 @@ $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeR
    (backward compat: tab ชื่อปีล้วน เช่น "2026" = รูปแบบเก่า v8.17 ลงมา)
 */
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
-// หัวตารางใหม่ (v8.19): ตรงกับ claims sheet + เพิ่มสถานะ
-const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','สถานะ'];
-// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก(text) D=วิธีการส่ง E=รูปใบเบิก(links) F=รูปหลักฐาน G=สถานะ H=โฟลเดอร์ Drive
+// v8.50: หัวตารางใหม่ — เพิ่ม 3 คอลัมน์ตรวจรับ (ประวัติ หลัง Admin Service ยืนยันรับ)
+const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','วันที่ตรวจรับ','ผู้ตรวจรับ','ผลการประเมิน'];
+// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก D=วิธีการส่ง E=รูปใบเบิก F=รูปหลักฐาน G=วันที่ตรวจรับ H=ผู้ตรวจรับ I=ผลการประเมิน
 // สีหัวตาราง: ม่วงอ่อน (lavender)
 const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
 
@@ -8150,25 +8425,25 @@ function rpSpoChips(withdrawals){
    d = row object (with rowIndex)
    canEdit = boolean — Engineer sees edit/delete buttons for own entries
 */
-let _rpOpenDetailId = null; // "containerId::rowIndex"
+// v8.50: ใช้ d.id (Firestore doc ID) แทน d.rowIndex; ปุ่ม "ยืนยันรับ" เปิด eval modal
+let _rpOpenDetailId = null;
+let _rpEvalDoc = null; // เก็บ doc ที่กำลัง evaluate อยู่
 function rpToggleDetail(containerId, d, canEdit){
-  const key = `${containerId}::${d.rowIndex}`;
-  const detailId = `rp-detail-${containerId}-${d.rowIndex}`;
+  const uid = d.id || d.rowIndex || '?';
+  const key = `${containerId}::${uid}`;
+  const detailId = `rp-detail-${containerId}-${uid}`;
   const existing = document.getElementById(detailId);
   if(existing){
-    // already open — close it
     existing.remove();
     _rpOpenDetailId = null;
     return;
   }
-  // close any previously open detail in this container
-  document.querySelectorAll(`[id^="rp-detail-${containerId}-"]`).forEach(el=>el.remove());
+  // ปิด detail ที่เปิดอยู่ใน container นี้ก่อน
+  document.querySelectorAll(`#${containerId} .rp-detail-panel`).forEach(el=>el.remove());
   _rpOpenDetailId = key;
 
-  // helper: สร้าง thumbnail URL จาก Drive file URL
   function rpDriveThumb(url, sz){ const fid=driveFileIdFromUrl(url); return fid?`https://drive.google.com/thumbnail?id=${fid}&sz=${sz||'w200'}`:''; }
 
-  // สะสม URL รูปทั้งหมดสำหรับ lightbox (ใบเบิก + หลักฐาน)
   const allImgUrls = [];
   const wiHtml = (d.withdrawals||[]).map(w=>{
     const thumb = w.driveUrl ? rpDriveThumb(w.driveUrl,'w300') : '';
@@ -8185,13 +8460,16 @@ function rpToggleDetail(containerId, d, canEdit){
 
   const mIcon = rpMethodIcon(d.returnMethodLabel);
   const mCls  = rpMethodClass(d.returnMethodLabel);
-  const editBtn    = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-edit-btn-${d.rowIndex}" style="font-size:12px;">✏️ แก้ไข</button>` : '';
-  const delBtn     = canEdit ? `<button class="btn btn-ghost btn-sm" id="rp-del-btn-${d.rowIndex}" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
-  // v8.37 — ปุ่ม "ยืนยันรับแล้ว" ย้ายจาก card มาอยู่ใน detail panel (isEditor = Sup/Admin เท่านั้น)
-  const confirmBtn = isEditor()
-    ? `<button class="btn btn-sm rp-card-confirm-btn" data-ri="${d.rowIndex}" data-cid="${containerId}" style="width:100%;justify-content:center;background:var(--green);color:#fff;font-size:12.5px;font-weight:600;margin-top:10px;">✅ ยืนยันรับแล้ว</button>` : '';
 
-  // เตรียม evidence thumbnail
+  // ปุ่มแก้ไข/ลบ: Engineer เห็นของตัวเอง; Admin Service/Manager เห็นทั้งหมด
+  const editBtn = canEdit ? `<button class="btn btn-ghost btn-sm rp-edit-btn" style="font-size:12px;">✏️ แก้ไข</button>` : '';
+  const delBtn  = canEdit ? `<button class="btn btn-ghost btn-sm rp-del-btn" style="font-size:12px;color:var(--red);">🗑 ลบ</button>` : '';
+
+  // v8.50 — ปุ่มยืนยันรับ: Admin Service หรือ Super Admin/Manager เท่านั้น — เปิด eval modal
+  const canConfirm = isAdminService() || isSuperAdmin();
+  const confirmBtn = canConfirm
+    ? `<button class="btn btn-sm rp-card-confirm-btn" style="width:100%;justify-content:center;background:var(--green);color:#fff;font-size:12.5px;font-weight:600;margin-top:10px;">✅ ยืนยันรับ / ประเมิน</button>` : '';
+
   const evThumb = d.evidenceUrl ? rpDriveThumb(d.evidenceUrl,'w300') : '';
   const evFull  = d.evidenceUrl ? `https://drive.google.com/thumbnail?id=${driveFileIdFromUrl(d.evidenceUrl)}&sz=w1200` : '';
   if(evFull) allImgUrls.push(evFull);
@@ -8202,6 +8480,8 @@ function rpToggleDetail(containerId, d, canEdit){
         : `<a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" class="rp-thumb-file">🧾 ดูหลักฐาน</a>`)
     : '';
 
+  const dateStr = d.dateStr || (d.createdAt ? new Date(d.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '');
+
   const panel = document.createElement('div');
   panel.id = detailId;
   panel.className = 'rp-detail-panel';
@@ -8210,92 +8490,85 @@ function rpToggleDetail(containerId, d, canEdit){
       <div class="rp-detail-label">วิธีส่งคืน</div>
       <span class="rp-pending-badge ${mCls}">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
     </div>
+    ${d.senderName ? `<div class="rp-detail-section"><div class="rp-detail-label">ผู้ส่ง</div><span style="font-size:13px;">${escapeHtml(d.senderName)}</span></div>` : ''}
     <div class="rp-detail-section">
       <div class="rp-detail-label">ใบเบิก (SPO)</div>
       ${wiHtml||'<span style="color:var(--text-faint);font-size:12px;">—</span>'}
     </div>
     ${evHtml?`<div class="rp-detail-section"><div class="rp-detail-label">หลักฐานการส่ง</div>${evHtml}</div>`:''}
-    ${d.driveFolder?`<div class="rp-detail-section"><div class="rp-detail-label">โฟลเดอร์ Drive</div><a href="${escapeHtml(d.driveFolder)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">📁 เปิด Drive</a></div>`:''}
     <div class="rp-detail-section" style="margin-bottom:0;">
       <div class="rp-detail-label">วันที่ส่ง</div>
-      <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(d.dateStr)}</span>
+      <span style="font-family:'IBM Plex Mono';font-size:12px;">${escapeHtml(dateStr)}</span>
     </div>
     ${(editBtn||delBtn)?`<div class="rp-detail-actions">${editBtn}${delBtn}</div>`:''}
     ${confirmBtn}
   `;
 
-  // Insert panel after the card element
-  const cardEl = document.getElementById(`rp-card-${containerId}-${d.rowIndex}`);
+  const cardEl = document.getElementById(`rp-card-${containerId}-${uid}`);
   if(cardEl && cardEl.parentNode){
     cardEl.parentNode.insertBefore(panel, cardEl.nextSibling);
   } else {
-    document.getElementById(containerId).appendChild(panel);
+    const cEl = document.getElementById(containerId);
+    if(cEl) cEl.appendChild(panel);
   }
 
-  // Bind lightbox on thumbnail clicks
   panel.querySelectorAll('.rp-thumb-item[data-lbidx]').forEach(el=>{
     el.addEventListener('click', e=>{
       e.stopPropagation();
-      const idx = +el.getAttribute('data-lbidx');
-      openLightbox(allImgUrls, idx);
+      openLightbox(allImgUrls, +el.getAttribute('data-lbidx'));
     });
   });
 
-  // Bind edit/delete buttons
   if(canEdit){
-    const eb = document.getElementById(`rp-edit-btn-${d.rowIndex}`);
-    const db = document.getElementById(`rp-del-btn-${d.rowIndex}`);
-    if(eb) eb.addEventListener('click', (e)=>{ e.stopPropagation(); rpOpenEditModal(d, containerId); });
-    if(db) db.addEventListener('click', (e)=>{ e.stopPropagation(); rpConfirmDelete(d, containerId); });
+    const eb = panel.querySelector('.rp-edit-btn');
+    const db = panel.querySelector('.rp-del-btn');
+    if(eb) eb.addEventListener('click', e=>{ e.stopPropagation(); rpOpenEditModal(d, containerId); });
+    if(db) db.addEventListener('click', e=>{ e.stopPropagation(); rpConfirmDelete(d, containerId); });
   }
-  // v8.37 — Bind "ยืนยันรับแล้ว" button ใน detail panel (Manager/Sup เท่านั้น)
-  if(isEditor()){
+
+  // v8.50 — เปิด eval modal แทน confirm ตรงๆ
+  if(canConfirm){
     const cfBtn = panel.querySelector('.rp-card-confirm-btn');
-    if(cfBtn) cfBtn.addEventListener('click', async (e)=>{
+    if(cfBtn) cfBtn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(!confirm(`ยืนยันการรับอะไหล่จาก ${d.senderName||'?'}\n\nรายการจะถูกย้ายไปแท็บ รับแล้ว${d.yearAD||new Date().getFullYear()} และไม่แสดงในรายการรอรับอีกต่อไป`)) return;
-      showLoadingOverlay('กำลังอัปเดตสถานะ...');
-      try{
-        await rpMoveRowToReceived(d);
-        hideLoadingOverlay();
-        showToast('✓ ยืนยันรับแล้ว — รายการถูกย้ายไปแท็บ รับแล้ว');
-        if(containerId==='rp-manager-list') loadReturnPartsManagerList();
-        else loadMyReturnParts();
-      }catch(err){
-        hideLoadingOverlay();
-        alert('อัปเดตสถานะไม่สำเร็จ: '+(err.message||err));
-      }
+      _rpEvalDoc = { ...d, _containerId: containerId };
+      // reset checkboxes
+      ['eval-ok','eval-incomplete','eval-pack','eval-parts','eval-docs'].forEach(id=>{
+        const el = $(id); if(el) el.checked = false;
+      });
+      $('rp-eval-modal').style.display = 'flex';
     });
   }
 }
 
 /* Build card HTML for a single return-parts row */
+// v8.50: ใช้ d.id (Firestore doc ID) แทน d.rowIndex
 function rpBuildCard(d, containerId, canEdit){
-  const cardId = `rp-card-${containerId}-${d.rowIndex}`;
+  const uid = d.id || d.rowIndex || '?';
+  const cardId = `rp-card-${containerId}-${uid}`;
   const mIcon  = rpMethodIcon(d.returnMethodLabel);
   const mCls   = rpMethodClass(d.returnMethodLabel);
   const chips  = rpSpoChips(d.withdrawals);
-  const senderLine = (containerId === 'rp-manager-list' && d.senderName)
+  const senderLine = (containerId !== 'eng-mywork-rp-list' && d.senderName)
     ? `<span style="font-size:11.5px;color:var(--text-dim);margin-left:6px;">${escapeHtml(d.senderName)}</span>` : '';
-  // v8.37 — "ยืนยันรับแล้ว" ย้ายไปอยู่ใน detail panel แล้ว (ไม่แสดงบน card)
-  return `<div class="rp-card" id="${cardId}" data-ri="${d.rowIndex}" data-cid="${containerId}">
+  const dateStr = d.dateStr || (d.createdAt ? new Date(d.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '');
+  return `<div class="rp-card" id="${cardId}" data-ri="${uid}" data-cid="${containerId}">
     <div class="rp-card-top">
       <div style="flex:1;min-width:0;">${chips}${senderLine}</div>
       <span class="rp-pending-badge ${mCls}" style="flex-shrink:0;">${mIcon} ${escapeHtml(d.returnMethodLabel||'-')}</span>
     </div>
-    <div class="rp-card-meta">${escapeHtml(d.dateStr)} · ⏳ รอตรวจรับ</div>
+    <div class="rp-card-meta">${escapeHtml(dateStr)} · ⏳ รอตรวจรับ</div>
   </div>`;
 }
 
 /* Attach click listeners to all rp-cards in a container */
-/* v8.37 — "ยืนยันรับแล้ว" ย้ายไปอยู่ใน rpToggleDetail() detail panel แล้ว ไม่ต้อง bind ที่นี่อีก */
+// v8.50: ใช้ d.id (string) แทน d.rowIndex (number)
 function rpBindCards(containerId, rows, canEdit){
-  const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
-  // Bind card click → expand detail (ปุ่ม ยืนยันรับแล้ว อยู่ใน detail panel — bind โดย rpToggleDetail)
+  const rowMap = new Map(rows.map(d=>[(d.id||d.rowIndex), d]));
   document.querySelectorAll(`#${containerId} .rp-card`).forEach(card=>{
     card.addEventListener('click', ()=>{
-      const ri = +card.getAttribute('data-ri');
-      const d = rowMap.get(ri);
+      const id = card.getAttribute('data-ri');
+      const d = rowMap.get(id);
       if(d) rpToggleDetail(containerId, d, canEdit);
     });
   });
@@ -8463,38 +8736,32 @@ async function ensureReturnPartsFolderPath(senderName){
   return f3;
 }
 
-/* ---- fsAddReturnPart → เขียนแถวใหม่ลง Google Sheet แท็บ รอรับ{ปี} ---- */
-/* NEW FORMAT (v8.34): 7 cols, 1 row per SPO
-   First row:  [วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก(1st), วิธีการส่ง, =HYPERLINK(รูปใบเบิก1), =HYPERLINK(รูปหลักฐาน), สถานะ]
-   Extra rows: ['', '', เลขที่ใบเบิก(ถัดไป), '', =HYPERLINK(รูปใบเบิกN), '', ''] */
+/* ---- fsAddReturnPart → v8.50: บันทึกลง Firestore returnParts collection (pending) แทน Google Sheet ---- */
 async function fsAddReturnPart(data){
-  // data: { senderEmail, senderName, returnMethod, returnMethodLabel, withdrawals, evidence, driveFolder, createdAt }
-  const dateObj = new Date(data.createdAt||Date.now());
-  // v8.43: วันที่เฉพาะ DD/MM/YYYY (ค.ศ.) ไม่มีเวลา
-  const _bk = new Date(dateObj.toLocaleString('en-US',{timeZone:'Asia/Bangkok'}));
-  const dateStr = `${String(_bk.getDate()).padStart(2,'0')}/${String(_bk.getMonth()+1).padStart(2,'0')}/${_bk.getFullYear()}`;
-  const yearAD  = dateObj.getFullYear().toString();
-  const withdrawals = (data.withdrawals||[]);
-  const evidUrl = data.evidence ? data.evidence.driveUrl : '';
-  const evidCell = evidUrl ? `=HYPERLINK("${evidUrl}";"หลักฐาน")` : '';
-  const methodLabel = data.returnMethodLabel||data.returnMethod||'';
+  // data: { senderEmail, senderName, returnMethod, returnMethodLabel, withdrawals:[{num,driveFileId,driveUrl,fileName}], evidence:{driveFileId,driveUrl,fileName}, createdAt }
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  // รวม driveFileIds ทั้งหมด (ใบเบิกทุกใบ + หลักฐาน) เพื่อให้ลบแยกรายไฟล์ได้ตอนตรวจรับ
+  const driveFileIds = [];
+  (data.withdrawals||[]).forEach(w=>{ if(w.driveFileId) driveFileIds.push(w.driveFileId); });
+  if(data.evidence && data.evidence.driveFileId) driveFileIds.push(data.evidence.driveFileId);
 
-  // Build rows: 1 per SPO
-  const rows = withdrawals.map((w, i) => {
-    const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
-    if(i===0){
-      // First row: all shared fields
-      return [dateStr, data.senderName||'', w.num||'', methodLabel, wiCell, evidCell, 'รอรับ'];
-    } else {
-      // Continuation rows: blank shared fields
-      return ['', '', w.num||'', '', wiCell, '', ''];
-    }
-  });
-  // ถ้าไม่มี withdrawal เลย ให้สร้าง 1 row ว่าง
-  if(rows.length===0){
-    rows.push([dateStr, data.senderName||'', '', methodLabel, '', evidCell, 'รอรับ']);
-  }
-  return await rpSheetAppendRow(rows, yearAD); // ส่ง yearAD เพื่อเขียนลงแท็บ รอรับ{ปี}
+  const doc = {
+    senderEmail:       data.senderEmail||'',
+    senderName:        data.senderName||'',
+    returnMethod:      data.returnMethod||'',
+    returnMethodLabel: data.returnMethodLabel||'',
+    withdrawals:       (data.withdrawals||[]).map(w=>({ num:w.num||'', driveFileId:w.driveFileId||'', driveUrl:w.driveUrl||'', fileName:w.fileName||'' })),
+    evidenceFileId:    data.evidence ? (data.evidence.driveFileId||'') : '',
+    evidenceUrl:       data.evidence ? (data.evidence.driveUrl||'') : '',
+    evidenceName:      data.evidence ? (data.evidence.fileName||'') : '',
+    driveFileIds,
+    createdAt:         data.createdAt||Date.now(),
+    status:            'pending',
+  };
+  const ref = await sdk.addDoc(sdk.collection(db,'returnParts'), doc);
+  fsBumpRpActivity();
+  return ref.id;
 }
 
 /* ---- Submit handler ---- */
@@ -8591,14 +8858,13 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
       returnMethodLabel: methodLabel,
       withdrawals: withdrawalData,
       evidence: evidenceData,
-      driveFolder: `https://drive.google.com/drive/folders/${folderId}`,
       createdAt: Date.now()
     });
 
     hideLoadingOverlay();
     rpClearDraft(); // ลบ draft หลัง submit สำเร็จ
     closeReturnPartsModal();
-    showToast('✓ ส่งข้อมูลเรียบร้อย — Admin จะยืนยันรับอะไหล่เร็วๆ นี้');
+    showToast('✓ ส่งข้อมูลเรียบร้อย — Admin Service จะตรวจรับอะไหล่และบันทึกประวัติลง Google Sheet');
     loadMyReturnParts(); // refresh list
 
   }catch(e){
@@ -8632,27 +8898,34 @@ async function setupRpManagerLinks(){
 }
 
 /* ---- โหลดรายการ "รอรับ" — เรียกเมื่อกดปุ่มดูรายการ (Manager view) ---- */
+// v8.50: โหลดจาก Firestore returnParts (status=pending) แทน Google Sheet
 async function loadReturnPartsManagerList(){
   const list = $('rp-manager-list');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
-    const rows = await rpSheetReadWaiting();
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const q = sdk.query(sdk.collection(db,'returnParts'), sdk.where('status','==','pending'));
+    const snap = await sdk.getDocs(q);
+    const rows = [];
+    snap.forEach(d=>rows.push({ id:d.id, ...d.data() }));
+    // เรียงล่าสุดก่อน
+    rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
     const badge = $('rp-manager-badge');
     if(rows.length>0){ badge.textContent=rows.length; badge.style.display='inline'; }
     else badge.style.display='none';
 
     if(rows.length===0){ list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>'; return; }
 
-    // Manager sees all; Engineer can edit/delete own entries from this view too
-    list.innerHTML = rows.map(d=>rpBuildCard(d,'rp-manager-list', d.senderEmail===myUserEmail)).join('');
-    rpBindCards('rp-manager-list', rows, false); // canEdit passed per-row inside rpToggleDetail
-    // Re-bind with per-row edit permission
-    const rowMap = new Map(rows.map(d=>[d.rowIndex, d]));
+    // Manager/AdminService เห็นทั้งหมด; Engineer เห็นของตัวเองแก้ไขได้
+    list.innerHTML = rows.map(d=>rpBuildCard(d,'rp-manager-list', isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail)).join('');
+    const rowMap = new Map(rows.map(d=>[d.id, d]));
     document.querySelectorAll('#rp-manager-list .rp-card').forEach(card=>{
       card.addEventListener('click', ()=>{
-        const ri = +card.getAttribute('data-ri');
-        const d = rowMap.get(ri);
-        if(d) rpToggleDetail('rp-manager-list', d, d.senderEmail===myUserEmail);
+        const id = card.getAttribute('data-ri');
+        const d = rowMap.get(id);
+        if(d) rpToggleDetail('rp-manager-list', d, isSuperAdmin()||isAdminService()||d.senderEmail===myUserEmail);
       });
     });
   }catch(e){
@@ -8712,6 +8985,37 @@ $('mgr-rp-collapse-header').addEventListener('click', ()=>{
 });
 let _mgrRpListLoaded = false;
 
+/* ---- v8.50: Admin Service — แสดงรายการรอตรวจรับ ---- */
+async function renderAdminServiceView(){
+  const listEl = $('admin-service-rp-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const q = sdk.query(sdk.collection(db,'returnParts'), sdk.where('status','==','pending'));
+    const snap = await sdk.getDocs(q);
+    const rows = [];
+    snap.forEach(doc=>rows.push({ id:doc.id, ...doc.data() }));
+    rows.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // เก่าสุดก่อน — ลำดับการรับ
+    if(rows.length===0){
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ไม่มีรายการรอตรวจรับ ✅</div>';
+      return;
+    }
+    listEl.innerHTML = rows.map(d=>rpBuildCard(d,'admin-service-rp-list',true)).join('');
+    const rowMap = new Map(rows.map(d=>[d.id, d]));
+    listEl.querySelectorAll('.rp-card').forEach(card=>{
+      card.addEventListener('click', ()=>{
+        const id = card.getAttribute('data-ri');
+        const d = rowMap.get(id);
+        if(d) rpToggleDetail('admin-service-rp-list', d, true);
+      });
+    });
+  }catch(e){
+    listEl.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px;">โหลดข้อมูลไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
+  }
+}
+
 /* ============================================================
    RETURN PARTS — Edit & Delete (Engineer สำหรับ entry ของตัวเอง)
    ============================================================ */
@@ -8758,41 +9062,68 @@ async function rpDeleteSheetRows(startRowIndex, rowCount, yearAD, tabOverride){
   if(!res.ok){ const t=await res.text(); throw new Error('ลบแถว Sheet ไม่สำเร็จ: '+t); }
 }
 
-/* ---- Move row(s) from รอรับ{year} → รับแล้ว{year} (Manager action: ยืนยันรับแล้ว) ---- */
-async function rpMoveRowToReceived(d){
-  const yearAD  = d.yearAD||new Date().getFullYear().toString();
-  const waitingTabName  = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
-  const receivedTabName = rpReceivedTabName(yearAD);
+/* ---- v8.50: ยืนยันรับและประเมิน (Admin Service action) ---- */
+// Archive to Sheet (9 cols) → delete Firestore doc → delete each Drive file
+async function rpConfirmReceive(d, evalResults){
+  // d = Firestore returnParts doc object; evalResults = array of Thai label strings
+  await initFirebase();
+  const sdk = window._firebaseSdk;
 
-  // 1) สร้าง tab รับแล้ว{ปี} ถ้ายังไม่มี
-  const sheetId = await ensureReturnPartsSheet();
-  await ensureRpTab(sheetId, receivedTabName);
+  // 1) เตรียมข้อมูล
+  const nowDate = new Date();
+  const recordDate = d.dateStr || (d.createdAt ? new Date(d.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : nowDate.toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}));
+  const receiveDate = nowDate.toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'});
+  const receiverName = nicknamesMap[myUserEmail] || myUserEmail || '';
 
-  // 2) สร้าง received rows (v8.34 multi-row format, สถานะ = รับแล้ว)
   const withdrawals = d.withdrawals||[];
-  let receivedRows;
-  if(d.isLegacy){
-    // legacy: collapse to single row (old format)
-    const spoText = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
-    const wiLinks = withdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
-    receivedRows = [[d.dateStr, d.senderName||'', spoText, d.returnMethodLabel||'', wiLinks, d.evidenceUrl||'', 'รับแล้ว']];
-  } else {
-    // v8.34: 1 row per SPO (same as waiting format, สถานะ = รับแล้ว)
-    const evidCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
-    receivedRows = withdrawals.map((w, i) => {
-      const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
-      if(i===0) return [d.dateStr, d.senderName||'', w.num||'', d.returnMethodLabel||'', wiCell, evidCell, 'รับแล้ว'];
-      else       return ['', '', w.num||'', '', wiCell, '', ''];
-    });
-    if(receivedRows.length===0) receivedRows = [[d.dateStr, d.senderName||'', '', d.returnMethodLabel||'', '', evidCell, 'รับแล้ว']];
+  const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ') || '-';
+
+  // สร้าง HYPERLINK cell สำหรับใบเบิก (ถ้ามีหลายใบเบิกใช้ลิงก์แรก; ถ้าหลายใบเบิกรวม URL)
+  let wiCell = '';
+  if(withdrawals.length===1 && withdrawals[0].driveUrl){
+    wiCell = `=HYPERLINK("${withdrawals[0].driveUrl}";"รูปใบเบิก")`;
+  } else if(withdrawals.length>1){
+    // หลายใบเบิก: ใส่ URL แต่ละอัน
+    wiCell = withdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
+  }
+  const evCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
+  const evalStr = evalResults.length>0 ? evalResults.join(' / ') : 'เรียบร้อยสมบูรณ์';
+
+  // 9 cols: วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, วันที่ตรวจรับ, ผู้ตรวจรับ, ผลการประเมิน
+  const row = [recordDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiveDate, receiverName, evalStr];
+
+  // 2) append ไปที่ Sheet ประวัติ (ใช้ tab 'ประวัติRP' หรือ 'HistoryRP' — สร้างถ้ายังไม่มี)
+  const sheetId = await ensureReturnPartsSheet();
+  const histTabName = `ประวัติRP${nowDate.getFullYear()}`;
+  await ensureRpTab(sheetId, histTabName);
+  // ตรวจสอบว่ามี header แล้วหรือยัง
+  const token = await rpGetToken();
+  const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1:I1')}`, { headers:{Authorization:`Bearer ${token}`} });
+  const headerData = await headerRes.json();
+  const hasHeader = headerData.values && headerData.values[0] && headerData.values[0].length>0;
+  if(!hasHeader){
+    await rpSheetAppendRow([RP_SHEET_HEADERS], nowDate.getFullYear().toString(), histTabName);
+  }
+  await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
+
+  // 3) ลบ Drive files ทีละไฟล์
+  const fileIds = d.driveFileIds || [];
+  // backward compat: เพิ่ม evidenceFileId และ withdrawal fileIds ถ้า driveFileIds ว่าง
+  if(fileIds.length===0){
+    if(d.evidenceFileId) fileIds.push(d.evidenceFileId);
+    (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) fileIds.push(w.driveFileId); });
+  }
+  for(const fid of fileIds){
+    if(fid) try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ (ข้าม):', fid, e.message); }
   }
 
-  // 3) append ไปที่ tab รับแล้ว{ปี}
-  await rpSheetAppendRow(receivedRows, yearAD, receivedTabName);
+  // 4) ลบ Firestore doc
+  await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
 
-  // 4) ลบแถว(ทั้งหมด) ออกจาก tab รอรับ (ลบ rowCount แถว)
-  const rowCount = d.rowCount||1;
-  await rpDeleteSheetRows(d.rowIndex, rowCount, yearAD, waitingTabName);
+  // 5) แจ้ง realtime listeners
+  fsBumpRpActivity();
+
+  fsWriteLog(`Admin Service ยืนยันรับอะไหล่จาก ${d.senderName||d.senderEmail} ผลประเมิน: ${evalStr}`);
 }
 
 /* ---- Delete Drive folder (same API as delete file) ---- */
@@ -8807,27 +9138,44 @@ async function rpDeleteDriveFolder(folderUrl){
   if(!res.ok && res.status!==404) throw new Error('ลบโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
 }
 
-/* ---- Confirm & Delete ---- */
+/* ---- v8.50: ลบรายการ RP — Firestore + Drive files (ไม่ลบ Sheet — เป็น history เท่านั้น) ---- */
 async function rpConfirmDelete(d, containerId){
-  if(!confirm('ยืนยันการลบรายการส่งคืนนี้?\n\nข้อมูลใน Google Sheet และไฟล์ใน Google Drive จะถูกลบถาวร กู้คืนไม่ได้')) return;
+  // Permission check: Engineer ลบของตัวเองเท่านั้น; Admin Service / Manager ลบได้ทั้งหมด
+  if(!isSuperAdmin() && !isAdminService() && d.senderEmail !== myUserEmail){
+    showToast('⚠ คุณไม่มีสิทธิ์ลบรายการนี้'); return;
+  }
+  if(!confirm('ยืนยันการลบรายการส่งคืนอะไหล่นี้?\n\nไฟล์ใน Google Drive จะถูกลบถาวร กู้คืนไม่ได้')) return;
   showLoadingOverlay('กำลังลบข้อมูล...');
   try{
-    const yearAD = d.yearAD||new Date().getFullYear().toString();
-    // legacy row อยู่ใน tab "2026", new row อยู่ใน tab "รอรับ2026"
-    const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
-    // 1) ลบแถว(ทั้งหมด) ใน Sheet (rowCount = จำนวน SPO rows ของ entry นี้)
-    await rpDeleteSheetRows(d.rowIndex, d.rowCount||1, yearAD, tabOverride);
-    // 2) ลบโฟลเดอร์ Drive (ไฟล์ทั้งหมดในโฟลเดอร์จะถูกลบด้วย)
-    if(d.driveFolder){
-      try{ await rpDeleteDriveFolder(d.driveFolder); }
-      catch(e){ console.warn('ลบโฟลเดอร์ Drive ไม่สำเร็จ (ข้ามต่อ):', e.message); }
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+
+    // 1) ลบ Drive files ทีละไฟล์
+    const fileIds = [...(d.driveFileIds||[])];
+    if(fileIds.length===0){
+      if(d.evidenceFileId) fileIds.push(d.evidenceFileId);
+      (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) fileIds.push(w.driveFileId); });
     }
+    for(const fid of fileIds){
+      if(fid) try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ (ข้าม):', fid, e.message); }
+    }
+
+    // 2) ลบ Firestore doc
+    if(d.id){
+      await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
+    }
+
+    // 3) แจ้ง realtime listeners
+    fsBumpRpActivity();
+    fsWriteLog(`ลบรายการ RP ของ ${d.senderName||d.senderEmail}`);
+
     hideLoadingOverlay();
     showToast('✓ ลบรายการเรียบร้อยแล้ว');
+
     // Refresh whichever list was open
-    if(containerId==='rp-manager-list') loadReturnPartsManagerList();
-    else if(containerId==='eng-mywork-rp-list') renderEngMyWorkRpSection(); // v8.41
-    else loadMyReturnParts();
+    if(containerId==='admin-service-rp-list') renderAdminServiceView();
+    else if(containerId==='rp-manager-list') loadReturnPartsManagerList();
+    else renderEngMyWorkRpSection();
   }catch(e){
     hideLoadingOverlay();
     alert('ลบไม่สำเร็จ: '+e.message);
@@ -8946,6 +9294,39 @@ window.rpEditRemoveWi = function(id){
 $('rp-edit-modal-close').addEventListener('click', ()=>{ $('rp-edit-modal').classList.remove('show'); });
 $('rp-edit-cancel-btn').addEventListener('click',  ()=>{ $('rp-edit-modal').classList.remove('show'); });
 $('rp-edit-modal').addEventListener('click', e=>{ if(e.target===$('rp-edit-modal')) $('rp-edit-modal').classList.remove('show'); });
+
+/* ---- v8.50: rp-eval-modal (Admin Service ประเมินผลตรวจรับ) ---- */
+function closeRpEvalModal(){ $('rp-eval-modal').style.display = 'none'; _rpEvalDoc = null; }
+$('rp-eval-modal-close').addEventListener('click', closeRpEvalModal);
+$('rp-eval-cancel-btn').addEventListener('click',  closeRpEvalModal);
+$('rp-eval-modal').addEventListener('click', e=>{ if(e.target===$('rp-eval-modal')) closeRpEvalModal(); });
+$('rp-eval-confirm-btn').addEventListener('click', async ()=>{
+  if(!_rpEvalDoc){ closeRpEvalModal(); return; }
+  const evalLabels = [
+    { id:'eval-ok',         label:'เรียบร้อยสมบูรณ์' },
+    { id:'eval-incomplete', label:'กรอกรายละเอียดไม่ครบ' },
+    { id:'eval-pack',       label:'แพ็คไม่เรียบร้อย' },
+    { id:'eval-parts',      label:'อะไหล่ไม่ครบ' },
+    { id:'eval-docs',       label:'เอกสารไม่ครบ' },
+  ];
+  const selected = evalLabels.filter(e=>{ const el=$(e.id); return el&&el.checked; }).map(e=>e.label);
+  if(selected.length===0){ showToast('⚠ กรุณาเลือกผลการประเมินอย่างน้อย 1 ข้อ'); return; }
+  const d = _rpEvalDoc;
+  const containerId = d._containerId || 'rp-manager-list';
+  closeRpEvalModal();
+  showLoadingOverlay('กำลังบันทึกผลการตรวจรับ...');
+  try{
+    await rpConfirmReceive(d, selected);
+    hideLoadingOverlay();
+    showToast('✓ ยืนยันรับเรียบร้อย — บันทึกประวัติแล้ว');
+    if(containerId==='admin-service-rp-list') renderAdminServiceView();
+    else if(containerId==='rp-manager-list') loadReturnPartsManagerList();
+    else renderEngMyWorkRpSection();
+  }catch(err){
+    hideLoadingOverlay();
+    alert('บันทึกผลการตรวจรับไม่สำเร็จ: '+(err.message||err));
+  }
+});
 $('rp-edit-add-wi-btn').addEventListener('click', ()=>{
   rpEditWithdrawals.push({ id: ++rpEditWithdrawalIdCounter, num:'', file:null, existingUrl:'', existingFileName:'' });
   rpEditRenderWithdrawalList();
