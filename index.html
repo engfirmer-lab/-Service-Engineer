@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.57
-  อัปเดตล่าสุด   : 28 กันยายน 2569 22:36 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.58
+  อัปเดตล่าสุด   : 28 กันยายน 2569 23:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.57</title>
+<title>F1 Service — v8.58</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -498,6 +498,7 @@
       <button data-tab="service_docs">📁 เอกสาร Service</button>
       <button data-tab="my_work">📌 เช็คสถานะ<span class="badge-count" id="eng-mywork-badge" style="display:none;margin-left:4px;">0</span></button>
       <button data-tab="claim">📋 บันทึกข้อมูล</button>
+      <button data-tab="cert">🎓 Certificate</button>
     </div>
 
     <div id="eng-tab-trbl">
@@ -622,6 +623,24 @@
       <div class="result-count" id="doc-result-count"></div>
       <div id="doc-results-list"></div>
     </div>
+
+    <!-- v8.58 — แท็บ Certificate ของ Engineer -->
+    <div id="eng-tab-cert" style="display:none;">
+      <div class="panel-block" style="padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2 style="margin-bottom:2px;font-size:14px;">พื้นที่รับผิดชอบของฉัน</h2>
+            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">เลือก Product/รุ่นที่คุณรับผิดชอบไว้ก่อน ระบบจะเปิดช่องอัปโหลด Cer ให้เฉพาะรุ่นที่เลือก</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขพื้นที่รับผิดชอบ</button>
+        </div>
+      </div>
+      <div class="panel-block">
+        <h2>Certificate ของฉัน</h2>
+        <p class="panel-sub">แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต — ไฟล์ไม่เกิน 5 MB</p>
+        <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- ============ SUP PRODUCT VIEW ============ -->
@@ -637,6 +656,7 @@
       <button data-tab="trbl" class="active">🩺 Troubleshooting</button>
       <button data-tab="docs">📁 จัดการเอกสาร</button>
       <button data-tab="claims">🔧 เคลม/แจ้งปัญหา<span id="claims-tab-badge" class="badge-count" style="display:none;margin-left:4px;">0</span></button>
+      <button data-tab="cert">🎓 Certificate</button>
     </div>
 
     <div id="sup-tab-trbl">
@@ -718,6 +738,15 @@
       <!-- ลิงก์ Google Sheet ประวัติเคลมที่เสร็จแล้ว — ค้างไว้ถาวรที่ล่างสุดของหน้า เหมือนลิงก์เช็ค Database ให้กดเข้าไปดูได้ตลอดเวลา -->
       <div class="panel-block" id="claims-sheet-history-block">
         <div id="claims-sheet-history-link"></div>
+      </div>
+    </div>
+
+    <!-- v8.58 — แท็บ Certificate ของ Sup Product (เฉพาะรุ่นที่ตัวเองดูแล, เฉพาะ Cer ผู้ผลิต) -->
+    <div id="sup-tab-cert" style="display:none;">
+      <div class="panel-block">
+        <h2>Certificate ผู้ผลิตของฉัน</h2>
+        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน) — ไฟล์ไม่เกิน 5 MB</p>
+        <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
   </div>
@@ -1158,6 +1187,18 @@
         </div>
       </div>
 
+      <!-- v8.58 — Certificate รอตรวจให้คะแนน — collapsible -->
+      <div class="panel-block" style="border:1.5px solid var(--amber);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="mgr-cert-collapse-header">
+          <h2 style="margin:0;font-size:14px;">🎓 Certificate รอตรวจให้คะแนน <span class="badge-count" id="cert-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
+          <span id="mgr-cert-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
+        </div>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Cer ที่ Engineer/Sup Product อัปโหลดเข้ามา รอ Manager เปิดดูและให้คะแนน</p>
+        <div id="mgr-cert-collapse-body" style="display:none;margin-top:10px;">
+          <div id="mgr-cert-list"></div>
+        </div>
+      </div>
+
       <!-- v8.40 — ลิงก์ด่วน อยู่ล่างสุดของ section งานคงค้างเสมอ -->
       <div class="panel-block" style="margin-top:8px;">
         <h2 style="font-size:13px;margin:0 0 10px;color:var(--text-faint);">🔗 ลิงก์ด่วน</h2>
@@ -1300,6 +1341,48 @@
       </div>
     </div>
   </div>
+
+  <!-- v8.58 — modal เลือกพื้นที่รับผิดชอบ (Engineer) -->
+  <div class="modal-overlay" id="eng-resp-modal" style="display:none;">
+    <div class="modal" style="max-width:520px;max-height:80vh;overflow:auto;">
+      <button class="modal-close-x" id="eng-resp-modal-close">✕</button>
+      <h3>เลือก Product/รุ่นที่คุณรับผิดชอบ</h3>
+      <p class="panel-sub">ติ๊กเลือกได้หลายรุ่น — เลือกไว้ครั้งเดียว แก้ไขทีหลังได้ตลอด</p>
+      <div id="eng-resp-checklist" style="margin:14px 0;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" id="eng-resp-cancel-btn">ยกเลิก</button>
+        <button class="btn btn-primary btn-sm" id="eng-resp-save-btn">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- v8.58 — modal ให้คะแนน Certificate (Manager) -->
+  <div class="modal-overlay" id="cert-score-modal" style="display:none;">
+    <div class="modal" style="max-width:420px;">
+      <button class="modal-close-x" id="cert-score-modal-close">✕</button>
+      <h3>ให้คะแนน Certificate</h3>
+      <div id="cert-score-info" style="font-size:13px;margin-bottom:14px;color:var(--text-dim);line-height:1.7;"></div>
+      <div class="field-wrap" style="margin-bottom:14px;">
+        <label>คะแนน (0-5)</label>
+        <select id="cert-score-select">
+          <option value="5">5 — ดีเยี่ยม</option>
+          <option value="4">4</option>
+          <option value="3">3</option>
+          <option value="2">2</option>
+          <option value="1">1</option>
+          <option value="0">0 — ไม่ผ่าน</option>
+        </select>
+      </div>
+      <div class="field-wrap" style="margin-bottom:14px;">
+        <label>หมายเหตุ (ถ้ามี)</label>
+        <textarea id="cert-score-note" style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-ghost btn-sm" id="cert-score-cancel-btn">ยกเลิก</button>
+        <button class="btn btn-primary btn-sm" id="cert-score-save-btn">บันทึกคะแนน</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -1400,8 +1483,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.57";
-const APP_UPDATED_AT = "28 กันยายน 2569 22:36 น. เวลาไทย";
+const APP_VERSION = "8.58";
+const APP_UPDATED_AT = "28 กันยายน 2569 23:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1553,6 +1636,8 @@ function seedData(){
 }
 
 let DATA = null;
+let myResponsibility = []; // [{category, model}] พื้นที่รับผิดชอบของ Engineer ที่ login อยู่ (v8.58)
+let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
@@ -3613,6 +3698,7 @@ function _engShowTab(tab){
   $('eng-tab-claim').style.display  = tab==='claim'        ? 'block' : 'none';
   $('eng-tab-docs').style.display   = tab==='service_docs' ? 'block' : 'none';
   $('eng-tab-my-work').style.display= tab==='my_work'      ? 'block' : 'none';
+  $('eng-tab-cert').style.display   = tab==='cert'         ? 'block' : 'none';
 }
 document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -3622,6 +3708,7 @@ document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
     if(engActiveTab==='my_work') renderEngMyWorkTab();
     if(engActiveTab==='service_docs'){ renderDocFilterEng(); renderEngDocResults(); }
     if(engActiveTab==='claim') renderEngMyClaimsList && renderEngMyClaimsList();
+    if(engActiveTab==='cert') renderEngCertTab();
   });
 });
 // v8.37 — eng-doctype-subtabs: แท็บประเภทเอกสาร (อยู่ภายใน eng-tab-docs)
@@ -4555,8 +4642,10 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
     $('sup-tab-trbl').style.display = supActiveTab==='trbl' ? 'block':'none';
     $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
     $('sup-tab-claims').style.display = supActiveTab==='claims' ? 'block':'none';
+    $('sup-tab-cert').style.display = supActiveTab==='cert' ? 'block':'none';
     if(supActiveTab==='docs') renderSupDocMatrix();
     if(supActiveTab==='claims') renderClaimsView();
+    if(supActiveTab==='cert') renderSupCertTab();
   });
 });
 
@@ -4692,7 +4781,7 @@ function populateSupSelectors(){
 }
 function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
-$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); });
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(); });
 $('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
 
 function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
@@ -9066,6 +9155,292 @@ $('mgr-rp-collapse-header').addEventListener('click', ()=>{
   if(_mgrRpOpen && !_mgrRpListLoaded){ loadReturnPartsManagerList(); _mgrRpListLoaded = true; }
 });
 let _mgrRpListLoaded = false;
+
+/* ===================== v8.58: CERTIFICATE (Engineer/Sup Product อัปโหลด, Manager ให้คะแนน) ===================== */
+
+// ---- helpers ----
+function certSlug(str){ return String(str||'').replace(/[^a-zA-Z0-9ก-๙]+/g,'_').replace(/^_+|_+$/g,'') || 'x'; }
+function certDocId(ownerEmail, certType, category, model){
+  return `${certSlug(ownerEmail)}__${certType}__${certSlug(category)}__${certSlug(model)}`;
+}
+function certTypeLabel(t){ return t==='internal' ? 'ภายใน' : 'ผู้ผลิต'; }
+
+// โฟลเดอร์: Service Center/Certificate/[ภายใน|ผู้ผลิต]/[ชื่อผู้อัปโหลด]/[Category]/[Model]/
+async function ensureCertificateFolderPath(certType, ownerName, category, model){
+  const f1 = await driveFindOrCreateFolder('Certificate', DRIVE_ROOT_FOLDER_ID);
+  const f2 = await driveFindOrCreateFolder(certTypeLabel(certType), f1);
+  const f3 = await driveFindOrCreateFolder(ownerName || 'ไม่ระบุชื่อ', f2);
+  const f4 = await driveFindOrCreateFolder(category, f3);
+  const f5 = await driveFindOrCreateFolder(model, f4);
+  return f5;
+}
+
+// ---- พื้นที่รับผิดชอบของ Engineer (collection: engineerResponsibility, doc id = email) ----
+async function fsLoadMyResponsibility(){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDoc(sdk.doc(db,'engineerResponsibility', myUserEmail));
+  myResponsibility = snap.exists() ? (snap.data().models||[]) : [];
+}
+async function fsSaveMyResponsibility(models){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  await sdk.setDoc(sdk.doc(db,'engineerResponsibility', myUserEmail), {
+    models, ownerEmail: myUserEmail, ownerName: nicknamesMap[myUserEmail]||myUserEmail, updatedAt: Date.now()
+  });
+  myResponsibility = models;
+  fsWriteLog(`ตั้งพื้นที่รับผิดชอบ Certificate: ${models.length} รุ่น`);
+}
+
+// ---- Certificate CRUD (collection: certificates) ----
+async function fsUploadCertificate(ownerEmail, ownerName, role, certType, category, model, file){
+  if(file.size > 5*1024*1024) throw new Error('ไฟล์ใหญ่เกิน 5 MB');
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const cid = certDocId(ownerEmail, certType, category, model);
+  const ref = sdk.doc(db,'certificates', cid);
+  const snap = await sdk.getDoc(ref);
+  const old = snap.exists() ? snap.data() : null;
+  // ลบไฟล์เก่าใน Drive ก่อน (ถ้ามี) — อัปโหลดใหม่ทับของเดิมเสมอ ไม่เก็บเวอร์ชันเก่า
+  if(old && old.fileUrl){
+    const oldFileId = driveFileIdFromUrl(old.fileUrl);
+    if(oldFileId) try{ await driveDeleteFile(oldFileId); }catch(e){ console.warn('ลบ Cer เก่าไม่สำเร็จ (ข้าม):', e.message); }
+  }
+  const folderId = await ensureCertificateFolderPath(certType, ownerName, category, model);
+  const fileUrl = await driveUploadLargeFile(file, file.name, folderId);
+  const payload = {
+    ownerEmail, ownerName, role, certType, category, model,
+    fileUrl, fileName: file.name, uploadedAt: Date.now(),
+  };
+  // คะแนนเดิม (ถ้ามี) ค้างไว้ตามที่ตกลง — ไม่รีเซ็ตกลับเป็น pending เวลาอัปโหลดใหม่ทับ
+  if(!old){ payload.score = null; payload.status = 'pending'; payload.reviewedBy = ''; payload.reviewedAt = null; payload.reviewNote = ''; }
+  await sdk.setDoc(ref, payload, { merge:true });
+  fsWriteLog(`อัปโหลด Certificate (${certTypeLabel(certType)}) ${category}/${model} — ${ownerName}`);
+  return cid;
+}
+async function fsScoreCertificate(certIdVal, score, note){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  await sdk.updateDoc(sdk.doc(db,'certificates', certIdVal), {
+    score, reviewNote: note||'', reviewedBy: myUserEmail, reviewedAt: Date.now(), status: 'reviewed'
+  });
+  fsWriteLog(`ให้คะแนน Certificate: ${score}/5${note ? ' — '+note : ''}`);
+}
+async function fsListCertificatesByOwner(ownerEmail){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const q = sdk.query(sdk.collection(db,'certificates'), sdk.where('ownerEmail','==',ownerEmail));
+  const snap = await sdk.getDocs(q);
+  const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out;
+}
+async function fsListAllCertificates(){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.collection(db,'certificates'));
+  const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out;
+}
+
+// ---- UI: Engineer — modal เลือกพื้นที่รับผิดชอบ ----
+function renderEngRespChecklist(){
+  const wrap = $('eng-resp-checklist');
+  const selectedSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+  const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
+  wrap.innerHTML = cats.map(cat=>{
+    const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
+    if(models.length===0) return '';
+    return `<div style="margin-bottom:12px;">
+      <div style="font-weight:600;font-size:13px;margin-bottom:6px;">${escapeHtml(cat)}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding-left:10px;">
+        ${models.map(m=>{
+          const key = cat+'|'+m;
+          return `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+            <input type="checkbox" class="eng-resp-chk" data-cat="${escapeHtml(cat)}" data-model="${escapeHtml(m)}" ${selectedSet.has(key)?'checked':''}>
+            <span>${escapeHtml(m)}</span>
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+$('eng-resp-open-btn').addEventListener('click', async ()=>{
+  showLoadingOverlay('กำลังโหลด...');
+  try{ await fsLoadMyResponsibility(); } finally { hideLoadingOverlay(); }
+  renderEngRespChecklist();
+  $('eng-resp-modal').style.display = 'flex';
+});
+function closeEngRespModal(){ $('eng-resp-modal').style.display='none'; }
+$('eng-resp-modal-close').addEventListener('click', closeEngRespModal);
+$('eng-resp-cancel-btn').addEventListener('click', closeEngRespModal);
+$('eng-resp-modal').addEventListener('click', e=>{ if(e.target===$('eng-resp-modal')) closeEngRespModal(); });
+$('eng-resp-save-btn').addEventListener('click', async ()=>{
+  const models = Array.from(document.querySelectorAll('.eng-resp-chk:checked')).map(el=>({ category: el.getAttribute('data-cat'), model: el.getAttribute('data-model') }));
+  closeEngRespModal();
+  showLoadingOverlay('กำลังบันทึก...');
+  try{
+    await fsSaveMyResponsibility(models);
+    hideLoadingOverlay();
+    showToast('✓ บันทึกพื้นที่รับผิดชอบแล้ว');
+    renderEngCertTab();
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+});
+
+// ---- UI: Engineer — แท็บ Certificate ----
+function certStatusBadge(cert){
+  if(!cert) return `<span style="color:var(--text-faint);font-size:12px;">— ยังไม่อัปโหลด —</span>`;
+  if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${cert.score}/5</span>`;
+  return `<span style="color:var(--amber);font-size:12px;">⏳ รอ Manager ตรวจ</span>`;
+}
+async function renderEngCertTab(){
+  const wrap = $('eng-cert-list');
+  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+  await fsLoadMyResponsibility();
+  if(myResponsibility.length===0){
+    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่ได้เลือกพื้นที่รับผิดชอบ — กด "เลือก/แก้ไขพื้นที่รับผิดชอบ" ด้านบนก่อน</div>`;
+    return;
+  }
+  const myCerts = await fsListCertificatesByOwner(myUserEmail);
+  const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
+  wrap.innerHTML = myResponsibility.slice().sort((a,b)=>naturalSort(a.category+a.model,b.category+b.model)).map(({category,model})=>{
+    const internal = certMap[category+'|'+model+'|internal'];
+    const manu = certMap[category+'|'+model+'|manufacturer'];
+    return `<div class="panel-block" style="padding:12px;margin-bottom:10px;">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${escapeHtml(category)} — ${escapeHtml(model)}</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>📋 Cer ภายใน &nbsp; ${certStatusBadge(internal)}</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${internal ? `<a href="${escapeHtml(internal.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
+            <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${internal?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="internal" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border);padding-top:10px;">
+          <div>🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
+            <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  wireCertUploadInputs();
+}
+
+// ---- UI: Sup Product — แท็บ Certificate (เฉพาะรุ่นที่ตัวเองดูแล, เฉพาะผู้ผลิต) ----
+async function renderSupCertTab(){
+  const wrap = $('sup-cert-list');
+  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+  const myModels = [];
+  Object.keys(DATA.categories||{}).sort(naturalSort).forEach(cat=>{
+    (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort).forEach(m=> myModels.push({category:cat, model:m}));
+  });
+  if(myModels.length===0){
+    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่คุณดูแล</div>`;
+    return;
+  }
+  const myCerts = await fsListCertificatesByOwner(myUserEmail);
+  const certMap = {}; myCerts.filter(c=>c.role==='supproduct').forEach(c=> certMap[c.category+'|'+c.model] = c);
+  wrap.innerHTML = myModels.map(({category,model})=>{
+    const manu = certMap[category+'|'+model];
+    return `<div class="panel-block" style="padding:12px;margin-bottom:10px;">
+      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${escapeHtml(category)} — ${escapeHtml(model)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="supproduct" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  wireCertUploadInputs();
+}
+
+// ผูก event ให้ input[type=file] ของ Certificate ทุกอัน (เรียกซ้ำได้ทุกครั้งที่ render ใหม่)
+function wireCertUploadInputs(){
+  document.querySelectorAll('.cert-upload-input').forEach(input=>{
+    input.addEventListener('change', async e=>{
+      const file = e.target.files[0]; if(!file) return;
+      if(file.size > 5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); e.target.value=''; return; }
+      const role = input.getAttribute('data-role');
+      const certType = input.getAttribute('data-certtype');
+      const category = input.getAttribute('data-cat');
+      const model = input.getAttribute('data-model');
+      const ownerEmail = myUserEmail;
+      const ownerName = nicknamesMap[myUserEmail] || myUserEmail;
+      showLoadingOverlay('กำลังอัปโหลด Certificate...');
+      try{
+        await fsUploadCertificate(ownerEmail, ownerName, role, certType, category, model, file);
+        hideLoadingOverlay();
+        showToast('✓ อัปโหลด Certificate สำเร็จ');
+        if(role==='engineer') renderEngCertTab(); else renderSupCertTab();
+      }catch(err){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+err.message); }
+    });
+  });
+}
+
+// ---- UI: Manager — ตรวจ/ให้คะแนน Certificate ----
+async function renderMgrCertList(){
+  const wrap = $('mgr-cert-list');
+  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+  const all = await fsListAllCertificates();
+  const pending = all.filter(c=>c.status!=='reviewed').sort((a,b)=>(a.uploadedAt||0)-(b.uploadedAt||0));
+  const badge = $('cert-manager-badge');
+  if(pending.length>0){ badge.style.display='inline-block'; badge.textContent = pending.length; } else { badge.style.display='none'; }
+  if(pending.length===0){
+    wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">✓ ไม่มี Certificate ค้างตรวจ</div>`;
+    return;
+  }
+  wrap.innerHTML = pending.map(c=>{
+    const roleLabel = c.role==='engineer' ? 'Engineer' : 'Sup Product';
+    return `<div class="panel-block" style="padding:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:13px;">
+          <div style="font-weight:600;">${escapeHtml(c.ownerName||c.ownerEmail)} <span style="font-weight:400;color:var(--text-faint);">(${roleLabel})</span></div>
+          <div style="color:var(--text-dim);margin-top:2px;">${escapeHtml(c.category)} / ${escapeHtml(c.model)} — ${certTypeLabel(c.certType)}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <a href="${escapeHtml(c.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>
+          <button class="btn btn-primary btn-sm cert-score-btn" data-id="${escapeHtml(c.id)}">✅ ให้คะแนน</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.querySelectorAll('.cert-score-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const cert = pending.find(c=>c.id===btn.getAttribute('data-id'));
+      if(!cert) return;
+      _certScoreDoc = cert;
+      const roleLabel = cert.role==='engineer' ? 'Engineer' : 'Sup Product';
+      $('cert-score-info').innerHTML = `<b>${escapeHtml(cert.ownerName||cert.ownerEmail)}</b> (${roleLabel})<br>${escapeHtml(cert.category)} / ${escapeHtml(cert.model)} — Cer${certTypeLabel(cert.certType)}`;
+      $('cert-score-select').value = '5';
+      $('cert-score-note').value = '';
+      $('cert-score-modal').style.display = 'flex';
+    });
+  });
+}
+function closeCertScoreModal(){ $('cert-score-modal').style.display='none'; _certScoreDoc=null; }
+$('cert-score-modal-close').addEventListener('click', closeCertScoreModal);
+$('cert-score-cancel-btn').addEventListener('click', closeCertScoreModal);
+$('cert-score-modal').addEventListener('click', e=>{ if(e.target===$('cert-score-modal')) closeCertScoreModal(); });
+$('cert-score-save-btn').addEventListener('click', async ()=>{
+  if(!_certScoreDoc) return;
+  const score = parseInt($('cert-score-select').value, 10);
+  const note = $('cert-score-note').value.trim();
+  const cid = _certScoreDoc.id;
+  closeCertScoreModal();
+  showLoadingOverlay('กำลังบันทึกคะแนน...');
+  try{
+    await fsScoreCertificate(cid, score, note);
+    hideLoadingOverlay();
+    showToast('✓ บันทึกคะแนนแล้ว');
+    renderMgrCertList();
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกคะแนนไม่สำเร็จ: '+e.message); }
+});
+
+// Dashboard — collapsible รายการ Certificate รอตรวจให้คะแนน
+let _mgrCertOpen = false;
+let _mgrCertListLoaded = false;
+$('mgr-cert-collapse-header').addEventListener('click', ()=>{
+  _mgrCertOpen = !_mgrCertOpen;
+  $('mgr-cert-collapse-body').style.display = _mgrCertOpen ? 'block' : 'none';
+  $('mgr-cert-collapse-icon').textContent = _mgrCertOpen ? '▲ ซ่อน' : '▼ แสดง';
+  if(_mgrCertOpen && !_mgrCertListLoaded){ renderMgrCertList(); _mgrCertListLoaded = true; }
+});
 
 /* ---- v8.50: Admin Service — แสดงรายการรอตรวจรับ ---- */
 // v8.53: เพิ่ม search bar — กรอง client-side
