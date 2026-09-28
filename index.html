@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.56
-  อัปเดตล่าสุด   : 28 กันยายน 2569 22:04 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.57
+  อัปเดตล่าสุด   : 28 กันยายน 2569 22:36 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.56</title>
+<title>F1 Service — v8.57</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1291,6 +1291,8 @@
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="แพ็คไม่เรียบร้อย" id="eval-pack"> <span>📦 แพ็คไม่เรียบร้อย</span></label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="อะไหล่ไม่ครบ" id="eval-parts"> <span>🔧 อะไหล่ไม่ครบ</span></label>
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="เอกสารไม่ครบ" id="eval-docs"> <span>📄 เอกสารไม่ครบ</span></label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" value="อื่นๆ" id="eval-other"> <span>✏️ อื่นๆ</span></label>
+        <textarea id="eval-other-text" placeholder="ระบุรายละเอียด (บังคับกรอกถ้าเลือกอื่นๆ)" style="display:none;width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-input,transparent);color:inherit;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-ghost btn-sm" id="rp-eval-cancel-btn">ยกเลิก</button>
@@ -1398,8 +1400,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.56";
-const APP_UPDATED_AT = "28 กันยายน 2569 22:04 น. เวลาไทย";
+const APP_VERSION = "8.57";
+const APP_UPDATED_AT = "28 กันยายน 2569 22:36 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8101,8 +8103,8 @@ $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeR
 */
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
 // v8.50: หัวตารางใหม่ — เพิ่ม 3 คอลัมน์ตรวจรับ (ประวัติ หลัง Admin Service ยืนยันรับ)
-const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','วันที่ตรวจรับ','ผู้ตรวจรับ','ผลการประเมิน'];
-// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก D=วิธีการส่ง E=รูปใบเบิก F=รูปหลักฐาน G=วันที่ตรวจรับ H=ผู้ตรวจรับ I=ผลการประเมิน
+const RP_SHEET_HEADERS = ['วันที่บันทึก','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','วันที่ตรวจรับ','ผู้ตรวจรับ','ผลการประเมิน','คะแนน'];
+// Columns: A=วันที่บันทึก B=ผู้ส่ง C=เลขที่ใบเบิก D=วิธีการส่ง E=รูปใบเบิก F=รูปหลักฐาน G=วันที่ตรวจรับ H=ผู้ตรวจรับ I=ผลการประเมิน J=คะแนน (v8.57)
 // สีหัวตาราง: ม่วงอ่อน (lavender)
 const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
 
@@ -8572,10 +8574,12 @@ function rpToggleDetail(containerId, d, canEdit){
     if(cfBtn) cfBtn.addEventListener('click', e=>{
       e.stopPropagation();
       _rpEvalDoc = { ...d, _containerId: containerId };
-      // reset checkboxes
-      ['eval-ok','eval-incomplete','eval-pack','eval-parts','eval-docs'].forEach(id=>{
+      // reset checkboxes + ข้อความ "อื่นๆ"
+      ['eval-ok','eval-incomplete','eval-pack','eval-parts','eval-docs','eval-other'].forEach(id=>{
         const el = $(id); if(el) el.checked = false;
       });
+      $('eval-other-text').value = '';
+      $('eval-other-text').style.display = 'none';
       $('rp-eval-modal').style.display = 'flex';
     });
   }
@@ -9179,8 +9183,8 @@ async function rpDeleteSheetRows(startRowIndex, rowCount, yearAD, tabOverride){
 
 /* ---- v8.50: ยืนยันรับและประเมิน (Admin Service action) ---- */
 // Archive to Sheet (9 cols) → delete Firestore doc → delete each Drive file
-async function rpConfirmReceive(d, evalResults){
-  // d = Firestore returnParts doc object; evalResults = array of Thai label strings
+async function rpConfirmReceive(d, evalResults, score){
+  // d = Firestore returnParts doc object; evalResults = array of Thai label strings; score = คะแนน 0-5 (v8.57)
   await initFirebase();
   const sdk = window._firebaseSdk;
 
@@ -9203,9 +9207,10 @@ async function rpConfirmReceive(d, evalResults){
   }
   const evCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
   const evalStr = evalResults.length>0 ? evalResults.join(' / ') : 'เรียบร้อยสมบูรณ์';
+  const scoreVal = (typeof score === 'number') ? score : 5;
 
-  // 9 cols: วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, วันที่ตรวจรับ, ผู้ตรวจรับ, ผลการประเมิน
-  const row = [recordDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiveDate, receiverName, evalStr];
+  // 10 cols: วันที่บันทึก, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, วันที่ตรวจรับ, ผู้ตรวจรับ, ผลการประเมิน, คะแนน (v8.57)
+  const row = [recordDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiveDate, receiverName, evalStr, scoreVal];
 
   // 2) append ไปที่ Sheet ประวัติ (ใช้ tab 'ประวัติRP' หรือ 'HistoryRP' — สร้างถ้ายังไม่มี)
   const sheetId = await ensureReturnPartsSheet();
@@ -9213,7 +9218,7 @@ async function rpConfirmReceive(d, evalResults){
   await ensureRpTab(sheetId, histTabName);
   // ตรวจสอบว่ามี header แล้วหรือยัง
   const token = await rpGetToken();
-  const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1:I1')}`, { headers:{Authorization:`Bearer ${token}`} });
+  const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1:J1')}`, { headers:{Authorization:`Bearer ${token}`} });
   const headerData = await headerRes.json();
   const hasHeader = headerData.values && headerData.values[0] && headerData.values[0].length>0;
   if(!hasHeader){
@@ -9238,7 +9243,7 @@ async function rpConfirmReceive(d, evalResults){
   // 5) แจ้ง realtime listeners
   fsBumpRpActivity();
 
-  fsWriteLog(`Admin Service ยืนยันรับอะไหล่จาก ${d.senderName||d.senderEmail} ผลประเมิน: ${evalStr}`);
+  fsWriteLog(`Admin Service ยืนยันรับอะไหล่จาก ${d.senderName||d.senderEmail} ผลประเมิน: ${evalStr} (${scoreVal}/5 คะแนน)`);
 }
 
 /* ---- Delete Drive folder (same API as delete file) ---- */
@@ -9410,11 +9415,30 @@ $('rp-edit-modal-close').addEventListener('click', ()=>{ $('rp-edit-modal').clas
 $('rp-edit-cancel-btn').addEventListener('click',  ()=>{ $('rp-edit-modal').classList.remove('show'); });
 $('rp-edit-modal').addEventListener('click', e=>{ if(e.target===$('rp-edit-modal')) $('rp-edit-modal').classList.remove('show'); });
 
-/* ---- v8.50: rp-eval-modal (Admin Service ประเมินผลตรวจรับ) ---- */
+/* ---- v8.57: rp-eval-modal (Admin Service ประเมินผลตรวจรับ) ---- */
 function closeRpEvalModal(){ $('rp-eval-modal').style.display = 'none'; _rpEvalDoc = null; }
 $('rp-eval-modal-close').addEventListener('click', closeRpEvalModal);
 $('rp-eval-cancel-btn').addEventListener('click',  closeRpEvalModal);
 $('rp-eval-modal').addEventListener('click', e=>{ if(e.target===$('rp-eval-modal')) closeRpEvalModal(); });
+
+// v8.57: "เรียบร้อยสมบูรณ์" กับข้อบกพร่องอื่นๆ เลือกพร้อมกันไม่ได้ (mutually exclusive)
+const RP_EVAL_ISSUE_IDS = ['eval-incomplete','eval-pack','eval-parts','eval-docs','eval-other'];
+$('eval-ok').addEventListener('change', function(){
+  if(this.checked){
+    RP_EVAL_ISSUE_IDS.forEach(id=>{ const el=$(id); if(el) el.checked=false; });
+    $('eval-other-text').style.display = 'none';
+    $('eval-other-text').value = '';
+  }
+});
+RP_EVAL_ISSUE_IDS.forEach(id=>{
+  const el = $(id);
+  if(!el) return;
+  el.addEventListener('change', function(){
+    if(this.checked) $('eval-ok').checked = false;
+    if(id==='eval-other') $('eval-other-text').style.display = $('eval-other').checked ? 'block' : 'none';
+  });
+});
+
 $('rp-eval-confirm-btn').addEventListener('click', async ()=>{
   if(!_rpEvalDoc){ closeRpEvalModal(); return; }
   const evalLabels = [
@@ -9423,15 +9447,27 @@ $('rp-eval-confirm-btn').addEventListener('click', async ()=>{
     { id:'eval-pack',       label:'แพ็คไม่เรียบร้อย' },
     { id:'eval-parts',      label:'อะไหล่ไม่ครบ' },
     { id:'eval-docs',       label:'เอกสารไม่ครบ' },
+    { id:'eval-other',      label:'อื่นๆ' },
   ];
-  const selected = evalLabels.filter(e=>{ const el=$(e.id); return el&&el.checked; }).map(e=>e.label);
-  if(selected.length===0){ showToast('⚠ กรุณาเลือกผลการประเมินอย่างน้อย 1 ข้อ'); return; }
+  const checked = evalLabels.filter(e=>{ const el=$(e.id); return el&&el.checked; });
+  if(checked.length===0){ showToast('⚠ กรุณาเลือกผลการประเมินอย่างน้อย 1 ข้อ'); return; }
+  const otherChecked = checked.some(e=>e.id==='eval-other');
+  const otherText = $('eval-other-text').value.trim();
+  if(otherChecked && !otherText){ showToast('⚠ กรุณาระบุรายละเอียด "อื่นๆ"'); return; }
+
+  const isComplete = checked.some(e=>e.id==='eval-ok');
+  // สร้าง label ที่จะบันทึก — "อื่นๆ" แทนที่ด้วย "อื่นๆ: <ข้อความ>"
+  const selected = checked.map(e=> e.id==='eval-other' ? `อื่นๆ: ${otherText}` : e.label);
+  // คะแนน: สมบูรณ์ = 5, ไม่สมบูรณ์ = 5 - จำนวนข้อบกพร่องที่เลือก (ต่ำสุด 0)
+  const issueCount = checked.filter(e=>e.id!=='eval-ok').length;
+  const score = isComplete ? 5 : Math.max(0, 5 - issueCount);
+
   const d = _rpEvalDoc;
   const containerId = d._containerId || 'rp-manager-list';
   closeRpEvalModal();
   showLoadingOverlay('กำลังบันทึกผลการตรวจรับ...');
   try{
-    await rpConfirmReceive(d, selected);
+    await rpConfirmReceive(d, selected, score);
     hideLoadingOverlay();
     showToast('✓ ยืนยันรับเรียบร้อย — บันทึกประวัติแล้ว');
     if(containerId==='admin-service-rp-list') renderAdminServiceView();
