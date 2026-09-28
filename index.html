@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.50
-  อัปเดตล่าสุด   : 28 กันยายน 2569 14:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.51
+  อัปเดตล่าสุด   : 28 กันยายน 2569 15:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.50</title>
+<title>F1 Service — v8.51</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1382,8 +1382,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.50";
-const APP_UPDATED_AT = "28 กันยายน 2569 14:00 น. เวลาไทย";
+const APP_VERSION = "8.51";
+const APP_UPDATED_AT = "28 กันยายน 2569 15:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3427,7 +3427,14 @@ async function checkAccessAndLoad(){
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
   if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal(); // ล็อกอินครั้งแรกด้วยอีเมลนี้ — ยังไม่เคยตั้งชื่อเล่น บังคับตั้งก่อนใช้งาน
-  if(window._pendingModeSwitch){ switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null; }
+  // รีเซ็ต mode ทุกครั้งที่ login/สลับบัญชี — กันบั๊ก: currentMode ของบัญชีก่อนหน้า (เช่น 'admin-service') ค้างอยู่
+  // ทำให้บัญชีใหม่ที่ไม่ใช่ Admin Service ยังเห็นหน้า admin-service อยู่ แม้ว่า mode button จะแสดงถูกแล้ว
+  if(window._pendingModeSwitch){
+    switchMode(window._pendingModeSwitch); window._pendingModeSwitch=null;
+  } else {
+    // เลือก default mode ตาม role — Engineer เห็นแค่หน้า eng, คนอื่นก็ใช้ eng เป็น default เหมือนกัน
+    switchMode('eng');
+  }
 }
 
 /* ===================== NICKNAME (ชื่อเล่น) — ตั้งครั้งแรกที่ login แทนอีเมล/ชื่อบัญชี Google ทุกจุดในแอป — แก้ไขทีหลังได้จากปุ่ม ✏️ ข้างชื่อบน header ===================== */
