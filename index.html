@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.51
-  อัปเดตล่าสุด   : 28 กันยายน 2569 15:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.52
+  อัปเดตล่าสุด   : 28 กันยายน 2569 21:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -45,7 +45,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.51</title>
+<title>F1 Service — v8.52</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1382,8 +1382,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.51";
-const APP_UPDATED_AT = "28 กันยายน 2569 15:00 น. เวลาไทย";
+const APP_VERSION = "8.52";
+const APP_UPDATED_AT = "28 กันยายน 2569 21:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4024,9 +4024,11 @@ async function getCachedPendingAccessRequests(forceRefresh = false){
 function invalidatePendingAccessReqsCache(){ _cachedPendingAccessReqsAt = 0; }
 
 async function updateNotifBadge(){
+  // Super Admin / Manager เห็นเฉพาะงานของตัวเองในกระดิ่ง — ไม่นับ pendingReview (Error/Proposal รอตรวจ) และ pendingClaims (เคลมรอดำเนินการ) ของคนอื่น
+  const isMgrOrAdmin = isSuperAdmin(); // isSuperAdmin() รวม Manager แล้ว
   const unreadResolved = myResolvedSubmissions().filter(p=>!p.notifRead).length + myResolvedProposals().filter(p=>!p.notifRead).length;
-  const pendingReview = myPendingReviewCount();
-  const pendingClaims = (isEditor() && DATA && DATA.claims) ? myVisibleClaims().filter(c=>c.status==='pending').length : 0;
+  const pendingReview = isMgrOrAdmin ? 0 : myPendingReviewCount();
+  const pendingClaims = (!isMgrOrAdmin && isEditor() && DATA && DATA.claims) ? myVisibleClaims().filter(c=>c.status==='pending').length : 0;
   const unreadClaimNotices = (DATA && DATA.claimNotices) ? DATA.claimNotices.filter(n=>!n.notifRead).length : 0;
   // (v8.00) ใช้แคชแทนการ getDocs ใหม่ทุกครั้ง
   const accessReqCount = (await getCachedPendingAccessRequests()).length;
@@ -4097,7 +4099,7 @@ async function renderNotifList(){
     }catch(e){}
   }
 
-  // เคลมอะไหล่รอดำเนินการ (Sup Product เท่านั้น) — กดรายการแล้วเปิด detail ได้เลย
+  // เคลมอะไหล่รอดำเนินการ (Sup Product เท่านั้น ไม่รวม Super Admin/Manager) — กดรายการแล้วเปิด detail ได้เลย
   if(isEditor() && !isSuperAdmin() && currentSupIdentity){
     const pendingMyClaims = myVisibleClaims().filter(c=>c.status==='pending').sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     if(pendingMyClaims.length>0){
@@ -4124,7 +4126,8 @@ async function renderNotifList(){
       html += `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>`;
     }
   }
-  if(pendingReviewErr.length>0 || pendingReviewProp.length>0){
+  // แสดงรายการรอตรวจสอบ (Error/Proposal) เฉพาะ Sup Product ที่ไม่ใช่ Super Admin/Manager
+  if(!isSuperAdmin() && (pendingReviewErr.length>0 || pendingReviewProp.length>0)){
     html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔔 รอคุณตรวจสอบ (ในฐานะ ${escapeHtml(currentSupIdentity)})</h4>`;
     pendingReviewErr.forEach(p=>{
       html += `<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">Error ใหม่: ${escapeHtml(p.model)} — ${escapeHtml(p.errorCode||p.symptom)} (จาก ${escapeHtml(p.submitterName||'-')})</span></div>${statusBadgeHtml('pending')}</div>`;
