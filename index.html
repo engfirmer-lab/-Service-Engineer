@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.63
-  อัปเดตล่าสุด   : 29 กันยายน 2569 13:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.64
+  อัปเดตล่าสุด   : 29 กันยายน 2569 14:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,7 +22,9 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
-  - [TODO] ตัด limit 5MB ออกให้หมดทุกจุดอัปโหลด (เอกสาร, Certificate, รูป/วิดีโอใน error, ส่งคืนอะไหล่ ฯลฯ) ยกเว้นจุดเดียวที่ยังคงไว้ที่ 5MB คือ "เคลมอะไหล่" (claim) เท่านั้น — ยังไม่ได้แก้ รอทำทีหลัง
+  - [FIXED v8.64] แท็บ "กำหนดรุ่นที่ต้องมี Certificate" และ "เอกสารทั้งหมดที่ฉันดูแล" (Sup Product) — เพิ่มปุ่มซ่อน/แสดงแล้ว (จำสถานะไว้ใน localStorage ต่อเครื่อง)
+  - [FIXED v8.64] ปุ่ม "ตรวจสอบไฟล์ซ้ำ" ในแท็บจัดการเอกสาร (Sup Product) — สแกนไฟล์ Drive ที่ทุกเอกสาร (ทุกรุ่นที่ดูแล) ชี้ไปหา เทียบ md5Checksum หาไฟล์เนื้อหาเหมือนกันแต่คนละไฟล์จริง (คนละ fileId) แล้วให้เลือกรวมเป็นเอกสารเดียว (ผูก groupId เดียวกัน + ลบไฟล์ซ้ำออกเหลือไฟล์เดียว) — หมายเหตุ: เทียบด้วย md5 เท่านั้น ไฟล์ที่ "เนื้อหาคล้ายกัน" แต่ byte ไม่ตรงกันเป๊ะ (เช่นสแกนซ้ำคนละรอบ) จะตรวจไม่เจอ
+  - [FIXED v8.64] ตัด limit 5MB ออกจากทุกจุดอัปโหลดแล้ว ยกเว้น "เคลมอะไหล่" (claim) ที่ยังคงไว้ที่ 5MB ตามเดิม — จุดที่ตัดออก: เอกสาร (Sup Product), Certificate (Engineer/Sup Product), ส่งคืนอะไหล่ (รูปใบเบิก/รูปหลักฐาน ทั้งตอนสร้างและตอนแก้ไข)
   - [FIXED v8.60] Pull-to-refresh บั๊ก: rp-eval-modal / eng-resp-modal / cert-score-modal ใช้ style.display แทน class .show ทำให้ตัวจับ pull-to-refresh หลอกว่าไม่มี modal เปิดอยู่ — แก้เป็น classList.add/remove('show') ทั้งหมดแล้ว
   - [FIXED v8.60] "พื้นที่รับผิดชอบของฉัน" เปลี่ยนชื่อเป็น "รุ่นเครื่องที่ดูแล" (Engineer)
   - [FIXED v8.60] แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น แบบ accordion (ซ่อนไว้ก่อน กดเปิดทีละ Category) อัปโหลดได้แม้ไม่ได้อยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล"
@@ -53,7 +55,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.63</title>
+<title>F1 Service — v8.64</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -645,7 +647,7 @@
       </div>
       <div class="panel-block">
         <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต (ไฟล์ไม่เกิน 5 MB) — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
+        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -692,14 +694,29 @@
 
     <div id="sup-tab-docs" style="display:none;">
       <div class="panel-block">
-        <h2>เอกสารทั้งหมดที่ฉันดูแล</h2>
-        <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
-        <div style="overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:8px;"><table id="sup-doc-matrix"></table></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <h2 style="margin:0;">เอกสารทั้งหมดที่ฉันดูแล</h2>
+          <button class="btn btn-ghost btn-sm" id="sup-doc-matrix-hide-btn">🙈 ซ่อน</button>
+        </div>
+        <div id="sup-doc-matrix-body">
+          <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            <button class="btn btn-ghost btn-sm" id="check-dup-files-btn">🔍 ตรวจสอบไฟล์ซ้ำ</button>
+          </div>
+          <div id="dup-files-status" style="font-size:12.5px;color:var(--text-faint);margin-bottom:10px;"></div>
+          <div id="dup-files-result"></div>
+          <div style="overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:8px;"><table id="sup-doc-matrix"></table></div>
+        </div>
       </div>
       <div class="panel-block">
-        <h2>กำหนดรุ่นที่ต้องมี Certificate</h2>
-        <p class="panel-sub">เลือกได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน / ผู้ผลิต / ทั้งคู่ / หรือไม่บังคับเลย — Engineer จะเห็นเป็นป้าย 📌 เตือนในแท็บ Certificate ของเขา</p>
-        <div id="sup-cert-req-list"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <h2 style="margin:0;">กำหนดรุ่นที่ต้องมี Certificate</h2>
+          <button class="btn btn-ghost btn-sm" id="sup-cert-req-hide-btn">🙈 ซ่อน</button>
+        </div>
+        <div id="sup-cert-req-body">
+          <p class="panel-sub">เลือกได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน / ผู้ผลิต / ทั้งคู่ / หรือไม่บังคับเลย — Engineer จะเห็นเป็นป้าย 📌 เตือนในแท็บ Certificate ของเขา</p>
+          <div id="sup-cert-req-list"></div>
+        </div>
       </div>
       <div class="panel-block">
         <h2>Google Drive Database</h2>
@@ -758,7 +775,7 @@
     <div id="sup-tab-cert" style="display:none;">
       <div class="panel-block">
         <h2>Certificate ผู้ผลิตของฉัน</h2>
-        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน) — ไฟล์ไม่เกิน 5 MB</p>
+        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน)</p>
         <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1500,8 +1517,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.63";
-const APP_UPDATED_AT = "29 กันยายน 2569 13:20 น. เวลาไทย";
+const APP_VERSION = "8.64";
+const APP_UPDATED_AT = "29 กันยายน 2569 14:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2937,6 +2954,98 @@ async function precreateDocumentFolders(){
   showToast('✓ สร้างโฟลเดอร์ล่วงหน้าเสร็จสิ้น');
 }
 $('precreate-folders-btn').addEventListener('click', precreateDocumentFolders);
+
+// v8.64 — ปุ่ม "ซ่อน/แสดง" แบบ generic สำหรับ panel-block ใดๆ ในแท็บ "จัดการเอกสาร" — จำสถานะไว้ใน localStorage ต่อ Sup Product คนนั้น
+function wirePanelHideToggle(btnId, bodyId, storageKey){
+  const btn = $(btnId), body = $(bodyId);
+  if(!btn || !body) return;
+  let hidden = false;
+  try{ hidden = localStorage.getItem(storageKey)==='1'; }catch(e){}
+  const apply = ()=>{ body.style.display = hidden ? 'none' : ''; btn.textContent = hidden ? '👁 แสดง' : '🙈 ซ่อน'; };
+  apply();
+  btn.addEventListener('click', ()=>{
+    hidden = !hidden;
+    try{ localStorage.setItem(storageKey, hidden?'1':'0'); }catch(e){}
+    apply();
+  });
+}
+wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
+wirePanelHideToggle('sup-cert-req-hide-btn', 'sup-cert-req-body', 'hide_sup_cert_req');
+
+// v8.64 — ตรวจสอบไฟล์ซ้ำ: ดึง md5Checksum ของไฟล์ Drive ที่ทุกเอกสาร (ทุกรุ่นที่ดูแล) ชี้ไปหา แล้วจัดกลุ่มไฟล์ที่ md5 ตรงกัน (=ไบต์เหมือนกันเป๊ะ)
+// แต่คนละไฟล์จริงใน Drive (คนละ fileId) — เสนอให้รวมเป็นเอกสารเดียว (ผูก groupId เดียวกัน + ลบไฟล์ซ้ำออก เหลือไฟล์เดียว)
+async function checkDuplicateFiles(){
+  const statusEl = $('dup-files-status');
+  const resultEl = $('dup-files-result');
+  resultEl.innerHTML = '';
+  const myCats = myOwnedCategories();
+  const myDocs = DATA.documents.filter(d=>myCats.includes(d.category) && ownerOf(d.category,d.model)===currentSupIdentity);
+  const withFile = myDocs.filter(d=>d.url && extractDriveFileId(d.url));
+  if(withFile.length===0){ statusEl.textContent = 'ยังไม่มีเอกสารที่เป็นไฟล์ใน Drive'; return; }
+  statusEl.textContent = `กำลังตรวจสอบ... (0/${withFile.length})`;
+  const token = await ensureDriveAccess();
+  const md5ByFileId = {};
+  let checked = 0;
+  await runWithConcurrency(withFile, 6, async (d)=>{
+    const fid = extractDriveFileId(d.url);
+    if(!md5ByFileId[fid]){
+      try{
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?fields=md5Checksum`, { headers:{ Authorization:`Bearer ${token}` } });
+        if(res.ok){ const info = await res.json(); md5ByFileId[fid] = info.md5Checksum || null; }
+        else md5ByFileId[fid] = null;
+      }catch(e){ md5ByFileId[fid] = null; }
+    }
+    checked++;
+    statusEl.textContent = `กำลังตรวจสอบ... (${checked}/${withFile.length})`;
+  });
+  // จัดกลุ่มตาม md5 (ข้ามไฟล์ที่ md5 หาไม่เจอ หรือกลุ่มที่มี fileId เดียว)
+  const byMd5 = {};
+  withFile.forEach(d=>{
+    const fid = extractDriveFileId(d.url);
+    const md5 = md5ByFileId[fid];
+    if(!md5) return;
+    (byMd5[md5] = byMd5[md5] || []).push(d);
+  });
+  const dupGroups = Object.values(byMd5).filter(list=>{
+    const distinctFileIds = new Set(list.map(d=>extractDriveFileId(d.url)));
+    return distinctFileIds.size>1; // มีมากกว่า 1 ไฟล์จริง แต่เนื้อหาเหมือนกัน
+  });
+  if(dupGroups.length===0){ statusEl.textContent = `✓ ตรวจสอบครบ ${withFile.length} ไฟล์ — ไม่พบไฟล์ซ้ำ`; return; }
+  statusEl.textContent = `✓ ตรวจสอบครบ ${withFile.length} ไฟล์ — พบ ${dupGroups.length} กลุ่มที่มีไฟล์ซ้ำ`;
+  resultEl.innerHTML = dupGroups.map((list,gi)=>`
+    <div style="border:1px solid var(--amber);border-radius:8px;padding:10px;margin-bottom:8px;">
+      <p style="font-size:12px;color:var(--amber);margin:0 0 6px;font-weight:600;">⚠ ไฟล์เนื้อหาเหมือนกัน ${list.length} รายการ</p>
+      ${list.map(d=>`<div style="font-size:12px;padding:2px 0;">${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${escapeHtml(d.title)}</div>`).join('')}
+      <button class="btn btn-primary btn-sm" data-mergegroup="${gi}" style="margin-top:8px;">🔗 รวมเป็นเอกสารเดียว (ลบไฟล์ซ้ำ เหลือไฟล์เดียว)</button>
+    </div>`).join('');
+  resultEl.querySelectorAll('[data-mergegroup]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    const gi = parseInt(btn.getAttribute('data-mergegroup'),10);
+    const list = dupGroups[gi];
+    if(!confirm(`ยืนยันรวม ${list.length} รายการนี้เป็นเอกสารเดียว? จะเก็บไฟล์ของ "${list[0].category} · ${list[0].model}" ไว้ ส่วนไฟล์ซ้ำที่เหลือจะถูกลบถาวรจาก Drive กู้คืนไม่ได้`)) return;
+    btn.disabled = true; btn.textContent = 'กำลังรวม...';
+    try{
+      const keeper = list[0];
+      const keeperUrl = keeper.url;
+      const groupId = keeper.groupId || ('g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8));
+      const redundantFileIds = new Set();
+      for(let i=1;i<list.length;i++){
+        const d = list[i];
+        const oldFileId = extractDriveFileId(d.url);
+        if(oldFileId && oldFileId!==extractDriveFileId(keeperUrl)) redundantFileIds.add(oldFileId);
+        await fsUpdateDocument(d.id, { url: keeperUrl, groupId });
+        d.url = keeperUrl; d.groupId = groupId;
+      }
+      if(!keeper.groupId){ await fsUpdateDocument(keeper.id, { groupId }); keeper.groupId = groupId; }
+      for(const fid of redundantFileIds){
+        try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ซ้ำไม่สำเร็จ (ข้าม):', fid, e.message); }
+      }
+      showToast(`✓ รวมเป็นเอกสารเดียวแล้ว (ลบไฟล์ซ้ำ ${redundantFileIds.size} ไฟล์)`);
+      renderAll();
+      checkDuplicateFiles();
+    }catch(e){ showToast('⚠ รวมไม่สำเร็จ: '+e.message); btn.disabled=false; btn.textContent='🔗 รวมเป็นเอกสารเดียว (ลบไฟล์ซ้ำ เหลือไฟล์เดียว)'; }
+  }));
+}
+$('check-dup-files-btn').addEventListener('click', checkDuplicateFiles);
 
 // ใช้ extractDriveFileId ที่มีอยู่แล้วในไฟล์นี้ (ดึงรหัสไฟล์ Drive จากลิงก์) — เช็คว่าไฟล์นี้เคยถูกลิงก์ไว้ในระบบแล้วหรือยัง กันสร้างซ้ำ
 // สำรวจโฟลเดอร์ Drive ของทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล หาไฟล์ที่ยังไม่เคยลิงก์ไว้ในระบบ แล้วสร้างลิงก์ให้อัตโนมัติ
@@ -8973,7 +9082,6 @@ function renderWithdrawalList(){
       const w = rpWithdrawals.find(x=>x.id===wid);
       const f = e.target.files[0];
       if(!f) return;
-      if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB กรุณาลดขนาดก่อน'); e.target.value=''; return; }
       if(w){ w.file=f; renderWithdrawalList(); }
     });
   });
@@ -8996,7 +9104,6 @@ rpEvidenceDZ.addEventListener('drop', e=>{
 $('rp-evidence-input').addEventListener('change', e=>{ const f=e.target.files[0]; if(f) rpSetEvidence(f); });
 
 function rpSetEvidence(f){
-  if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); return; }
   rpEvidenceFile = f;
   const dz = $('rp-evidence-dropzone');
   const prev = $('rp-evidence-preview');
@@ -9376,7 +9483,6 @@ async function fsSaveMyResponsibility(models){
 
 // ---- Certificate CRUD (collection: certificates) ----
 async function fsUploadCertificate(ownerEmail, ownerName, role, certType, category, model, file){
-  if(file.size > 5*1024*1024) throw new Error('ไฟล์ใหญ่เกิน 5 MB');
   await initFirebase(); const sdk = window._firebaseSdk;
   const cid = certDocId(ownerEmail, certType, category, model);
   const ref = sdk.doc(db,'certificates', cid);
@@ -9619,7 +9725,6 @@ function wireCertUploadInputs(){
   document.querySelectorAll('.cert-upload-input').forEach(input=>{
     input.addEventListener('change', async e=>{
       const file = e.target.files[0]; if(!file) return;
-      if(file.size > 5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); e.target.value=''; return; }
       const role = input.getAttribute('data-role');
       const certType = input.getAttribute('data-certtype');
       const category = input.getAttribute('data-cat');
@@ -10034,7 +10139,6 @@ function rpEditRenderWithdrawalList(){
       const wid = +e.target.getAttribute('data-ewid');
       const w = rpEditWithdrawals.find(x=>x.id===wid);
       const f = e.target.files[0]; if(!f) return;
-      if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); return; }
       if(w){ w.file=f; rpEditRenderWithdrawalList(); }
     });
   });
@@ -10121,7 +10225,6 @@ $('rp-edit-add-wi-btn').addEventListener('click', ()=>{
 $('rp-edit-evidence-dropzone').addEventListener('click', ()=>$('rp-edit-evidence-input').click());
 $('rp-edit-evidence-input').addEventListener('change', e=>{
   const f=e.target.files[0]; if(!f) return;
-  if(f.size>5*1024*1024){ alert('ไฟล์ใหญ่เกิน 5 MB'); return; }
   rpEditEvidenceFile = f;
   rpEditEvidenceExistingUrl = '';
   $('rp-edit-evidence-preview').innerHTML = `<span style="font-size:12px;color:var(--text-dim);">📎 ${escapeHtml(f.name)}</span>`;
