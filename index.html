@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.66
-  อัปเดตล่าสุด   : 29 กันยายน 2569 15:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.67
+  อัปเดตล่าสุด   : 29 กันยายน 2569 15:14 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,7 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.67] หน้าแก้ไขเอกสาร — โชว์กล่อง "🔗 ไฟล์นี้ใช้ร่วมกับ N รุ่น: ..." บอกรายชื่อรุ่นที่ผูกไฟล์นี้อยู่แล้ว ก่อนจะเลือกเพิ่มรุ่นใหม่ (ไม่ต้องเดาจากตารางเอกสารอีกต่อไป)
   - [FIXED v8.66] เอกสารที่บันทึกไว้แล้ว (แก้ไข) — เพิ่มรุ่นอื่นที่ใช้ไฟล์เดียวกันเข้ากลุ่ม groupId เดิมได้ทีหลัง ไม่ต้องผูกตอนสร้างใหม่ครั้งแรกเท่านั้น (เปิด modal แก้ไขเอกสาร จะมีส่วน "เพิ่มรุ่นที่ใช้ไฟล์นี้ด้วย" โชว์เฉพาะรุ่นที่ยังไม่ได้ผูกไฟล์นี้ ให้ติ๊กเพิ่มแล้วกดบันทึก)
   - [FIXED v8.65] ปุ่มซ่อน/แสดง — ค่าเริ่มต้นเปลี่ยนเป็น "ซ่อนไว้ก่อน" เสมอ (ต้องกดแสดงเอง) จนกว่าจะเคยกดเปลี่ยนค่าไว้แล้ว
   - [FIXED v8.64] แท็บ "กำหนดรุ่นที่ต้องมี Certificate" และ "เอกสารทั้งหมดที่ฉันดูแล" (Sup Product) — เพิ่มปุ่มซ่อน/แสดงแล้ว (จำสถานะไว้ใน localStorage ต่อเครื่อง)
@@ -57,7 +58,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.66</title>
+<title>F1 Service — v8.67</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -856,6 +857,9 @@
           <div id="doclink-upload-progress-text" style="font-size:11px;color:var(--text-faint);margin-top:4px;"></div>
         </div>
       </div>
+      <div id="doclink-linked-models-wrap" style="margin-top:14px;display:none;padding:10px;border-radius:8px;background:var(--panel-soft,rgba(255,255,255,.04));border:1px solid var(--border);font-size:12.5px;">
+        🔗 ไฟล์นี้ใช้ร่วมกับ <span id="doclink-linked-models-count"></span>: <span id="doclink-linked-models-list" style="color:var(--text-faint);"></span>
+      </div>
       <div id="doclink-share-wrap" style="margin-top:14px;display:none;">
         <button type="button" id="doclink-share-toggle-btn" class="btn btn-ghost btn-sm" style="width:100%;text-align:left;">📎 ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย <span id="doclink-share-count" style="color:var(--text-faint);font-weight:400;"></span></button>
         <div id="doclink-share-list" style="display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px;"></div>
@@ -1519,8 +1523,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.66";
-const APP_UPDATED_AT = "29 กันยายน 2569 15:05 น. เวลาไทย";
+const APP_VERSION = "8.67";
+const APP_UPDATED_AT = "29 กันยายน 2569 15:14 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5476,8 +5480,23 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   // ตอนแก้ไข: ให้เลือกเพิ่ม "รุ่นอื่นที่ยังไม่ได้ผูกไฟล์นี้" เข้ากลุ่ม groupId เดิมได้ทีหลัง
   {
     const excludeSet = new Set([category+'|'+model]);
+    const linkedSiblings = [];
     if(existing && existing.groupId){
-      DATA.documents.forEach(d=>{ if(d.groupId===existing.groupId) excludeSet.add(d.category+'|'+d.model); });
+      DATA.documents.forEach(d=>{
+        if(d.groupId===existing.groupId){
+          excludeSet.add(d.category+'|'+d.model);
+          if(!(d.category===category && d.model===model)) linkedSiblings.push(d);
+        }
+      });
+    }
+    // v8.66 — โชว์รายชื่อรุ่นที่ผูกไฟล์นี้อยู่แล้ว จะได้เห็นสถานะปัจจุบันก่อนกดเพิ่มรุ่นใหม่
+    const linkedWrap = $('doclink-linked-models-wrap');
+    if(linkedSiblings.length>0){
+      linkedWrap.style.display = 'block';
+      $('doclink-linked-models-count').textContent = (linkedSiblings.length+1)+' รุ่น';
+      $('doclink-linked-models-list').textContent = linkedSiblings.map(d=>`${d.category} · ${d.model}`).join(', ');
+    } else {
+      linkedWrap.style.display = 'none';
     }
     $('doclink-share-toggle-btn').firstChild.textContent = (existing ? '📎 เพิ่มรุ่นที่ใช้ไฟล์นี้ด้วย ' : '📎 ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย ');
     renderDoclinkShareList(excludeSet);
