@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.68
-  อัปเดตล่าสุด   : 29 กันยายน 2569 18:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.69
+  อัปเดตล่าสุด   : 30 กันยายน 2569 08:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,7 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.69] โหลด pdf.js ล้มเหลวบนมือถือบางเครื่อง (เช่นเปิดผ่าน Google Translate proxy หรือ cdnjs โดนบล็อก) — เพิ่ม CDN สำรอง (jsdelivr) ลองโหลดต่อถ้า cdnjs ล้มเหลว และแก้ไม่ให้ promise ที่ reject แล้วค้างตลอดไป (ลองใหม่ได้ในครั้งถัดไป)
   - [TODO] แจ้งปัญหา (type==='report') ที่ archive ไป Sheet แล้ว (จบเคส) ยังไม่ถูกนับรวมใน dashboard "จำนวนทั้งหมด" — v8.68 นับเฉพาะที่ยังอยู่ใน Firestore เท่านั้น (ยังไม่ได้ทำ fetch นับแถวจากแท็บ "<ผู้ดูแล> - แจ้งปัญหา" ใน Sheet เหมือน fetchSheetDoneCount ของฝั่งเคลม)
   - [TODO] parseFactoriumPdfText (v8.68) การแยกตาราง "ขอเบิก/ซื้อรายการอะไหล่" จากข้อความ PDF ที่ flatten แล้ว เป็น heuristic ล้วน (regex จับรูปแบบรหัสอะไหล่+ชื่อ+จำนวน+หน่วยนับ) ไม่รับประกันความแม่นยำ 100% โดยเฉพาะถ้าเทมเพลต PDF เปลี่ยนไปหรือชื่อรายการมีตัวเลขปน — ถ้าพาร์สพลาด/ได้0รายการ จะไม่เดา ปล่อยว่างให้กรอกเอง (มีข้อความเตือนในฟอร์ม)
   - [FIXED v8.68] แยกประเภทการบันทึก "แจ้งปัญหา" (type='report') กับ "เคลมอะไหล่" (type='claim') ออกจากกัน — ปุ่มแยก 2 ปุ่ม, ซ่อนฟิลด์ "เลขที่ใบยืม" สำหรับแจ้งปัญหา, "วิธีการแก้ไข" ไม่บังคับสำหรับแจ้งปัญหา, เคลมเก่าที่ไม่มี type ถือเป็น 'claim' เสมอ (backward compat)
@@ -66,7 +67,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.68</title>
+<title>F1 Service — v8.69</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1540,8 +1541,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.68";
-const APP_UPDATED_AT = "29 กันยายน 2569 18:30 น. เวลาไทย";
+const APP_VERSION = "8.69";
+const APP_UPDATED_AT = "30 กันยายน 2569 08:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6055,19 +6056,36 @@ function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=
 
 // ===== PDF auto-fill จากใบงาน Factorium (ไม่บังคับ — แค่ช่วยเติมข้อมูลบางส่วนให้ ทุกช่องยังแก้ไขได้ปกติ) =====
 let _pdfJsLoadPromise = null;
+// v8.69 — ลองโหลดจาก CDN สำรอง (jsdelivr) ถ้า cdnjs ล้มเหลว (เจอเคส cdnjs โหลดไม่ผ่านบนมือถือบางเครื่อง/บางเครือข่าย เช่นตอนเปิดผ่าน Google Translate proxy)
+const PDFJS_CDN_SOURCES = [
+  { lib:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js', worker:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js' },
+  { lib:'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.js', worker:'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.js' },
+];
+function _loadScriptOnce(src){
+  return new Promise((resolve, reject)=>{
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = ()=>reject(new Error('โหลดสคริปต์ไม่สำเร็จ: '+src));
+    document.head.appendChild(script);
+  });
+}
 function loadPdfJsLib(){
   if(typeof window.pdfjsLib !== 'undefined') return Promise.resolve();
   if(_pdfJsLoadPromise) return _pdfJsLoadPromise;
-  _pdfJsLoadPromise = new Promise((resolve, reject)=>{
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js';
-    script.onload = ()=>{
-      try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js'; }catch(e){}
-      resolve();
-    };
-    script.onerror = ()=>reject(new Error('โหลดไลบรารี pdf.js ไม่สำเร็จ (เช็คอินเทอร์เน็ต)'));
-    document.head.appendChild(script);
-  });
+  _pdfJsLoadPromise = (async ()=>{
+    let lastErr = null;
+    for(const src of PDFJS_CDN_SOURCES){
+      try{
+        await _loadScriptOnce(src.lib);
+        if(typeof window.pdfjsLib === 'undefined') throw new Error('โหลดสคริปต์สำเร็จแต่ไม่พบ pdfjsLib');
+        try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = src.worker; }catch(e){}
+        return; // สำเร็จ ออกจากลูปเลย
+      }catch(e){ lastErr = e; }
+    }
+    throw new Error('โหลดไลบรารี pdf.js ไม่สำเร็จ (เช็คอินเทอร์เน็ต หรือถ้าเปิดผ่าน Google Translate/เบราว์เซอร์แปลภาษา ลองปิดโหมดแปลแล้วลองใหม่): '+(lastErr?lastErr.message:''));
+  })();
+  _pdfJsLoadPromise.catch(()=>{ _pdfJsLoadPromise = null; }); // ให้ลองใหม่ได้ในครั้งถัดไปถ้าล้มเหลว (ไม่ค้าง promise เดิมที่ reject ไปแล้วตลอดไป)
   return _pdfJsLoadPromise;
 }
 // อ่านข้อความทั้งหมดจากไฟล์ PDF ทีละหน้า พยายามคง "แถว" ไว้คร่าวๆ โดยดูค่า y (transform[5]) ของแต่ละ item
