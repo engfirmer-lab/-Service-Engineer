@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.60
-  อัปเดตล่าสุด   : 28 กันยายน 2569 23:59 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.63
+  อัปเดตล่าสุด   : 29 กันยายน 2569 13:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -27,6 +27,9 @@
   - [FIXED v8.60] "พื้นที่รับผิดชอบของฉัน" เปลี่ยนชื่อเป็น "รุ่นเครื่องที่ดูแล" (Engineer)
   - [FIXED v8.60] แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น แบบ accordion (ซ่อนไว้ก่อน กดเปิดทีละ Category) อัปโหลดได้แม้ไม่ได้อยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล"
   - [FIXED v8.60] Sup Product กำหนดได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน/ผู้ผลิต/ทั้งคู่/ไม่บังคับ — Engineer เห็นเป็นป้าย 📌 ในแท็บ Certificate ของตัวเอง (เก็บที่ meta/certRequirements)
+  - [FIXED v8.61] แท็บ "ประวัติRP" ปรับโครงสร้างคอลัมน์: ตัดคอลัมน์ "รูปใบเบิก" รวมกลางตารางออก ย้าย "รูปหลักฐาน" ไปหลัง "คะแนน" แล้วเพิ่มคอลัมน์ "รูปใบเบิก 1,2,3..." ขยายท้ายสุดได้เรื่อยๆ (คนละคอลัมน์ต่อไฟล์ ลิงก์เดี่ยว เขียนพร้อมแถวเดียวตั้งแต่แรก ไม่ต้องเซ็ต rich text แยกทีหลังแบบเดิม) — แก้ต้นตอบัคลิงก์รูปใบเบิกหายเวลามีใบเบิกหลายใบ ชื่อลิงก์เปลี่ยนเป็นเลขที่ใบเบิก (เช่น SPO123455) — แถวเก่าก่อนหน้านี้จะไม่ถูกจัดเรียงคอลัมน์ให้อัตโนมัติ ต้องจัดเองด้วยมือถ้าต้องการให้ตรงกับหัวใหม่
+  - [FIXED v8.62] ลบเอกสาร (Sup Product เพิ่มเอกสาร) — ตัดตัวเลือก "ลบแค่ลิงก์ในระบบ (ไฟล์ใน Drive ยังอยู่)" ออกแล้ว ถ้าเอกสารมีไฟล์ใน Drive อยู่ ลบในแอพจะลบไฟล์ใน Drive ด้วยเสมอ กันไฟล์ค้างไม่มีใครลบ (ยกเว้นกรณี "ลบลิงก์เสียทั้งหมด" ที่ไฟล์หายไปจาก Drive แล้วอยู่แล้ว จึงลบแค่ลิงก์ในระบบตามเดิม)
+  - [FIXED v8.63] เพิ่มเอกสารใหม่ (Sup Product) — เพิ่มตัวเลือก "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย" ติ๊กเลือกรุ่นอื่นที่ดูแลได้หลายรุ่น อัปโหลด/วางลิงก์ครั้งเดียวแต่สร้างรายการเอกสารให้ทุกรุ่นที่เลือก (ชี้ไฟล์เดียวกัน ผูกกันด้วย groupId) — ตอนลบเอกสารที่ผูกหลายรุ่นแบบนี้ จะขึ้น checklist ให้เลือกว่าจะลบออกจากรุ่นไหนบ้าง (ค่าเริ่มต้นติ๊กครบทุกรุ่น) ไฟล์จริงใน Drive จะถูกลบก็ต่อเมื่อไม่เหลือรุ่นไหนอ้างอิงไฟล์นั้นแล้วเท่านั้น
   - [FIXED] รูป thumbnail ใน attachment preview: เปลี่ยนจาก lh3.googleusercontent.com เป็น drive.google.com/thumbnail?id=...&sz=w200 แก้ CORS/auth issue แล้ว
   - [FIXED] Auto-delete Sheet row: เมื่อ Sup Product ลบเคลมที่ค้างอยู่ (archive ไป Sheet แล้วแต่ Firestore delete ล้มเหลว) ตอนนี้ลบแถว Sheet ด้วยแล้วผ่าน deleteSheetRowIfTracked() / sheetRowIndex field
   ===================================================================
@@ -50,7 +53,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.60</title>
+<title>F1 Service — v8.63</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -834,6 +837,10 @@
           <div id="doclink-upload-progress-text" style="font-size:11px;color:var(--text-faint);margin-top:4px;"></div>
         </div>
       </div>
+      <div id="doclink-share-wrap" style="margin-top:14px;display:none;">
+        <button type="button" id="doclink-share-toggle-btn" class="btn btn-ghost btn-sm" style="width:100%;text-align:left;">📎 ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย <span id="doclink-share-count" style="color:var(--text-faint);font-weight:400;"></span></button>
+        <div id="doclink-share-list" style="display:none;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:6px;"></div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm" id="doclink-save-btn">บันทึก</button>
         <button class="btn btn-ghost btn-sm" id="doclink-delete-btn" style="display:none;color:var(--red);border-color:var(--red);">ลบลิงก์นี้</button>
@@ -1493,8 +1500,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.60";
-const APP_UPDATED_AT = "28 กันยายน 2569 23:59 น. เวลาไทย";
+const APP_VERSION = "8.63";
+const APP_UPDATED_AT = "29 กันยายน 2569 13:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1891,24 +1898,59 @@ function validateAddErrorForm(fieldPrefix, solutionsArr){
 }
 // แทนที่แพทเทิร์นเดิมที่ถาม confirm() ซ้อนกัน 2 ครั้งตอนลบเอกสารที่มีไฟล์แนบ (กด "ยกเลิก" บนกล่องแรกโดยตั้งใจแค่ไม่ให้ลบไฟล์ Drive
 // แต่ดันโดนกล่องที่ 2 ถามซ้ำทันที กด "ยกเลิก" อีกทีเพราะงง สุดท้ายไม่มีอะไรถูกลบเลยทั้งที่ตั้งใจจะลบลิงก์) — ใช้ปุ่มเดียวเลือกชัดเจนแทน
-function askDeleteChoice(){
+// v8.62 — ตัดตัวเลือก "ลบแค่ลิงก์ในระบบ" ออกแล้ว: ลบเอกสารในแอพ = ลบไฟล์ใน Drive เสมอ (ไม่ปล่อยไฟล์ค้าง)
+function confirmDeleteDoc(hasFile){
+  return confirm(hasFile
+    ? 'ยืนยันการลบเอกสารนี้? ไฟล์จริงใน Google Drive จะถูกลบไปด้วย กู้คืนไม่ได้'
+    : 'ยืนยันการลบลิงก์นี้?');
+}
+// v8.63 — เอกสารที่ผูกไฟล์เดียวกันหลายรุ่น (groupId ร่วมกัน): เลือกได้ว่าจะลบออกจากรุ่นไหนบ้าง
+// ค่าเริ่มต้นติ๊กไว้ครบทุกรุ่น (=ลบออกทั้งหมด) แต่เอาออกจากบางรุ่นได้ถ้าต้องการเก็บรุ่นอื่นไว้
+function chooseGroupDeleteTargets(siblingDocs, currentId){
   return new Promise(resolve=>{
     const ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const listHtml = siblingDocs.map(d=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;padding:5px 0;cursor:pointer;">
+      <input type="checkbox" class="grpdel-chk" value="${d.id}" checked>
+      <span>${escapeHtml(d.category)} · ${escapeHtml(d.model)}${d.id===currentId?' <span style="color:var(--text-faint);">(รายการนี้)</span>':''}</span>
+    </label>`).join('');
     ov.innerHTML = `
-      <div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:340px;width:100%;">
-        <p style="font-size:14.5px;font-weight:600;margin:0 0 6px;">ลบเอกสารนี้อย่างไร?</p>
-        <p style="font-size:12px;color:var(--text-faint);margin:0 0 16px;">เลือก "ลบไฟล์ใน Drive ด้วย" จะลบไฟล์จริงถาวร กู้คืนไม่ได้</p>
-        <button id="del-choice-file" class="btn btn-primary btn-sm" style="width:100%;margin-bottom:8px;">🗑️ ลบไฟล์ใน Drive + ลิงก์ในระบบ</button>
-        <button id="del-choice-link" class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px;">ลบแค่ลิงก์ในระบบ (ไฟล์ใน Drive ยังอยู่)</button>
-        <button id="del-choice-cancel" class="btn btn-ghost btn-sm" style="width:100%;">ยกเลิก</button>
+      <div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:360px;width:100%;max-height:80vh;overflow-y:auto;">
+        <p style="font-size:14.5px;font-weight:600;margin:0 0 4px;">เอกสารนี้ใช้ร่วมกันหลายรุ่น</p>
+        <p style="font-size:12px;color:var(--text-faint);margin:0 0 12px;">เลือกรุ่นที่ต้องการลบออก (ค่าเริ่มต้นเลือกไว้ทุกรุ่น) — ไฟล์จริงใน Drive จะถูกลบก็ต่อเมื่อไม่เหลือรุ่นไหนใช้ไฟล์นี้แล้วเท่านั้น</p>
+        <div id="grpdel-list">${listHtml}</div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button id="grpdel-confirm" class="btn btn-primary btn-sm" style="flex:1;">ลบตามที่เลือก</button>
+          <button id="grpdel-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button>
+        </div>
       </div>`;
     document.body.appendChild(ov);
     const cleanup = (val)=>{ ov.remove(); resolve(val); };
-    ov.querySelector('#del-choice-file').addEventListener('click', ()=>cleanup('file'));
-    ov.querySelector('#del-choice-link').addEventListener('click', ()=>cleanup('link'));
-    ov.querySelector('#del-choice-cancel').addEventListener('click', ()=>cleanup('cancel'));
+    ov.querySelector('#grpdel-confirm').addEventListener('click', ()=>{
+      const ids = Array.from(ov.querySelectorAll('.grpdel-chk:checked')).map(i=>i.value);
+      cleanup(ids.length>0 ? ids : null);
+    });
+    ov.querySelector('#grpdel-cancel').addEventListener('click', ()=>cleanup(null));
   });
+}
+// v8.63 — ลบเอกสารหลายรายการ (idsToDelete) แล้วลบไฟล์ Drive จริงเฉพาะตอนไม่เหลือรายการไหนอ้างอิง driveFileId นั้นแล้ว
+async function execGroupDelete(idsToDelete, driveFileId){
+  showLoadingOverlay('กำลังลบ...');
+  try{
+    for(const did of idsToDelete){ await fsDeleteDocument(did); }
+    DATA.documents = DATA.documents.filter(x=>!idsToDelete.includes(x.id));
+    if(driveFileId){
+      const stillReferenced = DATA.documents.some(x=>x.url && extractDriveFileId(x.url)===driveFileId);
+      if(!stillReferenced){
+        const token = await ensureDriveAccess();
+        const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
+        if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้)');
+      }
+    }
+  }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไม่สำเร็จบางส่วน: '+e.message); renderAll(); return false; }
+  hideLoadingOverlay();
+  renderAll();
+  return true;
 }
 function setStatus(loading, text){ $('status-dot').className='dot'+(loading?' loading':''); $('status-text').textContent=text; }
 const NO_OWNER = '__none__';
@@ -5217,26 +5259,21 @@ function renderDocLinkListItems(){
   wrap.querySelectorAll('[data-dellink]').forEach(b=>b.addEventListener('click', async ()=>{
     const id = b.getAttribute('data-dellink');
     const doc = docs.find(d=>d.id===id);
-    const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-    let deleteFileToo = false;
-    if(driveFileId){
-      const choice = await askDeleteChoice();
-      if(choice==='cancel') return;
-      deleteFileToo = (choice==='file');
-    } else if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
-    if(deleteFileToo){
-      showLoadingOverlay('กำลังลบไฟล์...');
-      try{
-        const token = await ensureDriveAccess();
-        const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-        if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
-      }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไฟล์ไม่สำเร็จ: '+e.message+' — ลิงก์ในระบบยังอยู่เหมือนเดิม ลองกดลบใหม่อีกครั้งได้'); return; }
-      hideLoadingOverlay();
+    if(!doc) return;
+    const driveFileId = doc.url ? extractDriveFileId(doc.url) : null;
+    const siblings = doc.groupId ? DATA.documents.filter(x=>x.groupId===doc.groupId) : [doc];
+    let idsToDelete;
+    if(siblings.length>1){
+      idsToDelete = await chooseGroupDeleteTargets(siblings, id);
+      if(!idsToDelete) return;
+    } else {
+      if(!confirmDeleteDoc(!!driveFileId)) return;
+      idsToDelete = [id];
     }
-    try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบลิงก์ไม่สำเร็จ: '+e.message+(deleteFileToo?' (ไฟล์ใน Drive ถูกลบไปแล้ว แต่ลิงก์ในระบบยังลบไม่สำเร็จ ลองกดลบใหม่อีกครั้งได้)':'')); return; }
-    DATA.documents = DATA.documents.filter(d=>d.id!==id);
-    renderDocLinkListItems(); renderAll();
-    showToast(deleteFileToo ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว');
+    const ok = await execGroupDelete(idsToDelete, driveFileId);
+    if(!ok){ renderDocLinkListItems(); return; }
+    renderDocLinkListItems();
+    showToast(idsToDelete.length>1 ? `✓ ลบแล้ว ${idsToDelete.length} รายการ` : (driveFileId ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว'));
   }));
 }
 $('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
@@ -5268,6 +5305,38 @@ wireFileDropzone($('doclink-dropzone'), (files)=>{
 });
 $('doclink-file-input').addEventListener('change', ()=>{ if($('doclink-file-input').files.length>0) $('doclink-dropzone').classList.remove('field-invalid'); });
 
+// v8.63 — รายชื่อรุ่นอื่นที่ดูแล (ไม่รวมรุ่นปัจจุบัน) ให้เลือกผูกเอกสารเดียวกันตอนเพิ่มใหม่
+function docShareCandidateModels(excludeCategory, excludeModel){
+  const list = [];
+  Object.entries(DATA.categories||{}).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,ms])=>{
+    [...ms].sort(naturalSort).forEach(m=>{
+      if(cat===excludeCategory && m===excludeModel) return;
+      if(ownerOf(cat,m)===currentSupIdentity) list.push({category:cat, model:m});
+    });
+  });
+  return list;
+}
+function renderDoclinkShareList(){
+  const candidates = docShareCandidateModels(doclinkContext.category, doclinkContext.model);
+  const wrap = $('doclink-share-wrap');
+  if(candidates.length===0){ wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const listEl = $('doclink-share-list');
+  listEl.innerHTML = candidates.map(c=>`<label style="display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;cursor:pointer;">
+    <input type="checkbox" class="doclink-share-chk" data-cat="${escapeHtml(c.category)}" data-model="${escapeHtml(c.model)}">
+    <span>${escapeHtml(c.category)} · ${escapeHtml(c.model)}</span>
+  </label>`).join('');
+  const updateCount = ()=>{
+    const n = listEl.querySelectorAll('.doclink-share-chk:checked').length;
+    $('doclink-share-count').textContent = n>0 ? `(เลือกแล้ว ${n} รุ่น)` : '';
+  };
+  listEl.querySelectorAll('.doclink-share-chk').forEach(chk=>chk.addEventListener('change', updateCount));
+  updateCount();
+}
+$('doclink-share-toggle-btn').addEventListener('click', ()=>{
+  const listEl = $('doclink-share-list');
+  listEl.style.display = listEl.style.display==='none' ? 'block' : 'none';
+});
 function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const existing = existingId ? DATA.documents.find(d=>d.id===existingId) : null;
   doclinkContext = { category, model, docType, videoSubtype, existingId: existingId || null };
@@ -5290,6 +5359,13 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const saveBtn = $('doclink-save-btn');
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   setDoclinkMode(existing ? 'link' : 'upload'); // เอกสารใหม่ → เปิดโหมดอัปโหลดไฟล์เป็นค่าเริ่มต้น / แก้ไขของเดิม → เปิดโหมดลิงก์ก่อน จะได้เห็นลิงก์เดิมทันที
+  // v8.63 — "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย" เฉพาะตอนเพิ่มใหม่เท่านั้น (แก้ไขของเดิมไม่เกี่ยว เพราะแก้แค่รายการเดียว)
+  if(existing){
+    $('doclink-share-wrap').style.display = 'none';
+  } else {
+    renderDoclinkShareList();
+    $('doclink-share-list').style.display = 'none';
+  }
   if(existing){
     doclinkDirtyGuard = attachEditDirtyGuard($('doclink-modal'), saveBtn, snapshotDoclinkEditState);
   } else {
@@ -5365,10 +5441,22 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
       const doc = DATA.documents.find(d=>d.id===existingId);
       if(doc){ doc.title = title; doc.url = url; }
     } else {
-      const fields = { docType, category, model, title, method:'link', url, uploadedAt: Date.now() };
-      if(docTypeHasSubtypes(docType)) fields.videoSubtype = videoSubtype;
-      const newId = await fsAddDocument(fields);
-      DATA.documents.push({ id:newId, ...fields });
+      // v8.63 — "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย": สร้างรายการเอกสารให้ทุกรุ่นที่เลือกพร้อมกัน ชี้ไปไฟล์/ลิงก์เดียวกัน
+      // ใส่ groupId ร่วมกันไว้ ใช้ตอนลบทีหลัง (เช็คว่ายังมีรุ่นอื่นอ้างอิงไฟล์นี้อยู่มั้ย ก่อนลบไฟล์จริงใน Drive)
+      const shareChks = Array.from(document.querySelectorAll('.doclink-share-chk:checked'));
+      const shareTargets = shareChks.map(c=>({ category:c.getAttribute('data-cat'), model:c.getAttribute('data-model') }));
+      const groupId = shareTargets.length>0 ? ('g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)) : null;
+      const baseFields = { docType, title, method:'link', url, uploadedAt: Date.now() };
+      if(docTypeHasSubtypes(docType)) baseFields.videoSubtype = videoSubtype;
+      if(groupId) baseFields.groupId = groupId;
+      const primaryFields = { ...baseFields, category, model };
+      const newId = await fsAddDocument(primaryFields);
+      DATA.documents.push({ id:newId, ...primaryFields });
+      for(const t of shareTargets){
+        const f = { ...baseFields, category:t.category, model:t.model };
+        const tid = await fsAddDocument(f);
+        DATA.documents.push({ id:tid, ...f });
+      }
     }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
@@ -5381,28 +5469,22 @@ $('doclink-delete-btn').addEventListener('click', async ()=>{
   if(!doclinkContext || !doclinkContext.existingId) return;
   const id = doclinkContext.existingId;
   const doc = DATA.documents.find(d=>d.id===id);
-  const driveFileId = doc ? extractDriveFileId(doc.url) : null;
-  let deleteFileToo = false;
-  if(driveFileId){
-    const choice = await askDeleteChoice();
-    if(choice==='cancel') return;
-    deleteFileToo = (choice==='file');
-  } else if(!confirm('ยืนยันการลบลิงก์นี้?')) return;
-  if(deleteFileToo){
-    showLoadingOverlay('กำลังลบไฟล์...');
-    try{
-      const token = await ensureDriveAccess();
-      const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-      if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้ — เจ้าของไฟล์จริงเป็นคนอื่น)');
-    }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไฟล์ไม่สำเร็จ: '+e.message+' — ลิงก์ในระบบยังอยู่เหมือนเดิม ลองกดลบใหม่อีกครั้งได้'); return; }
-    hideLoadingOverlay();
+  if(!doc) return;
+  const driveFileId = doc.url ? extractDriveFileId(doc.url) : null;
+  const siblings = doc.groupId ? DATA.documents.filter(x=>x.groupId===doc.groupId) : [doc];
+  let idsToDelete;
+  if(siblings.length>1){
+    idsToDelete = await chooseGroupDeleteTargets(siblings, id);
+    if(!idsToDelete) return;
+  } else {
+    if(!confirmDeleteDoc(!!driveFileId)) return;
+    idsToDelete = [id];
   }
-  try{ await fsDeleteDocument(id); }catch(e){ showToast('⚠ ลบลิงก์ไม่สำเร็จ: '+e.message+(deleteFileToo?' (ไฟล์ใน Drive ถูกลบไปแล้ว แต่ลิงก์ในระบบยังลบไม่สำเร็จ ลองกดลบใหม่อีกครั้งได้)':'')); return; }
-  DATA.documents = DATA.documents.filter(d=>d.id!==id);
+  const ok = await execGroupDelete(idsToDelete, driveFileId);
+  if(!ok) return;
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
-  renderAll();
-  showToast(deleteFileToo ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว');
+  showToast(idsToDelete.length>1 ? `✓ ลบแล้ว ${idsToDelete.length} รายการ` : (driveFileId ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว'));
 });
 
 async function renderSupView(){
@@ -8205,6 +8287,13 @@ $('rp-modal').addEventListener('click', e=>{ if(e.target===$('rp-modal')) closeR
 const RP_SHEET_NAME    = 'ส่งคืนอะไหล่ Office';  // ชื่อไฟล์ Spreadsheet ใน Drive
 // v8.50: หัวตารางใหม่ — เพิ่ม 3 คอลัมน์ตรวจรับ (ประวัติ หลัง Admin Service ยืนยันรับ)
 const RP_SHEET_HEADERS = ['วันที่บันทึก','วันที่ตรวจรับ','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','รูปใบเบิก','รูปหลักฐาน','ผู้ตรวจรับ','ผลการประเมิน','คะแนน'];
+// v8.61 — หัวตารางแท็บ "ประวัติRP" แบบใหม่: base 9 คอลัมน์คงที่ ตามด้วย "รูปใบเบิก N" ขยายต่อท้ายได้เรื่อยๆ (คนละคอลัมน์ต่อไฟล์ ไม่ต้องยัดรวมในเซลล์เดียวแบบเดิม)
+const RP_HIST_HEADERS_BASE = ['วันที่บันทึก','วันที่ตรวจรับ','ผู้ส่ง','เลขที่ใบเบิก','วิธีการส่ง','ผู้ตรวจรับ','ผลการประเมิน','คะแนน','รูปหลักฐาน'];
+function colIndexToLetter(idx0){
+  let n = idx0+1, s='';
+  while(n>0){ const rem=(n-1)%26; s=String.fromCharCode(65+rem)+s; n=Math.floor((n-1)/26); }
+  return s;
+}
 // Columns: A=วันที่บันทึก B=วันที่ตรวจรับ C=ผู้ส่ง D=เลขที่ใบเบิก E=วิธีการส่ง F=รูปใบเบิก G=รูปหลักฐาน H=ผู้ตรวจรับ I=ผลการประเมิน J=คะแนน (v8.59 — ย้าย วันที่ตรวจรับ มาถัดจาก วันที่บันทึก)
 // สีหัวตาราง: ม่วงอ่อน (lavender)
 const RP_HEADER_COLOR  = { red: 1, green: 1, blue: 1 }; // v8.40 ขาว (เปลี่ยนจากม่วง)
@@ -8416,6 +8505,62 @@ async function rpSetMultiLinkCell(sheetId, tabGid, rowIndex0, colIndex0, items){
     body: JSON.stringify({ requests })
   });
   if(!res.ok) throw new Error('เซ็ต rich text ลิงก์หลายไฟล์ไม่สำเร็จ: '+await res.text());
+}
+
+/* v8.61 — จัดการหัวตารางของแท็บ "ประวัติRP" แบบไดนามิก
+   Base 9 คอลัมน์คงที่ (RP_HIST_HEADERS_BASE) + "รูปใบเบิก N" ขยายต่อท้ายได้เรื่อยๆ ตามจำนวนใบเบิกสูงสุดที่เคยมีในแถวเดียว
+   คืนค่าจำนวนคอลัมน์ "รูปใบเบิก" ทั้งหมดที่มีอยู่ในหัวตารางหลังเรียกฟังก์ชันนี้ (>= neededWiCount) */
+async function rpEnsureHistHeader(sheetId, histTabName, token, neededWiCount){
+  const tabGid = _rpTabGidCache[histTabName];
+  const baseLen = RP_HIST_HEADERS_BASE.length;
+  const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!1:1')}`, { headers:{Authorization:`Bearer ${token}`} });
+  const headerData = await headerRes.json();
+  const currentHeader = (headerData.values && headerData.values[0]) || [];
+  const baseMatches = currentHeader.length>=baseLen && RP_HIST_HEADERS_BASE.every((h,i)=>currentHeader[i]===h);
+  let existingWiCount = 0;
+  if(baseMatches){
+    for(let i=baseLen; i<currentHeader.length; i++){
+      if(/^รูปใบเบิก \d+$/.test(currentHeader[i]||'')) existingWiCount++; else break;
+    }
+  }
+  async function paintHeaderRange(startColIndex0, endColIndex0){
+    if(tabGid===undefined) return;
+    try{
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
+        method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ requests:[{ repeatCell:{
+          range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:startColIndex0, endColumnIndex:endColIndex0 },
+          cell:{ userEnteredFormat:{ backgroundColor:{ red:0.957, green:0.8, blue:0.8 }, textFormat:{ bold:true, foregroundColor:{red:0,green:0,blue:0} } } },
+          fields:'userEnteredFormat(backgroundColor,textFormat)'
+        }}] })
+      });
+    }catch(e){ console.warn('เซ็ตสี header ไม่สำเร็จ (ข้าม):', e.message); }
+  }
+  if(!baseMatches){
+    // เขียนทับ header ทั้งแถวใหม่ (ไม่กระทบแถวข้อมูลเก่าที่มีอยู่แล้ว — ถ้าเป็นแท็บเก่าจากเวอร์ชันก่อนหน้าที่ลำดับคอลัมน์ไม่ตรงกัน ต้องจัดเรียงแถวเก่าเองด้วยมือ)
+    const wiHeaders = [];
+    for(let n=1; n<=Math.max(neededWiCount,1); n++) wiHeaders.push(`รูปใบเบิก ${n}`);
+    const fullHeader = neededWiCount>0 ? RP_HIST_HEADERS_BASE.concat(wiHeaders) : RP_HIST_HEADERS_BASE.slice();
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1')}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values:[fullHeader] })
+    });
+    await paintHeaderRange(0, fullHeader.length);
+    return neededWiCount>0 ? neededWiCount : 0;
+  }
+  if(neededWiCount > existingWiCount){
+    const newHeaders = [];
+    for(let n=existingWiCount+1; n<=neededWiCount; n++) newHeaders.push(`รูปใบเบิก ${n}`);
+    const startColIndex0 = baseLen + existingWiCount;
+    const startColLetter = colIndexToLetter(startColIndex0);
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!'+startColLetter+'1')}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values:[newHeaders] })
+    });
+    await paintHeaderRange(startColIndex0, baseLen+neededWiCount);
+    return neededWiCount;
+  }
+  return existingWiCount;
 }
 
 /* แปลง row array เป็น object — รองรับทั้งรูปแบบใหม่ (v8.34) และเก่า (v8.17/v8.19)
@@ -9690,69 +9835,32 @@ async function rpConfirmReceive(d, evalResults, score){
 
   const withdrawals = d.withdrawals||[];
   const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ') || '-';
-
-  // v8.59 — ใบเบิกใบเดียว: ใช้ HYPERLINK ปกติ (คลิกได้ทันที ไม่ต้องเรียก API เพิ่ม)
-  // หลายใบเบิก: HYPERLINK เดียวรวมหลาย URL ไม่ได้ (Sheets จะแปลงเป็นข้อความล้วนตอน concat) —
-  // เว้นคอลัมน์นี้ว่างไว้ก่อน แล้วค่อยเซ็ต rich text (ลิงก์แยกทีละไฟล์ในเซลล์เดียว) ทับทีหลังด้วย updateCells
-  let wiCell = '';
-  if(withdrawals.length===1 && withdrawals[0].driveUrl){
-    wiCell = `=HYPERLINK("${withdrawals[0].driveUrl}";"รูปใบเบิก")`;
-  }
   const evCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
   const evalStr = evalResults.length>0 ? evalResults.join(' / ') : 'เรียบร้อยสมบูรณ์';
   const scoreVal = (typeof score === 'number') ? score : 5;
 
-  // 10 cols (v8.59 — วันที่ตรวจรับ ย้ายมาอยู่ถัดจาก วันที่บันทึก):
-  // วันที่บันทึก, วันที่ตรวจรับ, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, รูปใบเบิก, รูปหลักฐาน, ผู้ตรวจรับ, ผลการประเมิน, คะแนน
-  const row = [recordDate, receiveDate, d.senderName||'', spoNums, d.returnMethodLabel||'', wiCell, evCell, receiverName, evalStr, scoreVal];
-
-  // 2) append ไปที่ Sheet ประวัติ (ใช้ tab 'ประวัติRP' หรือ 'HistoryRP' — สร้างถ้ายังไม่มี)
+  // 2) เตรียม Sheet + แท็บประวัติ
   const sheetId = await ensureReturnPartsSheet();
   const histTabName = `ประวัติRP${nowDate.getFullYear()}`;
   await ensureRpTab(sheetId, histTabName);
-  // ตรวจสอบว่า header ตรงกับ RP_SHEET_HEADERS ปัจจุบันไหม (v8.59 — เขียนทับทุกครั้งที่ไม่ตรง กันแท็บเก่าจากเวอร์ชันก่อนหน้า
-  // ที่ลำดับคอลัมน์ไม่ตรงกัน เช่น ตอนย้าย "วันที่ตรวจรับ" มาไว้คอลัมน์ B — ถ้าไม่ทำแบบนี้ แถวเก่ากับ header เก่าจะค้างไม่ตรงกับแถวใหม่ตลอดไป)
   const token = await rpGetToken();
-  const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1:J1')}`, { headers:{Authorization:`Bearer ${token}`} });
-  const headerData = await headerRes.json();
-  const currentHeader = (headerData.values && headerData.values[0]) || [];
-  const headerMatches = currentHeader.length===RP_SHEET_HEADERS.length && RP_SHEET_HEADERS.every((h,i)=>currentHeader[i]===h);
-  if(!headerMatches){
-    // เขียนทับแถว header (ไม่กระทบแถวข้อมูลที่มีอยู่แล้ว — ถ้าเป็นแท็บเก่าที่มีข้อมูลลำดับคอลัมน์เดิมอยู่ก่อนหน้า ต้องไปจัดเรียงคอลัมน์ของแถวเก่าเองด้วยมือ)
-    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(histTabName+'!A1')}?valueInputOption=USER_ENTERED`, {
-      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ values:[RP_SHEET_HEADERS] })
-    });
-    // เซ็ตสีพื้นหลัง header เป็นชมพูอ่อนด้วย (เผื่อเป็นแท็บเก่าที่หัวยังเป็นขาวจากโค้ดเวอร์ชันก่อน v8.59)
-    try{
-      const tabGid = _rpTabGidCache[histTabName];
-      if(tabGid!==undefined){
-        await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}:batchUpdate`, {
-          method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-          body: JSON.stringify({ requests:[{ repeatCell:{
-            range:{ sheetId:tabGid, startRowIndex:0, endRowIndex:1, startColumnIndex:0, endColumnIndex:RP_SHEET_HEADERS.length },
-            cell:{ userEnteredFormat:{ backgroundColor:{ red:0.957, green:0.8, blue:0.8 }, textFormat:{ bold:true, foregroundColor:{red:0,green:0,blue:0} } } },
-            fields:'userEnteredFormat(backgroundColor,textFormat)'
-          }}] })
-        });
-      }
-    }catch(e){ console.warn('เซ็ตสี header ไม่สำเร็จ (ข้าม):', e.message); }
-  }
-  const appendResult = await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
 
-  // v8.59 — หลายใบเบิก: เซ็ต rich text ลิงก์แยกทีละไฟล์ทับในคอลัมน์ "รูปใบเบิก" (col F, index 5)
-  if(withdrawals.length>1){
-    try{
-      const updatedRange = appendResult && appendResult.updates && appendResult.updates.updatedRange;
-      const rowMatch = updatedRange && updatedRange.match(/![A-Z]+(\d+):/);
-      if(rowMatch){
-        const rowIndex0 = parseInt(rowMatch[1],10) - 1;
-        const tabGid = _rpTabGidCache[histTabName];
-        const items = withdrawals.map((w,i)=>({ label: w.num ? `ใบเบิก ${w.num}` : `ไฟล์ ${i+1}`, url: w.driveUrl||'' })).filter(it=>it.url);
-        if(tabGid!==undefined && items.length>0) await rpSetMultiLinkCell(sheetId, tabGid, rowIndex0, 5, items);
-      }
-    }catch(e){ console.warn('เซ็ตลิงก์รูปใบเบิกหลายไฟล์ไม่สำเร็จ (ข้าม — ยังบันทึกแถวสำเร็จปกติ):', e.message); }
+  // v8.61 — คอลัมน์ "รูปใบเบิก N" อยู่ท้ายสุด แยกคนละคอลัมน์ต่อไฟล์ (ลิงก์เดี่ยว คลิกได้ทันที ไม่ต้องเซ็ต rich text ทีหลังแบบเดิม)
+  // ชื่อลิงก์ที่กดดู = เลขที่ใบเบิก เช่น "SPO123455" แทน "รูปใบเบิก N"
+  const wiItems = withdrawals.map(w=>({ label: w.num||'', url: w.driveUrl||'' })).filter(it=>it.url);
+  const totalWiCols = await rpEnsureHistHeader(sheetId, histTabName, token, wiItems.length);
+  const wiCells = [];
+  for(let i=0;i<totalWiCols;i++){
+    const it = wiItems[i];
+    const label = it ? (it.label || `ไฟล์ ${i+1}`).replace(/"/g,'') : '';
+    wiCells.push(it ? `=HYPERLINK("${it.url}";"${label}")` : '');
   }
+
+  // base 9 คอลัมน์ (v8.61 — คะแนน > รูปหลักฐาน > รูปใบเบิก ท้ายสุด):
+  // วันที่บันทึก, วันที่ตรวจรับ, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, ผู้ตรวจรับ, ผลการประเมิน, คะแนน, รูปหลักฐาน, [รูปใบเบิก 1, 2, ...]
+  const row = [recordDate, receiveDate, d.senderName||'', spoNums, d.returnMethodLabel||'', receiverName, evalStr, scoreVal, evCell, ...wiCells];
+
+  const appendResult = await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
 
   // 3) ลบ Drive files ทีละไฟล์
   const fileIds = d.driveFileIds || [];
