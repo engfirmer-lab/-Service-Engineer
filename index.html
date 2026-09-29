@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.65
-  อัปเดตล่าสุด   : 29 กันยายน 2569 14:12 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.66
+  อัปเดตล่าสุด   : 29 กันยายน 2569 15:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,7 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.66] เอกสารที่บันทึกไว้แล้ว (แก้ไข) — เพิ่มรุ่นอื่นที่ใช้ไฟล์เดียวกันเข้ากลุ่ม groupId เดิมได้ทีหลัง ไม่ต้องผูกตอนสร้างใหม่ครั้งแรกเท่านั้น (เปิด modal แก้ไขเอกสาร จะมีส่วน "เพิ่มรุ่นที่ใช้ไฟล์นี้ด้วย" โชว์เฉพาะรุ่นที่ยังไม่ได้ผูกไฟล์นี้ ให้ติ๊กเพิ่มแล้วกดบันทึก)
   - [FIXED v8.65] ปุ่มซ่อน/แสดง — ค่าเริ่มต้นเปลี่ยนเป็น "ซ่อนไว้ก่อน" เสมอ (ต้องกดแสดงเอง) จนกว่าจะเคยกดเปลี่ยนค่าไว้แล้ว
   - [FIXED v8.64] แท็บ "กำหนดรุ่นที่ต้องมี Certificate" และ "เอกสารทั้งหมดที่ฉันดูแล" (Sup Product) — เพิ่มปุ่มซ่อน/แสดงแล้ว (จำสถานะไว้ใน localStorage ต่อเครื่อง)
   - [FIXED v8.64] ปุ่ม "ตรวจสอบไฟล์ซ้ำ" ในแท็บจัดการเอกสาร (Sup Product) — สแกนไฟล์ Drive ที่ทุกเอกสาร (ทุกรุ่นที่ดูแล) ชี้ไปหา เทียบ md5Checksum หาไฟล์เนื้อหาเหมือนกันแต่คนละไฟล์จริง (คนละ fileId) แล้วให้เลือกรวมเป็นเอกสารเดียว (ผูก groupId เดียวกัน + ลบไฟล์ซ้ำออกเหลือไฟล์เดียว) — หมายเหตุ: เทียบด้วย md5 เท่านั้น ไฟล์ที่ "เนื้อหาคล้ายกัน" แต่ byte ไม่ตรงกันเป๊ะ (เช่นสแกนซ้ำคนละรอบ) จะตรวจไม่เจอ
@@ -56,7 +57,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.65</title>
+<title>F1 Service — v8.66</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1518,8 +1519,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.65";
-const APP_UPDATED_AT = "29 กันยายน 2569 14:12 น. เวลาไทย";
+const APP_VERSION = "8.66";
+const APP_UPDATED_AT = "29 กันยายน 2569 15:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5416,19 +5417,20 @@ wireFileDropzone($('doclink-dropzone'), (files)=>{
 });
 $('doclink-file-input').addEventListener('change', ()=>{ if($('doclink-file-input').files.length>0) $('doclink-dropzone').classList.remove('field-invalid'); });
 
-// v8.63 — รายชื่อรุ่นอื่นที่ดูแล (ไม่รวมรุ่นปัจจุบัน) ให้เลือกผูกเอกสารเดียวกันตอนเพิ่มใหม่
-function docShareCandidateModels(excludeCategory, excludeModel){
+// v8.63 — รายชื่อรุ่นอื่นที่ดูแล ให้เลือกผูกเอกสารเดียวกัน (ตอนเพิ่มใหม่) หรือเพิ่มเข้ากลุ่มทีหลัง (ตอนแก้ไข)
+// excludeSet = Set ของ "category|model" ที่ไม่ต้องโชว์ (รุ่นปัจจุบัน + รุ่นที่ผูกไฟล์นี้อยู่แล้ว)
+function docShareCandidateModels(excludeSet){
   const list = [];
   Object.entries(DATA.categories||{}).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,ms])=>{
     [...ms].sort(naturalSort).forEach(m=>{
-      if(cat===excludeCategory && m===excludeModel) return;
+      if(excludeSet.has(cat+'|'+m)) return;
       if(ownerOf(cat,m)===currentSupIdentity) list.push({category:cat, model:m});
     });
   });
   return list;
 }
-function renderDoclinkShareList(){
-  const candidates = docShareCandidateModels(doclinkContext.category, doclinkContext.model);
+function renderDoclinkShareList(excludeSet){
+  const candidates = docShareCandidateModels(excludeSet);
   const wrap = $('doclink-share-wrap');
   if(candidates.length===0){ wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
@@ -5470,11 +5472,15 @@ function openDocLinkModal(category, model, docType, videoSubtype, existingId){
   const saveBtn = $('doclink-save-btn');
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   setDoclinkMode(existing ? 'link' : 'upload'); // เอกสารใหม่ → เปิดโหมดอัปโหลดไฟล์เป็นค่าเริ่มต้น / แก้ไขของเดิม → เปิดโหมดลิงก์ก่อน จะได้เห็นลิงก์เดิมทันที
-  // v8.63 — "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย" เฉพาะตอนเพิ่มใหม่เท่านั้น (แก้ไขของเดิมไม่เกี่ยว เพราะแก้แค่รายการเดียว)
-  if(existing){
-    $('doclink-share-wrap').style.display = 'none';
-  } else {
-    renderDoclinkShareList();
+  // v8.66 — "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย" โชว์ทั้งตอนเพิ่มใหม่และตอนแก้ไขของเดิม
+  // ตอนแก้ไข: ให้เลือกเพิ่ม "รุ่นอื่นที่ยังไม่ได้ผูกไฟล์นี้" เข้ากลุ่ม groupId เดิมได้ทีหลัง
+  {
+    const excludeSet = new Set([category+'|'+model]);
+    if(existing && existing.groupId){
+      DATA.documents.forEach(d=>{ if(d.groupId===existing.groupId) excludeSet.add(d.category+'|'+d.model); });
+    }
+    $('doclink-share-toggle-btn').firstChild.textContent = (existing ? '📎 เพิ่มรุ่นที่ใช้ไฟล์นี้ด้วย ' : '📎 ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย ');
+    renderDoclinkShareList(excludeSet);
     $('doclink-share-list').style.display = 'none';
   }
   if(existing){
@@ -5548,9 +5554,24 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
 
   try{
     if(existingId){
-      await fsUpdateDocument(existingId, { title, url });
       const doc = DATA.documents.find(d=>d.id===existingId);
-      if(doc){ doc.title = title; doc.url = url; }
+      // v8.66 — เพิ่มรุ่นที่ใช้ไฟล์นี้ด้วยกันได้ตอนแก้ไขเอกสารเดิม (ผูก groupId เดียวกัน สร้างใหม่ถ้ายังไม่มี)
+      const shareChks2 = Array.from(document.querySelectorAll('.doclink-share-chk:checked'));
+      const shareTargets2 = shareChks2.map(c=>({ category:c.getAttribute('data-cat'), model:c.getAttribute('data-model') }));
+      let groupId2 = doc ? doc.groupId : null;
+      if(shareTargets2.length>0 && !groupId2){
+        groupId2 = 'g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+      }
+      const updateFields = { title, url };
+      if(groupId2 && !(doc && doc.groupId)) updateFields.groupId = groupId2;
+      await fsUpdateDocument(existingId, updateFields);
+      if(doc){ doc.title = title; doc.url = url; if(groupId2) doc.groupId = groupId2; }
+      for(const t of shareTargets2){
+        const f = { docType, title, method:'link', url, uploadedAt: Date.now(), groupId: groupId2, category:t.category, model:t.model };
+        if(docTypeHasSubtypes(docType)) f.videoSubtype = videoSubtype;
+        const tid = await fsAddDocument(f);
+        DATA.documents.push({ id:tid, ...f });
+      }
     } else {
       // v8.63 — "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย": สร้างรายการเอกสารให้ทุกรุ่นที่เลือกพร้อมกัน ชี้ไปไฟล์/ลิงก์เดียวกัน
       // ใส่ groupId ร่วมกันไว้ ใช้ตอนลบทีหลัง (เช็คว่ายังมีรุ่นอื่นอ้างอิงไฟล์นี้อยู่มั้ย ก่อนลบไฟล์จริงใน Drive)
