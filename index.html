@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.74
-  อัปเดตล่าสุด   : 30 กันยายน 2569 18:35 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.75
+  อัปเดตล่าสุด   : 30 กันยายน 2569 19:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,8 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.75] ตารางรายการอะไหล่จากใบงาน PDF — เปลี่ยนจาก regex เดาแบบเดิม (heuristic ล้วน ไม่แม่นยำ) มาอ่านตาราง "รหัส/ชื่อรายการ/.../คืน" (ตารางอะไหล่ที่เปลี่ยนจริงตอนปิดงาน ต่างจากตาราง "ขอเบิก/ซื้อรายการอะไหล่" ที่มักเว้นว่าง) ด้วยตำแหน่ง x เหมือนฟิลด์อื่น — กรองบรรทัด "audit log" (อนุมัติ/เหตุผลคืนซาก/วันที่) ทิ้งก่อนด้วย looksLikeAuditLogLine เพราะบรรทัดพวกนี้ปนอยู่ก่อน/หลังแถวข้อมูลจริงเสมอ แล้วค่อยกลุ่มคำเป็นแถวด้วยตำแหน่ง x ของ code/name รองรับได้หลายรายการในไฟล์เดียว (ทดสอบไฟล์จริงเจอ 2 รายการในไฟล์เดียวถูกต้องครบ) จำนวน/หน่วยดึงด้วย regex จากข้อความที่เหลือแทนการบังคับตำแหน่ง x เพราะคอลัมน์นี้ตำแหน่งไม่นิ่งในแต่ละเทมเพลต — ทดสอบผ่านไฟล์จริงครบ 5 ไฟล์ (มีอะไหล่ 2 ไฟล์ดึงได้ถูกต้อง ไม่มีอะไหล่ 3 ไฟล์ไม่ดึงอะไรมาเลย ไม่เดา)
+  - [FIXED v8.75] ฟอร์มเคลม/แจ้งปัญหา — ช่อง "หน่วย Count" บังคับเลือกเสมอ (เลือก "ไม่มี" นับว่าเลือกแล้ว ไม่ต้องกรอกจำนวน Count เลย และช่องจำนวนจะถูกปิดไว้กันสับสน) ถ้าเลือกหน่วยจริง (Test/Times/Hour) ถึงจะบังคับกรอกจำนวน Count ด้วย — เดิมบังคับกรอกจำนวน Count เสมอไม่ว่าจะเลือกหน่วยอะไร แม้เลือก "ไม่มี" ก็ยังบังคับกรอก ทำให้ขัดกับความหมายของตัวเลือก "ไม่มี" เอง
   - [FIXED v8.74] findSolutionField (v8.73) รองรับเทมเพลตที่ "สาเหตุของปัญหา" กับ "วิธีการแก้ไข" ไม่ได้อยู่บรรทัดเดียวกันแบบ grid (v8.73 รองรับแค่แบบนั้น) แต่แยกเป็น label เดี่ยวๆ ของตัวเองคนละบรรทัด ค่าจริงอยู่บรรทัดถัดไปได้หลายบรรทัด (พบจริงในไฟล์ใบงานอีกเทมเพลตหนึ่ง) — เพิ่มฟังก์ชัน findStandaloneMultilineField เป็น fallback เมื่อหา "บรรทัดที่มีทั้ง 2 label" แบบเดิมไม่เจอเลย: หา label ที่อยู่บรรทัดของตัวเองล้วนๆ (ไม่มีคำอื่นต่อท้าย) แล้วเก็บบรรทัดถัดไปต่อเนื่องจนกว่าจะเจอ label อื่นที่รู้จัก/เจอ label สาเหตุ-วิธีแก้ไข-วันที่ซ่อมเสร็จ/บรรทัดว่าง — ทดสอบกับไฟล์ PDF จริงเพิ่มอีก 1 ไฟล์ (เทมเพลตนี้โดยเฉพาะ) ดึงได้ครบถูกต้อง ไม่กระทบผลลัพธ์ไฟล์เทมเพลตเดิม 4 ไฟล์ที่เคยทดสอบผ่านแล้ว
   - [FIXED v8.73] เพิ่มดึง "วิธีการแก้ไข" (และเก็บ "สาเหตุของปัญหา" ไว้ในตัวแปร cause ด้วยแต่ยังไม่ใช้แสดงผล) จากตาราง "สรุปผลการซ่อม" ท้ายใบงาน Factorium (คอลัมน์ สาเหตุของปัญหา/วิธีการแก้ไข/วันที่ซ่อมเสร็จ บนบรรทัดเดียวกัน ค่าจริงมักยาวล้นหลายบรรทัดใต้ลงมา) — จับคู่ด้วยตำแหน่ง x ของ label เทียบกับ x ของแต่ละคำในบรรทัดถัดไป เดินคำทีละคำแล้วสลับคอลัมน์เมื่อใกล้จุดเริ่มคอลัมน์อื่น ถ้าบรรทัดไหนคำแรกไม่ใกล้คอลัมน์ไหนเลยถือว่าหลุดตารางแล้วหยุดทันที (กันไปกินหัวตารางอะไหล่/ข้อความอื่นที่บังเอิญอยู่ x ใกล้เคียงกัน เช่นที่เจอตอนทดสอบกับไฟล์เทมเพลตตัดอักษรแยกที่ตารางนี้ว่างเปล่าจริง) — ทดสอบกับไฟล์ PDF จริง 4 ไฟล์แล้ว: ไฟล์ที่มีข้อมูลจริง (sample2-4) ดึงได้ครบถูกต้อง ไฟล์ที่ตารางนี้ว่างเปล่าจริง (sample1) ไม่ดึงอะไรมาเลย (ไม่เดา) — เติมลงช่อง "วิธีการแก้ไข" อัตโนมัติถ้ามี ยังแก้ไขได้ปกติเหมือนฟิลด์อื่น
   - [FIXED v8.72] กรณีดึง PDF แล้ว "รุ่น" ไม่ตรงกับที่ตั้งไว้ในระบบ (findConfidentCategoryModelMatch หา match ไม่เจอ) เดิมจะเคลียร์ dropdown Product/รุ่นเป็นค่าว่างแบบเงียบๆ ไม่บอกอะไรเลย ผู้ใช้จริงเจอเคสนี้แล้วงงว่าทำไม "รุ่นไม่มีมาให้" — ตอนนี้ถ้าดึงข้อความ "รุ่น" จาก PDF ได้ (ไม่ว่าง) แต่หา match ไม่เจอ จะขึ้น toast บอกข้อความรุ่นที่ดึงได้จริง (เช่น "พบรุ่น \"BS-600M\" ในใบงาน แต่ไม่ตรงกับรุ่นที่ตั้งไว้ในระบบ") ให้ผู้ใช้รู้ทันทีว่าต้องเลือกเอง หรือเป็นสัญญาณว่ารุ่นนี้ยังไม่ได้เพิ่มไว้ในระบบ Product ของ Sup — ยังไม่เดา dropdown ให้เหมือนเดิม
@@ -73,7 +75,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.74</title>
+<title>F1 Service — v8.75</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1576,8 +1578,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.74";
-const APP_UPDATED_AT = "30 กันยายน 2569 18:35 น. เวลาไทย";
+const APP_VERSION = "8.75";
+const APP_UPDATED_AT = "30 กันยายน 2569 19:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6316,6 +6318,65 @@ function findStandaloneMultilineField(lines, frags){
   return '';
 }
 
+// v8.75: หารายการอะไหล่จากตาราง "รหัส/ชื่อรายการ/.../คืน" ท้ายใบงาน (ตารางอะไหล่ที่ถูกเบิก/เปลี่ยนจริงตอนปิดงาน ต่างจากตาราง "ขอเบิก/ซื้อรายการอะไหล่" ที่มักเว้นว่างไว้ไม่ได้กรอก)
+// ตารางนี้มักมีบรรทัด "audit log" (เช่น "1 : 01/09/2026 09:42", "อนุมัติโดย: System (...)", "เหตุผลการคืนซาก: -") ปนอยู่ก่อน/หลังแถวข้อมูลจริงเสมอ — กรองบรรทัดเหล่านี้ทิ้งก่อนด้วย looksLikeAuditLogLine
+// แถวข้อมูลจริงอาจมีทั้ง code และ name อยู่บรรทัดเดียวกัน (คนละคอลัมน์ x) หรือคนละบรรทัด และอาจขึ้นบรรทัดใหม่ยาวเกิน 1 บรรทัดได้ทั้งคู่ — ใช้ตำแหน่ง x เดินคำทีละคำเหมือนฟังก์ชันอื่นด้านบน
+// จำนวน/หน่วย (เช่น "1.00 EA 0.00 EA") มักอยู่คนละคอลัมน์ที่ตำแหน่ง x ไม่ตรงกับคอลัมน์ไหนแน่นอน (แตกต่างกันไปมากในแต่ละเทมเพลต) — ไม่ใช้ x บังคับ แต่เก็บเป็น "extra" แล้วค้นด้วย regex เอาตัวเลข+หน่วยนับแทน
+function looksLikeAuditLogLine(text){
+  return /อนุมัติ|เหตุผลการ|สโตร|System\s*\(/i.test(text) || /^\d+\s*:\s*\d{2}\/\d{2}\/\d{4}/.test(text);
+}
+function findPartsReturnTable(lines){
+  const rows = [];
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i];
+    if(!line.text){ i++; continue; }
+    const codeSpan = findLabelSpanInLine(line, ['รหัส']);
+    const nameSpan = findLabelSpanInLine(line, ['ชื่อรายการ']);
+    const retSpan = findLabelSpanInLine(line, ['คืน']);
+    if(!codeSpan || !nameSpan || !retSpan){ i++; continue; } // ต้องเจอครบ 3 label นี้ในบรรทัดเดียวกันถึงมั่นใจว่าเป็นตารางนี้จริง (กัน "รหัส" ไปชนคำอื่นที่ไม่เกี่ยวข้อง)
+    const codeX = codeSpan.xStart, nameX = nameSpan.xStart, margin = 20;
+    let cur = null;
+    let j = i+1;
+    for(; j<lines.length && j<i+60; j++){
+      const ln = lines[j];
+      if(!ln.text || !ln.words.length) break; // บรรทัดว่างคั่น -> จบตารางนี้
+      if(lineKnownLabelKeys(ln).length) break; // เจอ label อื่นที่รู้จักแล้ว -> หลุดตารางนี้แน่นอน
+      if(/^Showing\s/i.test(ln.text)) break; // ข้อความสรุปท้ายตาราง (มาจาก UI แบบ DataTables) -> จบตาราง
+      if(findLabelSpanInLine(ln, ['การอนุมัติขอเบิกอะไหล่','การอนุมัติขอเบิกอะไหล'])) break;
+      if(looksLikeAuditLogLine(ln.text)) continue; // บรรทัด log การอนุมัติ/บันทึกวันที่ ไม่ใช่ข้อมูลอะไหล่จริง ข้ามไปเฉยๆ ไม่ปิด/ไม่เปิดแถว
+      const fx = ln.words[0].x;
+      const nearCode = Math.abs(fx - codeX) <= margin;
+      // เจอบรรทัดที่ขึ้นต้นคอลัมน์รหัสอีกครั้ง และแถวปัจจุบันมี name/extra แล้ว (แปลว่าแถวก่อนหน้าสมบูรณ์แล้ว) -> ปิดแถวเดิม เปิดแถวใหม่ ไม่งั้นถือเป็นรหัสที่ขึ้นบรรทัดใหม่ (ต่อคำเดิม)
+      if(nearCode && cur && (cur.name.length || cur.extra.length)){ rows.push(cur); cur = null; }
+      if(!cur) cur = { code:[], name:[], extra:[] };
+      let curCol = null;
+      for(const w of ln.words){
+        if(Math.abs(w.x-codeX)<=margin) curCol = 'code';
+        else if(Math.abs(w.x-nameX)<=margin) curCol = 'name';
+        else if(!curCol) curCol = 'extra';
+        cur[curCol].push(w.str);
+      }
+    }
+    if(cur) rows.push(cur);
+    i = j;
+  }
+  const seen = new Set();
+  const out = [];
+  for(const r of rows){
+    const code = r.code.join(' ').replace(/\s*-\s*/g,'-').trim();
+    if(!/^[A-Za-z0-9][A-Za-z0-9\-\/\.]{2,}$/.test(code)) continue; // ไม่ใช่รูปแบบรหัสอะไหล่ (มีช่องว่าง/อักษรไทยปน) -> ทิ้ง กันบรรทัด log หลุดมาปน
+    if(seen.has(code)) continue;
+    seen.add(code);
+    let name = r.name.join(' ').replace(/\s*-\s*/g,'-').trim();
+    name = name.replace(new RegExp('\\s*'+code.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$'), '').trim(); // ตัดรหัสที่บางเทมเพลตใส่ซ้ำต่อท้ายชื่อรายการออก
+    const extraText = r.extra.join(' ');
+    const qtyMatch = extraText.match(/(\d+(?:\.\d+)?)\s*(?:ชิ้น|EA|PCS|อัน|ea|pcs)/i);
+    out.push({ partNumber: code, partName: name || code, qty: qtyMatch ? qtyMatch[1] : '', countQty:'', countUnit:'' });
+  }
+  return out;
+}
+
 // ทุกฟิลด์: ถ้าค่าที่ได้ดูไม่น่าเชื่อถือ (สั้นเกินไป/ว่าง/ดูเหมือนหยิบ label มาแทนค่า) จะปล่อยว่างไว้ ไม่เดา — ให้ Engineer กรอกเองดีกว่าได้ค่าผิด
 function parseFactoriumPdfText(lines){
   const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', solution:'', cause:'', parts:[] };
@@ -6340,20 +6401,11 @@ function parseFactoriumPdfText(lines){
   else if(isSaneText(errCode,3)) result.problem = errCode;
   else if(isSaneText(symptom,2)) result.problem = symptom;
 
-  // ตารางรายการอะไหล่ — ยังใช้ full text + regex heuristic เดิม (คงพฤติกรรมเดิมไว้ ไม่ใช่จุดที่แก้ในรอบนี้ — ดู [TODO] ด้านบน)
+  // v8.75: ตารางรายการอะไหล่ — เปลี่ยนจาก regex เดา (เดิม) มาใช้การอ่านตาราง "รหัส/ชื่อรายการ/.../คืน" (ตารางอะไหล่ที่ถูกเบิก/เปลี่ยนจริงตอนปิดงาน)
+  // ด้วยตำแหน่ง x เหมือนฟังก์ชันอื่นด้านบน — แม่นยำกว่าและรองรับหลายรายการ (ดูรายละเอียดที่ findPartsReturnTable)
   try{
-    const fullText = lines.map(l=>l.text).join('\n');
-    const norm = fullText.replace(/[ \t]+/g,' ');
-    const tblStart = norm.indexOf('ขอเบิก/ซื้อรายการอะไหล่')!==-1 ? norm.indexOf('ขอเบิก/ซื้อรายการอะไหล่') : norm.indexOf('ขอเบิก / ซื้อรายการอะไหล');
-    const tblEnd = norm.indexOf('การอนุมัติขอเบิกอะไหล่')!==-1 ? norm.indexOf('การอนุมัติขอเบิกอะไหล่') : norm.indexOf('การอนุมัติขอเบิกอะไหล');
-    if(tblStart !== -1){
-      const tblText = norm.slice(tblStart, tblEnd!==-1 ? tblEnd : tblStart+4000);
-      const rowRe = /([A-Za-z0-9]{2,}(?:[.\-\/][A-Za-z0-9]{1,}){1,6})\s+([^\d\n]{2,60}?)\s+(\d{1,4})\s+(?:ชิ้น|EA|PCS|อัน|ea|pcs)/gi;
-      let rm;
-      while((rm = rowRe.exec(tblText))){
-        result.parts.push({ partNumber: rm[1].trim(), partName: rm[2].trim(), qty: rm[3].trim(), countQty:'', countUnit:'' });
-      }
-    }
+    const parts = findPartsReturnTable(lines);
+    if(parts.length) result.parts = parts;
   }catch(e){ console.warn('parseFactoriumPdfText: แยกตารางอะไหล่ล้มเหลว (ไม่กระทบฟิลด์อื่น):', e.message); }
 
   const sol = findSolutionField(lines);
@@ -6444,7 +6496,7 @@ function renderClaimPartsRows(){
           <span style="font-size:12px;color:var(--text-faint);white-space:nowrap;">ชิ้น</span>
         </div>
         <div style="display:flex;align-items:center;gap:4px;flex:1;">
-          <input type="number" data-partfield="countQty" data-idx="${i}" value="${escapeHtml((p.countQty||'').toString())}" placeholder="Count" style="width:70px;" min="0">
+          <input type="number" data-partfield="countQty" data-idx="${i}" value="${escapeHtml((p.countQty||'').toString())}" placeholder="Count" style="width:70px;" min="0"${(p.countUnit||'')==='ไม่มี'?' disabled':''}>
           <select data-partfield="countUnit" data-idx="${i}" style="font-size:12.5px;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);height:34px;">
             <option value=""${!p.countUnit?' selected':''}>-- หน่วย --</option>
             <option value="ไม่มี"${(p.countUnit||'')==='ไม่มี'?' selected':''}>ไม่มี</option>
@@ -6468,6 +6520,14 @@ function renderClaimPartsRows(){
           claimDraft.parts[idx].partName = known;
           const nameEl = wrap.querySelector(`[data-partfield="partName"][data-idx="${idx}"]`);
           if(nameEl){ nameEl.value = known; nameEl.classList.remove('field-invalid'); }
+        }
+      }
+      // v8.75: เลือก "ไม่มี" -> ไม่ต้องกรอกจำนวน Count เลย (ปิดช่องกรอกไว้กันสับสน + เคลียร์ค่าทิ้ง); เลือกหน่วยอื่นที่ไม่ใช่ "ไม่มี" -> เปิดช่องกรอกจำนวนกลับมาให้กรอก (บังคับ)
+      if(field==='countUnit'){
+        const qtyEl = wrap.querySelector(`[data-partfield="countQty"][data-idx="${idx}"]`);
+        if(qtyEl){
+          if(el.value==='ไม่มี'){ qtyEl.value=''; qtyEl.disabled=true; qtyEl.classList.remove('field-invalid'); claimDraft.parts[idx].countQty=''; }
+          else{ qtyEl.disabled=false; }
         }
       }
       if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave();
@@ -6502,7 +6562,8 @@ function validateClaimPartsRows(){
     if(!partNumber && numEl){ numEl.classList.add('field-invalid'); missing.push({ el:numEl, label:`Part number (แถวที่ ${i+1})` }); } else if(numEl) numEl.classList.remove('field-invalid');
     if(!partName && nameEl){ nameEl.classList.add('field-invalid'); missing.push({ el:nameEl, label:`Part name (แถวที่ ${i+1})` }); } else if(nameEl) nameEl.classList.remove('field-invalid');
     if(!qty && qtyEl){ qtyEl.classList.add('field-invalid'); missing.push({ el:qtyEl, label:`จำนวน ชิ้น (แถวที่ ${i+1})` }); } else if(qtyEl) qtyEl.classList.remove('field-invalid');
-    if(!countQty && countQtyEl){ countQtyEl.classList.add('field-invalid'); missing.push({ el:countQtyEl, label:`จำนวน Count (แถวที่ ${i+1})` }); } else if(countQtyEl) countQtyEl.classList.remove('field-invalid');
+    // v8.75: บังคับเลือกหน่วย Count เสมอ (เลือก "ไม่มี" ก็นับว่าเลือกแล้ว) — ถ้าเลือกหน่วยจริง (ไม่ใช่ "ไม่มี") ถึงจะบังคับกรอกจำนวน Count ด้วย ถ้าเลือก "ไม่มี" ไม่ต้องกรอกจำนวนเลย
+    if(countUnit && countUnit!=='ไม่มี' && !countQty && countQtyEl){ countQtyEl.classList.add('field-invalid'); missing.push({ el:countQtyEl, label:`จำนวน Count (แถวที่ ${i+1})` }); } else if(countQtyEl) countQtyEl.classList.remove('field-invalid');
     if(!countUnit && countUnitEl){ countUnitEl.classList.add('field-invalid'); missing.push({ el:countUnitEl, label:`หน่วย Count (แถวที่ ${i+1})` }); } else if(countUnitEl) countUnitEl.classList.remove('field-invalid');
   });
   return missing;
