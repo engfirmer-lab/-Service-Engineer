@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.71
-  อัปเดตล่าสุด   : 30 กันยายน 2569 12:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.74
+  อัปเดตล่าสุด   : 30 กันยายน 2569 18:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,9 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.74] findSolutionField (v8.73) รองรับเทมเพลตที่ "สาเหตุของปัญหา" กับ "วิธีการแก้ไข" ไม่ได้อยู่บรรทัดเดียวกันแบบ grid (v8.73 รองรับแค่แบบนั้น) แต่แยกเป็น label เดี่ยวๆ ของตัวเองคนละบรรทัด ค่าจริงอยู่บรรทัดถัดไปได้หลายบรรทัด (พบจริงในไฟล์ใบงานอีกเทมเพลตหนึ่ง) — เพิ่มฟังก์ชัน findStandaloneMultilineField เป็น fallback เมื่อหา "บรรทัดที่มีทั้ง 2 label" แบบเดิมไม่เจอเลย: หา label ที่อยู่บรรทัดของตัวเองล้วนๆ (ไม่มีคำอื่นต่อท้าย) แล้วเก็บบรรทัดถัดไปต่อเนื่องจนกว่าจะเจอ label อื่นที่รู้จัก/เจอ label สาเหตุ-วิธีแก้ไข-วันที่ซ่อมเสร็จ/บรรทัดว่าง — ทดสอบกับไฟล์ PDF จริงเพิ่มอีก 1 ไฟล์ (เทมเพลตนี้โดยเฉพาะ) ดึงได้ครบถูกต้อง ไม่กระทบผลลัพธ์ไฟล์เทมเพลตเดิม 4 ไฟล์ที่เคยทดสอบผ่านแล้ว
+  - [FIXED v8.73] เพิ่มดึง "วิธีการแก้ไข" (และเก็บ "สาเหตุของปัญหา" ไว้ในตัวแปร cause ด้วยแต่ยังไม่ใช้แสดงผล) จากตาราง "สรุปผลการซ่อม" ท้ายใบงาน Factorium (คอลัมน์ สาเหตุของปัญหา/วิธีการแก้ไข/วันที่ซ่อมเสร็จ บนบรรทัดเดียวกัน ค่าจริงมักยาวล้นหลายบรรทัดใต้ลงมา) — จับคู่ด้วยตำแหน่ง x ของ label เทียบกับ x ของแต่ละคำในบรรทัดถัดไป เดินคำทีละคำแล้วสลับคอลัมน์เมื่อใกล้จุดเริ่มคอลัมน์อื่น ถ้าบรรทัดไหนคำแรกไม่ใกล้คอลัมน์ไหนเลยถือว่าหลุดตารางแล้วหยุดทันที (กันไปกินหัวตารางอะไหล่/ข้อความอื่นที่บังเอิญอยู่ x ใกล้เคียงกัน เช่นที่เจอตอนทดสอบกับไฟล์เทมเพลตตัดอักษรแยกที่ตารางนี้ว่างเปล่าจริง) — ทดสอบกับไฟล์ PDF จริง 4 ไฟล์แล้ว: ไฟล์ที่มีข้อมูลจริง (sample2-4) ดึงได้ครบถูกต้อง ไฟล์ที่ตารางนี้ว่างเปล่าจริง (sample1) ไม่ดึงอะไรมาเลย (ไม่เดา) — เติมลงช่อง "วิธีการแก้ไข" อัตโนมัติถ้ามี ยังแก้ไขได้ปกติเหมือนฟิลด์อื่น
+  - [FIXED v8.72] กรณีดึง PDF แล้ว "รุ่น" ไม่ตรงกับที่ตั้งไว้ในระบบ (findConfidentCategoryModelMatch หา match ไม่เจอ) เดิมจะเคลียร์ dropdown Product/รุ่นเป็นค่าว่างแบบเงียบๆ ไม่บอกอะไรเลย ผู้ใช้จริงเจอเคสนี้แล้วงงว่าทำไม "รุ่นไม่มีมาให้" — ตอนนี้ถ้าดึงข้อความ "รุ่น" จาก PDF ได้ (ไม่ว่าง) แต่หา match ไม่เจอ จะขึ้น toast บอกข้อความรุ่นที่ดึงได้จริง (เช่น "พบรุ่น \"BS-600M\" ในใบงาน แต่ไม่ตรงกับรุ่นที่ตั้งไว้ในระบบ") ให้ผู้ใช้รู้ทันทีว่าต้องเลือกเอง หรือเป็นสัญญาณว่ารุ่นนี้ยังไม่ได้เพิ่มไว้ในระบบ Product ของ Sup — ยังไม่เดา dropdown ให้เหมือนเดิม
   - [FIXED v8.71] เขียน extractFactoriumPdfText/parseFactoriumPdfText ใหม่ทั้งหมด (v8.68-8.70 ให้ผลผิดจริงในไฟล์งาน เช่นเติม Product เป็น "Urine" และชื่อสถานที่เพี้ยนเป็นตัวอักษรขยะ "/ อุปกรณ�"): (1) รองรับเทมเพลตที่ label เป็นหัวคอลัมน์กริดหลายตัวต่อกันบนบรรทัดเดียว ค่าจริงอยู่ "บรรทัดถัดไป" (จับคู่ด้วยตำแหน่ง x จริงของ label เทียบกับ x ของค่า ไม่ใช้ลำดับคอลัมน์ เพราะคอลัมน์ว่างทำให้ลำดับเพี้ยนได้) ไม่ใช่แค่ "label: value" บรรทัดเดียวกันแบบเดิม (2) รวม glyph/item จาก pdf.js เป็นคำโดยดูตำแหน่ง x จริง แทนการแทรกช่องว่างระหว่างทุก item แบบไม่มีเงื่อนไข — แก้ปัญหาบางเทมเพลตตัดข้อความไทยเป็นพยางค์แยกกันเกือบทุกตัว (3) ตัด combining mark ไทยออกเฉพาะตอนค้นหา label (ไม่แตะค่าที่เก็บจริง) กันปัญหาสระ/วรรณยุกต์หาย/ถูกแปลงรูปไม่เหมือนกันในแต่ละเทมเพลต (4) จับคู่ชื่อรุ่นที่ดึงได้กับ DATA.categories จริงในระบบก่อนเลือก dropdown Product/รุ่นให้อัตโนมัติเสมอ (case-insensitive ไม่สนช่องว่าง/ขีด) ไม่เจอ match ที่มั่นใจได้ = ปล่อย dropdown ว่างไว้ ไม่เดา — พ่วงแก้บั๊กเดิมที่วน set ค่า dropdown ชั่วคราวเพื่อทดลองจับคู่แล้วถ้าไม่เจอ dropdown จะค้างอยู่ที่ตัวเลือกสุดท้ายที่เคยลอง (สาเหตุจริงของ "Urine" ที่รายงานเข้ามา) — ทดสอบแล้วกับไฟล์ PDF จริง 4 ไฟล์ (Node harness ที่ /tmp/pdf_fixtures/test_parse.js ใช้ logic เดียวกันทุกตัวอักษร): เลข Job/รุ่น/สถานที่/S-N ตรงทั้งหมดสำหรับไฟล์เทมเพลตกริด (sample2-4) ส่วนไฟล์ที่ pdf.js ตัดอักษรไทยแยกทุกตัว (sample1) กู้เลข Job และ S/N กลับมาได้ถูกต้อง (รุ่น/สถานที่กู้ได้ถูกด้วยแต่เป็นผลพลอยได้ ไม่ได้การันตีทุกไฟล์แบบนี้)
   - [TODO] parseFactoriumPdfText (v8.71) ค่า "Error message หรืออาการเสีย" (errCode) ในเทมเพลตกริดที่ค่าล้นหลายบรรทัด (เช่น รหัสข้อผิดพลาดยาวที่ตัดขึ้นบรรทัดใหม่ 3-4 บรรทัดในไฟล์ PDF ก่อนเจอ label ถัดไป) ยังจับได้แค่บรรทัดแรกของค่านั้น ไม่ต่อบรรทัดที่เหลือ — ไม่กระทบฟิลด์อื่น (Job/รุ่น/สถานที่/S-N/รายการอะไหล่) แค่ข้อความ "ปัญหาที่พบ" อาจสั้นกว่าในไฟล์จริง ต้องเติมเองบางส่วน
   - [FIXED v8.70] ฝัง pdf.js และ pdf.worker.js (เข้ารหัส base64 แปลงเป็น Blob URL ตอนรันไทม์) ไว้ในไฟล์ index.html โดยตรง แทนการโหลดจาก CDN (cdnjs/jsdelivr) ตอนรันไทม์ — แก้ปัญหาโหลดไลบรารีไม่สำเร็จบนมือถือบางเครื่อง/บางเครือข่าย/บาง OS (รวม iOS) เพราะตอนนี้ไม่ต้องพึ่งอินเทอร์เน็ตอีกต่อไปสำหรับฟีเจอร์นี้ (ลบ PDFJS_CDN_SOURCES, _loadScriptOnce, และ logic ลองโหลด CDN สำรองทั้งหมดออกแล้ว)
@@ -70,7 +73,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.71</title>
+<title>F1 Service — v8.74</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1573,8 +1576,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.71";
-const APP_UPDATED_AT = "30 กันยายน 2569 12:00 น. เวลาไทย";
+const APP_VERSION = "8.74";
+const APP_UPDATED_AT = "30 กันยายน 2569 18:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6249,9 +6252,73 @@ async function extractFactoriumPdfText(file){
 }
 
 // แยกข้อมูลจากใบงาน Factorium — รับ "lines" จาก extractFactoriumPdfText (ไม่ใช่ fullText string อีกต่อไป)
+// v8.73: หา "วิธีการแก้ไข" (และ "สาเหตุของปัญหา" คู่กัน) จากตารางพิเศษท้ายใบงานที่มี 3 คอลัมน์บนบรรทัดเดียวกัน
+// (สาเหตุของปัญหา | วิธีการแก้ไข | วันที่ซ่อมเสร็จ) แต่ค่าจริงมักยาวล้นหลายบรรทัดใต้ header แถวนี้ — ต่างจาก findFieldValue
+// ตรงที่ค่าอาจ "ผสมกันในบรรทัดเดียวกับ header" (เช่น cause จบ แล้ว solution เริ่มต่อในบรรทัดเดียวกัน) และกินหลายบรรทัดถัดไปไม่ใช่แค่บรรทัดเดียว
+// วิธีจับคู่: หา x เริ่มต้นของแต่ละ label ในบรรทัด header แล้ว "เดินคำทีละคำ" ในบรรทัดถัดๆไป คำไหนอยู่ใกล้ x ของคอลัมน์ไหน (ในระยะ margin) ให้สลับไปคอลัมน์นั้น
+// เงื่อนไขหยุด: คำ "แรก" ของแต่ละบรรทัดต่อไปนี้ต้องอยู่ใกล้จุดเริ่มคอลัมน์ใดคอลัมน์หนึ่งเท่านั้น ไม่งั้นถือว่าหลุดตารางนี้แล้ว (กันไปกินหัวตาราง/ข้อความถัดไปที่บังเอิญมีคำอยู่ใกล้ x เดียวกัน)
+const SOLUTION_TABLE_HEADER_FRAGS = {
+  cause:    ['สาเหตุของปัญหา','สาเหตุของปญหา'],
+  solution: ['วิธีการแก้ไข','วิธีการแกไข'],
+};
+function findSolutionField(lines){
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(!line.text) continue;
+    const causeSpan = findLabelSpanInLine(line, SOLUTION_TABLE_HEADER_FRAGS.cause);
+    const solSpan = findLabelSpanInLine(line, SOLUTION_TABLE_HEADER_FRAGS.solution);
+    if(!causeSpan || !solSpan) continue; // ต้องเจอทั้งคู่ในบรรทัดเดียวกันถึงมั่นใจว่าเป็นตารางนี้จริง
+    const colStarts = [ {key:'cause', x:causeSpan.xStart}, {key:'solution', x:solSpan.xStart} ];
+    const margin = 20;
+    const buckets = { cause:[], solution:[] };
+    for(let j=i+1; j<lines.length && j<i+26; j++){
+      const ln = lines[j];
+      if(!ln.text || !ln.words.length) break; // บรรทัดว่างคั่น (จบหน้า/จบตาราง) -> จบ
+      if(lineKnownLabelKeys(ln).length) break; // เจอ label อื่นที่รู้จักแล้ว -> หลุดตารางนี้ไปแล้วแน่นอน
+      const firstNear = colStarts.find(c => Math.abs(ln.words[0].x - c.x) <= margin);
+      if(!firstNear) break;
+      let curCol = firstNear.key;
+      for(const w of ln.words){
+        const near = colStarts.find(c => Math.abs(w.x - c.x) <= margin);
+        if(near) curCol = near.key;
+        buckets[curCol].push(w.str);
+      }
+    }
+    return { cause: buckets.cause.join(' ').trim(), solution: buckets.solution.join(' ').trim() };
+  }
+  // v8.74: บางเทมเพลตไม่ได้เอา 3 label มาอยู่บรรทัดเดียวกันแบบ grid ข้างบน — "สาเหตุของปัญหา" กับ "วิธีการแก้ไข" กลับอยู่คนละบรรทัด
+  // แยกกันเป็น label เดี่ยวๆ ของตัวเอง (บรรทัดนั้นมีแค่ label ล้วนๆ ไม่มีคำอื่นต่อท้าย) แล้วค่าจริงอยู่บรรทัดถัดไปได้หลายบรรทัด (ไม่ใช่แค่บรรทัดเดียวแบบ findFieldValue เดิม)
+  // ใช้เมื่อรูปแบบ grid ด้านบนหา "บรรทัดที่มีทั้ง 2 label" ไม่เจอเลยเท่านั้น (กันไม่ให้ทับ/สับสนกับรูปแบบแรก)
+  const cause2 = findStandaloneMultilineField(lines, SOLUTION_TABLE_HEADER_FRAGS.cause);
+  const solution2 = findStandaloneMultilineField(lines, SOLUTION_TABLE_HEADER_FRAGS.solution);
+  return { cause: cause2, solution: solution2 };
+}
+// หาค่าของ label ที่ "อยู่บรรทัดของตัวเองล้วนๆ" (ไม่มีคำอื่นต่อท้ายบนบรรทัดเดียวกัน) โดยค่าจริงอาจกินหลายบรรทัดถัดไป
+// หยุดเก็บทันทีที่เจอบรรทัดว่าง, เจอ label อื่นที่รู้จัก (FACTORIUM_LABELS), หรือเจอ label สาเหตุ/วิธีแก้ไข/วันที่ซ่อมเสร็จ ตัวใดตัวหนึ่ง (แปลว่าเข้าสู่ label ถัดไปในตารางเดียวกันแล้ว)
+function findStandaloneMultilineField(lines, frags){
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(!line.text) continue;
+    const span = findLabelSpanInLine(line, frags);
+    if(!span) continue;
+    const tail = line.words.slice(span.endWordIdx+1).map(w=>w.str).join('').trim();
+    if(tail) continue; // มีคำอื่นต่อท้ายในบรรทัดเดียวกัน ไม่ใช่ label เดี่ยวๆ แบบนี้ ข้ามไปหาที่อื่น
+    const collected = [];
+    for(let j=i+1; j<lines.length && j<i+20; j++){
+      const ln = lines[j];
+      if(!ln.text) break;
+      if(lineKnownLabelKeys(ln).length) break;
+      if(findLabelSpanInLine(ln, SOLUTION_TABLE_HEADER_FRAGS.cause) || findLabelSpanInLine(ln, SOLUTION_TABLE_HEADER_FRAGS.solution) || findLabelSpanInLine(ln, ['วันที่ซ่อมเสร็จ','วันที่ซอมเสร็จ'])) break;
+      collected.push(ln.text);
+    }
+    return collected.join(' ').trim();
+  }
+  return '';
+}
+
 // ทุกฟิลด์: ถ้าค่าที่ได้ดูไม่น่าเชื่อถือ (สั้นเกินไป/ว่าง/ดูเหมือนหยิบ label มาแทนค่า) จะปล่อยว่างไว้ ไม่เดา — ให้ Engineer กรอกเองดีกว่าได้ค่าผิด
 function parseFactoriumPdfText(lines){
-  const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', parts:[] };
+  const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', solution:'', cause:'', parts:[] };
 
   const jobFactorium = findFieldValue(lines, 'jobFactorium');
   if(isSaneText(jobFactorium, 3)) result.jobFactorium = jobFactorium;
@@ -6288,6 +6355,11 @@ function parseFactoriumPdfText(lines){
       }
     }
   }catch(e){ console.warn('parseFactoriumPdfText: แยกตารางอะไหล่ล้มเหลว (ไม่กระทบฟิลด์อื่น):', e.message); }
+
+  const sol = findSolutionField(lines);
+  if(isSaneText(sol.solution, 3)) result.solution = sol.solution;
+  if(isSaneText(sol.cause, 2)) result.cause = sol.cause;
+
   return result;
 }
 
@@ -6736,6 +6808,7 @@ $('claim-prestep-pdf-input').addEventListener('change', async (e)=>{
     if(parsed.siteName){ claimDraft.siteName = parsed.siteName; $('claim-f-site').value = parsed.siteName; }
     if(parsed.jobFactorium){ claimDraft.jobFactorium = parsed.jobFactorium; $('claim-f-jobfactorium').value = parsed.jobFactorium; }
     if(parsed.problem){ claimDraft.problem = parsed.problem; $('claim-f-problem').value = parsed.problem; }
+    if(parsed.solution){ claimDraft.solution = parsed.solution; $('claim-f-solution').value = parsed.solution; } // v8.73: ดึง "วิธีการแก้ไข" จากตารางสรุปผลการซ่อมท้ายใบงาน (ถ้ามี) — ยังแก้ไขได้ปกติ
     if(parsed.parts && parsed.parts.length){ claimDraft.parts = parsed.parts; }
     populateClaimCategorySelect();
     // จับคู่ "model string ที่ดึงจาก PDF" กับ DATA.categories จริงในระบบเท่านั้น — ไม่มี match ที่มั่นใจได้ก็ปล่อย Product/รุ่นว่างไว้ ไม่เดา
@@ -6754,6 +6827,10 @@ $('claim-prestep-pdf-input').addEventListener('change', async (e)=>{
       claimDraft.model = '';
       catSel.value = '';
       populateClaimModelSelect();
+      // v8.72: แจ้งผู้ใช้ว่าดึง "รุ่น" จาก PDF ได้เป็นข้อความอะไร แต่หาไม่เจอในรายการ Product/รุ่นที่ตั้งไว้ในระบบ (ไม่ใช่ error เงียบๆ อีกต่อไป — ผู้ใช้จะได้รู้ว่าต้องเลือกเอง หรือรุ่นนี้ยังไม่มีในระบบต้องแจ้งแอดมินเพิ่ม)
+      if(isSaneText(parsed.model, 2)){
+        showToast(`⚠ พบรุ่น "${parsed.model}" ในใบงาน แต่ไม่ตรงกับรุ่นที่ตั้งไว้ในระบบ กรุณาเลือก Product/รุ่นเอง`);
+      }
     }
     renderClaimPartsRows();
     refreshClaimPartsDatalist();
