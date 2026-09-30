@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.70
-  อัปเดตล่าสุด   : 30 กันยายน 2569 09:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.71
+  อัปเดตล่าสุด   : 30 กันยายน 2569 12:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,8 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.71] เขียน extractFactoriumPdfText/parseFactoriumPdfText ใหม่ทั้งหมด (v8.68-8.70 ให้ผลผิดจริงในไฟล์งาน เช่นเติม Product เป็น "Urine" และชื่อสถานที่เพี้ยนเป็นตัวอักษรขยะ "/ อุปกรณ�"): (1) รองรับเทมเพลตที่ label เป็นหัวคอลัมน์กริดหลายตัวต่อกันบนบรรทัดเดียว ค่าจริงอยู่ "บรรทัดถัดไป" (จับคู่ด้วยตำแหน่ง x จริงของ label เทียบกับ x ของค่า ไม่ใช้ลำดับคอลัมน์ เพราะคอลัมน์ว่างทำให้ลำดับเพี้ยนได้) ไม่ใช่แค่ "label: value" บรรทัดเดียวกันแบบเดิม (2) รวม glyph/item จาก pdf.js เป็นคำโดยดูตำแหน่ง x จริง แทนการแทรกช่องว่างระหว่างทุก item แบบไม่มีเงื่อนไข — แก้ปัญหาบางเทมเพลตตัดข้อความไทยเป็นพยางค์แยกกันเกือบทุกตัว (3) ตัด combining mark ไทยออกเฉพาะตอนค้นหา label (ไม่แตะค่าที่เก็บจริง) กันปัญหาสระ/วรรณยุกต์หาย/ถูกแปลงรูปไม่เหมือนกันในแต่ละเทมเพลต (4) จับคู่ชื่อรุ่นที่ดึงได้กับ DATA.categories จริงในระบบก่อนเลือก dropdown Product/รุ่นให้อัตโนมัติเสมอ (case-insensitive ไม่สนช่องว่าง/ขีด) ไม่เจอ match ที่มั่นใจได้ = ปล่อย dropdown ว่างไว้ ไม่เดา — พ่วงแก้บั๊กเดิมที่วน set ค่า dropdown ชั่วคราวเพื่อทดลองจับคู่แล้วถ้าไม่เจอ dropdown จะค้างอยู่ที่ตัวเลือกสุดท้ายที่เคยลอง (สาเหตุจริงของ "Urine" ที่รายงานเข้ามา) — ทดสอบแล้วกับไฟล์ PDF จริง 4 ไฟล์ (Node harness ที่ /tmp/pdf_fixtures/test_parse.js ใช้ logic เดียวกันทุกตัวอักษร): เลข Job/รุ่น/สถานที่/S-N ตรงทั้งหมดสำหรับไฟล์เทมเพลตกริด (sample2-4) ส่วนไฟล์ที่ pdf.js ตัดอักษรไทยแยกทุกตัว (sample1) กู้เลข Job และ S/N กลับมาได้ถูกต้อง (รุ่น/สถานที่กู้ได้ถูกด้วยแต่เป็นผลพลอยได้ ไม่ได้การันตีทุกไฟล์แบบนี้)
+  - [TODO] parseFactoriumPdfText (v8.71) ค่า "Error message หรืออาการเสีย" (errCode) ในเทมเพลตกริดที่ค่าล้นหลายบรรทัด (เช่น รหัสข้อผิดพลาดยาวที่ตัดขึ้นบรรทัดใหม่ 3-4 บรรทัดในไฟล์ PDF ก่อนเจอ label ถัดไป) ยังจับได้แค่บรรทัดแรกของค่านั้น ไม่ต่อบรรทัดที่เหลือ — ไม่กระทบฟิลด์อื่น (Job/รุ่น/สถานที่/S-N/รายการอะไหล่) แค่ข้อความ "ปัญหาที่พบ" อาจสั้นกว่าในไฟล์จริง ต้องเติมเองบางส่วน
   - [FIXED v8.70] ฝัง pdf.js และ pdf.worker.js (เข้ารหัส base64 แปลงเป็น Blob URL ตอนรันไทม์) ไว้ในไฟล์ index.html โดยตรง แทนการโหลดจาก CDN (cdnjs/jsdelivr) ตอนรันไทม์ — แก้ปัญหาโหลดไลบรารีไม่สำเร็จบนมือถือบางเครื่อง/บางเครือข่าย/บาง OS (รวม iOS) เพราะตอนนี้ไม่ต้องพึ่งอินเทอร์เน็ตอีกต่อไปสำหรับฟีเจอร์นี้ (ลบ PDFJS_CDN_SOURCES, _loadScriptOnce, และ logic ลองโหลด CDN สำรองทั้งหมดออกแล้ว)
   - [FIXED v8.69] โหลด pdf.js ล้มเหลวบนมือถือบางเครื่อง (เช่นเปิดผ่าน Google Translate proxy หรือ cdnjs โดนบล็อก) — เพิ่ม CDN สำรอง (jsdelivr) ลองโหลดต่อถ้า cdnjs ล้มเหลว และแก้ไม่ให้ promise ที่ reject แล้วค้างตลอดไป (ลองใหม่ได้ในครั้งถัดไป)
   - [TODO] แจ้งปัญหา (type==='report') ที่ archive ไป Sheet แล้ว (จบเคส) ยังไม่ถูกนับรวมใน dashboard "จำนวนทั้งหมด" — v8.68 นับเฉพาะที่ยังอยู่ใน Firestore เท่านั้น (ยังไม่ได้ทำ fetch นับแถวจากแท็บ "<ผู้ดูแล> - แจ้งปัญหา" ใน Sheet เหมือน fetchSheetDoneCount ของฝั่งเคลม)
@@ -68,7 +70,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.70</title>
+<title>F1 Service — v8.71</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1571,8 +1573,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.70";
-const APP_UPDATED_AT = "30 กันยายน 2569 08:05 น. เวลาไทย";
+const APP_VERSION = "8.71";
+const APP_UPDATED_AT = "30 กันยายน 2569 12:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6103,64 +6105,182 @@ function loadPdfJsLib(){
   try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = _ensurePdfWorkerBlobUrl(); }catch(e){}
   return Promise.resolve();
 }
-// อ่านข้อความทั้งหมดจากไฟล์ PDF ทีละหน้า พยายามคง "แถว" ไว้คร่าวๆ โดยดูค่า y (transform[5]) ของแต่ละ item
-async function extractFactoriumPdfText(file){
-  const buf = await file.arrayBuffer();
-  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
-  let fullText = '';
+// ===================================================================
+// PDF Factorium extraction/parsing (v8.71 rewrite)
+// เหตุผลที่ต้องเขียนใหม่ทั้งหมด (v8.68-8.70 ให้ผลผิดในไฟล์จริง เช่นเติม Product เป็น "Urine" และชื่อสถานที่เพี้ยนเป็นตัวอักษรขยะ):
+//  1. เทมเพลต PDF ของ Factorium มีหลายแบบ บาง label เดี่ยวอยู่บรรทัดตัวเอง ค่าอยู่บรรทัดถัดไป, บาง label เป็นหัวคอลัมน์ในแถว "กริด"
+//     (label หลายตัวต่อกันบนบรรทัดเดียว) ค่าจริงอยู่ "คอลัมน์เดียวกัน" ของบรรทัดถัดไป — โค้ดเดิมสมมติว่า "label: value" อยู่บรรทัดเดียวกันเสมอ ซึ่งผิด
+//  2. pdf.js บางเทมเพลตตัดข้อความไทยเป็น glyph/พยางค์แยกกันเกือบทุกตัว โค้ดเดิมแทรกช่องว่างระหว่างทุก item แบบไม่มีเงื่อนไข
+//     ทำให้ได้ข้อความขยะ (เช่น "บ ริ ษั ท") — ตอนนี้ใช้ตำแหน่ง x จริงของแต่ละ item ตัดสินว่าควรต่อเป็นคำเดียวกันหรือแยกคำ/คอลัมน์
+//  3. เครื่องหมายกำกับเสียง/สระไทย (่ ้ ั ์ ฯลฯ) หาย/ถูกแปลงรูปไม่เหมือนกันในแต่ละเทมเพลต — ตัดออกเฉพาะตอน "หา label" (normLabel) ไม่แตะค่าที่เก็บจริง
+// หมายเหตุ: ฟังก์ชันด้านล่างนี้ (ตั้งแต่ extractFactoriumPdfLinesFromDoc ถึง parseFactoriumLines) มี logic เดียวกันทุกตัวอักษรกับ
+// /tmp/pdf_fixtures/lib_parse.js ที่ผ่านการทดสอบกับไฟล์ PDF จริง 4 ไฟล์แล้ว (ดูผลทดสอบใน BACKLOG ด้านบน) ต่างกันแค่วิธีเปิดไฟล์ PDF
+// (ที่นี่ใช้ window.pdfjsLib.getDocument จาก File object แทน require('fs') ของฝั่ง Node)
+// ===================================================================
+
+async function extractFactoriumPdfLinesFromDoc(pdf){
+  const allLines = [];
   for(let pageNum=1; pageNum<=pdf.numPages; pageNum++){
     const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    let lastY = null, line = '';
+    let lastY = null, lastItemEnd = null, lastCharW = 10;
+    let curWords = [];
+    let curWord = null;
+    function flushWord(){ if(curWord && curWord.str.trim()!==''){ curWords.push(curWord); } curWord = null; }
+    function flushLine(){
+      flushWord();
+      if(curWords.length){ allLines.push({ text: curWords.map(w=>w.str).join(' '), words: curWords }); }
+      curWords = [];
+    }
     content.items.forEach(item=>{
       const y = item.transform[5];
-      if(lastY !== null && Math.abs(y-lastY) > 2){ fullText += line + '\n'; line = ''; }
-      line += (line ? ' ' : '') + item.str;
+      const x = item.transform[4];
+      const w = item.width||0;
+      const sx = item.transform[0]||10;
+      const newLine = lastY !== null && Math.abs(y-lastY) > 2;
+      if(newLine){ flushLine(); lastItemEnd = null; }
+      // บาง PDF (ฟอนต์/cmap เพี้ยน) แทรกอักขระขยะที่มองไม่เห็น (NUL, Private Use Area, zero-width) ปนมาใน item.str กลางคำจริง — ตัดทิ้งก่อนเสมอ ปลอดภัยเพราะไม่ใช่เนื้อหาจริง
+      const str = (item.str||'').replace(/[\u0000�​-‏-]/g,'');
+      if(str === ''){ lastY = y; return; }
+      const isSpaceOnly = /^\s+$/.test(str);
+      if(lastItemEnd !== null){
+        const gap = x - lastItemEnd;
+        const avgCharW = lastCharW || 10;
+        if(isSpaceOnly || gap > avgCharW * 1.4){ flushWord(); }
+        // gap เล็กน้อย (< ~0.3-1.4 เท่าความกว้างตัวอักษร) -> ต่อเป็นคำเดียวกัน (แก้ปัญหา PDF บางเทมเพลตตัดตัวอักษรไทยเป็นคนละ item)
+      }
+      if(!isSpaceOnly){
+        if(!curWord) curWord = { str:'', x, xEnd:x };
+        curWord.str += str;
+        curWord.xEnd = x + w;
+      }
+      lastItemEnd = x + w;
+      lastCharW = sx;
       lastY = y;
     });
-    if(line) fullText += line + '\n';
-    fullText += '\n';
+    flushLine();
+    allLines.push({ text:'', words:[] }); // เว้นบรรทัดว่างคั่นหน้า
   }
-  return fullText;
+  return allLines;
 }
-// แยกข้อมูลจากข้อความใบงาน Factorium — label อาจเรียงต่างกันไปในแต่ละเทมเพลต และไม่ใช่ทุก label จะมีในทุกไฟล์ (คืนค่าว่าง/null ถ้าไม่เจอ ไม่เดา)
-function parseFactoriumPdfText(fullText){
-  const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', parts:[] };
-  const norm = fullText.replace(/[ \t]+/g,' ');
-  // ช่วยหาค่าหลัง label บนบรรทัดเดียวกัน (label อาจมีช่องว่างปนอยู่ระหว่างตัวอักษรจาก PDF extraction) จนกว่าจะเจอสิ้นบรรทัดหรือ label ถัดไปที่รู้จัก
-  function findAfterLabel(labelRegexes){
-    for(const re of labelRegexes){
-      const m = norm.match(re);
-      if(m && m[1] && m[1].trim()) return m[1].trim();
+
+function stripThaiMarks(s){
+  return (s||'').normalize('NFC').replace(/[ัิ-ฺ็-๎]/g, '');
+}
+function normLabel(s){ return stripThaiMarks(s).replace(/[^฀-๿a-zA-Z0-9]/g,''); }
+
+const FACTORIUM_LABELS = [
+  { key:'jobFactorium', frags:['เลขที่ใบแจ้งซ่อม','เลขที่ใบแจงซอม'] },
+  { key:'category',     frags:['ประเภทเครื่องจักร'] }, // ไว้กันชนกับ "ชื่อเครื่องจักร" เท่านั้น ไม่ได้ใช้ค่า
+  { key:'model',        frags:['ชื่อเครื่องจักร'] },
+  { key:'siteName',     frags:['สถานที่ตั้งเครื่องจักร'] },
+  { key:'serialNumber', frags:['รหัสครุภัณฑ'] },
+  { key:'deviceCode',   frags:['เลขรหัสประจำเครื่อง','เลขรหัสประจาเครื่อง'] },
+  { key:'symptom',      frags:['ลักษณะอาการเสีย'] },
+  { key:'errCode',      frags:['รหัสข้อผิดพลาด','รหัสขอผิดพลาด'] },
+];
+
+// จับคู่แบบ "เท่ากันพอดี" เท่านั้น (สะสมคำทีละคำจนความยาวเท่ากับ label แล้วเทียบ) — ห้าม substring ข้ามหลายคำที่ต่อกันโดยบังเอิญ
+function findLabelSpanInLine(line, frags){
+  const words = line.words;
+  const targets = frags.map(f=>normLabel(f));
+  const maxTargetLen = Math.max(...targets.map(t=>t.length));
+  for(let start=0; start<words.length; start++){
+    let chunk = '';
+    for(let len=1; start+len<=words.length; len++){
+      chunk += normLabel(words[start+len-1].str);
+      if(chunk.length > maxTargetLen) break;
+      if(targets.includes(chunk)) return { xStart: words[start].x, xEnd: words[start+len-1].xEnd, endWordIdx: start+len-1 };
     }
+  }
+  return null;
+}
+function lineKnownLabelKeys(line){
+  return FACTORIUM_LABELS.filter(l=>findLabelSpanInLine(line, l.frags)).map(l=>l.key);
+}
+
+// หาค่าของ label หนึ่งตัว รองรับ 3 รูปแบบที่พบจริงในเทมเพลต Factorium ต่างๆ — ดูคำอธิบายเต็มใน lib_parse.js (ชุดทดสอบ)
+function findFieldValue(lines, key){
+  const def = FACTORIUM_LABELS.find(l=>l.key===key);
+  if(!def) return '';
+  for(let i=0;i<lines.length;i++){
+    const line = lines[i];
+    if(!line.text) continue;
+    const span = findLabelSpanInLine(line, def.frags);
+    if(!span) continue;
+    const tailWords = line.words.slice(span.endWordIdx+1);
+    const tailJoined = tailWords.map(w=>w.str).join(' ').trim();
+    if(/^[:\-]/.test(tailJoined)){
+      const val = tailJoined.replace(/^[:\-]\s*/,'').replace(/^\(QR Code\)\s*/i,'').trim();
+      if(val) return val;
+      let j=i+1; while(j<lines.length && !lines[j].text) j++;
+      if(j<lines.length && lineKnownLabelKeys(lines[j]).length===0) return lines[j].text.trim();
+      continue;
+    }
+    if(tailJoined){
+      const boundaryX = tailWords[0].x;
+      let j=i+1; while(j<lines.length && !lines[j].text) j++;
+      if(j<lines.length){
+        const margin = 8;
+        const colWords = lines[j].words.filter(w=> w.x >= span.xStart-margin && w.x < boundaryX-margin);
+        const val = colWords.map(w=>w.str).join(' ').trim();
+        if(val) return val;
+      }
+      continue;
+    }
+    let j=i+1; while(j<lines.length && !lines[j].text) j++;
+    if(j<lines.length && lineKnownLabelKeys(lines[j]).length===0) return lines[j].text.trim();
     return '';
   }
-  result.serialNumber = findAfterLabel([
-    /รหัสครุภัณฑ\s*\(?QR\s*Code\)?[:\s]*([A-Za-z0-9\-\/]{4,})/i,
-    /รหัสครุภัณฑ์?[:\s]*([A-Za-z0-9\-\/]{4,})/i,
-  ]);
-  result.model = findAfterLabel([
-    /ชื่อเครื่องจักร\s*\/\s*อุปกรณ์[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/,
-    /ชื่อเครื่องจักร[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/,
-  ]);
-  result.siteName = findAfterLabel([
-    /สถานที่ตั้งเครื่องจักร\s*\/\s*อุปกรณ์[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/,
-    /สถานที่ตั้งเครื่องจักร[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/,
-  ]);
-  result.jobFactorium = findAfterLabel([
-    /เลขที่ใบแจ้งซ่อม[:\s]*([A-Za-z0-9\-\/]+)/,
-  ]);
-  const errCode = findAfterLabel([ /รหัสข้อผิดพลาด[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/ ]);
-  const symptom = findAfterLabel([ /ลักษณะอาการเสีย[:\s]*([^\n]+?)(?:\s{2,}|$|\n)/ ]);
-  if(errCode && symptom) result.problem = `${errCode} — ${symptom}`;
-  else result.problem = errCode || symptom || '';
-  // ตารางรายการอะไหล่ — heuristic: หาข้อความระหว่างหัวตาราง 2 หัว แล้วมองหา token ที่ดูเหมือน "รหัส" (ตัวอักษร/ตัวเลข มีขีด) ตามด้วยชื่อรายการและจำนวน
+  return '';
+}
+function isSaneText(s, minLen){ minLen = minLen||3; return !!(s && s.trim().length >= minLen); }
+function looksLikeMisparsedHeader(text){
+  if(!text) return false;
+  const fakeLine = { text, words: text.split(/\s+/).map((s,i)=>({str:s,x:i,xEnd:i})) };
+  return lineKnownLabelKeys(fakeLine).length >= 2;
+}
+
+// อ่านข้อความทั้งหมดจากไฟล์ PDF (คงชื่อฟังก์ชันเดิมไว้ให้จุดเรียกใช้เดิมไม่ต้องแก้) — คืนโครงสร้างบรรทัด (ไม่ใช่ string เปล่าเหมือนเดิม) ให้ parseFactoriumPdfText ใช้ต่อ
+async function extractFactoriumPdfText(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  return await extractFactoriumPdfLinesFromDoc(pdf);
+}
+
+// แยกข้อมูลจากใบงาน Factorium — รับ "lines" จาก extractFactoriumPdfText (ไม่ใช่ fullText string อีกต่อไป)
+// ทุกฟิลด์: ถ้าค่าที่ได้ดูไม่น่าเชื่อถือ (สั้นเกินไป/ว่าง/ดูเหมือนหยิบ label มาแทนค่า) จะปล่อยว่างไว้ ไม่เดา — ให้ Engineer กรอกเองดีกว่าได้ค่าผิด
+function parseFactoriumPdfText(lines){
+  const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', parts:[] };
+
+  const jobFactorium = findFieldValue(lines, 'jobFactorium');
+  if(isSaneText(jobFactorium, 3)) result.jobFactorium = jobFactorium;
+
+  const model = findFieldValue(lines, 'model');
+  if(isSaneText(model, 2) && !looksLikeMisparsedHeader(model)) result.model = model;
+
+  const siteName = findFieldValue(lines, 'siteName');
+  if(isSaneText(siteName, 3) && !looksLikeMisparsedHeader(siteName)) result.siteName = siteName;
+
+  const serialNumber = findFieldValue(lines, 'serialNumber');
+  if(isSaneText(serialNumber, 3)) result.serialNumber = serialNumber;
+
+  let symptom = findFieldValue(lines, 'symptom');
+  let errCode = findFieldValue(lines, 'errCode');
+  if(looksLikeMisparsedHeader(symptom)) symptom = '';
+  if(looksLikeMisparsedHeader(errCode)) errCode = '';
+  if(isSaneText(errCode,3) && isSaneText(symptom,2)) result.problem = `${errCode} — ${symptom}`;
+  else if(isSaneText(errCode,3)) result.problem = errCode;
+  else if(isSaneText(symptom,2)) result.problem = symptom;
+
+  // ตารางรายการอะไหล่ — ยังใช้ full text + regex heuristic เดิม (คงพฤติกรรมเดิมไว้ ไม่ใช่จุดที่แก้ในรอบนี้ — ดู [TODO] ด้านบน)
   try{
-    const tblStart = norm.indexOf('ขอเบิก/ซื้อรายการอะไหล่');
-    const tblEnd = norm.indexOf('การอนุมัติขอเบิกอะไหล่');
+    const fullText = lines.map(l=>l.text).join('\n');
+    const norm = fullText.replace(/[ \t]+/g,' ');
+    const tblStart = norm.indexOf('ขอเบิก/ซื้อรายการอะไหล่')!==-1 ? norm.indexOf('ขอเบิก/ซื้อรายการอะไหล่') : norm.indexOf('ขอเบิก / ซื้อรายการอะไหล');
+    const tblEnd = norm.indexOf('การอนุมัติขอเบิกอะไหล่')!==-1 ? norm.indexOf('การอนุมัติขอเบิกอะไหล่') : norm.indexOf('การอนุมัติขอเบิกอะไหล');
     if(tblStart !== -1){
       const tblText = norm.slice(tblStart, tblEnd!==-1 ? tblEnd : tblStart+4000);
-      // รหัสอะไหล่แบบมีขีด เช่น 12.345.678 หรือ ABC-1234 — ตามด้วยชื่อรายการ แล้วจำนวนตัวเลขสั้นๆ ก่อนหน่วยนับ
       const rowRe = /([A-Za-z0-9]{2,}(?:[.\-\/][A-Za-z0-9]{1,}){1,6})\s+([^\d\n]{2,60}?)\s+(\d{1,4})\s+(?:ชิ้น|EA|PCS|อัน|ea|pcs)/gi;
       let rm;
       while((rm = rowRe.exec(tblText))){
@@ -6169,6 +6289,22 @@ function parseFactoriumPdfText(fullText){
     }
   }catch(e){ console.warn('parseFactoriumPdfText: แยกตารางอะไหล่ล้มเหลว (ไม่กระทบฟิลด์อื่น):', e.message); }
   return result;
+}
+
+// จับคู่ "model string ที่ดึงจาก PDF" กับข้อมูลจริงในระบบ (DATA.categories) — ไม่เชื่อ regex เดาเอง ต้องมี match ที่มั่นใจได้เท่านั้นถึงจะเลือก dropdown ให้อัตโนมัติ
+// เทียบแบบ case-insensitive และไม่สนช่องว่าง/ขีด (เช่น "BS-600 M" == "bs600m") เพื่อกันเทมเพลต PDF เว้นวรรค/ใส่ขีดไม่ตรงกับชื่อรุ่นในระบบเป๊ะๆ
+function normalizeModelForMatch(s){ return (s||'').toString().toLowerCase().replace(/[\s\-_]/g,''); }
+function findConfidentCategoryModelMatch(rawModel){
+  if(!rawModel || !isSaneText(rawModel,2)) return null;
+  const target = normalizeModelForMatch(rawModel);
+  if(!target) return null;
+  const cats = (typeof DATA!=='undefined' && DATA.categories) ? DATA.categories : {};
+  for(const cat of Object.keys(cats)){
+    for(const model of (cats[cat]||[])){
+      if(normalizeModelForMatch(model) === target) return { category: cat, model };
+    }
+  }
+  return null;
 }
 
 let claimDraft = null;
@@ -6591,27 +6727,33 @@ $('claim-prestep-pdf-input').addEventListener('change', async (e)=>{
   statusEl.textContent = '⏳ กำลังอ่านไฟล์ PDF...';
   try{
     await loadPdfJsLib();
-    const fullText = await extractFactoriumPdfText(file);
-    const parsed = parseFactoriumPdfText(fullText);
+    const lines = await extractFactoriumPdfText(file);
+    const parsed = parseFactoriumPdfText(lines);
     // เปิดฟอร์มก่อน แล้วเติมค่าที่ดึงได้ทับ (ฟิลด์ทั้งหมดยังแก้ไขได้ตามปกติ)
     $('claim-prestep-wrap').style.display = 'none';
     $('claim-form-fields-wrap').style.display = '';
     if(parsed.serialNumber) { claimDraft.serialNumber = parsed.serialNumber; $('claim-f-sn').value = parsed.serialNumber; }
-    if(parsed.model){ claimDraft.model = parsed.model; }
     if(parsed.siteName){ claimDraft.siteName = parsed.siteName; $('claim-f-site').value = parsed.siteName; }
     if(parsed.jobFactorium){ claimDraft.jobFactorium = parsed.jobFactorium; $('claim-f-jobfactorium').value = parsed.jobFactorium; }
     if(parsed.problem){ claimDraft.problem = parsed.problem; $('claim-f-problem').value = parsed.problem; }
     if(parsed.parts && parsed.parts.length){ claimDraft.parts = parsed.parts; }
     populateClaimCategorySelect();
-    // ลองจับคู่รุ่นกับ category ที่มีอยู่ในระบบ (ชื่อรุ่นจาก PDF ต้องตรงกับตัวเลือกในระบบเป๊ะๆ ถึงจะเลือกอัตโนมัติได้)
-    if(claimDraft.model){
-      const catSel = $('claim-f-category');
-      for(const opt of Array.from(catSel.options)){
-        catSel.value = opt.value; populateClaimModelSelect();
-        const modelSel = $('claim-f-model');
-        const match = Array.from(modelSel.options).find(o=>o.value===claimDraft.model);
-        if(match){ claimDraft.category = opt.value; modelSel.value = claimDraft.model; break; }
-      }
+    // จับคู่ "model string ที่ดึงจาก PDF" กับ DATA.categories จริงในระบบเท่านั้น — ไม่มี match ที่มั่นใจได้ก็ปล่อย Product/รุ่นว่างไว้ ไม่เดา
+    // (แก้บั๊ก v8.68-8.70 ที่วน set ค่า dropdown ชั่วคราวเพื่อลองจับคู่ แล้วถ้าไม่เจอ dropdown จะค้างอยู่ที่ตัวเลือกสุดท้ายที่ลองแทนที่จะกลับเป็นค่าว่าง — ทำให้เห็น Product ผิดๆ ค้างอยู่ในฟอร์ม เช่นกรณี "Urine" ที่รายงานเข้ามา)
+    const catSel = $('claim-f-category');
+    const modelMatch = findConfidentCategoryModelMatch(parsed.model);
+    if(modelMatch){
+      claimDraft.category = modelMatch.category;
+      claimDraft.model = modelMatch.model;
+      catSel.value = modelMatch.category;
+      populateClaimModelSelect();
+      $('claim-f-model').value = modelMatch.model;
+    } else {
+      // ไม่พบรุ่นที่ตรงกันจริงในระบบ — เคลียร์ค่าให้ว่าง ไม่ตั้งค่า dropdown ใดๆ ทิ้งไว้ (ให้ผู้ใช้เลือกเอง)
+      claimDraft.category = '';
+      claimDraft.model = '';
+      catSel.value = '';
+      populateClaimModelSelect();
     }
     renderClaimPartsRows();
     refreshClaimPartsDatalist();
