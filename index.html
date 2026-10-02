@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.75
-  อัปเดตล่าสุด   : 30 กันยายน 2569 19:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.76
+  อัปเดตล่าสุด   : 30 กันยายน 2569 21:02 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -22,6 +22,7 @@
   - canSelfEdit = !canManage && submittedBy===myUserEmail — Engineer เจ้าของเคลม
   ===================================================================
   BACKLOG (จดไว้รอแก้ — ยังไม่ได้ implement)
+  - [FIXED v8.76] ปุ่ม "บันทึกเคลม" — จุดตรวจ cleanParts (ก่อนจะยอมให้บันทึกจริง) ยังใช้เงื่อนไขเดิมก่อน v8.75 อยู่ (บังคับ countQty เสมอไม่ว่าจะเลือกหน่วยอะไร) ทำให้ถึงจะเลือก "ไม่มี" ถูกต้องแล้วตามที่ v8.75 ตั้งใจไว้ ก็ยังกดบันทึกไม่ผ่าน ขึ้น toast "กรุณากรอก...จำนวน Count...ให้ครบ" อยู่ดี — แก้ให้ตรงกับ validateClaimPartsRows แล้ว: เลือก "ไม่มี" ไม่ต้องมี countQty ก็บันทึกผ่าน เลือกหน่วยจริงถึงจะบังคับ countQty เหมือนเดิม
   - [FIXED v8.75] ตารางรายการอะไหล่จากใบงาน PDF — เปลี่ยนจาก regex เดาแบบเดิม (heuristic ล้วน ไม่แม่นยำ) มาอ่านตาราง "รหัส/ชื่อรายการ/.../คืน" (ตารางอะไหล่ที่เปลี่ยนจริงตอนปิดงาน ต่างจากตาราง "ขอเบิก/ซื้อรายการอะไหล่" ที่มักเว้นว่าง) ด้วยตำแหน่ง x เหมือนฟิลด์อื่น — กรองบรรทัด "audit log" (อนุมัติ/เหตุผลคืนซาก/วันที่) ทิ้งก่อนด้วย looksLikeAuditLogLine เพราะบรรทัดพวกนี้ปนอยู่ก่อน/หลังแถวข้อมูลจริงเสมอ แล้วค่อยกลุ่มคำเป็นแถวด้วยตำแหน่ง x ของ code/name รองรับได้หลายรายการในไฟล์เดียว (ทดสอบไฟล์จริงเจอ 2 รายการในไฟล์เดียวถูกต้องครบ) จำนวน/หน่วยดึงด้วย regex จากข้อความที่เหลือแทนการบังคับตำแหน่ง x เพราะคอลัมน์นี้ตำแหน่งไม่นิ่งในแต่ละเทมเพลต — ทดสอบผ่านไฟล์จริงครบ 5 ไฟล์ (มีอะไหล่ 2 ไฟล์ดึงได้ถูกต้อง ไม่มีอะไหล่ 3 ไฟล์ไม่ดึงอะไรมาเลย ไม่เดา)
   - [FIXED v8.75] ฟอร์มเคลม/แจ้งปัญหา — ช่อง "หน่วย Count" บังคับเลือกเสมอ (เลือก "ไม่มี" นับว่าเลือกแล้ว ไม่ต้องกรอกจำนวน Count เลย และช่องจำนวนจะถูกปิดไว้กันสับสน) ถ้าเลือกหน่วยจริง (Test/Times/Hour) ถึงจะบังคับกรอกจำนวน Count ด้วย — เดิมบังคับกรอกจำนวน Count เสมอไม่ว่าจะเลือกหน่วยอะไร แม้เลือก "ไม่มี" ก็ยังบังคับกรอก ทำให้ขัดกับความหมายของตัวเลือก "ไม่มี" เอง
   - [FIXED v8.74] findSolutionField (v8.73) รองรับเทมเพลตที่ "สาเหตุของปัญหา" กับ "วิธีการแก้ไข" ไม่ได้อยู่บรรทัดเดียวกันแบบ grid (v8.73 รองรับแค่แบบนั้น) แต่แยกเป็น label เดี่ยวๆ ของตัวเองคนละบรรทัด ค่าจริงอยู่บรรทัดถัดไปได้หลายบรรทัด (พบจริงในไฟล์ใบงานอีกเทมเพลตหนึ่ง) — เพิ่มฟังก์ชัน findStandaloneMultilineField เป็น fallback เมื่อหา "บรรทัดที่มีทั้ง 2 label" แบบเดิมไม่เจอเลย: หา label ที่อยู่บรรทัดของตัวเองล้วนๆ (ไม่มีคำอื่นต่อท้าย) แล้วเก็บบรรทัดถัดไปต่อเนื่องจนกว่าจะเจอ label อื่นที่รู้จัก/เจอ label สาเหตุ-วิธีแก้ไข-วันที่ซ่อมเสร็จ/บรรทัดว่าง — ทดสอบกับไฟล์ PDF จริงเพิ่มอีก 1 ไฟล์ (เทมเพลตนี้โดยเฉพาะ) ดึงได้ครบถูกต้อง ไม่กระทบผลลัพธ์ไฟล์เทมเพลตเดิม 4 ไฟล์ที่เคยทดสอบผ่านแล้ว
@@ -75,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.75</title>
+<title>F1 Service — v8.76</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -241,6 +242,25 @@
   .modal h3{font-size:15px;margin-bottom:6px;padding-right:20px;}
   .modal p{font-size:12.5px;color:var(--text-dim);margin-bottom:14px;line-height:1.5;}
   .modal textarea{width:100%;background:var(--panel-alt);border:1px solid var(--border);border-radius:7px;padding:10px;color:var(--text);font-family:'Sarabun';font-size:13.5px;min-height:80px;margin-bottom:10px;}
+
+  /* ===== Profile modal (mandatory onboarding + self edit) ===== */
+  #profile-modal .modal{max-width:560px;}
+  .profile-section-title{font-size:12.5px;font-weight:700;color:var(--amber);margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.3px;}
+  .profile-section-title:first-of-type{margin-top:4px;}
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;}
+  .profile-grid .field-wrap{grid-column:span 2;}
+  @media(min-width:460px){ .profile-grid .field-wrap.half{grid-column:span 1;} }
+  .profile-readonly-note{font-size:11px;color:var(--text-faint);margin:2px 0 4px;}
+  .profile-locked input, .profile-locked select{opacity:.55;pointer-events:none;background:var(--panel);}
+  .profile-age-hint{font-size:11px;color:var(--text-faint);margin-top:2px;}
+  .province-picker{border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--panel-alt);}
+  .province-picker input[type=text]{margin-bottom:6px;}
+  .province-picker-list{max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+  .province-picker-list label{display:flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 4px;border-radius:5px;cursor:pointer;}
+  .province-picker-list label:hover{background:var(--panel);}
+  .province-chip-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .province-chip{display:inline-flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:3px 8px 3px 10px;font-size:11.5px;}
+  .province-chip button{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:12px;padding:0;line-height:1;}
   .modal-actions{display:flex;gap:8px;flex-wrap:wrap;}
 
   .desktop-hint{background:rgba(91,159,217,.1);border:1px solid var(--blue);color:var(--blue);font-family:'IBM Plex Mono';font-size:11px;padding:8px 12px;border-radius:7px;margin-bottom:16px;}
@@ -248,6 +268,13 @@
   .panel-block h2{font-size:15px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:8px;}
   .panel-block h2 .tag{font-family:'IBM Plex Mono';font-size:10px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px;border-radius:4px;}
   .panel-sub{font-size:12px;color:var(--text-faint);margin-bottom:16px;}
+  .orgchart-col{background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:10px;flex:1 1 160px;}
+  .orgchart-col-title{font-size:12px;font-weight:700;color:var(--text-faint);margin-bottom:8px;text-align:center;}
+  .orgchart-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:7px 9px;margin-bottom:7px;font-size:12.5px;}
+  .orgchart-card-lead{border-color:var(--amber);border-width:2px;}
+  .orgchart-card-name{font-weight:600;}
+  .orgchart-edit-row{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
+  .orgchart-edit-row select{font-size:11px;padding:2px 4px;}
   .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .form-grid.two{grid-template-columns:1fr 1fr;}
   .form-grid .full{grid-column:1/-1;}
@@ -522,6 +549,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         <span id="signed-in-name">เข้าสู่ระบบแล้ว</span>
         <button id="notif-bell" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;position:relative;padding:2px 4px;">🔔<span id="notif-badge" class="badge-count" style="display:none;position:absolute;top:-4px;right:-2px;">0</span></button>
         <button id="edit-nickname-btn" title="แก้ไขชื่อเล่น" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">✏️</button>
+        <button id="edit-profile-btn" title="แก้ไขโปรไฟล์" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;display:none;">👤 โปรไฟล์</button>
         <button id="change-name-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;">ออกจากระบบ</button>
       </div>
     </div>
@@ -531,6 +559,8 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <button id="mode-settings">⚙️ ตั้งค่าระบบ</button>
       <button id="mode-mgr">Dashboard</button>
       <button id="mode-backup">Export/Backup</button>
+      <button id="mode-orgchart" style="display:none;">🗂 ผังองค์กร</button>
+      <button id="mode-roster" style="display:none;">👥 รายชื่อผู้ใช้งาน</button>
       <button id="mode-admin-service" style="display:none;">📦 ตรวจรับอะไหล่</button>
     </div>
     <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
@@ -1122,6 +1152,87 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     </div>
   </div>
 
+  <!-- ============ PROFILE MODAL (บังคับกรอกครั้งแรกที่ login ถ้ายังไม่มี userProfiles/{email} / แก้ไขทีหลังได้จากปุ่ม 👤 โปรไฟล์ — Super Admin ไม่ถูกบังคับ) ============ -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal">
+      <button class="modal-close-x" id="profile-modal-close-x" style="display:none;">✕</button>
+      <h3 id="profile-modal-title">ยินดีต้อนรับ 👋 กรุณากรอกข้อมูลส่วนตัว</h3>
+      <p class="panel-sub" id="profile-modal-sub">ข้อมูลนี้ใช้สำหรับระบบงาน Service ภายในบริษัท กรุณากรอกให้ครบก่อนเริ่มใช้งาน (กรอกครั้งเดียว แก้ไขทีหลังได้)</p>
+
+      <div class="profile-section-title">ข้อมูลส่วนตัว</div>
+      <div class="profile-grid">
+        <div class="field-wrap half"><label>ชื่อ (ไทย) <span style="color:var(--red);">*</span></label><input type="text" id="profile-firstNameTh"></div>
+        <div class="field-wrap half"><label>นามสกุล (ไทย) <span style="color:var(--red);">*</span></label><input type="text" id="profile-lastNameTh"></div>
+        <div class="field-wrap half"><label>ชื่อเล่น (ไทย) <span style="color:var(--red);">*</span></label><input type="text" id="profile-nicknameTh"></div>
+        <div class="field-wrap half"><label>First name (EN) <span style="color:var(--red);">*</span></label><input type="text" id="profile-firstNameEn"></div>
+        <div class="field-wrap half"><label>Last name (EN) <span style="color:var(--red);">*</span></label><input type="text" id="profile-lastNameEn"></div>
+        <div class="field-wrap half"><label>Nickname (EN) <span style="color:var(--red);">*</span></label><input type="text" id="profile-nicknameEn"></div>
+        <div class="field-wrap half"><label>เบอร์โทรศัพท์ <span style="color:var(--red);">*</span></label><input type="tel" id="profile-phone" placeholder="0xx-xxx-xxxx"></div>
+        <div class="field-wrap half"><label>วัน เดือน ปีเกิด <span style="color:var(--red);">*</span></label><input type="date" id="profile-birthDate">
+          <div class="profile-age-hint" id="profile-age-hint"></div>
+        </div>
+      </div>
+
+      <div class="profile-section-title">ที่อยู่ปัจจุบัน</div>
+      <div class="profile-grid">
+        <div class="field-wrap"><label>บ้านเลขที่ / ที่อยู่ <span style="color:var(--red);">*</span></label><input type="text" id="profile-houseNo" placeholder="บ้านเลขที่ หมู่ ถนน ฯลฯ"></div>
+        <div class="field-wrap half"><label>จังหวัด <span style="color:var(--red);">*</span></label><select id="profile-province"><option value="">— เลือกจังหวัด —</option></select></div>
+        <div class="field-wrap half"><label>อำเภอ/เขต <span style="color:var(--red);">*</span></label><select id="profile-amphoe"><option value="">— เลือกจังหวัดก่อน —</option></select></div>
+        <div class="field-wrap half"><label>ตำบล/แขวง <span style="color:var(--red);">*</span></label><select id="profile-tambon"><option value="">— เลือกอำเภอก่อน —</option></select></div>
+        <div class="field-wrap half"><label>Email บริษัท <span style="color:var(--red);">*</span></label><input type="email" id="profile-companyEmail" placeholder="name@firmer.co.th">
+          <div class="profile-age-hint">(คนละอันกับอีเมลที่ใช้ล็อกอิน)</div>
+        </div>
+      </div>
+
+      <div class="profile-section-title">ข้อมูลงาน</div>
+      <div class="profile-grid">
+        <div class="field-wrap half" id="profile-position-wrap">
+          <label>ตำแหน่ง <span style="color:var(--red);">*</span></label>
+          <select id="profile-position">
+            <option value="">— เลือกตำแหน่ง —</option>
+            <option>Manager</option><option>Sup Product</option><option>Engineer Product</option>
+            <option>Sup Area</option><option>Technician (ช่าง)</option><option>Engineer Office</option>
+            <option>IT Service</option><option>Admin Service</option>
+          </select>
+          <div class="profile-readonly-note" style="display:none;">แก้ไขได้โดย Manager เท่านั้น</div>
+        </div>
+        <div class="field-wrap half" id="profile-area-wrap">
+          <label>เขตพื้นที่รับผิดชอบ <span style="color:var(--red);">*</span></label>
+          <select id="profile-area">
+            <option value="">— เลือกเขตพื้นที่ —</option>
+            <option>เหนือบน</option><option>เหนือล่าง</option><option>อีสานบน</option><option>อีสานกลาง</option>
+            <option>อีสานล่าง</option><option>กทม.กลาง,ตะวันออก</option><option>กทม.,กลาง,ตะวันตก</option>
+            <option>ใต้</option><option>ส่วนกลาง (Office)</option>
+          </select>
+          <div class="profile-readonly-note" style="display:none;">แก้ไขได้โดย Manager เท่านั้น</div>
+        </div>
+        <div class="field-wrap" id="profile-provinces-covered-wrap">
+          <label>จังหวัดที่ดูแล <span style="color:var(--red);">*</span></label>
+          <div class="profile-readonly-note" style="display:none;">แก้ไขได้โดย Manager เท่านั้น</div>
+          <div class="province-picker">
+            <input type="text" id="profile-province-search" placeholder="ค้นหาจังหวัด...">
+            <div class="province-picker-list" id="profile-province-list"></div>
+          </div>
+          <div class="province-chip-wrap" id="profile-province-chips"></div>
+        </div>
+        <div class="field-wrap half" id="profile-startdate-wrap">
+          <label>วันที่เริ่มงาน <span style="color:var(--red);">*</span></label>
+          <input type="date" id="profile-startDate">
+          <div class="profile-age-hint" id="profile-tenure-hint"></div>
+          <div class="profile-readonly-note" style="display:none;">แก้ไขได้โดย Manager เท่านั้น</div>
+        </div>
+        <div class="field-wrap half">
+          <label>Account Mindray</label>
+          <input type="text" id="profile-mindrayAccount" placeholder="เช่น Sxxxxxx">
+          <label style="display:flex;align-items:center;gap:6px;font-weight:400;margin-top:6px;font-size:12.5px;"><input type="checkbox" id="profile-mindrayNone" style="width:auto;"> ไม่มี Account Mindray</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="profile-save-btn" style="width:100%;margin-top:14px;">บันทึกข้อมูล</button>
+      <button class="btn btn-ghost" id="profile-cancel-btn" style="width:100%;margin-top:8px;display:none;">ยกเลิก</button>
+    </div>
+  </div>
+
   <!-- ============ SETTINGS VIEW (v8.37 — รวม จัดการสิทธิ์ + จัดการ Product) ============ -->
   <div id="view-settings" style="display:none;">
     <div class="desktop-hint">⚙️ ตั้งค่าระบบ — จัดการสิทธิ์ผู้ใช้และ Product ทั้งหมด (เฉพาะ Editor)</div>
@@ -1392,6 +1503,58 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
   </div>
   <div id="app-footer-version" style="text-align:center;padding:24px 0 8px;font-size:11px;color:var(--text-faint);">จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน 7.47 (อัปเดตล่าสุด 20 กันยายน 2569 เวลาไทย)</div>
 
+  <!-- ===== หน้า ผังองค์กร (Org Chart) — สร้างสดจาก userProfiles จริง ไม่ hardcode ชื่อคน ===== -->
+  <div id="view-orgchart" style="display:none;">
+    <div class="desktop-hint">🗂 ผังองค์กร — ดึงสดจากข้อมูลโปรไฟล์ (userProfiles) ทุกคนที่กรอกแล้ว ทุกคนดูได้ แก้ไข (โยกย้ายตำแหน่ง/เขต) ได้เฉพาะ Manager</div>
+    <div class="panel-block">
+      <h2>ภาพรวม</h2>
+      <div id="orgchart-stats" style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;"></div>
+    </div>
+    <div class="panel-block">
+      <h2>สำนักงานใหญ่ (ส่วนกลาง / Office)</h2>
+      <p class="panel-sub">จัดกลุ่มตามตำแหน่งของคนที่เขตพื้นที่ = "ส่วนกลาง (Office)"</p>
+      <div id="orgchart-office" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="panel-block">
+      <h2>ทีมภาคสนาม (ตามเขตพื้นที่)</h2>
+      <p class="panel-sub">แต่ละคอลัมน์คือ 1 เขตพื้นที่ — "Sup Area" ของเขตนั้นจะแสดงเด่นเป็นหัวหน้าเขต (เป็นการแสดงผลเท่านั้น ไม่ใช่ field บังคับ)</p>
+      <div id="orgchart-field" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text-faint);padding:4px 2px;">* แสดงเฉพาะผู้ที่กรอกโปรไฟล์ (userProfiles) แล้วเท่านั้น คนที่ยังไม่เคยกรอกจะยังไม่ปรากฏในผังนี้</div>
+  </div>
+
+  <!-- ===== หน้า รายชื่อผู้ใช้งาน (Roster) — Manager เท่านั้น: ดู/แก้ไข/ลบโปรไฟล์ทุกคน + ซิงก์ Google Sheet + Export Excel ===== -->
+  <div id="view-roster" style="display:none;">
+    <div class="desktop-hint">👥 รายชื่อผู้ใช้งาน — เฉพาะ Manager · แก้ไข/ลบจริงทำที่นี่เท่านั้น (Google Sheet ไว้ดู/ค้นหาอย่างเดียว)</div>
+    <div class="panel-block">
+      <h2>ตัวเลือก</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="roster-open-sheet-btn">🔗 เปิด Google Sheet</button>
+        <button class="btn btn-ghost btn-sm" id="roster-export-excel-btn">📊 Export Excel</button>
+        <button class="btn btn-ghost btn-sm" id="roster-resync-btn">🔄 Sync ใหม่ทั้งหมด</button>
+        <button class="btn btn-ghost btn-sm" id="roster-refresh-btn">↻ รีเฟรช</button>
+        <span style="font-size:11px;color:var(--text-faint);">* บันทึก/โยกย้ายทุกครั้งซิงก์ขึ้น Sheet ให้อัตโนมัติอยู่แล้ว ปุ่ม Sync ใหม่ทั้งหมดไว้ใช้กรณีชีตกับระบบไม่ตรงกัน</span>
+      </div>
+    </div>
+    <div class="panel-block">
+      <h2>รายชื่อทั้งหมด <span id="roster-count" style="font-weight:400;color:var(--text-faint);"></span></h2>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;" id="roster-table">
+          <thead><tr style="text-align:left;border-bottom:1px solid var(--border);">
+            <th style="padding:6px 8px;">ชื่อเล่น</th>
+            <th style="padding:6px 8px;">ตำแหน่ง</th>
+            <th style="padding:6px 8px;">เขตพื้นที่</th>
+            <th style="padding:6px 8px;">เบอร์โทร</th>
+            <th style="padding:6px 8px;">Email บริษัท</th>
+            <th style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
+            <th style="padding:6px 8px;"></th>
+          </tr></thead>
+          <tbody id="roster-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== หน้า Admin Service: ตรวจรับอะไหล่ ===== -->
   <div id="view-admin-service" style="display:none;">
     <div class="desktop-hint">📦 ตรวจรับอะไหล่คืน Office — Admin Service เท่านั้น</div>
@@ -1578,8 +1741,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.75";
-const APP_UPDATED_AT = "30 กันยายน 2569 19:05 น. เวลาไทย";
+const APP_VERSION = "8.76";
+const APP_UPDATED_AT = "30 กันยายน 2569 21:02 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1805,6 +1968,11 @@ let approvedUsers = []; // รายชื่ออีเมลที่มี�
 let myVotes = {};
 let nicknamesMap = {}; // email(lowercase) -> nickname ที่ผู้ใช้ตั้งไว้ครั้งแรกที่ login (แทนชื่อ/อีเมลบัญชี Google ทุกจุดในแอป)
 let myNicknameDocId = null; // uid ของเอกสาร nicknames/{uid} ของผู้ใช้ปัจจุบัน (ถ้ามี)
+let myUserProfile = null; // เอกสาร userProfiles/{email} ของผู้ใช้ปัจจุบัน ถ้ายังไม่เคยกรอกจะเป็น null — บังคับกรอกก่อนใช้งาน (ยกเว้น Super Admin)
+let thaiAddressData = null; // cache ของ data/thai-address.json (โหลดครั้งเดียว) — { provinces:[{id,name}], amphoes:[{id,name,provinceId}], tambons:[{id,name,amphoeId}] }
+let profileSelectedProvincesCovered = []; // ชื่อจังหวัดที่เลือกในช่อง "จังหวัดที่ดูแล" (multi-select) ของฟอร์มโปรไฟล์ที่กำลังเปิดอยู่
+let rosterEditingEmail = null; // ถ้าไม่ null = Manager กำลังแก้โปรไฟล์ของคนอื่น (จาก roster) ผ่าน modal เดียวกับที่ใช้แก้โปรไฟล์ตัวเอง — email นี้คือ doc id ของ userProfiles ที่กำลังแก้
+let rosterProfiles = []; // [{email, ...profileData}] แคชล่าสุดของหน้า roster (Manager) — คนละตัวแปรกับ orgChartProfiles เผื่อเปิดคนละแท็บพร้อมกัน แต่โครงสร้างข้อมูลเหมือนกัน
 
 let engEditingSolutions = [];
 let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไข" on a pending Engineer submission
@@ -2082,7 +2250,7 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
     ]);
-    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], claimNotices: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} } };
+    DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], claimNotices: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} }, profilesSheetMeta: { spreadsheetId:null, tabs:{} } };
     // ลิงก์/gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว (แยกแท็บตามผู้ดูแล Product) — แคชไว้กันต้องยิง Sheets API ทุกครั้งที่เปิดหน้ารายการเคลม
     // สำคัญ: อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจ และดักด้วย try/catch ของตัวเอง — เอกสาร meta/claimsSheet เป็นเอกสารใหม่ (เพิ่งเพิ่มทีหลัง) ถ้า Firestore Rules ของโปรเจกต์ยังไม่ได้อนุญาตให้อ่านเอกสารนี้ (ยังไม่ได้แก้ Rules ตาม path ใหม่)
     // จะทำให้อ่านไม่สำเร็จ — ถ้าเอาไปรวมไว้ใน Promise.all เดียวกับข้อมูลอื่น จะทำให้ Promise.all ทั้งก้อน reject ไปด้วย ซึ่งเคยทำให้ nicknamesMap ไม่ถูกตั้งค่าเลยและแอปถามชื่อเล่นซ้ำทุกครั้งที่รีเฟรช (บั๊กที่เจอและแก้ใน v7.47)
@@ -2090,6 +2258,11 @@ async function loadData(){
       const claimsSheetDoc = await sdk.getDoc(sdk.doc(db,'meta','claimsSheet'));
       if(claimsSheetDoc.exists()){ const csd = claimsSheetDoc.data(); DATA.claimsSheetMeta = { spreadsheetId: csd.spreadsheetId||null, tabs: csd.tabs||{} }; }
     }catch(claimsSheetErr){ console.warn('อ่านแคชลิงก์ Google Sheet ของเคลมไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', claimsSheetErr.message); }
+    // แคชลิงก์/gid ของ Google Sheet รายชื่อผู้ใช้งาน (userProfiles) — เหตุผลเดียวกับ claimsSheetMeta ด้านบน: อ่านแยก ไม่ให้พังก้อนอื่น
+    try{
+      const profilesSheetDoc = await sdk.getDoc(sdk.doc(db,'meta','profilesSheet'));
+      if(profilesSheetDoc.exists()){ const psd = profilesSheetDoc.data(); DATA.profilesSheetMeta = { spreadsheetId: psd.spreadsheetId||null, tabs: psd.tabs||{} }; }
+    }catch(profilesSheetErr){ console.warn('อ่านแคชลิงก์ Google Sheet ของรายชื่อผู้ใช้งานไม่สำเร็จ (ไม่กระทบข้อมูลอื่น):', profilesSheetErr.message); }
     // แจ้งเตือนความคืบหน้าเคลม (ให้ผู้แจ้งเคลมเห็นตอนสถานะเคลมของตัวเองเปลี่ยน) — เก็บแยกคอลเลกชันต่างหาก (claimNotices) โดยตั้งใจ ไม่ผูกกับเอกสารเคลมหลัก
     // เพราะเอกสารเคลมหลักจะถูกลบทิ้งทันทีตอนย้ายไป Google Sheet (จบเคส) ถ้าผูกไว้ด้วยกัน แจ้งเตือนสุดท้ายจะหายไปพร้อมกันก่อนผู้แจ้งจะทันเห็น
     // อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจเช่นเดียวกับ claimsSheetMeta ด้านบน (บทเรียนจากบั๊ก v7.47) — อ่านไม่สำเร็จก็แค่ไม่มีแจ้งเตือนเคลม ไม่กระทบข้อมูลอื่น
@@ -2244,6 +2417,7 @@ function ensureDataShape(){
   if(!DATA.claimNotices) DATA.claimNotices = [];
   if(!DATA.categories) DATA.categories = {...DEFAULT_CATEGORIES};
   if(!DATA.claimsSheetMeta) DATA.claimsSheetMeta = { spreadsheetId:null, tabs:{} };
+  if(!DATA.profilesSheetMeta) DATA.profilesSheetMeta = { spreadsheetId:null, tabs:{} };
 }
 
 // โหลดวิธีแก้ไข (subcollection) ของ Error หนึ่งรายการ แบบ lazy — โหลดเฉพาะตอนเปิดดูจริง
@@ -2426,6 +2600,14 @@ function nicknameFor(email){ // คืนชื่อเล่นที่ผู
   return nicknamesMap[email.toLowerCase()] || email;
 }
 function myDisplayName(){ return nicknameFor(myUserEmail) || myUserName || myUserEmail || ''; }
+// ชื่อสำหรับช่อง "ผู้เคลม/ผู้แจ้ง": ชื่อเล่น - เขตรับผิดชอบ (ดึงจาก userProfiles ที่บังคับกรอก)
+// ถ้ายังไม่มีโปรไฟล์ (เช่น Super Admin ที่ไม่ต้องกรอก) ให้ fallback กลับไปใช้ชื่อเล่นเฉยๆ แบบเดิม
+function myClaimantName(){
+  const nick = (myUserProfile && myUserProfile.nicknameTh) ? myUserProfile.nicknameTh : nicknameFor(myUserEmail);
+  const area = myUserProfile && myUserProfile.area ? myUserProfile.area : '';
+  if(nick && area) return `${nick} - ${area}`;
+  return nick || myDisplayName();
+}
 function showSignedInPill(){
   const name = myDisplayName();
   $('signed-in-pill').style.display = 'flex'; $('signed-in-avatar').textContent = (name||'?').charAt(0); $('signed-in-name').textContent = name;
@@ -2872,6 +3054,172 @@ async function _deleteSheetRowByGid(token, spreadsheetId, sheetId, rowIndex){
   });
   if(!res.ok) throw new Error('Sheets batchUpdate deleteDimension ล้มเหลว: '+await googleApiErrorMessage(res));
 }
+
+/* ===================== GOOGLE SHEETS — ซิงก์ "รายชื่อผู้ใช้งาน" (userProfiles) อ่านอย่างเดียว =====================
+   สเปรดชีตกลาง 1 ไฟล์ แท็บเดียว ("Profiles") — 1 แถวต่อ 1 คน คอลัมน์ตรงกับลำดับฟิลด์ในฟอร์มโปรไฟล์ (showProfileModal) เป๊ะๆ
+   แก้ไข/ลบจริงทำผ่านแอปเท่านั้น (ดู saveUserProfile / deleteRosterProfile) — ชีตนี้ไว้ดู/ค้นหา/กรอง/พิมพ์ นอกแอปเท่านั้น
+   คอลัมน์สุดท้าย ("Email (เข้าระบบ)") ไม่ใช่ฟิลด์ในฟอร์ม แต่เป็น key ภายในไว้หาแถวเดิมตอน upsert (doc id ของ userProfiles) */
+const PROFILES_SHEET_NAME = 'รายชื่อผู้ใช้งาน (Service Center)';
+const PROFILES_SHEET_TAB_TITLE = 'Profiles';
+const PROFILES_SHEET_HEADERS = ['ชื่อ(ไทย)','นามสกุล(ไทย)','ชื่อเล่น(ไทย)','First name','Last name','Nickname','เบอร์โทรศัพท์','วันเกิด','บ้านเลขที่','จังหวัด','อำเภอ','ตำบล','Email บริษัท','ตำแหน่ง','เขตพื้นที่รับผิดชอบ','จังหวัดที่ดูแล','วันที่เริ่มงาน','Account Mindray','Email (เข้าระบบ)'];
+let _profilesSheetIdCache = null;
+let _profilesSheetInFlight = null;
+async function fsSaveProfilesSheetMeta(){
+  try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','profilesSheet'), DATA.profilesSheetMeta); }
+  catch(e){ console.warn('บันทึกแคชลิงก์ Google Sheet รายชื่อผู้ใช้งานไม่สำเร็จ (ไม่กระทบข้อมูลโปรไฟล์):', e.message); }
+}
+// หา (หรือสร้างใหม่ถ้ายังไม่มี) สเปรดชีตกลางของรายชื่อผู้ใช้งาน — เหมือน ensureClaimsLogSpreadsheet แต่แท็บเดียว ไม่แยกตามผู้ดูแล
+async function ensureProfilesSpreadsheet(){
+  if(_profilesSheetIdCache) return _profilesSheetIdCache;
+  if(DATA.profilesSheetMeta && DATA.profilesSheetMeta.spreadsheetId){ _profilesSheetIdCache = DATA.profilesSheetMeta.spreadsheetId; return _profilesSheetIdCache; }
+  if(_profilesSheetInFlight) return _profilesSheetInFlight;
+  _profilesSheetInFlight = (async ()=>{
+    const token = await ensureDriveAccess();
+    const q = encodeURIComponent(`'${DRIVE_ROOT_FOLDER_ID}' in parents and name='${PROFILES_SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!res.ok) throw new Error('ค้นหาชีตรายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(res));
+    const data = await res.json();
+    if(data.files && data.files.length>0){
+      _profilesSheetIdCache = data.files[0].id;
+      DATA.profilesSheetMeta.spreadsheetId = _profilesSheetIdCache;
+      fsSaveProfilesSheetMeta();
+      return _profilesSheetIdCache;
+    }
+    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ properties:{ title: PROFILES_SHEET_NAME }, sheets:[{ properties:{ title: PROFILES_SHEET_TAB_TITLE } }] })
+    });
+    if(!createRes.ok) throw new Error('สร้างชีตรายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(createRes));
+    const created = await createRes.json();
+    const sheetId = created.spreadsheetId;
+    const tabGid = (created.sheets && created.sheets[0] && created.sheets[0].properties) ? created.sheets[0].properties.sheetId : 0;
+    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
+    if(!moveRes.ok) throw new Error('ย้ายชีตรายชื่อผู้ใช้งานเข้าโฟลเดอร์ไม่สำเร็จ: '+await googleApiErrorMessage(moveRes));
+    _profilesSheetIdCache = sheetId;
+    DATA.profilesSheetMeta.spreadsheetId = sheetId;
+    DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE] = tabGid;
+    await fsSaveProfilesSheetMeta();
+    await appendClaimRowToSheet(sheetId, PROFILES_SHEET_HEADERS, PROFILES_SHEET_TAB_TITLE); // เขียนหัวตารางไว้แถวแรก (ฟังก์ชันนี้ generic ใช้ร่วมกับเคลมได้ ไม่ได้ผูกกับข้อมูลเคลม)
+    try{ await applyClaimsSheetFormatting(sheetId, tabGid, PROFILES_SHEET_HEADERS.length, true); } // เช่นกัน generic ใช้ร่วมได้
+    catch(fmtErr){ console.warn('จัดรูปแบบชีตรายชื่อผู้ใช้งานไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
+    return sheetId;
+  })();
+  try{ return await _profilesSheetInFlight; }
+  finally{ _profilesSheetInFlight = null; }
+}
+// แปลงโปรไฟล์ 1 คนเป็น 1 แถว ตามลำดับคอลัมน์ PROFILES_SHEET_HEADERS เป๊ะๆ (ลำดับเดียวกับฟอร์ม showProfileModal)
+function buildProfileSheetRow(email, p){
+  p = p || {};
+  return [
+    p.firstNameTh||'', p.lastNameTh||'', p.nicknameTh||'',
+    p.firstNameEn||'', p.lastNameEn||'', p.nicknameEn||'',
+    p.phone||'',
+    p.birthDate ? `'${isoToDDMMYYYY(p.birthDate)}` : '',
+    p.houseNo||'', p.province||'', p.amphoe||'', p.tambon||'',
+    p.companyEmail||'', p.position||'', p.area||'',
+    (p.provincesCovered||[]).join(', '),
+    p.startDate ? `'${isoToDDMMYYYY(p.startDate)}` : '',
+    p.mindrayNone ? 'ไม่มี' : (p.mindrayAccount||''),
+    (email||'').toLowerCase(),
+  ];
+}
+// หาแถวเดิมของ email นี้ใน Sheet (ด้วยคอลัมน์สุดท้าย) แล้วอัปเดตทับ ถ้ายังไม่มีก็ append ต่อท้าย — ไม่ critical ถ้าพลาด (แค่ชีตไม่อัปเดต ข้อมูลจริงอยู่ใน Firestore ครบอยู่แล้ว)
+async function upsertProfileRowInSheet(email, p){
+  try{
+    const sheetId = await ensureProfilesSpreadsheet();
+    const token = await ensureDriveAccess();
+    const range = `${PROFILES_SHEET_TAB_TITLE}!A1:${String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1)}100000`;
+    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!getRes.ok) throw new Error('อ่านข้อมูล Sheet รายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
+    const getData = await getRes.json();
+    const values = getData.values || [];
+    const emailCol = PROFILES_SHEET_HEADERS.length - 1;
+    let foundRow = -1; // index ใน values (0 = แถวหัวตาราง)
+    for(let i=1;i<values.length;i++){ if(((values[i][emailCol]||'')+'').toLowerCase() === (email||'').toLowerCase()){ foundRow = i; break; } }
+    const targetRow1based = foundRow>=0 ? (foundRow+1) : (values.length>0 ? values.length+1 : 2); // ถ้าชีตว่างเปล่าแปลกๆ (ไม่มีแม้หัวตาราง) ก็เริ่มแถว 2 กันทับหัวตาราง
+    const writeRange = `${PROFILES_SHEET_TAB_TITLE}!A${targetRow1based}`;
+    const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values: [buildProfileSheetRow(email, p)] })
+    });
+    if(!putRes.ok) throw new Error('บันทึกแถวโปรไฟล์ลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(putRes));
+  }catch(e){ console.warn('ซิงก์โปรไฟล์ไปยัง Google Sheet ไม่สำเร็จ (ไม่กระทบข้อมูลหลักใน Firestore):', e.message); }
+}
+// ลบแถวของ email นี้ออกจาก Sheet (ใช้ตอน Manager ลบโปรไฟล์จาก roster) — ไม่ throw ถ้าพลาด เพราะการลบ Firestore ต้องเดินหน้าต่อเสมอ
+async function deleteProfileRowFromSheet(email){
+  try{
+    const sheetId = await ensureProfilesSpreadsheet();
+    const token = await ensureDriveAccess();
+    const range = `${PROFILES_SHEET_TAB_TITLE}!A1:${String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1)}100000`;
+    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!getRes.ok) throw new Error('อ่านข้อมูล Sheet รายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
+    const getData = await getRes.json();
+    const values = getData.values || [];
+    const emailCol = PROFILES_SHEET_HEADERS.length - 1;
+    const foundRow = values.findIndex((row,i)=> i>0 && ((row[emailCol]||'')+'').toLowerCase() === (email||'').toLowerCase());
+    if(foundRow<0) return; // ไม่เคยอยู่ใน Sheet (เช่น sync ยังไม่ทันเกิด) — ไม่มีอะไรให้ลบ
+    let gid = DATA.profilesSheetMeta.tabs && DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE];
+    if(gid===undefined || gid===null){
+      const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
+      if(!metaRes.ok) throw new Error('หา gid แท็บ Profiles ไม่สำเร็จ: '+await googleApiErrorMessage(metaRes));
+      const metaData = await metaRes.json();
+      const found = (metaData.sheets||[]).find(s=>s.properties && s.properties.title===PROFILES_SHEET_TAB_TITLE);
+      if(!found) return;
+      gid = found.properties.sheetId;
+    }
+    await _deleteSheetRowByGid(token, sheetId, gid, foundRow+1); // foundRow เป็น 0-based ใน values → แถวจริง (1-based) = foundRow+1
+  }catch(e){ console.warn('ลบแถวโปรไฟล์ออกจาก Sheet ไม่สำเร็จ (ไม่กระทบการลบใน Firestore):', e.message); }
+}
+// Sync ใหม่ทั้งหมด: ล้างแถวข้อมูล (เก็บหัวตารางไว้) แล้วเขียนทุกคนใน userProfiles ใหม่ทั้งหมด — ใช้เป็น fallback เผื่อชีตกับ Firestore ไม่ตรงกัน (แก้มือใน Sheet, sync ตกหล่น ฯลฯ)
+async function resyncAllProfilesSheet(){
+  showLoadingOverlay('กำลัง Sync ชีตรายชื่อผู้ใช้งานใหม่ทั้งหมด...');
+  try{
+    const sheetId = await ensureProfilesSpreadsheet();
+    const token = await ensureDriveAccess();
+    const colLetter = String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1);
+    updateLoadingOverlayText('กำลังล้างข้อมูลเดิมในชีต...');
+    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A2:'+colLetter+'100000')}:clear`, {
+      method:'POST', headers:{ Authorization:`Bearer ${token}` }
+    });
+    if(!clearRes.ok) throw new Error('ล้างข้อมูลเดิมในชีตไม่สำเร็จ: '+await googleApiErrorMessage(clearRes));
+    updateLoadingOverlayText('กำลังดึงรายชื่อผู้ใช้งานทั้งหมด...');
+    const profiles = await fetchAllUserProfiles();
+    const rows = profiles.map(p=>buildProfileSheetRow(p.email, p));
+    if(rows.length>0){
+      updateLoadingOverlayText(`กำลังเขียน ${rows.length} แถวลงชีต...`);
+      const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A2')}?valueInputOption=USER_ENTERED`, {
+        method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ values: rows })
+      });
+      if(!putRes.ok) throw new Error('เขียนข้อมูลลงชีตไม่สำเร็จ: '+await googleApiErrorMessage(putRes));
+    }
+    const gid = (DATA.profilesSheetMeta.tabs && DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE]) || 0;
+    try{ await applyClaimsSheetFormatting(sheetId, gid, PROFILES_SHEET_HEADERS.length, false); }
+    catch(fmtErr){ console.warn('จัดรูปแบบชีตรายชื่อผู้ใช้งานหลัง sync ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
+    showToast(`✅ Sync ชีตรายชื่อผู้ใช้งานเรียบร้อย (${rows.length} คน)`);
+  }catch(e){
+    showToast('⚠ Sync ชีตรายชื่อผู้ใช้งานไม่สำเร็จ: '+e.message);
+  }finally{
+    hideLoadingOverlay();
+  }
+}
+function profilesSheetLink(){
+  const id = DATA && DATA.profilesSheetMeta && DATA.profilesSheetMeta.spreadsheetId;
+  return id ? `https://docs.google.com/spreadsheets/d/${id}/edit` : null;
+}
+// เปิด (หรือสร้างแล้วเปิด) Google Sheet รายชื่อผู้ใช้งาน — ใช้กับปุ่ม "🔗 เปิด Google Sheet" ในหน้า roster
+async function openProfilesSheet(){
+  try{
+    showLoadingOverlay('กำลังเปิด Google Sheet...');
+    const sheetId = await ensureProfilesSpreadsheet();
+    window.open(`https://docs.google.com/spreadsheets/d/${sheetId}/edit`, '_blank', 'noopener');
+  }catch(e){
+    showToast('⚠ เปิด/สร้าง Google Sheet ไม่สำเร็จ: '+e.message);
+  }finally{
+    hideLoadingOverlay();
+  }
+}
+
 // สร้าง/หาโฟลเดอร์ตามโครงสร้าง: Service Center / ผู้รับผิดชอบ / ประเภท / รุ่น / Troubleshooting / ErrorCode-อาการ / วิธีที่ N
 const _findFolderInFlight = new Map();
 async function findDriveFolder(name, parentId, strict){
@@ -3673,6 +4021,8 @@ function updateModeButtonVisibility(){
   const btnSettings     = $('mode-settings');
   const btnBackup       = $('mode-backup');
   const btnAdminService = $('mode-admin-service');
+  const btnOrgChart     = $('mode-orgchart');
+  const btnRoster       = $('mode-roster');
 
   if(adminSvcOnly){
     // Admin Service: เห็นแค่ mode-admin-service
@@ -3682,22 +4032,28 @@ function updateModeButtonVisibility(){
     if(btnSettings)     btnSettings.style.display     = 'none';
     if(btnBackup)       btnBackup.style.display       = 'none';
     if(btnAdminService) btnAdminService.style.display = '';
+    if(btnOrgChart)     btnOrgChart.style.display     = 'none';
+    if(btnRoster)       btnRoster.style.display       = 'none';
   } else if(engineerOnly){
-    // Engineer ทั่วไป: ซ่อน mgr/settings/backup/admin-service
+    // Engineer ทั่วไป: ซ่อน mgr/settings/backup/admin-service/roster — ผังองค์กรเห็นได้ (ดูอย่างเดียว)
     if(btnEng)          btnEng.style.display          = '';
     if(btnSup)          btnSup.style.display          = 'none';
     if(btnMgr)          btnMgr.style.display          = 'none';
     if(btnSettings)     btnSettings.style.display     = 'none';
     if(btnBackup)       btnBackup.style.display       = 'none';
     if(btnAdminService) btnAdminService.style.display = 'none';
+    if(btnOrgChart)     btnOrgChart.style.display     = isApproved() ? '' : 'none';
+    if(btnRoster)       btnRoster.style.display       = 'none'; // roster เฉพาะ Manager เท่านั้น
   } else {
-    // Editor / Manager / SuperAdmin: เห็นทุก button รวม admin-service
+    // Editor / Manager / SuperAdmin: เห็นทุก button รวม admin-service + ผังองค์กร — roster เฉพาะ Manager จริงๆ เท่านั้น (Editor ที่ไม่ใช่ Manager ไม่เห็น)
     if(btnEng)          btnEng.style.display          = '';
     if(btnSup)          btnSup.style.display          = '';
     if(btnMgr)          btnMgr.style.display          = '';
     if(btnSettings)     btnSettings.style.display     = '';
     if(btnBackup)       btnBackup.style.display       = '';
     if(btnAdminService) btnAdminService.style.display = '';
+    if(btnOrgChart)     btnOrgChart.style.display     = isApproved() ? '' : 'none';
+    if(btnRoster)       btnRoster.style.display       = isManager() ? '' : 'none';
   }
 }
 
@@ -3763,6 +4119,7 @@ async function checkAccessAndLoad(){
     $('access-request-overlay').classList.remove('show');
     setStatus(false, ''); // ล้าง "กำลังตรวจสอบสิทธิ์..." ที่ค้างอยู่
     if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal();
+    await checkUserProfileGate();
     switchMode('admin-service');
     return;
   }
@@ -3778,6 +4135,7 @@ async function checkAccessAndLoad(){
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
   if(myUserEmail && !nicknamesMap[myUserEmail]) showNicknameModal(); // ล็อกอินครั้งแรกด้วยอีเมลนี้ — ยังไม่เคยตั้งชื่อเล่น บังคับตั้งก่อนใช้งาน
+  await checkUserProfileGate(); // บังคับกรอกโปรไฟล์ครั้งแรก (ยกเว้น Super Admin) — เช็คว่ามี userProfiles/{email} หรือยัง ครอบคลุมทั้งคนใหม่และคนเก่าที่ยังไม่เคยกรอก
   // รีเซ็ต mode ทุกครั้งที่ login/สลับบัญชี — กันบั๊ก: currentMode ของบัญชีก่อนหน้า (เช่น 'admin-service') ค้างอยู่
   // ทำให้บัญชีใหม่ที่ไม่ใช่ Admin Service ยังเห็นหน้า admin-service อยู่ แม้ว่า mode button จะแสดงถูกแล้ว
   if(window._pendingModeSwitch){
@@ -3843,9 +4201,583 @@ $('nickname-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') saveN
 $('nickname-cancel-btn').addEventListener('click', ()=>{ $('nickname-modal').classList.remove('show'); });
 $('edit-nickname-btn').addEventListener('click', ()=>{ if(!myUserEmail){ return; } showNicknameModal(false); });
 
+/* ===================== USER PROFILE (ข้อมูลส่วนตัว/ที่อยู่/งาน) — บังคับกรอกครั้งแรกที่ login (ยกเว้น Super Admin) =====================
+   เก็บที่ Firestore collection "userProfiles" doc id = อีเมล login (ตัวพิมพ์เล็ก) — แยกจากระบบ nicknamesMap/nicknames เดิมโดยสิ้นเชิง (คนละ collection)
+   TODO: nicknameTh/nicknameEn ในโปรไฟล์นี้ซ้ำซ้อนกับระบบ "ชื่อเล่น" (nicknamesMap/showNicknameModal) เดิม — ในอนาคตอาจรวมเป็นระบบเดียว แต่ไม่แตะตอนนี้เพราะของเดิมทำงานอยู่แล้ว ความเสี่ยงสูงถ้าไปยุ่ง */
+let profileModalIsFirstTime = true;
+
+async function loadThaiAddressData(){
+  if(thaiAddressData) return thaiAddressData;
+  try{
+    const res = await fetch('./data/thai-address.json');
+    thaiAddressData = await res.json();
+  }catch(e){
+    console.warn('โหลดข้อมูลจังหวัด/อำเภอ/ตำบลไม่สำเร็จ:', e);
+    thaiAddressData = { provinces:[], amphoes:[], tambons:[] };
+  }
+  return thaiAddressData;
+}
+
+// คำนวณอายุ/อายุงานแบบสดจากวันที่เก็บไว้ (ไม่เก็บตัวเลขสำเร็จรูป เพราะอายุต้องเปลี่ยนไปเรื่อยๆ ทุกวัน)
+function formatYearsMonthsFromDate(dateStr){
+  if(!dateStr) return '';
+  const start = new Date(dateStr+'T00:00:00');
+  if(isNaN(start.getTime())) return '';
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  if(now.getDate() < start.getDate()) months--;
+  if(months < 0){ years--; months += 12; }
+  if(years < 0) return '';
+  return years + ' ปี ' + months + ' เดือน';
+}
+
+async function userProfileExists(email){
+  if(!email) return true; // กันพลาด — ไม่มีอีเมลจะบังคับโชว์ modal ไปก็ทำอะไรไม่ได้อยู่ดี
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const docSnap = await sdk.getDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
+    if(docSnap.exists()){ myUserProfile = docSnap.data(); return true; }
+    return false;
+  }catch(e){
+    console.warn('ตรวจสอบ userProfiles ไม่สำเร็จ:', e);
+    return true; // โหลดไม่ได้ (เช่น ออฟไลน์) — ไม่บังคับ block การใช้งานซ้ำ ให้ลองใหม่ตอน login/refresh ครั้งหน้า
+  }
+}
+
+// เรียกหลัง login ทุกครั้ง (ทั้ง user ทั่วไปและ admin-service) — Super Admin ไม่ถูกบังคับกรอกเด็ดขาดตามที่ตกลงไว้
+async function checkUserProfileGate(){
+  if(!myUserEmail || isSuperAdmin()){ $('edit-profile-btn').style.display = 'none'; return; }
+  const exists = await userProfileExists(myUserEmail);
+  $('edit-profile-btn').style.display = ''; // แสดงปุ่มแก้ไขโปรไฟล์เสมอสำหรับคนที่ไม่ใช่ Super Admin ไม่ว่าจะเคยกรอกแล้วหรือยัง
+  if(!exists) showProfileModal(true);
+}
+
+// editingEmail/editingProfile: ใช้เฉพาะตอน Manager เปิดแก้โปรไฟล์ "คนอื่น" จากหน้า roster (ดู openEditOtherProfile) — ไม่ส่งมา = แก้โปรไฟล์ตัวเองตามเดิม
+function showProfileModal(isFirstTime, editingEmail, editingProfile){
+  profileModalIsFirstTime = isFirstTime !== false;
+  rosterEditingEmail = editingEmail || null;
+  loadThaiAddressData().then(()=>populateProfileProvinceSelect());
+  populateProfileProvinceCoveredList();
+
+  if(profileModalIsFirstTime){
+    $('profile-modal-title').textContent = 'ยินดีต้อนรับ 👋 กรุณากรอกข้อมูลส่วนตัว';
+    $('profile-modal-sub').textContent = 'ข้อมูลนี้ใช้สำหรับระบบงาน Service ภายในบริษัท กรุณากรอกให้ครบก่อนเริ่มใช้งาน (กรอกครั้งเดียว แก้ไขทีหลังได้)';
+    $('profile-modal-close-x').style.display = 'none';
+    $('profile-cancel-btn').style.display = 'none';
+    $('profile-save-btn').textContent = 'เริ่มใช้งาน';
+    clearProfileForm();
+  } else if(rosterEditingEmail){
+    const p = editingProfile || {};
+    $('profile-modal-title').textContent = `แก้ไขโปรไฟล์ (Manager): ${escapeHtml(orgChartDisplayName({...p, email:rosterEditingEmail}))}`;
+    $('profile-modal-sub').textContent = `กำลังแก้ไขข้อมูลของ ${escapeHtml(rosterEditingEmail)} — สิทธิ์ Manager แก้ได้ทุกช่อง`;
+    $('profile-modal-close-x').style.display = '';
+    $('profile-cancel-btn').style.display = 'block';
+    $('profile-save-btn').textContent = 'บันทึก';
+    fillProfileForm(p);
+  } else {
+    $('profile-modal-title').textContent = 'แก้ไขโปรไฟล์';
+    $('profile-modal-sub').textContent = 'แก้ไขข้อมูลส่วนตัวของคุณ';
+    $('profile-modal-close-x').style.display = '';
+    $('profile-cancel-btn').style.display = 'block';
+    $('profile-save-btn').textContent = 'บันทึก';
+    fillProfileForm(myUserProfile || {});
+  }
+  applyProfileFieldPermissions();
+  $('profile-modal').classList.add('show');
+}
+
+function clearProfileForm(){
+  ['firstNameTh','lastNameTh','nicknameTh','firstNameEn','lastNameEn','nicknameEn','phone','birthDate','houseNo','companyEmail','startDate','mindrayAccount'].forEach(f=>{ $('profile-'+f).value=''; });
+  $('profile-position').value = '';
+  $('profile-area').value = '';
+  $('profile-mindrayNone').checked = false;
+  profileSelectedProvincesCovered = [];
+  $('profile-province').value = '';
+  populateProfileAmphoeSelect(null);
+  populateProfileTambonSelect(null);
+  renderProfileProvinceChips();
+  updateProfileAreaVisibility();
+  $('profile-age-hint').textContent = '';
+  $('profile-tenure-hint').textContent = '';
+}
+
+function fillProfileForm(p){
+  $('profile-firstNameTh').value = p.firstNameTh||'';
+  $('profile-lastNameTh').value = p.lastNameTh||'';
+  $('profile-nicknameTh').value = p.nicknameTh||'';
+  $('profile-firstNameEn').value = p.firstNameEn||'';
+  $('profile-lastNameEn').value = p.lastNameEn||'';
+  $('profile-nicknameEn').value = p.nicknameEn||'';
+  $('profile-phone').value = p.phone||'';
+  $('profile-birthDate').value = p.birthDate||'';
+  $('profile-houseNo').value = p.houseNo||'';
+  $('profile-companyEmail').value = p.companyEmail||'';
+  $('profile-position').value = p.position||'';
+  $('profile-area').value = p.area||'';
+  $('profile-startDate').value = p.startDate||'';
+  $('profile-mindrayAccount').value = p.mindrayAccount||'';
+  $('profile-mindrayNone').checked = !!p.mindrayNone;
+  profileSelectedProvincesCovered = Array.isArray(p.provincesCovered) ? [...p.provincesCovered] : [];
+  // ที่อยู่: ต้องตั้งจังหวัดก่อน แล้วค่อย populate อำเภอ/ตำบลตามลำดับ (cascading)
+  const data = thaiAddressData || { provinces:[], amphoes:[], tambons:[] };
+  const prov = data.provinces.find(x=>x.name===p.province);
+  $('profile-province').value = prov ? prov.id : '';
+  populateProfileAmphoeSelect(prov ? prov.id : null);
+  const amph = data.amphoes.find(x=>x.name===p.amphoe && (!prov || x.provinceId===prov.id));
+  $('profile-amphoe').value = amph ? amph.id : '';
+  populateProfileTambonSelect(amph ? amph.id : null);
+  const tam = data.tambons.find(x=>x.name===p.tambon && (!amph || x.amphoeId===amph.id));
+  $('profile-tambon').value = tam ? tam.id : '';
+  renderProfileProvinceChips();
+  updateProfileAreaVisibility();
+  updateProfileAgeTenureHints();
+}
+
+function updateProfileAgeTenureHints(){
+  const age = formatYearsMonthsFromDate($('profile-birthDate').value);
+  $('profile-age-hint').textContent = age ? ('อายุปัจจุบัน: '+age) : '';
+  const tenure = formatYearsMonthsFromDate($('profile-startDate').value);
+  $('profile-tenure-hint').textContent = tenure ? ('อายุงาน: '+tenure) : '';
+}
+$('profile-birthDate').addEventListener('change', updateProfileAgeTenureHints);
+$('profile-startDate').addEventListener('change', updateProfileAgeTenureHints);
+
+function populateProfileProvinceSelect(){
+  const data = thaiAddressData || { provinces:[] };
+  const sel = $('profile-province');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— เลือกจังหวัด —</option>' + data.provinces.slice().sort((a,b)=>a.name.localeCompare(b.name,'th')).map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value = current;
+}
+function populateProfileAmphoeSelect(provinceId){
+  const data = thaiAddressData || { amphoes:[] };
+  const sel = $('profile-amphoe');
+  if(!provinceId){ sel.innerHTML = '<option value="">— เลือกจังหวัดก่อน —</option>'; return; }
+  const list = data.amphoes.filter(a=>String(a.provinceId)===String(provinceId)).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  sel.innerHTML = '<option value="">— เลือกอำเภอ/เขต —</option>' + list.map(a=>`<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+}
+function populateProfileTambonSelect(amphoeId){
+  const data = thaiAddressData || { tambons:[] };
+  const sel = $('profile-tambon');
+  if(!amphoeId){ sel.innerHTML = '<option value="">— เลือกอำเภอก่อน —</option>'; return; }
+  const list = data.tambons.filter(t=>String(t.amphoeId)===String(amphoeId)).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  sel.innerHTML = '<option value="">— เลือกตำบล/แขวง —</option>' + list.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+}
+$('profile-province').addEventListener('change', ()=>{
+  populateProfileAmphoeSelect($('profile-province').value || null);
+  populateProfileTambonSelect(null); // เปลี่ยนจังหวัด ต้องรีเซ็ตทั้งอำเภอและตำบล
+});
+$('profile-amphoe').addEventListener('change', ()=>{
+  populateProfileTambonSelect($('profile-amphoe').value || null); // เปลี่ยนอำเภอ รีเซ็ตแค่ตำบล
+});
+
+// ===== จังหวัดที่ดูแล (multi-select: ค้นหา + checkbox list + chip สรุป) =====
+function populateProfileProvinceCoveredList(filterText){
+  const data = thaiAddressData || { provinces:[] };
+  const list = $('profile-province-list');
+  const q = (filterText||'').trim();
+  const names = data.provinces.map(p=>p.name).sort((a,b)=>a.localeCompare(b,'th')).filter(n=>!q || n.includes(q));
+  list.innerHTML = names.map(n=>`<label><input type="checkbox" data-prov-cover="${escapeHtml(n)}" ${profileSelectedProvincesCovered.includes(n)?'checked':''}> ${escapeHtml(n)}</label>`).join('') || '<div style="font-size:12px;color:var(--text-faint);padding:4px;">ไม่พบจังหวัด</div>';
+  list.querySelectorAll('[data-prov-cover]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const name = cb.getAttribute('data-prov-cover');
+    if(cb.checked){ if(!profileSelectedProvincesCovered.includes(name)) profileSelectedProvincesCovered.push(name); }
+    else { profileSelectedProvincesCovered = profileSelectedProvincesCovered.filter(n=>n!==name); }
+    renderProfileProvinceChips();
+  }));
+}
+function renderProfileProvinceChips(){
+  const wrap = $('profile-province-chips');
+  wrap.innerHTML = profileSelectedProvincesCovered.map(n=>`<span class="province-chip">${escapeHtml(n)}<button type="button" data-rm-prov="${escapeHtml(n)}">✕</button></span>`).join('');
+  wrap.querySelectorAll('[data-rm-prov]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const name = btn.getAttribute('data-rm-prov');
+    profileSelectedProvincesCovered = profileSelectedProvincesCovered.filter(n=>n!==name);
+    renderProfileProvinceChips();
+    populateProfileProvinceCoveredList($('profile-province-search').value);
+  }));
+}
+$('profile-province-search').addEventListener('input', ()=>populateProfileProvinceCoveredList($('profile-province-search').value));
+$('profile-mindrayNone').addEventListener('change', ()=>{
+  const none = $('profile-mindrayNone').checked;
+  $('profile-mindrayAccount').disabled = none;
+  if(none) $('profile-mindrayAccount').value = '';
+});
+$('profile-area').addEventListener('change', updateProfileAreaVisibility);
+function updateProfileAreaVisibility(){
+  const isOffice = $('profile-area').value === 'ส่วนกลาง (Office)';
+  $('profile-provinces-covered-wrap').style.display = isOffice ? 'none' : '';
+}
+
+// ฟิลด์ที่ user ทั่วไปแก้เองไม่ได้ (เฉพาะ Manager/SuperAdmin) — ตามสเปกที่ตกลงกัน: ตำแหน่ง/เขตพื้นที่/จังหวัดที่ดูแล/วันที่เริ่มงาน
+// ตอนกรอกครั้งแรก (profileModalIsFirstTime) ทุกฟิลด์แก้ไขได้หมดเสมอ — ล็อกเฉพาะตอนเปิดแก้ไขทีหลังและผู้แก้ไม่ใช่ Manager
+// TODO: ตอนนี้รองรับแค่ "Manager แก้โปรไฟล์ตัวเอง" (ปลดล็อกหมด) — ส่วน "Manager แก้โปรไฟล์คนอื่น" (roster UI) เป็นเฟสถัดไปคู่กับ org-chart ยังไม่ทำตอนนี้
+function applyProfileFieldPermissions(){
+  const lockedIds = ['profile-position-wrap','profile-area-wrap','profile-provinces-covered-wrap','profile-startdate-wrap'];
+  const shouldLock = !profileModalIsFirstTime && !isManager();
+  lockedIds.forEach(id=>{
+    const wrap = $(id);
+    wrap.classList.toggle('profile-locked', shouldLock);
+    const note = wrap.querySelector('.profile-readonly-note');
+    if(note) note.style.display = shouldLock ? 'block' : 'none';
+  });
+}
+
+async function saveUserProfile(){
+  const requiredFields = [
+    { id:'profile-firstNameTh', label:'ชื่อ (ไทย)' },
+    { id:'profile-lastNameTh', label:'นามสกุล (ไทย)' },
+    { id:'profile-nicknameTh', label:'ชื่อเล่น (ไทย)' },
+    { id:'profile-firstNameEn', label:'First name (EN)' },
+    { id:'profile-lastNameEn', label:'Last name (EN)' },
+    { id:'profile-nicknameEn', label:'Nickname (EN)' },
+    { id:'profile-phone', label:'เบอร์โทรศัพท์' },
+    { id:'profile-birthDate', label:'วัน เดือน ปีเกิด' },
+    { id:'profile-houseNo', label:'บ้านเลขที่' },
+    { id:'profile-province', label:'จังหวัด' },
+    { id:'profile-amphoe', label:'อำเภอ/เขต' },
+    { id:'profile-tambon', label:'ตำบล/แขวง' },
+    { id:'profile-companyEmail', label:'Email บริษัท' },
+    { id:'profile-position', label:'ตำแหน่ง' },
+    { id:'profile-area', label:'เขตพื้นที่รับผิดชอบ' },
+    { id:'profile-startDate', label:'วันที่เริ่มงาน' },
+  ];
+  const isOffice = $('profile-area').value === 'ส่วนกลาง (Office)';
+  const validation = validateRequiredFieldsSimple(requiredFields);
+  if(!validation.valid){ showToast('⚠ กรุณากรอก: '+validation.missing.join(', ')); return; }
+  if(!isOffice && profileSelectedProvincesCovered.length===0){ showToast('⚠ กรุณาเลือกจังหวัดที่ดูแลอย่างน้อย 1 จังหวัด'); return; }
+
+  const data = thaiAddressData || { provinces:[], amphoes:[], tambons:[] };
+  const provObj = data.provinces.find(p=>String(p.id)===String($('profile-province').value));
+  const amphObj = data.amphoes.find(a=>String(a.id)===String($('profile-amphoe').value));
+  const tamObj = data.tambons.find(t=>String(t.id)===String($('profile-tambon').value));
+
+  const payload = {
+    firstNameTh: $('profile-firstNameTh').value.trim(),
+    lastNameTh: $('profile-lastNameTh').value.trim(),
+    nicknameTh: $('profile-nicknameTh').value.trim(),
+    firstNameEn: $('profile-firstNameEn').value.trim(),
+    lastNameEn: $('profile-lastNameEn').value.trim(),
+    nicknameEn: $('profile-nicknameEn').value.trim(),
+    phone: $('profile-phone').value.trim(),
+    birthDate: $('profile-birthDate').value,
+    houseNo: $('profile-houseNo').value.trim(),
+    province: provObj ? provObj.name : '',
+    amphoe: amphObj ? amphObj.name : '',
+    tambon: tamObj ? tamObj.name : '',
+    companyEmail: $('profile-companyEmail').value.trim(),
+    position: $('profile-position').value,
+    area: $('profile-area').value,
+    provincesCovered: isOffice ? [] : [...profileSelectedProvincesCovered],
+    startDate: $('profile-startDate').value,
+    mindrayAccount: $('profile-mindrayNone').checked ? '' : $('profile-mindrayAccount').value.trim(),
+    mindrayNone: $('profile-mindrayNone').checked,
+    updatedAt: Date.now(),
+  };
+  const btn = $('profile-save-btn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  const isEditingOther = !!rosterEditingEmail;
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    const docId = (isEditingOther ? rosterEditingEmail : myUserEmail).toLowerCase();
+    const existing = isEditingOther ? (rosterProfiles.find(p=>p.email===docId) || null) : myUserProfile;
+    if(!existing) payload.createdAt = Date.now();
+    await sdk.setDoc(sdk.doc(db,'userProfiles', docId), payload, { merge:true });
+    const merged = { ...(existing||{}), ...payload };
+    if(isEditingOther){
+      const idx = rosterProfiles.findIndex(p=>p.email===docId);
+      if(idx>=0) rosterProfiles[idx] = { email:docId, ...merged }; else rosterProfiles.push({ email:docId, ...merged });
+      const oIdx = orgChartProfiles.findIndex(p=>p.email===docId);
+      if(oIdx>=0) orgChartProfiles[oIdx] = { email:docId, ...merged };
+      renderRoster();
+      showToast('✅ บันทึกโปรไฟล์ของผู้ใช้งานเรียบร้อย');
+    } else {
+      myUserProfile = merged;
+      $('edit-profile-btn').style.display = (myUserEmail && !isSuperAdmin()) ? '' : 'none';
+      showToast('✅ บันทึกข้อมูลโปรไฟล์เรียบร้อย');
+    }
+    $('profile-modal').classList.remove('show');
+    rosterEditingEmail = null;
+    upsertProfileRowInSheet(docId, merged); // ซิงก์ขึ้น Google Sheet แบบไม่บล็อก UI — พลาดได้ไม่กระทบข้อมูลใน Firestore
+  }catch(e){
+    showToast('⚠ บันทึกโปรไฟล์ไม่สำเร็จ: '+e.message);
+  }finally{
+    btn.disabled = false; btn.textContent = profileModalIsFirstTime ? 'เริ่มใช้งาน' : 'บันทึก';
+  }
+}
+$('profile-save-btn').addEventListener('click', saveUserProfile);
+$('profile-cancel-btn').addEventListener('click', ()=>{ $('profile-modal').classList.remove('show'); rosterEditingEmail = null; });
+$('profile-modal-close-x').addEventListener('click', ()=>{ $('profile-modal').classList.remove('show'); rosterEditingEmail = null; });
+$('edit-profile-btn').addEventListener('click', async ()=>{
+  if(!myUserEmail) return;
+  await loadThaiAddressData();
+  if(!myUserProfile) await userProfileExists(myUserEmail);
+  showProfileModal(false);
+});
+// Manager เปิดแก้โปรไฟล์ของ "คนอื่น" จากหน้า roster
+async function openEditOtherProfile(email){
+  if(!isManager()) return;
+  await loadThaiAddressData();
+  let p = rosterProfiles.find(x=>x.email===email);
+  if(!p){
+    try{
+      await initFirebase();
+      const sdk = window._firebaseSdk;
+      const docSnap = await sdk.getDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
+      p = docSnap.exists() ? { email, ...docSnap.data() } : { email };
+    }catch(e){ showToast('⚠ โหลดโปรไฟล์ไม่สำเร็จ: '+e.message); return; }
+  }
+  showProfileModal(false, email, p);
+}
+
+/* ===================== ORG CHART (ผังองค์กร) — สร้างสดจาก userProfiles จริงทั้งหมด ไม่ hardcode =====================
+   ดึงทุก doc ใน collection "userProfiles" แล้วจัดกลุ่มตาม position/area ของแต่ละคน — ดูได้ทุกคนที่ isApproved()
+   แก้ไข (โยกย้ายตำแหน่ง/เขต) ได้เฉพาะ isManager() เท่านั้น — เขียนตรงไปที่ userProfiles/{email} */
+const ORGCHART_POSITIONS = ['Manager','Sup Product','Engineer Product','Sup Area','Technician (ช่าง)','Engineer Office','IT Service','Admin Service'];
+const ORGCHART_AREAS = ['เหนือบน','เหนือล่าง','อีสานบน','อีสานกลาง','อีสานล่าง','กทม.กลาง,ตะวันออก','กทม.,กลาง,ตะวันตก','ใต้','ส่วนกลาง (Office)'];
+const ORGCHART_OFFICE_AREA = 'ส่วนกลาง (Office)';
+let orgChartProfiles = []; // [{email, ...profileData}]
+let orgChartLoading = false;
+
+function orgChartDisplayName(p){
+  // ใช้ convention เดียวกับ myClaimantName(): ชื่อเล่นไทยจากโปรไฟล์ > nicknameFor(email) > email
+  return (p && p.nicknameTh) ? p.nicknameTh : (nicknameFor(p && p.email) || (p && p.email) || '(ไม่ทราบชื่อ)');
+}
+function orgChartFullNameTh(p){
+  const first = p.firstNameTh||''; const last = p.lastNameTh||'';
+  return (first || last) ? (first+' '+last).trim() : '';
+}
+
+async function fetchAllUserProfiles(){
+  await initFirebase();
+  const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.collection(db,'userProfiles'));
+  const out = [];
+  snap.forEach(d=> out.push({ email: d.id, ...d.data() }));
+  return out;
+}
+
+async function loadAndRenderOrgChart(){
+  if(orgChartLoading) return;
+  orgChartLoading = true;
+  const officeEl = $('orgchart-office'); const fieldEl = $('orgchart-field');
+  officeEl.innerHTML = '<div style="font-size:12.5px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล...</div>';
+  fieldEl.innerHTML = '';
+  try{
+    orgChartProfiles = await fetchAllUserProfiles();
+    renderOrgChart();
+  }catch(e){
+    officeEl.innerHTML = `<div style="font-size:12.5px;color:var(--red);">⚠ โหลดผังองค์กรไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
+  }finally{
+    orgChartLoading = false;
+  }
+}
+
+function renderOrgChart(){
+  const canEdit = isManager();
+  const officeProfiles = orgChartProfiles.filter(p=>p.area===ORGCHART_OFFICE_AREA);
+  const fieldProfiles  = orgChartProfiles.filter(p=>p.area && p.area!==ORGCHART_OFFICE_AREA);
+
+  // สถิติสรุป
+  $('orgchart-stats').innerHTML = `
+    <div><b>${orgChartProfiles.length}</b> คนทั้งหมด (กรอกโปรไฟล์แล้ว)</div>
+    <div><b>${officeProfiles.length}</b> ส่วนกลาง (Office)</div>
+    <div><b>${fieldProfiles.length}</b> ภาคสนาม</div>
+  `;
+
+  // ---- สำนักงานใหญ่: Manager แยกเป็นกล่องบนสุด, ที่เหลือจัดเป็นคอลัมน์ตาม position ที่มีจริง ----
+  const managers = officeProfiles.filter(p=>p.position==='Manager');
+  const officeRest = officeProfiles.filter(p=>p.position!=='Manager');
+  const officePositionsPresent = ORGCHART_POSITIONS.filter(pos=>pos!=='Manager' && officeRest.some(p=>p.position===pos));
+  // เผื่อกรณี position ไม่อยู่ในลิสต์มาตรฐาน (ข้อมูลเก่า/แปลก) ก็ยังโชว์ให้เห็น ไม่ตกหล่น
+  officeRest.forEach(p=>{ if(p.position && !officePositionsPresent.includes(p.position)) officePositionsPresent.push(p.position); });
+
+  let officeHtml = '';
+  officeHtml += `<div class="orgchart-col" style="min-width:160px;">
+      <div class="orgchart-col-title">Manager</div>
+      ${managers.length ? managers.map(p=>orgChartCardHtml(p, canEdit)).join('') : orgChartEmptyCardHtml()}
+    </div>`;
+  officePositionsPresent.forEach(pos=>{
+    const people = officeRest.filter(p=>p.position===pos);
+    officeHtml += `<div class="orgchart-col" style="min-width:160px;">
+        <div class="orgchart-col-title">${escapeHtml(pos)}</div>
+        ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
+      </div>`;
+  });
+  $('orgchart-office').innerHTML = officeHtml || '<div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตส่วนกลาง</div>';
+
+  // ---- ทีมภาคสนาม: คอลัมน์ตามเขตพื้นที่ (8 เขตตามลิสต์มาตรฐาน) — Sup Area ของเขตนั้นขึ้นก่อนเป็นหัวหน้าเขต ----
+  const fieldAreas = ORGCHART_AREAS.filter(a=>a!==ORGCHART_OFFICE_AREA);
+  let fieldHtml = '';
+  fieldAreas.forEach(area=>{
+    const people = fieldProfiles.filter(p=>p.area===area);
+    if(people.length===0) return; // เขตที่ยังไม่มีใครกรอกเลย ไม่ต้องแสดงคอลัมน์ว่างๆ ให้รก
+    const leads = people.filter(p=>p.position==='Sup Area');
+    const members = people.filter(p=>p.position!=='Sup Area');
+    fieldHtml += `<div class="orgchart-col" style="min-width:170px;">
+        <div class="orgchart-col-title">${escapeHtml(area)}</div>
+        ${leads.map(p=>orgChartCardHtml(p, canEdit, true)).join('')}
+        ${members.map(p=>orgChartCardHtml(p, canEdit)).join('')}
+      </div>`;
+  });
+  // เขตพื้นที่ที่มีคนแต่ area ไม่ตรงกับลิสต์มาตรฐาน (ข้อมูลเก่า/พิมพ์เอง) — กันตกหล่น
+  const extraAreas = [...new Set(fieldProfiles.filter(p=>!ORGCHART_AREAS.includes(p.area)).map(p=>p.area))];
+  extraAreas.forEach(area=>{
+    const people = fieldProfiles.filter(p=>p.area===area);
+    fieldHtml += `<div class="orgchart-col" style="min-width:170px;">
+        <div class="orgchart-col-title">${escapeHtml(area)} <span style="color:var(--text-faint);font-weight:400;">(เขตนอกลิสต์มาตรฐาน)</span></div>
+        ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
+      </div>`;
+  });
+  $('orgchart-field').innerHTML = fieldHtml || '<div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตภาคสนาม</div>';
+
+  if(canEdit) wireOrgChartEditControls();
+}
+
+function orgChartEmptyCardHtml(){
+  return `<div class="orgchart-card" style="opacity:.5;font-style:italic;">(ยังไม่มี)</div>`;
+}
+
+function orgChartCardHtml(p, canEdit, isLead){
+  const name = escapeHtml(orgChartDisplayName(p));
+  const fullName = escapeHtml(orgChartFullNameTh(p));
+  const email = escapeHtml(p.email||'');
+  const editControls = canEdit ? `
+      <div class="orgchart-edit-row">
+        <select class="orgchart-edit-position" data-email="${email}">
+          ${ORGCHART_POSITIONS.map(pos=>`<option value="${escapeHtml(pos)}" ${p.position===pos?'selected':''}>${escapeHtml(pos)}</option>`).join('')}
+        </select>
+        <select class="orgchart-edit-area" data-email="${email}">
+          ${ORGCHART_AREAS.map(a=>`<option value="${escapeHtml(a)}" ${p.area===a?'selected':''}>${escapeHtml(a)}</option>`).join('')}
+        </select>
+      </div>` : '';
+  return `<div class="orgchart-card${isLead?' orgchart-card-lead':''}" title="${fullName}">
+      <div class="orgchart-card-name">${isLead?'⭐ ':''}${name}</div>
+      ${editControls}
+    </div>`;
+}
+
+function wireOrgChartEditControls(){
+  document.querySelectorAll('#view-orgchart .orgchart-edit-position, #view-orgchart .orgchart-edit-area').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const email = sel.getAttribute('data-email');
+      const cardEl = sel.closest('.orgchart-card');
+      const posSel = cardEl.querySelector('.orgchart-edit-position');
+      const areaSel = cardEl.querySelector('.orgchart-edit-area');
+      await saveOrgChartReassignment(email, posSel.value, areaSel.value);
+    });
+  });
+}
+
+async function saveOrgChartReassignment(email, newPosition, newArea){
+  if(!isManager()){ showToast('⛔ เฉพาะ Manager เท่านั้นที่โยกย้ายตำแหน่ง/เขตได้'); return; }
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    await sdk.setDoc(sdk.doc(db,'userProfiles', email.toLowerCase()), { position:newPosition, area:newArea, updatedAt:Date.now() }, { merge:true });
+    // อัปเดตในหน่วยความจำแล้วรีเรนเดอร์ทันที ไม่ต้อง fetch ใหม่ทั้งหมด
+    const idx = orgChartProfiles.findIndex(p=>p.email===email);
+    if(idx>=0){ orgChartProfiles[idx].position = newPosition; orgChartProfiles[idx].area = newArea; }
+    if(myUserProfile && myUserEmail && email===myUserEmail.toLowerCase()){ myUserProfile.position = newPosition; myUserProfile.area = newArea; }
+    const rIdx = rosterProfiles.findIndex(p=>p.email===email);
+    if(rIdx>=0){ rosterProfiles[rIdx].position = newPosition; rosterProfiles[rIdx].area = newArea; renderRoster(); }
+    renderOrgChart();
+    showToast('✅ บันทึกการโยกย้ายเรียบร้อย');
+    const synced = orgChartProfiles[idx] || { email, position:newPosition, area:newArea };
+    upsertProfileRowInSheet(email, synced); // ซิงก์ขึ้น Google Sheet แบบไม่บล็อก UI
+  }catch(e){
+    showToast('⚠ บันทึกการโยกย้ายไม่สำเร็จ: '+e.message);
+  }
+}
+
+/* ===================== ROSTER (รายชื่อผู้ใช้งาน) — Manager เท่านั้น: ดู/แก้ไข/ลบโปรไฟล์ทุกคน + ซิงก์ Google Sheet + Export Excel =====================
+   ใช้ fetchAllUserProfiles() ตัวเดียวกับ Org Chart (ไม่เขียนฟังก์ชันดึงข้อมูลซ้ำ) แก้ไขจริงเปิด modal เดียวกับที่ใช้แก้โปรไฟล์ตัวเอง (ดู openEditOtherProfile)
+   ลบ = ลบเอกสาร userProfiles/{email} เท่านั้น ไม่แตะ approvedUsers/adminEmails/managerEmails — ผลคือคนนั้นโดนบังคับกรอกโปรไฟล์ใหม่ตอน login ครั้งถัดไป แต่ไม่เสียสิทธิ์เข้าระบบ */
+let rosterLoading = false;
+async function loadAndRenderRoster(){
+  if(!isManager()) return;
+  if(rosterLoading) return;
+  rosterLoading = true;
+  $('roster-tbody').innerHTML = `<tr><td colspan="7" style="padding:10px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล...</td></tr>`;
+  try{
+    rosterProfiles = await fetchAllUserProfiles();
+    renderRoster();
+  }catch(e){
+    $('roster-tbody').innerHTML = `<tr><td colspan="7" style="padding:10px;color:var(--red);">⚠ โหลดรายชื่อผู้ใช้งานไม่สำเร็จ: ${escapeHtml(e.message)}</td></tr>`;
+  }finally{
+    rosterLoading = false;
+  }
+}
+function renderRoster(){
+  const sorted = rosterProfiles.slice().sort((a,b)=> orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
+  $('roster-count').textContent = `(${sorted.length} คน)`;
+  $('roster-tbody').innerHTML = sorted.map(p=>{
+    const tenure = formatYearsMonthsFromDate(p.startDate);
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px 8px;">${escapeHtml(orgChartDisplayName(p))}</td>
+      <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
+      <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
+      <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
+      <td style="padding:6px 8px;">${escapeHtml(p.companyEmail||'')}</td>
+      <td style="padding:6px 8px;">${p.startDate?isoToDDMMYYYY(p.startDate):''}${tenure?` (${tenure})`:''}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">
+        <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
+        <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
+  document.querySelectorAll('#roster-tbody .roster-edit-btn').forEach(btn=>btn.addEventListener('click', ()=>openEditOtherProfile(btn.getAttribute('data-email'))));
+  document.querySelectorAll('#roster-tbody .roster-delete-btn').forEach(btn=>btn.addEventListener('click', ()=>deleteRosterProfile(btn.getAttribute('data-email'))));
+}
+async function deleteRosterProfile(email){
+  if(!isManager()) return;
+  const p = rosterProfiles.find(x=>x.email===email);
+  const name = p ? orgChartDisplayName(p) : email;
+  if(!confirm(`ยืนยันลบโปรไฟล์ของ "${name}" (${email})?\n\n⚠ การลบนี้ "ไม่ได้" ตัดสิทธิ์เข้าระบบ — แค่ล้างข้อมูลโปรไฟล์เท่านั้น คนนี้จะถูกบังคับให้กรอกโปรไฟล์ใหม่ตั้งแต่ต้นตอน login ครั้งถัดไป`)) return;
+  showLoadingOverlay('กำลังลบโปรไฟล์...');
+  try{
+    await initFirebase();
+    const sdk = window._firebaseSdk;
+    await sdk.deleteDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
+    rosterProfiles = rosterProfiles.filter(x=>x.email!==email);
+    orgChartProfiles = orgChartProfiles.filter(x=>x.email!==email);
+    renderRoster();
+    showToast('✅ ลบโปรไฟล์เรียบร้อย — คนนี้จะต้องกรอกโปรไฟล์ใหม่ตอน login ครั้งถัดไป');
+    deleteProfileRowFromSheet(email); // ไม่บล็อก UI — พลาดได้ไม่กระทบการลบใน Firestore
+  }catch(e){
+    showToast('⚠ ลบโปรไฟล์ไม่สำเร็จ: '+e.message);
+  }finally{
+    hideLoadingOverlay();
+  }
+}
+function exportRosterExcel(){
+  if(rosterProfiles.length===0){ showToast('ยังไม่มีข้อมูลรายชื่อผู้ใช้งานให้ Export'); return; }
+  const rows = rosterProfiles.map(p=>{
+    const row = {};
+    PROFILES_SHEET_HEADERS.forEach((h,i)=>{ row[h] = buildProfileSheetRow(p.email, p)[i]; });
+    return row;
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'รายชื่อผู้ใช้งาน');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  XLSX.writeFile(wb, `รายชื่อผู้ใช้งาน-${stamp}.xlsx`);
+  fsWriteLog('Export รายชื่อผู้ใช้งานเป็น Excel');
+  showToast('✓ Export แล้ว');
+}
+$('roster-open-sheet-btn').addEventListener('click', openProfilesSheet);
+$('roster-export-excel-btn').addEventListener('click', exportRosterExcel);
+$('roster-resync-btn').addEventListener('click', ()=>{ if(confirm('Sync ใหม่ทั้งหมด? จะล้างข้อมูลเดิมในชีตแล้วเขียนใหม่จากระบบทั้งหมด')) resyncAllProfilesSheet(); });
+$('roster-refresh-btn').addEventListener('click', loadAndRenderRoster);
+
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 function requestModeSwitch(mode){
   if(mode==='eng'){ switchMode(mode); return; }
+  if(mode==='orgchart'){ switchMode(mode); return; } // ผังองค์กร: ทุกคนที่ isApproved() ดูได้ (ปุ่มถูกซ่อนไว้แล้วถ้าไม่ผ่าน ไม่ต้องเช็ค Editor)
+  if(mode==='roster'){
+    if(!isManager()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้ — เฉพาะ Manager เท่านั้น'); return; } // ป้องกันซ้อน ไม่พึ่งแค่ซ่อนปุ่ม
+    switchMode(mode); return;
+  }
   if(!isEditor()){
     showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้ — เฉพาะผู้ดูแลระบบ (Editor) เท่านั้น');
     return;
@@ -3880,18 +4812,24 @@ function switchMode(mode){
   $('view-mgr').style.display           = mode==='mgr'           ? 'block':'none';
   $('view-backup').style.display        = mode==='backup'        ? 'block':'none';
   $('view-admin-service').style.display = mode==='admin-service' ? 'block':'none';
+  $('view-orgchart').style.display      = mode==='orgchart'      ? 'block':'none';
+  $('view-roster').style.display        = mode==='roster'        ? 'block':'none';
   $('mode-eng').classList.toggle('active',           mode==='eng');
   $('mode-sup').classList.toggle('active',           mode==='sup');
   $('mode-settings').classList.toggle('active',      mode==='settings');
   $('mode-mgr').classList.toggle('active',           mode==='mgr');
   $('mode-backup').classList.toggle('active',        mode==='backup');
   $('mode-admin-service').classList.toggle('active', mode==='admin-service');
+  $('mode-orgchart').classList.toggle('active',      mode==='orgchart');
+  $('mode-roster').classList.toggle('active',        mode==='roster');
   if(mode==='sup') renderSupView();
   if(mode==='settings') switchSettingsSubTab(_settingsSubActive); // โหลด sub-tab ที่ active ล่าสุด
   // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
   if(mode==='mgr'){ setupRpManagerLinks(); updateMgrPendingBadge(); switchMgrSubTab('summary'); } // v8.36: เปิด tab สรุปข้อมูล + โหลดข้อมูล
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
   if(mode==='admin-service'){ renderAdminServiceView(); }
+  if(mode==='orgchart'){ loadAndRenderOrgChart(); }
+  if(mode==='roster'){ if(!isManager()){ switchMode('eng'); return; } loadAndRenderRoster(); } // กันเผื่อเรียก switchMode('roster') ตรงๆ ข้าม requestModeSwitch
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -3908,6 +4846,8 @@ $('mode-settings').addEventListener('click', ()=>requestModeSwitch('settings'));
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
 $('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
 $('mode-admin-service').addEventListener('click', ()=>switchMode('admin-service'));
+$('mode-orgchart').addEventListener('click', ()=>requestModeSwitch('orgchart'));
+$('mode-roster').addEventListener('click', ()=>requestModeSwitch('roster'));
 
 /* ===================== แถบเลื่อนเล็กๆ ด้านล่างเมนู บอกตำแหน่งซ้าย-ขวาที่กำลังดูอยู่ ===================== */
 function updateModeToggleScrollHint(){
@@ -4292,11 +5232,11 @@ async function submitUp(solId){
     try{ await fsRemoveFeedback(targetErrId, solId, existing); }catch(e){ showToast('⚠ ยกเลิกไม่สำเร็จ: '+e.message); }
     showToast('ยกเลิกการโหวตแล้ว');
   } else {
-    const entry = {type:'up', name:myDisplayName(), ts:Date.now()};
+    const entry = {type:'up', name:myClaimantName(), ts:Date.now()};
     for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(entry); e.totalUps=(e.totalUps||0)+1; break; } }
     myVotes['up:'+solId]=entry;
     try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
-    showToast('✓ บันทึก feedback แล้วในชื่อ '+myDisplayName());
+    showToast('✓ บันทึก feedback แล้วในชื่อ '+myClaimantName());
   }
   renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId) renderErrorDetailPanel();
@@ -4324,7 +5264,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
         uploadedImages = await resolveImagesForUpload(s.images||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
         uploadedVideos = await resolveVideosForUpload(s.videos||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
       }
-      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myDisplayName() };
+      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myClaimantName() };
       const newId = await fsAddProposal(fields);
       DATA.proposals.push({ id:newId, ...fields });
     }
@@ -4333,17 +5273,17 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId===downModalErrorId) renderErrorDetailPanel();
-  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myDisplayName()); downModalErrorId=null;
+  showToast('✓ ส่งข้อเสนอวิธีแก้ใหม่แล้วในชื่อ '+myClaimantName()); downModalErrorId=null;
 });
 
 /* ===================== NOTIFICATIONS (Engineer's submitted-error status) ===================== */
 function myResolvedSubmissions(){
   if(!myUserName || !DATA) return [];
-  return (DATA.pendingErrors||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName()) && p.status!=='pending');
+  return (DATA.pendingErrors||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName() || p.submitterName===myClaimantName()) && p.status!=='pending');
 }
 function myResolvedProposals(){
   if(!myUserName || !DATA) return [];
-  return (DATA.proposals||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName()) && p.status!=='pending');
+  return (DATA.proposals||[]).filter(p=>(p.submitterName===myUserName || p.submitterName===myDisplayName() || p.submitterName===myClaimantName()) && p.status!=='pending');
 }
 function myPendingReviewCount(){
   // ถ้าเลือกตัวตนเป็น Sup Product คนใดคนหนึ่งไว้แล้ว นับ Error/ข้อเสนอที่ยังรอเขาตรวจสอบ (คงอยู่จนกว่าจะอนุมัติ/ปฏิเสธ)
@@ -4410,8 +5350,8 @@ function statusBadgeHtml(status){
 }
 async function renderNotifList(){
   const list = $('notif-list');
-  const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName()).sort((a,b)=>b.createdAt-a.createdAt);
-  const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName()).sort((a,b)=>b.createdAt-a.createdAt);
+  const myErrs = (DATA.pendingErrors||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName() || p.submitterName===myClaimantName()).sort((a,b)=>b.createdAt-a.createdAt);
+  const myProps = (DATA.proposals||[]).filter(p=>p.submitterName===myUserName || p.submitterName===myDisplayName() || p.submitterName===myClaimantName()).sort((a,b)=>b.createdAt-a.createdAt);
   // แสดงเฉพาะรายการที่ "รอตรวจสอบ" หรือ "จบสถานะแล้วแต่ยังไม่เคยเห็นผล" — พอเคยเห็นผลแล้วจะหายไปจากรายการ ไม่ค้างอยู่ตลอดไป
   const myErrsVisible = myErrs.filter(p=>p.status==='pending' || !p.notifRead);
   const myPropsVisible = myProps.filter(p=>p.status==='pending' || !p.notifRead);
@@ -4871,7 +5811,7 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
       validSolutions[i].videos = await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i);
     }
   }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
-  const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myDisplayName(), status:'pending', createdAt: Date.now() };
+  const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myClaimantName(), status:'pending', createdAt: Date.now() };
   let newId;
   try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   DATA.pendingErrors.push({ id:newId, ...fields });
@@ -6436,7 +7376,7 @@ let claimEditingId = null;
 let claimDirtyGuard = null; // dirty-check ปุ่ม "บันทึกเคลม" — ใช้เฉพาะตอนแก้ไขเคลมที่มีอยู่แล้ว (claimEditingId ไม่ว่าง) ไม่ใช้ตอนบันทึกเคลมใหม่
 
 function resetClaimDraft(type){
-  claimDraft = { type: type||'claim', claimant: myDisplayName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', problemDetail:'', solution:'', problemDate:'', fixDate:'', parts:[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
+  claimDraft = { type: type||'claim', claimant: myClaimantName()||'', siteName:'', category:'', model:'', serialNumber:'', problem:'', problemDetail:'', solution:'', problemDate:'', fixDate:'', parts:[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}], loanSlipNo:'', jobFactorium:'', attachments: emptyClaimAttachments() };
   claimEditingId = null;
 }
 // ปรับ label/field ที่แสดงผลต่างกันระหว่าง type==='report' (แจ้งปัญหา) กับ type==='claim' (เคลมอะไหล่)
@@ -6974,7 +7914,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     claimDraft.loanSlipNo = _loanRaw ? ('SPO' + _loanRaw.replace(/^SPO/i,'')) : '';
   }
   const rawParts = claimDraft.parts.map(p=>({partNumber:(p.partNumber||'').trim(), partName:(p.partName||'').trim(), qty:(p.qty||'').toString().trim(), countQty:(p.countQty||'').toString().trim(), countUnit:(p.countUnit||'').trim()})).filter(p=>p.partNumber||p.partName);
-  const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.qty && p.countQty && p.countUnit);
+  // v8.76: เลือกหน่วย "ไม่มี" แล้วไม่ต้องกรอกจำนวน Count เลย (เดิมจุดนี้ยังเช็คแบบเก่า บังคับ countQty เสมอไม่ว่าจะเลือกหน่วยอะไร ทำให้กดบันทึกไม่ผ่านแม้เลือก "ไม่มี" ถูกต้องแล้วก็ตาม)
+  const cleanParts = rawParts.filter(p=>p.partNumber && p.partName && p.qty && p.countUnit && (p.countUnit==='ไม่มี' || p.countQty));
   const validation = validateClaimRequiredFields();
   if(!validation.valid){ showToast('⚠ กรุณากรอกข้อมูลที่จำเป็นให้ครบ: '+validation.missing.join(', ')); return; }
   const partsInvalid = validateClaimPartsRows();
@@ -7038,7 +7979,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
       problemDate: claimDraft.problemDate, fixDate: claimDraft.fixDate||'', problemDetail: claimDraft.problemDetail||'',
       parts: cleanParts, jobFactorium: claimDraft.jobFactorium, loanSlipNo: claimDraft.loanSlipNo,
-      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myDisplayName(),
+      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myClaimantName(),
       driveFolderUrl: `https://drive.google.com/drive/folders/${folderId}`,
     };
     if(claimEditingId){
@@ -8913,7 +9854,7 @@ function rpRestoreDraft(draft){
 /* ---- Open / Close modal ---- */
 function openReturnPartsModal(){
   // Fill sender info
-  const name = myDisplayName();
+  const name = myClaimantName();
   $('rp-sender-name').textContent = name || '(ยังไม่ได้ล็อกอิน)';
   $('rp-sender-avatar').textContent = (name||'?').charAt(0).toUpperCase();
   // Reset form ก่อน
@@ -9811,7 +10752,7 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
 
   showLoadingOverlay('กำลังเตรียมอัปโหลด...');
   try{
-    const senderName = myDisplayName();
+    const senderName = myClaimantName();
     const folderId = await ensureReturnPartsFolderPath(senderName);
     updateLoadingOverlayText('กำลังอัปโหลดไฟล์ใบเบิก...');
 
