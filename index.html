@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.84
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 21:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.85
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 23:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.84</title>
+<title>F1 Service — v8.85</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -743,11 +743,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       </div>
       <div class="panel-block">
         <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer — <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);display:inline-block;"></span> = รุ่นที่คุณดูแล</span></p>
-        <div style="display:flex;gap:6px;margin-bottom:12px;">
-          <button class="btn btn-sm eng-certtype-tab-btn" data-certtype="internal" style="flex:1;">📋 ใบ Cer ภายใน</button>
-          <button class="btn btn-sm eng-certtype-tab-btn" data-certtype="manufacturer" style="flex:1;">🏭 ใบ Cer ผู้ผลิต</button>
-        </div>
+        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — แต่ละรุ่นเห็น 📋 Cer ภายใน และ 🏭 Cer ผู้ผลิต พร้อมกัน — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer — <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);display:inline-block;"></span> = รุ่นที่คุณดูแล</span></p>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1825,8 +1821,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.84";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 21:50 น. เวลาไทย";
+const APP_VERSION = "8.85";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 23:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1982,7 +1978,6 @@ let myResponsibility = []; // [{category, model}] รุ่นเครื่อ
 let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
 let _engCertOpenCats = new Set(); // Category ไหนเปิด accordion อยู่บ้างในแท็บ Certificate ของ Engineer (v8.60)
-let _engCertTypeTab = 'internal'; // แท็บย่อยใน Certificate ของ Engineer: 'internal' | 'manufacturer' (v8.83)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
@@ -11493,30 +11488,33 @@ function certReqBadgeHtml(category, model){
   const label = req==='internal' ? 'ต้องมี Cer ภายใน' : req==='manufacturer' ? 'ต้องมี Cer ผู้ผลิต' : 'ต้องมี Cer ทั้งภายใน+ผู้ผลิต';
   return `<span style="font-size:11px;color:var(--amber);font-weight:600;margin-left:6px;">📌 ${label}</span>`;
 }
-// v8.83 — แถวรุ่นเครื่องแบบ matrix (เหมือนรูปแบบของ Sup Product): ➕ ไม่มีไฟล์ / ✅ มีไฟล์แล้ว — กดเพื่อเปิด modal รายละเอียด
-// แทบสีด้านซ้าย = รุ่นที่ตัวเองดูแล (myResponsibility) ไม่ว่าจะมีไฟล์ Cer หรือยังก็ตาม
-function engCertModelRowHtml(category, model, certMap, isMine){
-  const cert = certMap[category+'|'+model+'|'+_engCertTypeTab];
+// v8.85 — แถวรุ่นเครื่องแบบ matrix (เหมือนรูปแบบของ Sup Product): ➕ ไม่มีไฟล์ / ✅ มีไฟล์แล้ว — กดเพื่อเปิด modal รายละเอียด
+// เห็น 📋 ภายใน และ 🏭 ผู้ผลิต พร้อมกันในแถวเดียว ไม่ต้องสลับแท็บ — แทบสีด้านซ้าย = รุ่นที่ตัวเองดูแล (myResponsibility) ไม่ว่าจะมีไฟล์ Cer หรือยังก็ตาม
+function engCertBadgeBtn(label, icon, category, model, certType, cert){
   const has = !!cert;
+  return `<button class="eng-certmx-btn" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" data-certtype="${certType}"
+    title="${icon} ${label} — ${has?'มีไฟล์แล้ว กดเพื่อดู/อัปใหม่':'ยังไม่มีไฟล์ กดเพื่ออัปโหลด'}"
+    style="flex-shrink:0;display:inline-flex;align-items:center;gap:3px;background:none;cursor:pointer;font-size:11.5px;font-weight:700;
+      ${has ? 'border:1px solid var(--green);border-radius:6px;color:var(--green);padding:3px 7px;' : 'border:1px dashed var(--border);border-radius:6px;color:var(--text-faint);padding:3px 7px;'}">
+    ${icon} ${has ? '✅' : '➕'}
+  </button>`;
+}
+function engCertModelRowHtml(category, model, certMap, isMine){
+  const internal = certMap[category+'|'+model+'|internal'];
+  const manu = certMap[category+'|'+model+'|manufacturer'];
   return `<div class="eng-certmx-row${isMine?' mine':''}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-top:1px solid var(--border);${isMine?'border-left:4px solid var(--green);background:rgba(34,197,94,.06);':'border-left:4px solid transparent;'}">
     <div style="font-size:13px;min-width:0;">
       ${isMine?'<span title="รุ่นที่คุณดูแล" style="margin-right:4px;">🔧</span>':''}<span style="font-weight:600;">${escapeHtml(model)}</span>${certReqBadgeHtml(category,model)}
     </div>
-    <button class="eng-certmx-btn" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}"
-      title="${has?'มีไฟล์แล้ว — กดเพื่อดู/อัปใหม่':'ยังไม่มีไฟล์ — กดเพื่ออัปโหลด'}"
-      style="flex-shrink:0;background:none;cursor:pointer;font-size:12.5px;font-weight:700;
-        ${has ? 'border:none;color:var(--green);' : 'border:1px dashed var(--border);border-radius:6px;color:var(--text-faint);width:30px;height:26px;'}">
-      ${has ? '✅' : '➕'}
-    </button>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      ${engCertBadgeBtn('Cer ภายใน','📋',category,model,'internal',internal)}
+      ${engCertBadgeBtn('Cer ผู้ผลิต','🏭',category,model,'manufacturer',manu)}
+    </div>
   </div>`;
 }
-// v8.60/v8.83 — แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น (accordion กดเปิดทีละ Category, default ซ่อนทั้งหมด) — แยกแท็บย่อย ภายใน/ผู้ผลิต — อัปโหลดได้ไม่ว่าจะอยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล" หรือไม่ก็ตาม
-let _engCertDataCache = null; // {certMap, myModelSet} กันโหลดซ้ำตอนสลับแท็บ/เปิดปิด category
+// v8.60/v8.85 — แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น (accordion กดเปิดทีละ Category, default ซ่อนทั้งหมด) — เห็น Cer ภายใน/ผู้ผลิต พร้อมกันในแถวเดียว — อัปโหลดได้ไม่ว่าจะอยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล" หรือไม่ก็ตาม
+let _engCertDataCache = null; // {certMap, myModelSet} กันโหลดซ้ำตอนเปิดปิด category
 async function renderEngCertTab(forceReload){
-  document.querySelectorAll('.eng-certtype-tab-btn').forEach(btn=>{
-    const active = btn.getAttribute('data-certtype')===_engCertTypeTab;
-    btn.className = 'btn btn-sm eng-certtype-tab-btn' + (active?' btn-primary':' btn-ghost');
-  });
   const wrap = $('eng-cert-list');
   if(forceReload || !_engCertDataCache){
     wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
@@ -11554,18 +11552,12 @@ async function renderEngCertTab(forceReload){
       renderEngCertTab();
     });
   });
-  document.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
+  wrap.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      openCertDetailModal('engineer', _engCertTypeTab, btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
+      openCertDetailModal('engineer', btn.getAttribute('data-certtype'), btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
     });
   });
 }
-document.querySelectorAll('.eng-certtype-tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    _engCertTypeTab = btn.getAttribute('data-certtype');
-    renderEngCertTab();
-  });
-});
 
 // v8.83 — modal รายละเอียด Certificate 1 ช่อง ใช้ร่วมกันทั้ง Engineer และ Sup Product
 let _certDetailCtx = null; // {role, certType, category, model}
