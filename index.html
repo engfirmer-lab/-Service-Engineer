@@ -1601,7 +1601,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
             <th style="padding:6px 8px;">ตำแหน่ง</th>
             <th style="padding:6px 8px;">เขตพื้นที่</th>
             <th style="padding:6px 8px;">เบอร์โทร</th>
-            <th style="padding:6px 8px;">Email บริษัท</th>
+            <th style="padding:6px 8px;">วันเกิด / อายุ</th>
             <th style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
             <th style="padding:6px 8px;"></th>
           </tr></thead>
@@ -5042,13 +5042,14 @@ function renderRoster(){
   const sorted = rosterProfiles.slice().sort((a,b)=> orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
   $('roster-count').textContent = `(${sorted.length} คน)`;
   $('roster-tbody').innerHTML = sorted.map(p=>{
-    const tenure = formatYearsMonthsFromDate(p.startDate);
+    const tenure = computeYmdDuration(p.startDate);
+    const age = computeYmdDuration(p.birthDate);
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:6px 8px;">${escapeHtml(orgChartDisplayName(p))}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
-      <td style="padding:6px 8px;">${escapeHtml(p.companyEmail||'')}</td>
+      <td style="padding:6px 8px;">${p.birthDate?isoToDDMMYYYY(p.birthDate):''}${age?` (${age})`:''}</td>
       <td style="padding:6px 8px;">${p.startDate?isoToDDMMYYYY(p.startDate):''}${tenure?` (${tenure})`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
