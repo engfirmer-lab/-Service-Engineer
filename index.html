@@ -1251,6 +1251,18 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <div id="access-requests-list"></div>
     </div>
 
+    <!-- โหมดปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานส่วนนี้ได้ (ซ่อนด้วย JS ใน updateModeButtonVisibility) -->
+    <div class="panel-block" id="maintenance-mode-panel" style="display:none;">
+      <h2>🔧 โหมดปิดปรับปรุงระบบ</h2>
+      <p class="panel-sub">เปิดแล้วทุกคน (ยกเว้น Super Admin) จะเข้าแอปไม่ได้ เจอหน้าจอ "ระบบปิดปรับปรุง" แทนทันที — ใช้ตอนกำลังแก้ไข/ย้ายข้อมูลสำคัญแล้วไม่อยากให้ใครใช้งานพร้อมกัน</p>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="maintenance-mode-toggle" style="width:18px;height:18px;">
+        <span id="maintenance-mode-toggle-label">ปิดใช้งานระบบชั่วคราว (ปัจจุบัน: ปิดอยู่ = ใช้งานได้ปกติ)</span>
+      </label>
+      <input type="text" id="maintenance-mode-message-input" placeholder="ข้อความที่จะโชว์ให้ทุกคนเห็น (ไม่บังคับ)" style="width:100%;margin-bottom:10px;">
+      <button class="btn btn-primary btn-sm" id="maintenance-mode-save-btn">บันทึก</button>
+    </div>
+
     <div class="panel-block">
       <h2>จัดการสิทธิ์ผู้ใช้งาน</h2>
       <p class="panel-sub">
@@ -1688,6 +1700,16 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
   </div>
 </div>
 
+
+<!-- หน้าจอล็อกระบบตอนปิดปรับปรุง — Super Admin เปิดใช้ได้จากตั้งค่าระบบ บล็อกทุกคนยกเว้น Super Admin เอง -->
+<div class="gsi-overlay" id="maintenance-lock-overlay">
+  <div class="gsi-card">
+    <img src="firmer-logo.png" alt="Firmer" class="gsi-logo-img">
+    <h2>🔧 ระบบปิดปรับปรุงชั่วคราว</h2>
+    <p id="maintenance-lock-message">ขณะนี้ระบบกำลังปิดปรับปรุง กรุณากลับมาใหม่อีกครั้งในภายหลัง</p>
+    <button id="maintenance-lock-logout-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;margin-top:14px;">ออกจากระบบ / เปลี่ยนบัญชี</button>
+  </div>
+</div>
 
 <!-- "แก้ไม่ได้" modal -->
 <div class="modal-overlay" id="down-modal">
@@ -3926,6 +3948,60 @@ function showVersionUpdateBanner(serverVersion){
 }
 $('version-update-refresh-btn').addEventListener('click', ()=>location.reload());
 
+/* ===================== โหมดปิดปรับปรุงระบบ (Maintenance Lock) — Super Admin เปิด/ปิดได้จากตั้งค่าระบบ =====================
+   ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/maintenanceMode)
+   เปิดแล้วทุกคน (ยกเว้น Super Admin) จะเห็นหน้าจอล็อกแทนแอปจริงทันที แม้กำลังเปิดแอปค้างอยู่ก็ตาม (ไม่ต้อง Refresh เอง) */
+let maintenanceMode = { enabled:false, message:'' };
+let _maintenanceWatchStarted = false;
+function applyMaintenanceLock(){
+  const overlay = $('maintenance-lock-overlay');
+  if(!overlay) return;
+  if(maintenanceMode.enabled && !isSuperAdmin()){
+    $('maintenance-lock-message').textContent = maintenanceMode.message && maintenanceMode.message.trim()
+      ? maintenanceMode.message.trim()
+      : 'ขณะนี้ระบบกำลังปิดปรับปรุง กรุณากลับมาใหม่อีกครั้งในภายหลัง';
+    overlay.classList.add('show');
+  } else {
+    overlay.classList.remove('show');
+  }
+}
+function initMaintenanceWatch(){
+  if(_maintenanceWatchStarted) return; // กันผูก listener ซ้ำ
+  _maintenanceWatchStarted = true;
+  try{
+    const sdk = window._firebaseSdk;
+    const maintRef = sdk.doc(db,'meta','maintenanceMode');
+    sdk.onSnapshot(maintRef, (snap)=>{
+      maintenanceMode = snap.exists() ? { enabled: !!snap.data().enabled, message: snap.data().message || '' } : { enabled:false, message:'' };
+      applyMaintenanceLock();
+      // ถ้ากำลังอยู่หน้าตั้งค่าระบบและเป็น Super Admin อยู่ด้วย ให้ sync สถานะ checkbox ให้ตรงของจริงเสมอ (เผื่อเปิด/ปิดจากเครื่องอื่น)
+      if(isSuperAdmin()){
+        const cb = $('maintenance-mode-toggle'), lbl = $('maintenance-mode-toggle-label'), msgInput = $('maintenance-mode-message-input');
+        if(cb) cb.checked = maintenanceMode.enabled;
+        if(lbl) lbl.textContent = `ปิดใช้งานระบบชั่วคราว (ปัจจุบัน: ${maintenanceMode.enabled ? 'เปิดอยู่ = ล็อกทุกคนยกเว้น Super Admin' : 'ปิดอยู่ = ใช้งานได้ปกติ'})`;
+        if(msgInput && document.activeElement !== msgInput) msgInput.value = maintenanceMode.message || '';
+      }
+    }, (e)=>console.warn('ฟังสถานะโหมดปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
+  }catch(e){ console.warn('เริ่มเช็คโหมดปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+}
+async function fsSaveMaintenanceMode(){
+  if(!isSuperAdmin()) return; // ป้องกันซ้อน — Firestore Rules เป็นตัวบังคับจริง
+  const enabled = !!$('maintenance-mode-toggle').checked;
+  const message = $('maintenance-mode-message-input').value.trim();
+  showLoadingOverlay('กำลังบันทึก...');
+  try{
+    const sdk = window._firebaseSdk;
+    await sdk.setDoc(sdk.doc(db,'meta','maintenanceMode'), { enabled, message, updatedAt: Date.now(), updatedBy: myUserEmail || null });
+    showToast(enabled ? '🔒 เปิดโหมดปิดปรับปรุงแล้ว — ทุกคนยกเว้น Super Admin จะเข้าแอปไม่ได้' : '✅ ปิดโหมดปิดปรับปรุงแล้ว — กลับมาใช้งานได้ตามปกติ');
+  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+  finally{ hideLoadingOverlay(); }
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn = $('maintenance-mode-save-btn');
+  if(btn) btn.addEventListener('click', fsSaveMaintenanceMode);
+});
+$('maintenance-lock-logout-btn')?.addEventListener('click', ()=>{ try{ window._firebaseSdk.signOut(auth); }catch(e){} location.reload(); });
+
 /* ===================== เรียลไทม์รายการเคลม/แจ้งเตือน — ไม่ต้องกดรีเฟรชจอเอง ===================== */
 // ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/claimsActivity) แทนการเปิด listener ทั้ง collection claims/claimNotices
 // (ซึ่งจะกินโควต้า Firestore สูงกว่ามากเวลามีผู้ใช้เปิดแอปค้างไว้พร้อมกันหลายคน) — เอกสารนี้ถูก "แตะ" ให้ updatedAt เปลี่ยนทุกครั้งที่มีการเพิ่ม/แก้ไข/ลบเคลม (ดู fsBumpClaimsActivity)
@@ -4055,6 +4131,10 @@ function updateModeButtonVisibility(){
     if(btnOrgChart)     btnOrgChart.style.display     = isApproved() ? '' : 'none';
     if(btnRoster)       btnRoster.style.display       = isManager() ? '' : 'none';
   }
+
+  // แผงโหมดปิดปรับปรุงระบบ — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานได้
+  const maintPanel = $('maintenance-mode-panel');
+  if(maintPanel) maintPanel.style.display = isSuperAdmin() ? '' : 'none';
 }
 
 async function checkAccessAndLoad(){
@@ -4107,6 +4187,23 @@ async function checkAccessAndLoad(){
     await renderAccessRequestScreen();
     return;
   }
+
+  // เช็คโหมดปิดปรับปรุงระบบ — ต้องเริ่มฟังก่อนเช็คครั้งแรกเสมอ (ให้ทันเห็นค่าล่าสุดแม้เพิ่ง login)
+  // และต้องเปิด listener ไว้ตลอดแม้ผ่านด่านนี้ไปแล้ว เผื่อ Super Admin เปิดโหมดนี้ระหว่างที่เรากำลังใช้แอปอยู่
+  initMaintenanceWatch();
+  try{
+    const sdk = window._firebaseSdk;
+    const maintSnap = await sdk.getDoc(sdk.doc(db,'meta','maintenanceMode'));
+    maintenanceMode = maintSnap.exists() ? { enabled: !!maintSnap.data().enabled, message: maintSnap.data().message || '' } : { enabled:false, message:'' };
+  }catch(e){ console.warn('อ่านสถานะโหมดปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+  if(maintenanceMode.enabled && !isSuperAdmin()){
+    $('gsi-overlay').classList.remove('show');
+    $('access-request-overlay').classList.remove('show');
+    setStatus(false, '');
+    applyMaintenanceLock();
+    return;
+  }
+  applyMaintenanceLock();
 
   // Admin Service: ข้ามการโหลดข้อมูลหลัก (claim/etc.) ให้โหลดเฉพาะสิ่งที่จำเป็นสำหรับหน้าตรวจรับ
   if(isAdminService() && !isSuperAdmin()){
