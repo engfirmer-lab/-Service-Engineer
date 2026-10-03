@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.78
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 09:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.79
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 10:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.78</title>
+<title>F1 Service — v8.79</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1254,7 +1254,11 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <!-- โหมดปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานส่วนนี้ได้ (ซ่อนด้วย JS ใน updateModeButtonVisibility) -->
     <div class="panel-block" id="maintenance-mode-panel" style="display:none;">
       <h2>🔧 ล็อกหน้าปิดปรับปรุง</h2>
-      <p class="panel-sub">เลือกติ๊กเฉพาะหน้าที่ต้องการปิด — ทุกคน (ยกเว้น Super Admin) ที่กดเข้าหน้านั้นจะเจอข้อความ "ปิดปรับปรุง" แทนทันที ส่วนหน้าที่ไม่ติ๊กไว้ใช้งานได้ตามปกติ</p>
+      <p class="panel-sub">เลือกติ๊กเฉพาะหน้า (รวมหน้าย่อย) ที่ต้องการปิด — ทุกคน (ยกเว้น Super Admin) ที่กดเข้าหน้านั้นจะเจอข้อความ "ปิดปรับปรุง" แทนทันที ส่วนหน้าที่ไม่ติ๊กไว้ใช้งานได้ตามปกติ</p>
+      <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;padding:10px;border:1px solid var(--red);border-radius:8px;cursor:pointer;background:rgba(220,38,38,0.06);">
+        <input type="checkbox" id="maintenance-mode-all-toggle" style="width:19px;height:19px;">
+        <span><b style="color:var(--red);">🚫 ปิดทั้งแอปทั้งระบบ</b> — เข้าแอปไม่ได้เลยแม้แต่หน้าเดียว (ใช้ตอนต้องปรับปรุงทั้งระบบ) ยกเว้นติ๊กนี้ อย่างอื่นด้านล่างไม่มีผล</span>
+      </label>
       <div id="maintenance-mode-checkboxes" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
       <input type="text" id="maintenance-mode-message-input" placeholder="ข้อความที่จะโชว์ให้ทุกคนเห็น (ไม่บังคับ)" style="width:100%;margin-bottom:10px;">
       <button class="btn btn-primary btn-sm" id="maintenance-mode-save-btn">บันทึก</button>
@@ -1539,7 +1543,6 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <h2>ตัวเลือก</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-ghost btn-sm" id="roster-open-sheet-btn">🔗 เปิด Google Sheet</button>
-        <button class="btn btn-ghost btn-sm" id="roster-export-excel-btn">📊 Export Excel</button>
         <button class="btn btn-ghost btn-sm" id="roster-resync-btn">🔄 Sync ใหม่ทั้งหมด</button>
         <button class="btn btn-ghost btn-sm" id="roster-refresh-btn">↻ รีเฟรช</button>
         <span style="font-size:11px;color:var(--text-faint);">* บันทึก/โยกย้ายทุกครั้งซิงก์ขึ้น Sheet ให้อัตโนมัติอยู่แล้ว ปุ่ม Sync ใหม่ทั้งหมดไว้ใช้กรณีชีตกับระบบไม่ตรงกัน</span>
@@ -1698,6 +1701,16 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 </div>
 
 
+<!-- หน้าจอล็อกเต็มจอตอนปิดปรับปรุงทั้งระบบ (ล็อก "ALL") — Super Admin เปิดใช้ได้จากตั้งค่าระบบ บล็อกทุกคนยกเว้น Super Admin เอง -->
+<div class="gsi-overlay" id="maintenance-lock-overlay">
+  <div class="gsi-card">
+    <img src="firmer-logo.png" alt="Firmer" class="gsi-logo-img">
+    <h2>🔧 ระบบปิดปรับปรุงชั่วคราว</h2>
+    <p id="maintenance-lock-message">ขณะนี้กำลังปิดปรับปรุงทั้งระบบ กรุณากลับมาใหม่อีกครั้งในภายหลัง</p>
+    <button id="maintenance-lock-logout-btn" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:11px;padding:2px 6px;text-decoration:underline;margin-top:14px;">ออกจากระบบ / เปลี่ยนบัญชี</button>
+  </div>
+</div>
+
 <!-- "แก้ไม่ได้" modal -->
 <div class="modal-overlay" id="down-modal">
   <div class="modal" style="max-width:460px;">
@@ -1750,8 +1763,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.78";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 09:25 น. เวลาไทย";
+const APP_VERSION = "8.79";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 10:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3070,7 +3083,28 @@ async function _deleteSheetRowByGid(token, spreadsheetId, sheetId, rowIndex){
    คอลัมน์สุดท้าย ("Email (เข้าระบบ)") ไม่ใช่ฟิลด์ในฟอร์ม แต่เป็น key ภายในไว้หาแถวเดิมตอน upsert (doc id ของ userProfiles) */
 const PROFILES_SHEET_NAME = 'รายชื่อผู้ใช้งาน (Service Center)';
 const PROFILES_SHEET_TAB_TITLE = 'Profiles';
-const PROFILES_SHEET_HEADERS = ['ชื่อ(ไทย)','นามสกุล(ไทย)','ชื่อเล่น(ไทย)','First name','Last name','Nickname','เบอร์โทรศัพท์','วันเกิด','บ้านเลขที่','จังหวัด','อำเภอ','ตำบล','Email บริษัท','ตำแหน่ง','เขตพื้นที่รับผิดชอบ','จังหวัดที่ดูแล','วันที่เริ่มงาน','Account Mindray','Email (เข้าระบบ)'];
+// คอลัมน์คงที่ (ลำดับตามที่ขอ) — คอลัมน์ "จังหวัดที่ดูแล N" ต่อท้ายแบบไดนามิก ตามจำนวนจังหวัดที่ดูแลมากสุดของคนใดคนหนึ่งในระบบ ณ ตอนนั้น
+const PROFILES_SHEET_BASE_HEADERS = ['ชื่อ - สกุล (ไทย)','ชื่อเล่น','ชื่อ - สกุล (อังกฤษ)','Nickname','เบอร์โทรศัพท์','วันเกิด','อายุ','เขต','ตำแหน่ง','วันที่เริ่มงาน','อายุงาน','Email บริษัท','Email เข้าระบบ','Account Mindray','บ้านเลขที่','จังหวัด','อำเภอ','ตำบล'];
+const PROFILES_SHEET_EMAIL_COL = PROFILES_SHEET_BASE_HEADERS.indexOf('Email เข้าระบบ'); // index คงที่เสมอ ไม่ว่าจะมีคอลัมน์ "จังหวัดที่ดูแล" กี่คอลัมน์ต่อท้าย — ใช้หาแถวเดิมตอน upsert/ลบ
+function profilesSheetHeadersFor(provinceColCount){
+  const n = Math.max(1, provinceColCount||1);
+  const extra = []; for(let i=1;i<=n;i++) extra.push(`จังหวัดที่ดูแล ${i}`);
+  return PROFILES_SHEET_BASE_HEADERS.concat(extra);
+}
+// คำนวณ "X ปี Y เดือน Z วัน" จากวันที่ (ISO yyyy-mm-dd) ถึงวันนี้ — ใช้ทั้งอายุและอายุงาน
+function computeYmdDuration(fromISO){
+  if(!fromISO) return '';
+  const from = new Date(fromISO+'T00:00:00');
+  if(isNaN(from.getTime())) return '';
+  const to = new Date();
+  if(from > to) return ''; // วันที่ในอนาคต (ข้อมูลผิด) — ไม่คำนวณ
+  let years = to.getFullYear() - from.getFullYear();
+  let months = to.getMonth() - from.getMonth();
+  let days = to.getDate() - from.getDate();
+  if(days < 0){ months -= 1; days += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
+  if(months < 0){ years -= 1; months += 12; }
+  return `${years} ปี ${months} เดือน ${days} วัน`;
+}
 let _profilesSheetIdCache = null;
 let _profilesSheetInFlight = null;
 async function fsSaveProfilesSheetMeta(){
@@ -3108,48 +3142,70 @@ async function ensureProfilesSpreadsheet(){
     DATA.profilesSheetMeta.spreadsheetId = sheetId;
     DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE] = tabGid;
     await fsSaveProfilesSheetMeta();
-    await appendClaimRowToSheet(sheetId, PROFILES_SHEET_HEADERS, PROFILES_SHEET_TAB_TITLE); // เขียนหัวตารางไว้แถวแรก (ฟังก์ชันนี้ generic ใช้ร่วมกับเคลมได้ ไม่ได้ผูกกับข้อมูลเคลม)
-    try{ await applyClaimsSheetFormatting(sheetId, tabGid, PROFILES_SHEET_HEADERS.length, true); } // เช่นกัน generic ใช้ร่วมได้
+    const initialHeaders = profilesSheetHeadersFor(1);
+    await appendClaimRowToSheet(sheetId, initialHeaders, PROFILES_SHEET_TAB_TITLE); // เขียนหัวตารางไว้แถวแรก (ฟังก์ชันนี้ generic ใช้ร่วมกับเคลมได้ ไม่ได้ผูกกับข้อมูลเคลม)
+    try{ await applyClaimsSheetFormatting(sheetId, tabGid, initialHeaders.length, true); } // เช่นกัน generic ใช้ร่วมได้
     catch(fmtErr){ console.warn('จัดรูปแบบชีตรายชื่อผู้ใช้งานไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
     return sheetId;
   })();
   try{ return await _profilesSheetInFlight; }
   finally{ _profilesSheetInFlight = null; }
 }
-// แปลงโปรไฟล์ 1 คนเป็น 1 แถว ตามลำดับคอลัมน์ PROFILES_SHEET_HEADERS เป๊ะๆ (ลำดับเดียวกับฟอร์ม showProfileModal)
-function buildProfileSheetRow(email, p){
+// แปลงโปรไฟล์ 1 คนเป็น 1 แถว ตามลำดับคอลัมน์ PROFILES_SHEET_BASE_HEADERS เป๊ะๆ + คอลัมน์ "จังหวัดที่ดูแล 1..N" ต่อท้ายตาม provinceColCount
+// - ชื่อ-สกุล รวมเป็น cell เดียว (เว้นวรรคคั่น) ทั้งไทย/อังกฤษ
+// - เบอร์โทร/วันที่ ขึ้นต้นด้วย ' กัน Google Sheets ตัดเลข 0 หน้า/ตีความเป็นวันที่เอง
+// - อายุ/อายุงาน คำนวณสดจากวันเกิด/วันเริ่มงาน ณ เวลาที่ sync (ไม่ใช่ค่าคงที่ที่เก็บไว้ ต้อง sync ใหม่ถึงจะอัปเดตตัวเลข)
+function buildProfileSheetRow(email, p, provinceColCount){
   p = p || {};
+  const nameTh = [p.firstNameTh, p.lastNameTh].filter(Boolean).join(' ');
+  const nameEn = [p.firstNameEn, p.lastNameEn].filter(Boolean).join(' ');
+  const provinces = p.provincesCovered || [];
+  const n = Math.max(1, provinceColCount||1);
+  const provinceCells = []; for(let i=0;i<n;i++) provinceCells.push(provinces[i]||'');
   return [
-    p.firstNameTh||'', p.lastNameTh||'', p.nicknameTh||'',
-    p.firstNameEn||'', p.lastNameEn||'', p.nicknameEn||'',
-    p.phone||'',
+    nameTh, p.nicknameTh||'', nameEn, p.nicknameEn||'',
+    p.phone ? `'${p.phone}` : '',
     p.birthDate ? `'${isoToDDMMYYYY(p.birthDate)}` : '',
-    p.houseNo||'', p.province||'', p.amphoe||'', p.tambon||'',
-    p.companyEmail||'', p.position||'', p.area||'',
-    (p.provincesCovered||[]).join(', '),
+    computeYmdDuration(p.birthDate),
+    p.area||'', p.position||'',
     p.startDate ? `'${isoToDDMMYYYY(p.startDate)}` : '',
+    computeYmdDuration(p.startDate),
+    p.companyEmail||'', (email||'').toLowerCase(),
     p.mindrayNone ? 'ไม่มี' : (p.mindrayAccount||''),
-    (email||'').toLowerCase(),
+    p.houseNo||'', p.province||'', p.amphoe||'', p.tambon||'',
+    ...provinceCells,
   ];
 }
-// หาแถวเดิมของ email นี้ใน Sheet (ด้วยคอลัมน์สุดท้าย) แล้วอัปเดตทับ ถ้ายังไม่มีก็ append ต่อท้าย — ไม่ critical ถ้าพลาด (แค่ชีตไม่อัปเดต ข้อมูลจริงอยู่ใน Firestore ครบอยู่แล้ว)
+// หาแถวเดิมของ email นี้ใน Sheet (ด้วยคอลัมน์ "Email เข้าระบบ" ซึ่งอยู่ index คงที่เสมอ) แล้วอัปเดตทับ ถ้ายังไม่มีก็ append ต่อท้าย
+// ถ้าคนนี้มีจังหวัดที่ดูแลมากกว่าจำนวนคอลัมน์ "จังหวัดที่ดูแล" ที่มีอยู่ในชีตตอนนี้ จะขยายหัวตารางเพิ่มคอลัมน์ให้อัตโนมัติ
+// ไม่ critical ถ้าพลาด (แค่ชีตไม่อัปเดต ข้อมูลจริงอยู่ใน Firestore ครบอยู่แล้ว)
 async function upsertProfileRowInSheet(email, p){
   try{
     const sheetId = await ensureProfilesSpreadsheet();
     const token = await ensureDriveAccess();
-    const range = `${PROFILES_SHEET_TAB_TITLE}!A1:${String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1)}100000`;
-    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`, { headers:{ Authorization:`Bearer ${token}` } });
+    const wideRange = `${PROFILES_SHEET_TAB_TITLE}!A1:ZZ100000`; // กว้างพอเผื่อคอลัมน์จังหวัดขยายไปแล้วหลายรอบ
+    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(wideRange)}`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!getRes.ok) throw new Error('อ่านข้อมูล Sheet รายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
     const getData = await getRes.json();
     const values = getData.values || [];
-    const emailCol = PROFILES_SHEET_HEADERS.length - 1;
+    const currentHeaderLen = (values[0]||[]).length || PROFILES_SHEET_BASE_HEADERS.length;
+    const currentProvinceCols = Math.max(1, currentHeaderLen - PROFILES_SHEET_BASE_HEADERS.length);
+    const neededProvinceCols = Math.max(currentProvinceCols, (p.provincesCovered||[]).length);
+    if(neededProvinceCols > currentProvinceCols){
+      // ขยายหัวตารางเพิ่มคอลัมน์ "จังหวัดที่ดูแล N" ใหม่ (แถวข้อมูลเดิมไม่ต้องแก้ — คอลัมน์ใหม่จะว่างเองโดยอัตโนมัติ)
+      const newHeaders = profilesSheetHeadersFor(neededProvinceCols);
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A1')}?valueInputOption=USER_ENTERED`, {
+        method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ values: [newHeaders] })
+      });
+    }
     let foundRow = -1; // index ใน values (0 = แถวหัวตาราง)
-    for(let i=1;i<values.length;i++){ if(((values[i][emailCol]||'')+'').toLowerCase() === (email||'').toLowerCase()){ foundRow = i; break; } }
+    for(let i=1;i<values.length;i++){ if(((values[i][PROFILES_SHEET_EMAIL_COL]||'')+'').toLowerCase() === (email||'').toLowerCase()){ foundRow = i; break; } }
     const targetRow1based = foundRow>=0 ? (foundRow+1) : (values.length>0 ? values.length+1 : 2); // ถ้าชีตว่างเปล่าแปลกๆ (ไม่มีแม้หัวตาราง) ก็เริ่มแถว 2 กันทับหัวตาราง
     const writeRange = `${PROFILES_SHEET_TAB_TITLE}!A${targetRow1based}`;
     const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
       method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ values: [buildProfileSheetRow(email, p)] })
+      body: JSON.stringify({ values: [buildProfileSheetRow(email, p, neededProvinceCols)] })
     });
     if(!putRes.ok) throw new Error('บันทึกแถวโปรไฟล์ลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(putRes));
   }catch(e){ console.warn('ซิงก์โปรไฟล์ไปยัง Google Sheet ไม่สำเร็จ (ไม่กระทบข้อมูลหลักใน Firestore):', e.message); }
@@ -3159,13 +3215,12 @@ async function deleteProfileRowFromSheet(email){
   try{
     const sheetId = await ensureProfilesSpreadsheet();
     const token = await ensureDriveAccess();
-    const range = `${PROFILES_SHEET_TAB_TITLE}!A1:${String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1)}100000`;
-    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`, { headers:{ Authorization:`Bearer ${token}` } });
+    const wideRange = `${PROFILES_SHEET_TAB_TITLE}!A1:ZZ100000`;
+    const getRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(wideRange)}`, { headers:{ Authorization:`Bearer ${token}` } });
     if(!getRes.ok) throw new Error('อ่านข้อมูล Sheet รายชื่อผู้ใช้งานไม่สำเร็จ: '+await googleApiErrorMessage(getRes));
     const getData = await getRes.json();
     const values = getData.values || [];
-    const emailCol = PROFILES_SHEET_HEADERS.length - 1;
-    const foundRow = values.findIndex((row,i)=> i>0 && ((row[emailCol]||'')+'').toLowerCase() === (email||'').toLowerCase());
+    const foundRow = values.findIndex((row,i)=> i>0 && ((row[PROFILES_SHEET_EMAIL_COL]||'')+'').toLowerCase() === (email||'').toLowerCase());
     if(foundRow<0) return; // ไม่เคยอยู่ใน Sheet (เช่น sync ยังไม่ทันเกิด) — ไม่มีอะไรให้ลบ
     let gid = DATA.profilesSheetMeta.tabs && DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE];
     if(gid===undefined || gid===null){
@@ -3179,21 +3234,31 @@ async function deleteProfileRowFromSheet(email){
     await _deleteSheetRowByGid(token, sheetId, gid, foundRow+1); // foundRow เป็น 0-based ใน values → แถวจริง (1-based) = foundRow+1
   }catch(e){ console.warn('ลบแถวโปรไฟล์ออกจาก Sheet ไม่สำเร็จ (ไม่กระทบการลบใน Firestore):', e.message); }
 }
-// Sync ใหม่ทั้งหมด: ล้างแถวข้อมูล (เก็บหัวตารางไว้) แล้วเขียนทุกคนใน userProfiles ใหม่ทั้งหมด — ใช้เป็น fallback เผื่อชีตกับ Firestore ไม่ตรงกัน (แก้มือใน Sheet, sync ตกหล่น ฯลฯ)
+// Sync ใหม่ทั้งหมด: ล้างทั้งชีต (รวมหัวตาราง) แล้วเขียนหัวตาราง+ทุกคนใน userProfiles ใหม่ทั้งหมด — ใช้เป็น fallback เผื่อชีตกับ Firestore ไม่ตรงกัน (แก้มือใน Sheet, sync ตกหล่น ฯลฯ)
+// คำนวณจำนวนคอลัมน์ "จังหวัดที่ดูแล" ใหม่จากคนที่ดูแลเยอะที่สุด ณ ตอน sync (กันคอลัมน์ไม่พอ/เหลือคอลัมน์ว่างเปล่าเยอะเกินไป)
 async function resyncAllProfilesSheet(){
   showLoadingOverlay('กำลัง Sync ชีตรายชื่อผู้ใช้งานใหม่ทั้งหมด...');
   try{
     const sheetId = await ensureProfilesSpreadsheet();
     const token = await ensureDriveAccess();
-    const colLetter = String.fromCharCode(65+PROFILES_SHEET_HEADERS.length-1);
+    updateLoadingOverlayText('กำลังดึงรายชื่อผู้ใช้งานทั้งหมด...');
+    const profiles = await fetchAllUserProfiles();
+    const provinceColCount = Math.max(1, ...profiles.map(p=>(p.provincesCovered||[]).length), 1);
+    const headers = profilesSheetHeadersFor(provinceColCount);
+    const colLetterFor = (n)=>{ let s=''; n=n+1; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; };
+    const colLetter = colLetterFor(headers.length-1);
     updateLoadingOverlayText('กำลังล้างข้อมูลเดิมในชีต...');
-    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A2:'+colLetter+'100000')}:clear`, {
+    const clearRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A1:ZZ100000')}:clear`, {
       method:'POST', headers:{ Authorization:`Bearer ${token}` }
     });
     if(!clearRes.ok) throw new Error('ล้างข้อมูลเดิมในชีตไม่สำเร็จ: '+await googleApiErrorMessage(clearRes));
-    updateLoadingOverlayText('กำลังดึงรายชื่อผู้ใช้งานทั้งหมด...');
-    const profiles = await fetchAllUserProfiles();
-    const rows = profiles.map(p=>buildProfileSheetRow(p.email, p));
+    updateLoadingOverlayText('กำลังเขียนหัวตารางใหม่...');
+    const headerRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A1')}?valueInputOption=USER_ENTERED`, {
+      method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values: [headers] })
+    });
+    if(!headerRes.ok) throw new Error('เขียนหัวตารางไม่สำเร็จ: '+await googleApiErrorMessage(headerRes));
+    const rows = profiles.map(p=>buildProfileSheetRow(p.email, p, provinceColCount));
     if(rows.length>0){
       updateLoadingOverlayText(`กำลังเขียน ${rows.length} แถวลงชีต...`);
       const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(PROFILES_SHEET_TAB_TITLE+'!A2')}?valueInputOption=USER_ENTERED`, {
@@ -3203,7 +3268,7 @@ async function resyncAllProfilesSheet(){
       if(!putRes.ok) throw new Error('เขียนข้อมูลลงชีตไม่สำเร็จ: '+await googleApiErrorMessage(putRes));
     }
     const gid = (DATA.profilesSheetMeta.tabs && DATA.profilesSheetMeta.tabs[PROFILES_SHEET_TAB_TITLE]) || 0;
-    try{ await applyClaimsSheetFormatting(sheetId, gid, PROFILES_SHEET_HEADERS.length, false); }
+    try{ await applyClaimsSheetFormatting(sheetId, gid, headers.length, false); }
     catch(fmtErr){ console.warn('จัดรูปแบบชีตรายชื่อผู้ใช้งานหลัง sync ไม่สำเร็จ (ไม่กระทบข้อมูล):', fmtErr.message); }
     showToast(`✅ Sync ชีตรายชื่อผู้ใช้งานเรียบร้อย (${rows.length} คน)`);
   }catch(e){
@@ -3939,11 +4004,19 @@ $('version-update-refresh-btn').addEventListener('click', ()=>location.reload())
    ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/maintenanceMode)
    เปิดเฉพาะหน้าที่ติ๊กไว้ — หน้าที่ไม่ติ๊กใช้งานได้ตามปกติ ทุกคน (ยกเว้น Super Admin) ที่กดเข้าหน้าที่ถูกล็อกจะเจอ toast แจ้งเตือนทันที ไม่สลับหน้าให้
    ถ้า user กำลังอยู่หน้าที่เพิ่งถูกล็อกระหว่างเปิดแอปค้างอยู่ จะโดนสลับออกไปหน้า eng ให้อัตโนมัติทันที (ไม่ต้อง Refresh เอง) */
+// key 'ALL' = ปิดทั้งแอปทั้งระบบ (ใช้ตอนต้องปรับปรุงใหญ่) — ไม่อยู่ใน list นี้ มีสวิตช์แยกต่างหากที่เด่นกว่าด้านบน
+// รายการหน้าหลัก + หน้าย่อย (children) ของแต่ละหน้า — ล็อกหน้าหลักจะบล็อกทุกหน้าย่อยในนั้นไปด้วยโดยอัตโนมัติ (ดู isModeLocked)
 const MAINTENANCE_MODE_LIST = [
   { key:'eng',           label:'🩺 Engineer (Troubleshooting)' },
   { key:'sup',           label:'📋 Sup Product' },
-  { key:'mgr',           label:'👔 Manager (ภาพรวม)' },
-  { key:'settings',      label:'⚙️ ตั้งค่าระบบ' },
+  { key:'mgr',           label:'👔 Manager (ภาพรวม)', children:[
+    { key:'mgr:summary', label:'สรุปข้อมูล' },
+    { key:'mgr:pending', label:'งานค้าง/รออนุมัติ' },
+  ]},
+  { key:'settings',      label:'⚙️ ตั้งค่าระบบ', children:[
+    { key:'settings:access', label:'สิทธิ์ผู้ใช้' },
+    { key:'settings:owner',  label:'Product & Category' },
+  ]},
   { key:'backup',        label:'💾 Backup' },
   { key:'admin-service', label:'🔧 ตรวจรับอะไหล่ (Admin Service)' },
   { key:'orgchart',      label:'🗂️ ผังองค์กร' },
@@ -3951,27 +4024,43 @@ const MAINTENANCE_MODE_LIST = [
 ];
 let maintenanceMode = { lockedModes:{}, message:'' };
 let _maintenanceWatchStarted = false;
-function isModeLocked(mode){ return !!(maintenanceMode.lockedModes && maintenanceMode.lockedModes[mode]); }
-function maintenanceLockMessage(){
-  return (maintenanceMode.message && maintenanceMode.message.trim()) ? maintenanceMode.message.trim() : 'หน้านี้กำลังปิดปรับปรุงชั่วคราว กรุณากลับมาใหม่อีกครั้งในภายหลัง';
+// ล็อกแล้วถ้าตัวเองถูกติ๊ก หรือถ้าเป็นหน้าย่อย (มี ':') แล้วหน้าหลักของมันถูกติ๊กไว้ด้วย (ล็อกหน้าหลัก = ล็อกยกชุดทุกหน้าย่อย)
+function isModeLocked(mode){
+  if(!maintenanceMode.lockedModes) return false;
+  if(maintenanceMode.lockedModes[mode]) return true;
+  if(mode.indexOf(':')>=0 && maintenanceMode.lockedModes[mode.split(':')[0]]) return true;
+  return false;
 }
-// เรียกทุกครั้งที่สถานะล็อกเปลี่ยน (realtime) — ถ้าหน้าที่กำลังเปิดอยู่ตอนนี้โดนล็อกเข้า ให้สลับออกไปหน้า eng ทันที (ยกเว้น Super Admin)
+function isAppFullyLocked(){ return !!(maintenanceMode.lockedModes && maintenanceMode.lockedModes['ALL']); }
+function maintenanceLockMessage(){
+  return (maintenanceMode.message && maintenanceMode.message.trim()) ? maintenanceMode.message.trim() : 'ขณะนี้กำลังปิดปรับปรุง กรุณากลับมาใหม่อีกครั้งในภายหลัง';
+}
+// เรียกทุกครั้งที่สถานะล็อกเปลี่ยน (realtime) — เช็คทั้งล็อกทั้งแอปและล็อกรายหน้า ยกเว้น Super Admin เสมอ
 function applyMaintenanceLock(){
-  if(isSuperAdmin()) return;
+  if(isSuperAdmin()){ $('maintenance-lock-overlay')?.classList.remove('show'); return; }
+  const overlay = $('maintenance-lock-overlay');
+  if(isAppFullyLocked()){
+    if(overlay){ $('maintenance-lock-message').textContent = maintenanceLockMessage(); overlay.classList.add('show'); }
+    return;
+  }
+  if(overlay) overlay.classList.remove('show');
   if(typeof currentMode !== 'undefined' && currentMode && isModeLocked(currentMode)){
     showToast('🔒 '+maintenanceLockMessage());
     if(currentMode !== 'eng' && !isModeLocked('eng')){ switchMode('eng'); }
   }
 }
 function renderMaintenanceModeCheckboxes(){
+  const allCb = $('maintenance-mode-all-toggle');
+  if(allCb) allCb.checked = isAppFullyLocked();
   const box = $('maintenance-mode-checkboxes');
   if(!box) return;
-  box.innerHTML = MAINTENANCE_MODE_LIST.map(m=>`
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+  const rowHtml = (m, indent)=>`
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;${indent?'margin-left:26px;':''}">
       <input type="checkbox" class="maint-mode-cb" data-mode="${m.key}" ${isModeLocked(m.key)?'checked':''} style="width:17px;height:17px;">
-      <span>${m.label}${isModeLocked(m.key)?' — <b style="color:var(--red);">ปิดอยู่</b>':''}</span>
+      <span style="${indent?'font-size:12.5px;color:var(--text-faint);':''}">${m.label}${isModeLocked(m.key)?' — <b style="color:var(--red);">ปิดอยู่</b>':''}</span>
     </label>
-  `).join('');
+  `;
+  box.innerHTML = MAINTENANCE_MODE_LIST.map(m=>rowHtml(m,false) + (m.children||[]).map(c=>rowHtml(c,true)).join('')).join('');
 }
 function initMaintenanceWatch(){
   if(_maintenanceWatchStarted) return; // กันผูก listener ซ้ำ
@@ -3995,13 +4084,18 @@ async function fsSaveMaintenanceMode(){
   if(!isSuperAdmin()) return; // ป้องกันซ้อน — Firestore Rules เป็นตัวบังคับจริง
   const lockedModes = {};
   document.querySelectorAll('.maint-mode-cb').forEach(cb=>{ lockedModes[cb.getAttribute('data-mode')] = !!cb.checked; });
+  lockedModes['ALL'] = !!$('maintenance-mode-all-toggle')?.checked;
   const message = $('maintenance-mode-message-input').value.trim();
   showLoadingOverlay('กำลังบันทึก...');
   try{
     const sdk = window._firebaseSdk;
     await sdk.setDoc(sdk.doc(db,'meta','maintenanceMode'), { lockedModes, message, updatedAt: Date.now(), updatedBy: myUserEmail || null });
-    const lockedCount = Object.values(lockedModes).filter(Boolean).length;
-    showToast(lockedCount>0 ? `🔒 บันทึกแล้ว — ปิด ${lockedCount} หน้า` : '✅ บันทึกแล้ว — ไม่มีหน้าไหนถูกปิด');
+    if(lockedModes['ALL']){
+      showToast('🔒 ปิดทั้งแอปแล้ว — ทุกคนยกเว้น Super Admin เข้าแอปไม่ได้เลย');
+    } else {
+      const lockedCount = Object.keys(lockedModes).filter(k=>k!=='ALL' && lockedModes[k]).length;
+      showToast(lockedCount>0 ? `🔒 บันทึกแล้ว — ปิด ${lockedCount} หน้า` : '✅ บันทึกแล้ว — ไม่มีหน้าไหนถูกปิด');
+    }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
   finally{ hideLoadingOverlay(); }
 }
@@ -4009,6 +4103,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const btn = $('maintenance-mode-save-btn');
   if(btn) btn.addEventListener('click', fsSaveMaintenanceMode);
 });
+$('maintenance-lock-logout-btn')?.addEventListener('click', ()=>{ try{ window._firebaseSdk.signOut(auth); }catch(e){} location.reload(); });
 
 /* ===================== เรียลไทม์รายการเคลม/แจ้งเตือน — ไม่ต้องกดรีเฟรชจอเอง ===================== */
 // ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/claimsActivity) แทนการเปิด listener ทั้ง collection claims/claimNotices
@@ -4219,6 +4314,13 @@ async function checkAccessAndLoad(){
     const maintSnap = await sdk.getDoc(sdk.doc(db,'meta','maintenanceMode'));
     maintenanceMode = maintSnap.exists() ? { lockedModes: maintSnap.data().lockedModes || {}, message: maintSnap.data().message || '' } : { lockedModes:{}, message:'' };
   }catch(e){ console.warn('อ่านสถานะล็อกหน้าปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+  if(isAppFullyLocked() && !isSuperAdmin()){
+    $('gsi-overlay').classList.remove('show');
+    $('access-request-overlay').classList.remove('show');
+    setStatus(false, '');
+    applyMaintenanceLock();
+    return;
+  }
 
   // Admin Service: ข้ามการโหลดข้อมูลหลัก (claim/etc.) ให้โหลดเฉพาะสิ่งที่จำเป็นสำหรับหน้าตรวจรับ
   if(isAdminService() && !isSuperAdmin()){
@@ -4863,22 +4965,7 @@ async function deleteRosterProfile(email){
     hideLoadingOverlay();
   }
 }
-function exportRosterExcel(){
-  if(rosterProfiles.length===0){ showToast('ยังไม่มีข้อมูลรายชื่อผู้ใช้งานให้ Export'); return; }
-  const rows = rosterProfiles.map(p=>{
-    const row = {};
-    PROFILES_SHEET_HEADERS.forEach((h,i)=>{ row[h] = buildProfileSheetRow(p.email, p)[i]; });
-    return row;
-  });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'รายชื่อผู้ใช้งาน');
-  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
-  XLSX.writeFile(wb, `รายชื่อผู้ใช้งาน-${stamp}.xlsx`);
-  fsWriteLog('Export รายชื่อผู้ใช้งานเป็น Excel');
-  showToast('✓ Export แล้ว');
-}
 $('roster-open-sheet-btn').addEventListener('click', openProfilesSheet);
-$('roster-export-excel-btn').addEventListener('click', exportRosterExcel);
 $('roster-resync-btn').addEventListener('click', ()=>{ if(confirm('Sync ใหม่ทั้งหมด? จะล้างข้อมูลเดิมในชีตแล้วเขียนใหม่จากระบบทั้งหมด')) resyncAllProfilesSheet(); });
 $('roster-refresh-btn').addEventListener('click', loadAndRenderRoster);
 
@@ -4900,6 +4987,10 @@ function requestModeSwitch(mode){
 // v8.37 — ตั้งค่าระบบ sub-tab switch (สิทธิ์ผู้ใช้ | Product & Category)
 let _settingsSubActive = 'access';
 function switchSettingsSubTab(tab){
+  if(isModeLocked('settings:'+tab) && !isSuperAdmin()){
+    showToast('🔒 '+maintenanceLockMessage());
+    return;
+  }
   _settingsSubActive = tab;
   $('settings-tab-access').style.display = tab==='access' ? 'block' : 'none';
   $('settings-tab-owner').style.display  = tab==='owner'  ? 'block' : 'none';
@@ -11035,6 +11126,10 @@ let _mgrSubActive = 'summary';
 let _mgrDataLoaded = false;
 
 function switchMgrSubTab(tab){
+  if(isModeLocked('mgr:'+tab) && !isSuperAdmin()){
+    showToast('🔒 '+maintenanceLockMessage());
+    return;
+  }
   _mgrSubActive = tab;
   $('mgr-sub-summary').style.display = tab==='summary' ? 'block' : 'none';
   $('mgr-sub-pending').style.display = tab==='pending' ? 'block' : 'none';
