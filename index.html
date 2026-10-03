@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.82
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 11:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.83
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 19:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.82</title>
+<title>F1 Service — v8.83</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -743,7 +743,11 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       </div>
       <div class="panel-block">
         <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — แต่ละรุ่นมี 2 ประเภท: 📋 Cer ภายใน และ 🏭 Cer จากผู้ผลิต — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
+        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด — 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer — <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--green);display:inline-block;"></span> = รุ่นที่คุณดูแล</span></p>
+        <div style="display:flex;gap:6px;margin-bottom:12px;">
+          <button class="btn btn-sm eng-certtype-tab-btn" data-certtype="internal" style="flex:1;">📋 ใบ Cer ภายใน</button>
+          <button class="btn btn-sm eng-certtype-tab-btn" data-certtype="manufacturer" style="flex:1;">🏭 ใบ Cer ผู้ผลิต</button>
+        </div>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1656,6 +1660,20 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     </div>
   </div>
 
+  <!-- v8.83 — modal รายละเอียด Certificate 1 ช่อง (ดูไฟล์ / อัปโหลด / อัปใหม่) -->
+  <div class="modal-overlay" id="cert-detail-modal">
+    <div class="modal" style="max-width:420px;">
+      <button class="modal-close-x" id="cert-detail-modal-close">✕</button>
+      <h3 id="cert-detail-title">Certificate</h3>
+      <p class="panel-sub" id="cert-detail-sub"></p>
+      <div id="cert-detail-status" style="margin:10px 0;font-size:13px;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+        <a href="#" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" id="cert-detail-view-btn" style="display:none;">👁 ดูไฟล์</a>
+        <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;" id="cert-detail-upload-label">📤 <span id="cert-detail-upload-label-text">อัปโหลด</span><input type="file" id="cert-detail-upload-input" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+      </div>
+    </div>
+  </div>
+
   <!-- v8.58 — modal เลือกพื้นที่รับผิดชอบ (Engineer) -->
   <div class="modal-overlay" id="eng-resp-modal">
     <div class="modal" style="max-width:520px;max-height:80vh;overflow:auto;">
@@ -1807,8 +1825,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.82";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 11:20 น. เวลาไทย";
+const APP_VERSION = "8.83";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 19:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1964,6 +1982,7 @@ let myResponsibility = []; // [{category, model}] รุ่นเครื่อ
 let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
 let _engCertOpenCats = new Set(); // Category ไหนเปิด accordion อยู่บ้างในแท็บ Certificate ของ Engineer (v8.60)
+let _engCertTypeTab = 'internal'; // แท็บย่อยใน Certificate ของ Engineer: 'internal' | 'manufacturer' (v8.83)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
@@ -5222,7 +5241,7 @@ document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
     if(engActiveTab==='my_work') renderEngMyWorkTab();
     if(engActiveTab==='service_docs'){ renderDocFilterEng(); renderEngDocResults(); }
     if(engActiveTab==='claim') renderEngMyClaimsList && renderEngMyClaimsList();
-    if(engActiveTab==='cert') renderEngCertTab();
+    if(engActiveTab==='cert') renderEngCertTab(true);
   });
 });
 // v8.37 — eng-doctype-subtabs: แท็บประเภทเอกสาร (อยู่ภายใน eng-tab-docs)
@@ -6161,7 +6180,7 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
     $('sup-tab-cert').style.display = supActiveTab==='cert' ? 'block':'none';
     if(supActiveTab==='docs'){ renderSupDocMatrix(); renderSupCertReqList(); }
     if(supActiveTab==='claims') renderClaimsView();
-    if(supActiveTab==='cert') renderSupCertTab();
+    if(supActiveTab==='cert') renderSupCertTab(true);
   });
 });
 
@@ -6297,7 +6316,7 @@ function populateSupSelectors(){
 }
 function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
-$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(); });
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(true); });
 $('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
 
 function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
@@ -11458,7 +11477,7 @@ $('eng-resp-save-btn').addEventListener('click', async ()=>{
     await fsSaveMyResponsibility(models);
     hideLoadingOverlay();
     showToast('✓ บันทึกพื้นที่รับผิดชอบแล้ว');
-    renderEngCertTab();
+    renderEngCertTab(true);
   }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
 });
 
@@ -11474,37 +11493,40 @@ function certReqBadgeHtml(category, model){
   const label = req==='internal' ? 'ต้องมี Cer ภายใน' : req==='manufacturer' ? 'ต้องมี Cer ผู้ผลิต' : 'ต้องมี Cer ทั้งภายใน+ผู้ผลิต';
   return `<span style="font-size:11px;color:var(--amber);font-weight:600;margin-left:6px;">📌 ${label}</span>`;
 }
-function engCertModelRowHtml(category, model, certMap){
-  const internal = certMap[category+'|'+model+'|internal'];
-  const manu = certMap[category+'|'+model+'|manufacturer'];
-  return `<div style="padding:10px 12px;border-top:1px solid var(--border);">
-    <div style="font-weight:600;font-size:13px;margin-bottom:8px;">${escapeHtml(model)}${certReqBadgeHtml(category,model)}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:13px;">📋 Cer ภายใน &nbsp; ${certStatusBadge(internal)}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${internal ? `<a href="${escapeHtml(internal.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
-          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${internal?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="internal" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-top:1px dashed var(--border);padding-top:8px;">
-        <div style="font-size:13px;">🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
-          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="engineer" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
-        </div>
-      </div>
+// v8.83 — แถวรุ่นเครื่องแบบ matrix (เหมือนรูปแบบของ Sup Product): ➕ ไม่มีไฟล์ / ✅ มีไฟล์แล้ว — กดเพื่อเปิด modal รายละเอียด
+// แทบสีด้านซ้าย = รุ่นที่ตัวเองดูแล (myResponsibility) ไม่ว่าจะมีไฟล์ Cer หรือยังก็ตาม
+function engCertModelRowHtml(category, model, certMap, isMine){
+  const cert = certMap[category+'|'+model+'|'+_engCertTypeTab];
+  const has = !!cert;
+  return `<div class="eng-certmx-row${isMine?' mine':''}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-top:1px solid var(--border);${isMine?'border-left:4px solid var(--green);background:rgba(34,197,94,.06);':'border-left:4px solid transparent;'}">
+    <div style="font-size:13px;min-width:0;">
+      ${isMine?'<span title="รุ่นที่คุณดูแล" style="margin-right:4px;">🔧</span>':''}<span style="font-weight:600;">${escapeHtml(model)}</span>${certReqBadgeHtml(category,model)}
     </div>
+    <button class="eng-certmx-btn" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}"
+      title="${has?'มีไฟล์แล้ว — กดเพื่อดู/อัปใหม่':'ยังไม่มีไฟล์ — กดเพื่ออัปโหลด'}"
+      style="flex-shrink:0;background:none;cursor:pointer;font-size:12.5px;font-weight:700;
+        ${has ? 'border:none;color:var(--green);' : 'border:1px dashed var(--border);border-radius:6px;color:var(--text-faint);width:30px;height:26px;'}">
+      ${has ? '✅' : '➕'}
+    </button>
   </div>`;
 }
-// v8.60 — แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น (accordion กดเปิดทีละ Category) — อัปโหลดได้ไม่ว่าจะอยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล" หรือไม่ก็ตาม
-async function renderEngCertTab(){
+// v8.60/v8.83 — แท็บ Certificate ของ Engineer: โชว์ทุก Product/รุ่น (accordion กดเปิดทีละ Category, default ซ่อนทั้งหมด) — แยกแท็บย่อย ภายใน/ผู้ผลิต — อัปโหลดได้ไม่ว่าจะอยู่ในรายชื่อ "รุ่นเครื่องที่ดูแล" หรือไม่ก็ตาม
+let _engCertDataCache = null; // {certMap, myModelSet} กันโหลดซ้ำตอนสลับแท็บ/เปิดปิด category
+async function renderEngCertTab(forceReload){
+  document.querySelectorAll('.eng-certtype-tab-btn').forEach(btn=>{
+    const active = btn.getAttribute('data-certtype')===_engCertTypeTab;
+    btn.className = 'btn btn-sm eng-certtype-tab-btn' + (active?' btn-primary':' btn-ghost');
+  });
   const wrap = $('eng-cert-list');
-  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-  await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
-  const myCerts = await fsListCertificatesByOwner(myUserEmail);
-  const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
-  const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+  if(forceReload || !_engCertDataCache){
+    wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+    await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
+    const myCerts = await fsListCertificatesByOwner(myUserEmail);
+    const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
+    const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+    _engCertDataCache = { certMap, myModelSet };
+  }
+  const { certMap, myModelSet } = _engCertDataCache;
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
   wrap.innerHTML = cats.map(cat=>{
     const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
@@ -11516,7 +11538,7 @@ async function renderEngCertTab(){
         <div style="font-weight:600;font-size:13.5px;">${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></div>
         <span style="font-size:12px;color:var(--text-faint);">${isOpen?'▲ ซ่อน':'▼ แสดง'}</span>
       </div>
-      ${isOpen ? models.map(m=>engCertModelRowHtml(cat,m,certMap)).join('') : ''}
+      ${isOpen ? models.map(m=>engCertModelRowHtml(cat,m,certMap,myModelSet.has(cat+'|'+m))).join('') : ''}
     </div>`;
   }).join('');
   document.querySelectorAll('.eng-cert-cat-header').forEach(header=>{
@@ -11526,13 +11548,56 @@ async function renderEngCertTab(){
       renderEngCertTab();
     });
   });
-  wireCertUploadInputs();
+  document.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      openCertDetailModal('engineer', _engCertTypeTab, btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
+    });
+  });
 }
+document.querySelectorAll('.eng-certtype-tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    _engCertTypeTab = btn.getAttribute('data-certtype');
+    renderEngCertTab();
+  });
+});
+
+// v8.83 — modal รายละเอียด Certificate 1 ช่อง ใช้ร่วมกันทั้ง Engineer และ Sup Product
+let _certDetailCtx = null; // {role, certType, category, model}
+function openCertDetailModal(role, certType, category, model){
+  _certDetailCtx = { role, certType, category, model };
+  const certMap = role==='engineer' ? (_engCertDataCache && _engCertDataCache.certMap || {}) : _supCertDataCache;
+  const cert = certMap ? certMap[category+'|'+model+(role==='engineer'?('|'+certType):'')] : null;
+  $('cert-detail-title').textContent = (certType==='internal' ? '📋 Cer ภายใน' : '🏭 Cer ผู้ผลิต');
+  $('cert-detail-sub').textContent = `${category} · ${model}`;
+  $('cert-detail-status').innerHTML = certStatusBadge(cert);
+  const viewBtn = $('cert-detail-view-btn');
+  if(cert && cert.fileUrl){ viewBtn.style.display=''; viewBtn.href = cert.fileUrl; } else { viewBtn.style.display='none'; }
+  $('cert-detail-upload-label-text').textContent = cert ? 'อัปใหม่' : 'อัปโหลด';
+  $('cert-detail-modal').classList.add('show');
+}
+function closeCertDetailModal(){ $('cert-detail-modal').classList.remove('show'); _certDetailCtx = null; }
+$('cert-detail-modal-close').addEventListener('click', closeCertDetailModal);
+$('cert-detail-modal').addEventListener('click', e=>{ if(e.target===$('cert-detail-modal')) closeCertDetailModal(); });
+$('cert-detail-upload-input').addEventListener('change', async e=>{
+  const file = e.target.files[0]; if(!file || !_certDetailCtx) return;
+  const { role, certType, category, model } = _certDetailCtx;
+  const ownerEmail = myUserEmail;
+  const ownerName = nicknamesMap[myUserEmail] || myUserEmail;
+  closeCertDetailModal();
+  showLoadingOverlay('กำลังอัปโหลด Certificate...');
+  try{
+    await fsUploadCertificate(ownerEmail, ownerName, role, certType, category, model, file);
+    hideLoadingOverlay();
+    showToast('✓ อัปโหลด Certificate สำเร็จ');
+    if(role==='engineer') renderEngCertTab(true); else renderSupCertTab(true);
+  }catch(err){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+err.message); }
+  e.target.value = '';
+});
 
 // ---- UI: Sup Product — แท็บ Certificate (เฉพาะรุ่นที่ตัวเองดูแล, เฉพาะผู้ผลิต) ----
-async function renderSupCertTab(){
+let _supCertDataCache = null; // {category|model -> cert}
+async function renderSupCertTab(forceReload){
   const wrap = $('sup-cert-list');
-  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
   const myModels = [];
   Object.keys(DATA.categories||{}).sort(naturalSort).forEach(cat=>{
     (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort).forEach(m=> myModels.push({category:cat, model:m}));
@@ -11541,22 +11606,31 @@ async function renderSupCertTab(){
     wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่คุณดูแล</div>`;
     return;
   }
-  const myCerts = await fsListCertificatesByOwner(myUserEmail);
-  const certMap = {}; myCerts.filter(c=>c.role==='supproduct').forEach(c=> certMap[c.category+'|'+c.model] = c);
-  wrap.innerHTML = myModels.map(({category,model})=>{
+  if(forceReload || !_supCertDataCache){
+    wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
+    const myCerts = await fsListCertificatesByOwner(myUserEmail);
+    const certMap = {}; myCerts.filter(c=>c.role==='supproduct').forEach(c=> certMap[c.category+'|'+c.model] = c);
+    _supCertDataCache = certMap;
+  }
+  const certMap = _supCertDataCache;
+  wrap.innerHTML = `<div class="panel-block" style="padding:0;overflow:hidden;">` + myModels.map(({category,model})=>{
     const manu = certMap[category+'|'+model];
-    return `<div class="panel-block" style="padding:12px;margin-bottom:10px;">
-      <div style="font-weight:600;font-size:13.5px;margin-bottom:8px;">${escapeHtml(category)} — ${escapeHtml(model)}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div>🏭 Cer ผู้ผลิต &nbsp; ${certStatusBadge(manu)}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          ${manu ? `<a href="${escapeHtml(manu.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>` : ''}
-          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin:0;">📤 ${manu?'อัปใหม่':'อัปโหลด'}<input type="file" class="cert-upload-input" data-role="supproduct" data-certtype="manufacturer" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
-        </div>
-      </div>
+    const has = !!manu;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-top:1px solid var(--border);border-left:4px solid var(--green);background:rgba(34,197,94,.06);">
+      <div style="font-size:13px;"><span style="color:var(--text-faint);">${escapeHtml(category)}</span> — <span style="font-weight:600;">${escapeHtml(model)}</span></div>
+      <button class="eng-certmx-btn" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}"
+        title="${has?'มีไฟล์แล้ว — กดเพื่อดู/อัปใหม่':'ยังไม่มีไฟล์ — กดเพื่ออัปโหลด'}"
+        style="flex-shrink:0;background:none;cursor:pointer;font-size:12.5px;font-weight:700;
+          ${has ? 'border:none;color:var(--green);' : 'border:1px dashed var(--border);border-radius:6px;color:var(--text-faint);width:30px;height:26px;'}">
+        ${has ? '✅' : '➕'}
+      </button>
     </div>`;
-  }).join('');
-  wireCertUploadInputs();
+  }).join('') + `</div>`;
+  document.querySelectorAll('#sup-cert-list .eng-certmx-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      openCertDetailModal('supproduct', 'manufacturer', btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
+    });
+  });
 }
 
 // v8.60 — UI: Sup Product กำหนดว่ารุ่นไหนต้องมีใบ Cer แบบไหนบ้าง
@@ -11600,7 +11674,7 @@ async function renderSupCertReqList(){
   });
 }
 
-// ผูก event ให้ input[type=file] ของ Certificate ทุกอัน (เรียกซ้ำได้ทุกครั้งที่ render ใหม่)
+// v8.83 — ฟังก์ชันนี้เลิกใช้แล้ว (เปลี่ยนไปใช้ cert-detail-modal แบบรวมศูนย์แทน) เก็บไว้เผื่อโค้ดเก่าที่อื่นเรียกอยู่
 function wireCertUploadInputs(){
   document.querySelectorAll('.cert-upload-input').forEach(input=>{
     input.addEventListener('change', async e=>{
@@ -11616,7 +11690,7 @@ function wireCertUploadInputs(){
         await fsUploadCertificate(ownerEmail, ownerName, role, certType, category, model, file);
         hideLoadingOverlay();
         showToast('✓ อัปโหลด Certificate สำเร็จ');
-        if(role==='engineer') renderEngCertTab(); else renderSupCertTab();
+        if(role==='engineer') renderEngCertTab(true); else renderSupCertTab(true);
       }catch(err){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+err.message); }
     });
   });
