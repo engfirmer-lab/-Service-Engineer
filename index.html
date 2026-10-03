@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.80
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 10:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.81
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 10:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.80</title>
+<title>F1 Service — v8.81</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -275,6 +275,22 @@
   .orgchart-card-name{font-weight:600;}
   .orgchart-edit-row{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
   .orgchart-edit-row select{font-size:11px;padding:2px 4px;}
+  /* ===== แผนผังองค์กรแบบ Tree (เส้นเชื่อมกล่อง) — CSS-only, ไม่พึ่ง library ===== */
+  .orgchart-tree{--line:var(--border);overflow-x:auto;padding-bottom:8px;}
+  .orgchart-manager-row{display:flex;justify-content:center;margin-bottom:0;}
+  .orgchart-manager-box{background:#14532D;color:#fff;border-radius:10px;padding:12px 26px;text-align:center;min-width:140px;}
+  .orgchart-manager-box .lbl{font-size:10.5px;opacity:.8;}
+  .orgchart-manager-box .nm{font-size:14.5px;font-weight:700;margin-top:2px;}
+  .orgchart-trunk{width:2px;height:22px;background:var(--line);margin:0 auto;}
+  .orgchart-branches{display:flex;justify-content:center;gap:22px;position:relative;padding-top:22px;min-width:max-content;}
+  .orgchart-branches::before{content:'';position:absolute;top:0;left:50%;width:2px;height:22px;background:var(--line);}
+  .orgchart-branch{position:relative;padding-top:22px;min-width:160px;}
+  .orgchart-branch::before{content:'';position:absolute;top:0;left:50%;width:2px;height:22px;background:var(--line);}
+  .orgchart-branch::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--line);}
+  .orgchart-branch:only-child::after{display:none;}
+  .orgchart-branch:first-child:not(:only-child)::after{left:50%;}
+  .orgchart-branch:last-child:not(:only-child)::after{right:50%;}
+  .orgchart-section-label{font-size:11px;font-weight:700;color:var(--text-faint);text-align:center;margin:26px 0 2px;letter-spacing:.3px;}
   .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .form-grid.two{grid-template-columns:1fr 1fr;}
   .form-grid .full{grid-column:1/-1;}
@@ -1523,15 +1539,24 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <h2>ภาพรวม</h2>
       <div id="orgchart-stats" style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;"></div>
     </div>
-    <div class="panel-block">
-      <h2>สำนักงานใหญ่ (ส่วนกลาง / Office)</h2>
-      <p class="panel-sub">จัดกลุ่มตามตำแหน่งของคนที่เขตพื้นที่ = "ส่วนกลาง (Office)"</p>
-      <div id="orgchart-office" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
-    </div>
-    <div class="panel-block">
-      <h2>ทีมภาคสนาม (ตามเขตพื้นที่)</h2>
-      <p class="panel-sub">แต่ละคอลัมน์คือ 1 เขตพื้นที่ — "Sup Area" ของเขตนั้นจะแสดงเด่นเป็นหัวหน้าเขต (เป็นการแสดงผลเท่านั้น ไม่ใช่ field บังคับ)</p>
-      <div id="orgchart-field" style="display:flex;gap:14px;flex-wrap:wrap;"></div>
+    <div class="panel-block" style="overflow-x:auto;">
+      <div class="orgchart-tree">
+        <div class="orgchart-manager-row" id="orgchart-manager-row"></div>
+        <div class="orgchart-trunk"></div>
+        <div class="orgchart-branches">
+          <div class="orgchart-branch" style="min-width:auto;">
+            <div class="orgchart-col-title" style="margin-bottom:10px;">สำนักงานใหญ่ (ส่วนกลาง / Office)</div>
+            <div class="orgchart-trunk"></div>
+            <div class="orgchart-branches" id="orgchart-office"></div>
+          </div>
+          <div class="orgchart-branch" style="min-width:auto;">
+            <div class="orgchart-col-title" style="margin-bottom:10px;">ทีมภาคสนาม (ตามเขตพื้นที่)</div>
+            <div class="orgchart-trunk"></div>
+            <div class="orgchart-branches" id="orgchart-field"></div>
+          </div>
+        </div>
+      </div>
+      <p class="panel-sub" style="margin-top:18px;">"Sup Area" ของแต่ละเขตจะแสดงเด่น (⭐) เป็นหัวหน้าเขต (เป็นการแสดงผลเท่านั้น ไม่ใช่ field บังคับ)</p>
     </div>
     <div style="font-size:11px;color:var(--text-faint);padding:4px 2px;">* แสดงเฉพาะผู้ที่กรอกโปรไฟล์ (userProfiles) แล้วเท่านั้น คนที่ยังไม่เคยกรอกจะยังไม่ปรากฏในผังนี้</div>
   </div>
@@ -1763,8 +1788,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.80";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 10:20 น. เวลาไทย";
+const APP_VERSION = "8.81";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 10:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4802,51 +4827,56 @@ function renderOrgChart(){
     <div><b>${fieldProfiles.length}</b> ภาคสนาม</div>
   `;
 
-  // ---- สำนักงานใหญ่: Manager แยกเป็นกล่องบนสุด, ที่เหลือจัดเป็นคอลัมน์ตาม position ที่มีจริง ----
+  // ---- กล่อง Manager บนสุดของแผนผัง (โหนดราก) ----
   const managers = officeProfiles.filter(p=>p.position==='Manager');
   const officeRest = officeProfiles.filter(p=>p.position!=='Manager');
+  $('orgchart-manager-row').innerHTML = managers.length
+    ? managers.map(p=>`<div class="orgchart-manager-box"><div class="lbl">Manager</div><div class="nm">${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('')
+    : `<div class="orgchart-manager-box" style="opacity:.5;"><div class="lbl">Manager</div><div class="nm">(ยังไม่มี)</div></div>`;
+
+  // ---- สำนักงานใหญ่: จัดเป็นกิ่งตาม position ที่มีจริง (ไม่รวม Manager ซึ่งอยู่บนสุดแล้ว) ----
   const officePositionsPresent = ORGCHART_POSITIONS.filter(pos=>pos!=='Manager' && officeRest.some(p=>p.position===pos));
   // เผื่อกรณี position ไม่อยู่ในลิสต์มาตรฐาน (ข้อมูลเก่า/แปลก) ก็ยังโชว์ให้เห็น ไม่ตกหล่น
   officeRest.forEach(p=>{ if(p.position && !officePositionsPresent.includes(p.position)) officePositionsPresent.push(p.position); });
 
   let officeHtml = '';
-  officeHtml += `<div class="orgchart-col" style="min-width:160px;">
-      <div class="orgchart-col-title">Manager</div>
-      ${managers.length ? managers.map(p=>orgChartCardHtml(p, canEdit)).join('') : orgChartEmptyCardHtml()}
-    </div>`;
-  officePositionsPresent.forEach(pos=>{
-    const people = officeRest.filter(p=>p.position===pos);
-    officeHtml += `<div class="orgchart-col" style="min-width:160px;">
-        <div class="orgchart-col-title">${escapeHtml(pos)}</div>
-        ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
-      </div>`;
-  });
-  $('orgchart-office').innerHTML = officeHtml || '<div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตส่วนกลาง</div>';
+  if(officePositionsPresent.length===0){
+    officeHtml = '<div class="orgchart-branch" style="min-width:auto;padding-top:0;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตส่วนกลาง</div></div>';
+  } else {
+    officePositionsPresent.forEach(pos=>{
+      const people = officeRest.filter(p=>p.position===pos);
+      officeHtml += `<div class="orgchart-branch"><div class="orgchart-col">
+          <div class="orgchart-col-title">${escapeHtml(pos)}</div>
+          ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
+        </div></div>`;
+    });
+  }
+  $('orgchart-office').innerHTML = officeHtml;
 
-  // ---- ทีมภาคสนาม: คอลัมน์ตามเขตพื้นที่ (8 เขตตามลิสต์มาตรฐาน) — Sup Area ของเขตนั้นขึ้นก่อนเป็นหัวหน้าเขต ----
+  // ---- ทีมภาคสนาม: กิ่งตามเขตพื้นที่ (8 เขตตามลิสต์มาตรฐาน) — Sup Area ของเขตนั้นขึ้นก่อนเป็นหัวหน้าเขต ----
   const fieldAreas = ORGCHART_AREAS.filter(a=>a!==ORGCHART_OFFICE_AREA);
   let fieldHtml = '';
   fieldAreas.forEach(area=>{
     const people = fieldProfiles.filter(p=>p.area===area);
-    if(people.length===0) return; // เขตที่ยังไม่มีใครกรอกเลย ไม่ต้องแสดงคอลัมน์ว่างๆ ให้รก
+    if(people.length===0) return; // เขตที่ยังไม่มีใครกรอกเลย ไม่ต้องแสดงกิ่งว่างๆ ให้รก
     const leads = people.filter(p=>p.position==='Sup Area');
     const members = people.filter(p=>p.position!=='Sup Area');
-    fieldHtml += `<div class="orgchart-col" style="min-width:170px;">
+    fieldHtml += `<div class="orgchart-branch"><div class="orgchart-col">
         <div class="orgchart-col-title">${escapeHtml(area)}</div>
         ${leads.map(p=>orgChartCardHtml(p, canEdit, true)).join('')}
         ${members.map(p=>orgChartCardHtml(p, canEdit)).join('')}
-      </div>`;
+      </div></div>`;
   });
   // เขตพื้นที่ที่มีคนแต่ area ไม่ตรงกับลิสต์มาตรฐาน (ข้อมูลเก่า/พิมพ์เอง) — กันตกหล่น
   const extraAreas = [...new Set(fieldProfiles.filter(p=>!ORGCHART_AREAS.includes(p.area)).map(p=>p.area))];
   extraAreas.forEach(area=>{
     const people = fieldProfiles.filter(p=>p.area===area);
-    fieldHtml += `<div class="orgchart-col" style="min-width:170px;">
+    fieldHtml += `<div class="orgchart-branch"><div class="orgchart-col">
         <div class="orgchart-col-title">${escapeHtml(area)} <span style="color:var(--text-faint);font-weight:400;">(เขตนอกลิสต์มาตรฐาน)</span></div>
         ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
-      </div>`;
+      </div></div>`;
   });
-  $('orgchart-field').innerHTML = fieldHtml || '<div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตภาคสนาม</div>';
+  $('orgchart-field').innerHTML = fieldHtml || '<div class="orgchart-branch" style="min-width:auto;padding-top:0;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตภาคสนาม</div></div>';
 
   if(canEdit) wireOrgChartEditControls();
 }
