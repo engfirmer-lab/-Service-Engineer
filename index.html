@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.83
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 19:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.84
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 21:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.83</title>
+<title>F1 Service — v8.84</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1825,8 +1825,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.83";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 19:10 น. เวลาไทย";
+const APP_VERSION = "8.84";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 21:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -11520,11 +11520,17 @@ async function renderEngCertTab(forceReload){
   const wrap = $('eng-cert-list');
   if(forceReload || !_engCertDataCache){
     wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-    await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
-    const myCerts = await fsListCertificatesByOwner(myUserEmail);
-    const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
-    const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
-    _engCertDataCache = { certMap, myModelSet };
+    try{
+      await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
+      const myCerts = await fsListCertificatesByOwner(myUserEmail);
+      const certMap = {}; myCerts.forEach(c=> certMap[c.category+'|'+c.model+'|'+c.certType] = c);
+      const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+      _engCertDataCache = { certMap, myModelSet };
+    }catch(err){
+      wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
+      console.error('renderEngCertTab error:', err);
+      return;
+    }
   }
   const { certMap, myModelSet } = _engCertDataCache;
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
@@ -11608,9 +11614,15 @@ async function renderSupCertTab(forceReload){
   }
   if(forceReload || !_supCertDataCache){
     wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-    const myCerts = await fsListCertificatesByOwner(myUserEmail);
-    const certMap = {}; myCerts.filter(c=>c.role==='supproduct').forEach(c=> certMap[c.category+'|'+c.model] = c);
-    _supCertDataCache = certMap;
+    try{
+      const myCerts = await fsListCertificatesByOwner(myUserEmail);
+      const certMap = {}; myCerts.filter(c=>c.role==='supproduct').forEach(c=> certMap[c.category+'|'+c.model] = c);
+      _supCertDataCache = certMap;
+    }catch(err){
+      wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
+      console.error('renderSupCertTab error:', err);
+      return;
+    }
   }
   const certMap = _supCertDataCache;
   wrap.innerHTML = `<div class="panel-block" style="padding:0;overflow:hidden;">` + myModels.map(({category,model})=>{
