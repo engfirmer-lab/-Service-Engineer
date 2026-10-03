@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.79
-  อัปเดตล่าสุด   : 3 ตุลาคม 2569 10:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.80
+  อัปเดตล่าสุด   : 3 ตุลาคม 2569 10:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.79</title>
+<title>F1 Service — v8.80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1254,7 +1254,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <!-- โหมดปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานส่วนนี้ได้ (ซ่อนด้วย JS ใน updateModeButtonVisibility) -->
     <div class="panel-block" id="maintenance-mode-panel" style="display:none;">
       <h2>🔧 ล็อกหน้าปิดปรับปรุง</h2>
-      <p class="panel-sub">เลือกติ๊กเฉพาะหน้า (รวมหน้าย่อย) ที่ต้องการปิด — ทุกคน (ยกเว้น Super Admin) ที่กดเข้าหน้านั้นจะเจอข้อความ "ปิดปรับปรุง" แทนทันที ส่วนหน้าที่ไม่ติ๊กไว้ใช้งานได้ตามปกติ</p>
+      <p class="panel-sub">เลือกติ๊กเฉพาะหน้า (รวมหน้าย่อย) ที่ต้องการปิด — เฉพาะหน้าที่คนอื่น (ไม่ใช่ Super Admin/Manager) ใช้งานเท่านั้น ตั้งค่าระบบ/Manager ไม่อยู่ในรายการนี้เพราะเป็นพื้นที่ของ Super Admin กับ Manager เอง ทุกคนที่กดเข้าหน้าที่ถูกล็อกจะเจอข้อความ "ปิดปรับปรุง" แทนทันที ส่วนหน้าที่ไม่ติ๊กไว้ใช้งานได้ตามปกติ</p>
       <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;padding:10px;border:1px solid var(--red);border-radius:8px;cursor:pointer;background:rgba(220,38,38,0.06);">
         <input type="checkbox" id="maintenance-mode-all-toggle" style="width:19px;height:19px;">
         <span><b style="color:var(--red);">🚫 ปิดทั้งแอปทั้งระบบ</b> — เข้าแอปไม่ได้เลยแม้แต่หน้าเดียว (ใช้ตอนต้องปรับปรุงทั้งระบบ) ยกเว้นติ๊กนี้ อย่างอื่นด้านล่างไม่มีผล</span>
@@ -1763,8 +1763,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.79";
-const APP_UPDATED_AT = "3 ตุลาคม 2569 10:10 น. เวลาไทย";
+const APP_VERSION = "8.80";
+const APP_UPDATED_AT = "3 ตุลาคม 2569 10:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4006,21 +4006,23 @@ $('version-update-refresh-btn').addEventListener('click', ()=>location.reload())
    ถ้า user กำลังอยู่หน้าที่เพิ่งถูกล็อกระหว่างเปิดแอปค้างอยู่ จะโดนสลับออกไปหน้า eng ให้อัตโนมัติทันที (ไม่ต้อง Refresh เอง) */
 // key 'ALL' = ปิดทั้งแอปทั้งระบบ (ใช้ตอนต้องปรับปรุงใหญ่) — ไม่อยู่ใน list นี้ มีสวิตช์แยกต่างหากที่เด่นกว่าด้านบน
 // รายการหน้าหลัก + หน้าย่อย (children) ของแต่ละหน้า — ล็อกหน้าหลักจะบล็อกทุกหน้าย่อยในนั้นไปด้วยโดยอัตโนมัติ (ดู isModeLocked)
+// เฉพาะหน้าที่ "คนอื่น" (ไม่ใช่ Super Admin/Manager) ใช้งานเท่านั้น — ตั้งค่าระบบ/Manager/Roster เป็นพื้นที่ของ Super Admin กับ Manager เอง เลยไม่ให้ล็อกตัวเองได้
 const MAINTENANCE_MODE_LIST = [
-  { key:'eng',           label:'🩺 Engineer (Troubleshooting)' },
-  { key:'sup',           label:'📋 Sup Product' },
-  { key:'mgr',           label:'👔 Manager (ภาพรวม)', children:[
-    { key:'mgr:summary', label:'สรุปข้อมูล' },
-    { key:'mgr:pending', label:'งานค้าง/รออนุมัติ' },
+  { key:'eng', label:'🩺 Engineer', children:[
+    { key:'eng:trbl',         label:'Troubleshooting' },
+    { key:'eng:service_docs', label:'เอกสาร Service' },
+    { key:'eng:my_work',      label:'เช็คสถานะ' },
+    { key:'eng:claim',        label:'บันทึกข้อมูล' },
+    { key:'eng:cert',         label:'Certificate' },
   ]},
-  { key:'settings',      label:'⚙️ ตั้งค่าระบบ', children:[
-    { key:'settings:access', label:'สิทธิ์ผู้ใช้' },
-    { key:'settings:owner',  label:'Product & Category' },
+  { key:'sup', label:'📋 Sup Product', children:[
+    { key:'sup:trbl',   label:'Troubleshooting' },
+    { key:'sup:docs',   label:'จัดการเอกสาร' },
+    { key:'sup:claims', label:'เคลม/แจ้งปัญหา' },
+    { key:'sup:cert',   label:'Certificate' },
   ]},
-  { key:'backup',        label:'💾 Backup' },
   { key:'admin-service', label:'🔧 ตรวจรับอะไหล่ (Admin Service)' },
   { key:'orgchart',      label:'🗂️ ผังองค์กร' },
-  { key:'roster',        label:'🧑‍🤝‍🧑 Roster (Manager)' },
 ];
 let maintenanceMode = { lockedModes:{}, message:'' };
 let _maintenanceWatchStarted = false;
@@ -5098,6 +5100,8 @@ function _engShowTab(tab){
 }
 document.querySelectorAll('#eng-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
+    const _tab = btn.getAttribute('data-tab');
+    if(isModeLocked('eng:'+_tab) && !isSuperAdmin()){ showToast('🔒 '+maintenanceLockMessage()); return; }
     document.querySelectorAll('#eng-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
     engActiveTab = btn.getAttribute('data-tab');
     _engShowTab(engActiveTab);
@@ -6033,6 +6037,8 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
 /* ===================== SUP PRODUCT: sub-tabs ===================== */
 document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
+    const _tab = btn.getAttribute('data-tab');
+    if(isModeLocked('sup:'+_tab) && !isSuperAdmin()){ showToast('🔒 '+maintenanceLockMessage()); return; }
     document.querySelectorAll('#sup-subtabs button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
     supActiveTab = btn.getAttribute('data-tab');
     $('sup-tab-trbl').style.display = supActiveTab==='trbl' ? 'block':'none';
