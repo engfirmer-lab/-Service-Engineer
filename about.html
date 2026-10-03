@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1 Service — เกี่ยวกับแอป</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#131924; --border:#1f2937; --text:#e5e7eb;
+    --text-dim:#9ca3af; --accent:#2563eb; --green:#16a34a;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f8fafc; --panel:#ffffff; --border:#e2e8f0; --text:#0f172a; --text-dim:#475569; }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
+    line-height:1.7;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:40px 20px 60px;}
+  .logo-row{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+  .logo-row .mark{
+    width:52px;height:52px;border-radius:12px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;flex-shrink:0;
+  }
+  h1{font-size:26px;margin:0 0 4px;}
+  .sub{color:var(--text-dim);font-size:14px;margin:0;}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:22px 24px;margin:22px 0;
+  }
+  h2{font-size:17px;margin:0 0 10px;}
+  p{margin:0 0 12px;font-size:14.5px;color:var(--text);}
+  p:last-child{margin-bottom:0;}
+  ul{margin:0;padding-left:20px;font-size:14.5px;}
+  li{margin-bottom:6px;}
+  .badge{
+    display:inline-block;background:rgba(37,99,235,.12);color:var(--accent);
+    font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;margin-bottom:4px;
+  }
+  footer{margin-top:36px;font-size:12.5px;color:var(--text-dim);text-align:center;}
+  footer a{color:var(--accent);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo-row">
+      <div class="mark">F1</div>
+      <div>
+        <h1>F1 Service</h1>
+        <p class="sub">Firmer Service Center — ระบบจัดการงานบริการภายในองค์กร</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="badge">เกี่ยวกับแอปนี้</span>
+      <h2>แอปนี้คืออะไร</h2>
+      <p>
+        F1 Service เป็นเว็บแอปพลิเคชันสำหรับใช้งานภายในของ <strong>บริษัท เฟิร์มเมอร์ จำกัด</strong>
+        พัฒนาขึ้นเพื่อให้ทีมวิศวกรบริการ (Engineer) และหัวหน้าฝ่ายผลิตภัณฑ์ (Sup Product)
+        ใช้บันทึก ติดตาม และจัดการข้อมูลงานบริการเครื่องมือแพทย์ เช่น การเคลมอะไหล่
+        เอกสารประกอบการซ่อม และ Certificate ของพนักงาน ไว้ในที่เดียวกัน
+      </p>
+      <p>
+        ผู้ใช้งานทุกคนเป็นพนักงานของบริษัทเท่านั้น และต้องเข้าสู่ระบบด้วยบัญชี Google
+        ที่ได้รับอนุมัติจากผู้ดูแลระบบก่อนจึงจะใช้งานแอปได้
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>แอปนี้ใช้ข้อมูลอะไรบ้าง</h2>
+      <ul>
+        <li>เก็บรูปภาพ/เอกสารประกอบการเคลมอะไหล่และ Certificate ไว้ใน Google Drive ขององค์กร</li>
+        <li>บันทึกข้อมูลงานบริการ (ปัญหาที่พบ, อะไหล่ที่ใช้, สถานะงาน) ไว้ใน Firebase ของบริษัท</li>
+        <li>ไม่มีการแชร์ข้อมูลต่อให้บุคคลหรือองค์กรภายนอก</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>ใครใช้แอปนี้</h2>
+      <p>พนักงานฝ่ายบริการ (Engineer / Sup Product / Admin Service) ของบริษัท เฟิร์มเมอร์ จำกัด เท่านั้น</p>
+    </div>
+
+    <footer>
+      ดูนโยบายความเป็นส่วนตัวได้ที่ <a href="./privacy.html">หน้านโยบายความเป็นส่วนตัว</a><br>
+      © บริษัท เฟิร์มเมอร์ จำกัด
+    </footer>
+  </div>
+</body>
+</html>
