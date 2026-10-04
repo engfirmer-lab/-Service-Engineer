@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.86
-  อัปเดตล่าสุด   : 4 ตุลาคม 2569 00:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.90
+  อัปเดตล่าสุด   : 4 ตุลาคม 2569 11:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.86</title>
+<title>F1 Service — v8.90</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -798,6 +798,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button class="btn btn-ghost btn-sm" id="check-dup-files-btn">🔍 ตรวจสอบไฟล์ซ้ำ</button>
+            <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="docs" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
           </div>
           <div id="dup-files-status" style="font-size:12.5px;color:var(--text-faint);margin-bottom:10px;"></div>
           <div id="dup-files-result"></div>
@@ -825,6 +826,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
         <p class="panel-sub"><b>วางไฟล์เองใน Drive แล้ว หรือลบไฟล์ทิ้งไปแล้ว?</b> กดปุ่มนี้เพื่อให้แอปไปสำรวจโฟลเดอร์ครั้งเดียว — เจอไฟล์ใหม่จะสร้างลิงก์ให้อัตโนมัติ เจอลิงก์ที่ไฟล์หายไปแล้วจะแจ้งให้ลบออกจากระบบ</p>
         <button class="btn btn-ghost btn-sm" id="sync-drive-docs-btn">🔄 ซิงค์ + ตรวจสอบลิงก์เสีย</button>
+        <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="all" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
         <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
         <div id="dead-links-result" style="margin-top:10px;"></div>
       </div>
@@ -859,6 +861,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       </div>
       <div class="panel-block">
         <h2 id="claims-list-title">รายการเคลม</h2>
+        <div style="margin-bottom:8px;"><button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="claims" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button></div>
         <div id="claims-list"></div>
       </div>
       <!-- ลิงก์ Google Sheet ประวัติเคลมที่เสร็จแล้ว — ค้างไว้ถาวรที่ล่างสุดของหน้า เหมือนลิงก์เช็ค Database ให้กดเข้าไปดูได้ตลอดเวลา -->
@@ -871,7 +874,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div id="sup-tab-cert" style="display:none;">
       <div class="panel-block">
         <h2>Certificate ผู้ผลิตของฉัน</h2>
-        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน)</p>
+        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน) <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="cert" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button></p>
         <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1432,6 +1435,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
               <button id="rp-manager-search-clear" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:13px;padding:0;">✕</button>
             </div>
             <button class="btn btn-ghost btn-sm" id="rp-manager-refresh-btn">🔄 รีเฟรช</button>
+            <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="rp" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
           </div>
           <div id="rp-manager-list-wrap">
             <div id="rp-manager-list"></div>
@@ -1627,6 +1631,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
            style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:6px 10px;border-radius:8px;background:var(--surface2,rgba(0,0,0,.06));color:var(--text);text-decoration:none;border:1px solid var(--border);white-space:nowrap;flex-shrink:0;">
           📋 ดูประวัติที่รับแล้วใน Sheet
         </a>
+        <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="rp" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
       </div>
       <div id="admin-service-rp-list">
         <div style="color:var(--text-faint);font-size:13px;padding:16px 0;">⏳ กำลังโหลด...</div>
@@ -1821,8 +1826,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.86";
-const APP_UPDATED_AT = "4 ตุลาคม 2569 00:30 น. เวลาไทย";
+const APP_VERSION = "8.90";
+const APP_UPDATED_AT = "4 ตุลาคม 2569 11:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2011,7 +2016,7 @@ function renderDownModalCauses(){
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
-            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
             <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
@@ -2061,7 +2066,11 @@ let reviewingPendingErrorId = null; // set when Sup Product clicks "แก้ไ
 
 const $ = id => document.getElementById(id);
 function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// v8.90 — แยกคีย์ "ประเภท|รุ่น" ที่จุด | แรกเท่านั้น (ชื่อรุ่นที่มี | ไม่ถูกตัดทิ้ง)
+function splitCatModel(k){ k=String(k); const i=k.indexOf('|'); return i<0 ? [k,''] : [k.slice(0,i), k.slice(i+1)]; }
+function escapeHtml(s){ if(s===null||s===undefined||s===false) return ''; s=String(s); return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// v8.90 — อนุญาตเฉพาะลิงก์ http(s) ใส่ใน href / window.open (กัน javascript: ที่เขียนเข้า Firestore ตรงๆ)
+function safeHttpUrl(u){ u = String(u==null?'':u).trim(); return /^https?:\/\//i.test(u) ? u : ''; }
 
 // อุปกรณ์/อะไหล่ที่ใช้ในแต่ละวิธีแก้ — เดิมเป็นข้อความยัดรวมบรรทัดเดียว เปลี่ยนเป็น array เพิ่ม/ลบได้ทีละรายการ แสดงเป็นลิสต์แยกบรรทัดอ่านง่ายกว่า
 // toItemList แปลงข้อมูลเก่า (string เดี่ยว คั่นด้วย , หรือ ;) เป็น array อัตโนมัติ ไม่กระทบข้อมูลเดิมที่มีอยู่แล้วใน Firestore
@@ -2264,16 +2273,20 @@ function chooseGroupDeleteTargets(siblingDocs, currentId){
 async function execGroupDelete(idsToDelete, driveFileId){
   showLoadingOverlay('กำลังลบ...');
   try{
-    for(const did of idsToDelete){ await fsDeleteDocument(did); }
-    DATA.documents = DATA.documents.filter(x=>!idsToDelete.includes(x.id));
+    // v8.88 — ลบไฟล์ใน Drive ก่อน (ถ้าลบไม่ได้ จะยังไม่แตะรายการในแอป กันไฟล์ค้างโดยไม่มีรายการอ้างอิง)
     if(driveFileId){
-      const stillReferenced = DATA.documents.some(x=>x.url && extractDriveFileId(x.url)===driveFileId);
+      const stillReferenced = DATA.documents.some(x=>!idsToDelete.includes(x.id) && x.url && extractDriveFileId(x.url)===driveFileId);
       if(!stillReferenced){
-        const token = await ensureDriveAccess();
-        const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-        if(!delRes.ok && delRes.status!==404) throw new Error('Drive ตอบกลับรหัส '+delRes.status+' (อาจเป็นเพราะไม่มีสิทธิ์ลบไฟล์นี้)');
+        try{ await driveDeleteFile(driveFileId); }
+        catch(e){
+          hideLoadingOverlay();
+          if(!confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ: '+e.message+'\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?')){ renderAll(); return false; }
+          showLoadingOverlay('กำลังลบ...');
+        }
       }
     }
+    for(const did of idsToDelete){ await fsDeleteDocument(did); }
+    DATA.documents = DATA.documents.filter(x=>!idsToDelete.includes(x.id));
   }catch(e){ hideLoadingOverlay(); showToast('⚠ ลบไม่สำเร็จบางส่วน: '+e.message); renderAll(); return false; }
   hideLoadingOverlay();
   renderAll();
@@ -2368,24 +2381,26 @@ async function loadData(){
     claimsSnap.forEach(d=> DATA.claims.push({ id:d.id, ...d.data() }));
     if(catDoc.exists()){ const cd = catDoc.data(); DATA.categories = cd.categories||{}; DATA.owners = cd.owners||{categoryOwners:{},modelOverrides:{}}; }
     if(Object.keys(DATA.categories).length===0){
-      // ครั้งแรกที่ไม่มีข้อมูล — สร้างค่าเริ่มต้นให้ในฐานข้อมูลจริงเลย
+      // ครั้งแรกที่ "ไม่มีเอกสาร" จริงๆ เท่านั้น — สร้างค่าเริ่มต้น (v8.90: ไม่เขียนทับถ้าเอกสารมีอยู่แต่ว่าง และเขียนเฉพาะ Editor ขึ้นไป)
       DATA.categories = {...DEFAULT_CATEGORIES};
       DATA.owners = { categoryOwners: {...DEFAULT_CATEGORY_OWNER}, modelOverrides: {...DEFAULT_MODEL_OVERRIDE} };
-      await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners });
+      if(!catDoc.exists() && isEditor()) await sdk.setDoc(sdk.doc(db,'meta','categories'), { categories: DATA.categories, owners: DATA.owners });
     }
     if(supDoc.exists() && Array.isArray(supDoc.data().names) && supDoc.data().names.length>0){
       SUP_PRODUCTS = supDoc.data().names;
     } else {
       // ครั้งแรกที่ไม่มีรายชื่อ — สร้างค่าเริ่มต้นให้ในฐานข้อมูลจริงเลย
-      await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS });
+      if(!supDoc.exists() && isEditor()) await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS });
     }
     if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
     renderSupIdentityOptions();
     setStatus(false, `พร้อมใช้งาน`);
   }catch(e){
-    setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — ใช้ข้อมูลตัวอย่างชั่วคราว');
-    showToast('⚠ โหลดข้อมูลจริงไม่สำเร็จ: '+e.message);
-    DATA = seedData();
+    // v8.90 — โหลดพลาดต้องไม่สลับไปใช้ข้อมูลตัวอย่าง (ผู้ใช้แก้ไขบนข้อมูลปลอมแล้วเขียนขยะลงฐานข้อมูลจริงได้) → แสดงว่างพร้อมแจ้งให้รีเฟรช
+    setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — กรุณารีเฟรชหน้า');
+    showToast('⚠ โหลดข้อมูลไม่สำเร็จ: '+e.message+' — กรุณารีเฟรชหน้า');
+    DATA = { errors:[], documents:[], proposals:[], pendingErrors:[], claims:[], claimNotices:[], categories:{}, owners:{categoryOwners:{},modelOverrides:{}} };
+    window._dataLoadFailed = true;
     ensureDataShape();
     renderSupIdentityOptions();
   }
@@ -2532,13 +2547,17 @@ async function fsSaveSolution(errorId, solutionId, fields){ showLoadingOverlay('
 async function fsDeleteSolution(errorId, solutionId){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId)); }finally{ hideLoadingOverlay(); } }
 async function fsAddFeedback(errorId, solutionId, entry){ showLoadingOverlay('กำลังบันทึก...'); try{
   await initFirebase(); const sdk=window._firebaseSdk;
-  await sdk.updateDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId), { feedback: sdk.arrayUnion(entry) });
-  await sdk.updateDoc(sdk.doc(db,'errors',errorId), { totalUps: sdk.increment(1) });
+  const batch = sdk.writeBatch(db); // v8.90 — เขียนพร้อมกันแบบ atomic (เดิม 2 คำสั่งแยก ถ้าคำสั่งหลังพลาดตัวนับโหวตเพี้ยน)
+  batch.update(sdk.doc(db,'errors',errorId,'solutions',solutionId), { feedback: sdk.arrayUnion(entry) });
+  batch.update(sdk.doc(db,'errors',errorId), { totalUps: sdk.increment(1) });
+  await batch.commit();
 }finally{ hideLoadingOverlay(); } }
 async function fsRemoveFeedback(errorId, solutionId, entry){ showLoadingOverlay('กำลังลบ...'); try{
   await initFirebase(); const sdk=window._firebaseSdk;
-  await sdk.updateDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId), { feedback: sdk.arrayRemove(entry) });
-  await sdk.updateDoc(sdk.doc(db,'errors',errorId), { totalUps: sdk.increment(-1) });
+  const batch = sdk.writeBatch(db);
+  batch.update(sdk.doc(db,'errors',errorId,'solutions',solutionId), { feedback: sdk.arrayRemove(entry) });
+  batch.update(sdk.doc(db,'errors',errorId), { totalUps: sdk.increment(-1) });
+  await batch.commit();
 }finally{ hideLoadingOverlay(); } }
 // (v8.00) ลบ showLoadingOverlay ออกจาก fsIncrementView — การนับ view ไม่ควรบล็อก UI
 // ทำงานเงียบๆ เป็น fire-and-forget (ถ้าล้มเหลวก็แค่ console.warn ไม่รบกวนผู้ใช้)
@@ -2621,10 +2640,49 @@ async function fsBatchUpdateField(collectionName, docIds, fields){ showLoadingOv
 // (v8.00) รวม extractDriveFileId เข้ากับ driveFileIdFromUrl (ด้านล่าง) ซึ่งครอบคลุม URL ทุกรูปแบบได้ดีกว่า
 // alias ไว้เพื่อไม่ต้องเปลี่ยน call site ทั้งหมด — ทั้งสองชื่อทำงานเหมือนกันทุกประการ
 function extractDriveFileId(url){ return driveFileIdFromUrl(url); }
+// v8.88 — ฟังก์ชันลบไฟล์/โฟลเดอร์ใน Drive "ตัวเดียว" ที่เช็คผลจริง (เดิมมีซ้ำ 2 ตัว ตัวหลังกลืน error ทิ้ง ทำให้ลบไม่ติดแต่แจ้งสำเร็จ)
+// v8.90 — ลืมแคชโฟลเดอร์ที่ถูกลบ/ย้ายไปแล้ว กันอัปโหลดรอบถัดไปไปลงโฟลเดอร์ที่ไม่มีอยู่ (404)
+function driveCacheForgetId(id){ try{ for(const [k,v] of Array.from(_driveFolderCache.entries())) if(v===id) _driveFolderCache.delete(k); }catch(e){} }
+// คืนค่า: 'deleted' (ลบถาวร) | 'trashed' (ไม่ใช่เจ้าของไฟล์ → ย้ายลงถังขยะแทน) | 'missing' (ไม่พบไฟล์ — ถือว่าไม่เหลือแล้ว) | 'none' (ไม่มี id)
+// ถ้าลบไม่ได้จริง → throw พร้อมเหตุผลจาก Google
 async function driveDeleteFile(fileId){
+  if(!fileId) return 'none';
   const token = await ensureDriveAccess();
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok && res.status!==404) throw new Error('ลบไฟล์ Drive ไม่สำเร็จ ('+res.status+')');
+  const url = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true`;
+  const auth = { Authorization:`Bearer ${token}` };
+  const res = await fetch(url, { method:'DELETE', headers:auth });
+  if(res.ok){ driveCacheForgetId(fileId); return 'deleted'; }
+  if(res.status===404){ driveCacheForgetId(fileId); return 'missing'; }
+  const msg = await googleApiErrorMessage(res);
+  if(res.status===403){
+    const r2 = await fetch(url, { method:'PATCH', headers:{...auth,'Content-Type':'application/json'}, body: JSON.stringify({trashed:true}) });
+    if(r2.ok){ driveCacheForgetId(fileId); return 'trashed'; }
+    throw new Error('ไม่มีสิทธิ์ลบไฟล์ใน Drive (เจ้าของไฟล์เป็นอีกบัญชี): '+(await googleApiErrorMessage(r2)));
+  }
+  throw new Error('Drive ตอบ '+res.status+' — '+msg);
+}
+// ลบหลายไฟล์ แล้วรายงานผล — ไม่ throw: คืน {failed:[{id,msg}], missing:n, done:n}
+async function driveDeleteMany(ids){
+  const out = { failed:[], missing:0, done:0 };
+  const uniq = Array.from(new Set((ids||[]).filter(Boolean)));
+  for(const id of uniq){
+    try{ const r = await driveDeleteFile(id); if(r==='missing') out.missing++; else out.done++; }
+    catch(e){ out.failed.push({ id, msg:e.message }); }
+  }
+  return out;
+}
+function driveFailSummary(r){ return r.failed.length ? r.failed.length+' ไฟล์ ('+r.failed[0].msg+')' : ''; }
+// ลบทุกอย่างของเคลมใน Drive: โฟลเดอร์เคลม (ไฟล์แนบ + รูปสรุปอยู่ข้างใน) + ไฟล์แนบ/รูปสรุปรายไฟล์ (กรณีเคลมเก่าไม่มีโฟลเดอร์)
+async function deleteClaimDriveAssets(c){
+  const ids = [];
+  const folderId = c.driveFolderUrl ? ((c.driveFolderUrl.match(/\/folders\/([A-Za-z0-9_-]+)/)||[])[1]||'') : '';
+  if(folderId) ids.push(folderId);
+  Object.values(c.attachments||{}).flat().forEach(a=>{ const f = a.driveFileId || extractDriveFileId(a.url||''); if(f) ids.push(f); });
+  if(c.summaryImageFileId) ids.push(c.summaryImageFileId);
+  // ลบไฟล์ก่อน แล้วค่อยลบโฟลเดอร์ (ถ้าโฟลเดอร์ถูกลบก่อน ไฟล์ข้างในจะกลายเป็น 'missing' ซึ่งก็ถือว่าไม่เหลือ)
+  const files = ids.filter(x=>x!==folderId), r = await driveDeleteMany(files);
+  if(folderId){ const r2 = await driveDeleteMany([folderId]); r.failed.push(...r2.failed); r.missing += r2.missing; r.done += r2.done; }
+  return r;
 }
 // ยืนยัน + ลบไฟล์ที่อัปโหลดขึ้น Google Drive แล้วทันที — ลบสำเร็จจริงค่อยเอาออกจากฟอร์ม กันไฟล์ตกค้างเงียบๆ แบบที่เคยเจอ
 // ใช้กับทุกจุดที่ลบไฟล์ที่อัปโหลดขึ้น Drive แล้ว (รูป/วิดีโอในวิธีแก้ไข, เอกสาร) — ยังไม่เคยอัปโหลด (แค่ preview ในเครื่อง) เอาออกได้เลยไม่ต้องถาม
@@ -2701,23 +2759,29 @@ const DRIVE_ROOT_FOLDER_ID = "1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu"; // โฟล�
 let driveAccessToken = null;
 let driveTokenExpiry = 0; // timestamp ms ที่ token จะหมดอายุ
 let driveTokenClient = null;
+let _driveTokenInFlight = null, _driveTokenReject = null;
 function initDriveTokenClient(){
   if(driveTokenClient) return;
   driveTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: 'https://www.googleapis.com/auth/drive',
     callback: '',
+    // v8.90 — ป๊อปอัปถูกบล็อก/ถูกปิด จะไม่เรียก callback เลย ทำให้ promise ค้างและ overlay ค้างทั้งแอป → ใช้ error_callback ปฏิเสธ promise
+    error_callback: (err)=>{ if(_driveTokenReject) _driveTokenReject(new Error('ขอสิทธิ์ Google Drive ไม่สำเร็จ ('+((err && err.type) || 'ป๊อปอัปถูกปิด/ถูกบล็อก')+')')); },
   });
 }
 function ensureDriveAccess(){
-  return new Promise((resolve, reject)=>{
-    // reuse token ถ้ายังไม่หมดอายุ (เผื่อ 3 นาทีล่วงหน้า)
-    if(driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000){
-      resolve(driveAccessToken); return;
-    }
+  // reuse token ถ้ายังไม่หมดอายุ (เผื่อ 3 นาทีล่วงหน้า)
+  if(driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000) return Promise.resolve(driveAccessToken);
+  // v8.90 — ใช้ promise เดียวร่วมกัน (เดิมทุกครั้งที่เรียกทับ callback ตัวเดิม เรียกขนานกัน 6 งานแล้วค้าง 5 งาน)
+  if(_driveTokenInFlight) return _driveTokenInFlight;
+  _driveTokenInFlight = new Promise((resolve, reject)=>{
     driveAccessToken = null; // clear token เก่าที่หมดอายุแล้ว
     initDriveTokenClient();
+    const timer = setTimeout(()=>reject(new Error('ขอสิทธิ์ Google Drive หมดเวลา — ลองใหม่อีกครั้ง')), 120000);
+    _driveTokenReject = (e)=>{ clearTimeout(timer); reject(e); };
     driveTokenClient.callback = (resp)=>{
+      clearTimeout(timer);
       if(resp.error){ reject(new Error(resp.error)); return; }
       driveAccessToken = resp.access_token;
       // Google token อายุ 3600 วินาที — เก็บเวลาหมดอายุไว้
@@ -2726,7 +2790,8 @@ function ensureDriveAccess(){
     };
     // prompt:'' = silent refresh ถ้า session ยังอยู่ ไม่ต้อง login ซ้ำ
     driveTokenClient.requestAccessToken({ prompt: '' });
-  });
+  }).finally(()=>{ _driveTokenInFlight = null; _driveTokenReject = null; });
+  return _driveTokenInFlight;
 }
 function sanitizeFolderName(name){ return String(name).replace(/['"\\\/]/g,'-').trim().slice(0,120) || 'ไม่มีชื่อ'; }
 // แปลงลิงก์ Google Drive ทุกรูปแบบให้เป็นแบบ "เปิดดูตัวอย่างในตัว" เสมอ (กันปัญหาบางลิงก์กดแล้วดาวน์โหลดแทนที่จะเปิดดู)
@@ -2737,7 +2802,7 @@ function normalizeDriveLink(url){
     /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/,     // .../file/d/FILE_ID/...
     /drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/,      // .../open?id=FILE_ID
     /drive\.google\.com\/uc\?.*[?&]id=([a-zA-Z0-9_-]+)/,  // .../uc?export=download&id=FILE_ID (ลิงก์ดาวน์โหลดตรง)
-    /[?&]id=([a-zA-Z0-9_-]+)/,                             // เผื่อรูปแบบอื่นที่มี id= อยู่ใน query string
+    /(?:docs|drive)\.google\.com\/[^\s]*[?&]id=([a-zA-Z0-9_-]+)/, // v8.90 — จำกัดเฉพาะลิงก์ Google (เดิมรับ ?id= ของเว็บใดก็ได้)
   ];
   for(const re of patterns){
     const m = trimmed.match(re);
@@ -2754,9 +2819,10 @@ function driveFileIdFromUrl(url){
     /drive\.google\.com\/uc\?.*[?&]id=([a-zA-Z0-9_-]+)/,
     /drive\.google\.com\/thumbnail\?id=([a-zA-Z0-9_-]+)/,
     /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/,
-    /[?&]id=([a-zA-Z0-9_-]+)/,
   ];
   for(const re of patterns){ const m = String(url).match(re); if(m && m[1]) return m[1]; }
+  // v8.90 — รูปแบบ ?id= ทั่วไป ใช้เฉพาะลิงก์ของ Google เท่านั้น (เดิมลิงก์เว็บอื่นที่มี ?id=123 ถูกตีเป็นไฟล์ Drive ปลอม → ถูกตัดสินว่า "ลิงก์เสีย" แล้วลบรายการจริง)
+  if(/(^|\/\/)([a-z0-9-]+\.)*(google\.com|googleusercontent\.com)\//i.test(String(url))){ const m2 = String(url).match(/[?&]id=([a-zA-Z0-9_-]+)/); if(m2 && m2[1]) return m2[1]; }
   return null;
 }
 // ลิงก์ .../file/d/ID/view เปิดเป็นหน้า HTML ของ Drive ใช้เป็น <img src> ตรงๆ ไม่ได้ — แปลงเป็น thumbnail URL ที่โหลดได้ด้วย session Google ปัจจุบัน (ไม่ต้องใช้ Bearer token)
@@ -2903,6 +2969,9 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName, headers){
   finally{ _claimsSheetTabInFlight.delete(tabTitle); }
 }
 // rowsData: array ของ row (array of arrays) — ถ้าส่ง flat array เดียว (header) จะถูก wrap อัตโนมัติ
+// v8.90 — กัน formula injection: ข้อความที่ผู้ใช้กรอกแล้วขึ้นต้นด้วย = + @ จะถูกใส่ ' นำหน้าให้เป็นข้อความธรรมดา (ยกเว้นสูตร =HYPERLINK ที่ระบบสร้างเอง)
+function sheetSafeCell(v){ return (typeof v==='string' && /^[=+@]/.test(v) && !/^=HYPERLINK\(/i.test(v)) ? "'"+v : v; }
+function sheetSafeRows(rows){ return (rows||[]).map(r=>Array.isArray(r) ? r.map(sheetSafeCell) : sheetSafeCell(r)); }
 async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const token = await ensureDriveAccess();
   const tabPrefix = tabTitle ? `'${String(tabTitle).replace(/'/g,"''")}'!` : '';
@@ -2920,7 +2989,7 @@ async function appendClaimRowToSheet(spreadsheetId, rowsData, tabTitle){
   const writeRange = `${tabPrefix}A${nextRow}`;
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
     method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ values })
+    body: JSON.stringify({ values: sheetSafeRows(values) })
   });
   if(!res.ok) throw new Error('บันทึกแถวลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(res));
   const data = await res.json();
@@ -3029,8 +3098,8 @@ function buildClaimSheetRows(c, summaryImageUrl){
       '',                                // ช่างส่งคืน (Sup กรอกเอง)
       '',                                // ได้รับจากผู้ผลิต (Sup กรอกเอง)
       '',                                // ส่งคืนผู้ผลิต (Sup กรอกเอง)
-      summaryImageUrl ? `=HYPERLINK("${summaryImageUrl}";"รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม (ใช้ ; สำหรับ Sheets ภาษาไทย)
-      c.driveFolderUrl ? `=HYPERLINK("${c.driveFolderUrl}";"ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive (ใช้ ; สำหรับ Sheets ภาษาไทย)
+      safeHttpUrl(summaryImageUrl) ? `=HYPERLINK("${safeHttpUrl(summaryImageUrl).replace(/"/g,'%22')}";"รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม (ใช้ ; สำหรับ Sheets ภาษาไทย)
+      safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive (ใช้ ; สำหรับ Sheets ภาษาไทย)
     ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
@@ -3049,8 +3118,8 @@ function buildReportSheetRows(c, summaryImageUrl){
     const partCols = [ p.partNumber||'', p.partName||'', p.qty||p.count||'' ];
     const sharedLast = i === 0 ? [
       p.countQty ? String(p.countQty)+(p.countUnit?' '+p.countUnit:'') : '',
-      summaryImageUrl ? `=HYPERLINK("${summaryImageUrl}";"รูปสรุป")` : '',
-      c.driveFolderUrl ? `=HYPERLINK("${c.driveFolderUrl}";"ไฟล์แนบ")` : '',
+      safeHttpUrl(summaryImageUrl) ? `=HYPERLINK("${safeHttpUrl(summaryImageUrl).replace(/"/g,'%22')}";"รูปสรุป")` : '',
+      safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',
     ] : ['','',''];
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
@@ -3075,6 +3144,15 @@ async function archiveClaimToSheetAndDelete(c){
         summaryImageUrl = imgResult.url || '';
       } catch(imgErr){ console.warn('ถ่ายรูปสรุปล้มเหลว (ไม่กระทบข้อมูลหลัก):', imgErr.message); }
     }
+    // v8.90 — ถ้าเคยเขียนลง Sheet ไปแล้วแต่ลบเคลมใน Firestore ไม่สำเร็จ (ค้างอยู่) กดซ้ำต้องไม่เพิ่มแถวซ้ำ ข้ามไปลบเคลมเลย
+    const alreadyAppended = !!(c.sheetRowIndex && c.sheetSpreadsheetId && c.sheetTabTitle);
+    if(alreadyAppended){
+      updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
+      await fsDeleteClaim(c.id);
+      DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
+      delete _sheetDoneCountCache[currentYearAD()];
+      return true;
+    }
     // 2) เตรียมสเปรดชีตและแท็บ
     updateLoadingOverlayText('กำลังบันทึกลง Google Sheet...');
     const sheetId = await ensureClaimsLogSpreadsheet();
@@ -3092,7 +3170,7 @@ async function archiveClaimToSheetAndDelete(c){
     // formatting รันเฉพาะตอนสร้าง tab ใหม่เท่านั้น (isNewTab=true ใน ensureOwnerSheetTab)
     // 4) บันทึกตำแหน่งแถวแรกลงเคลม (backward compat: เคลมเก่าไม่มี field นี้ ไม่กระทบ)
     if(appendResult.rowIndex){
-      try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex }); }
+      try{ await fsUpdateClaim(c.id, { sheetSpreadsheetId: sheetId, sheetTabTitle: tab.title, sheetRowIndex: appendResult.rowIndex, sheetRowCount: rows.length }); }
       catch(e){ console.warn('บันทึก sheetRowIndex ลงเคลมไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e.message); }
     }
     // 5) ลบออกจาก Firestore
@@ -3122,17 +3200,29 @@ async function deleteSheetRowIfTracked(c){
       const getData = await getRes.json();
       const found = (getData.sheets||[]).find(s=>s.properties && s.properties.title===c.sheetTabTitle);
       if(!found){ console.warn('ไม่พบแท็บ "'+c.sheetTabTitle+'" ใน Sheet — ข้ามการลบแถว'); return; }
-      await _deleteSheetRowByGid(token, c.sheetSpreadsheetId, found.properties.sheetId, c.sheetRowIndex);
+      await _deleteSheetRowByGidVerified(token, c, found.properties.sheetId);
     } else {
-      await _deleteSheetRowByGid(token, c.sheetSpreadsheetId, gid, c.sheetRowIndex);
+      await _deleteSheetRowByGidVerified(token, c, gid);
     }
   }catch(e){ console.warn('ลบแถว Sheet ไม่สำเร็จ (ข้ามต่อ ไม่กระทบ Firestore):', e.message); }
 }
-async function _deleteSheetRowByGid(token, spreadsheetId, sheetId, rowIndex){
+// v8.90 — ตรวจก่อนลบ: แถวที่จดตำแหน่งไว้ต้องยังเป็นของเคลมนี้จริง (มีผู้เคลม/สถานที่/S-N ตรงกัน) เพราะถ้ามีแถวข้างบนถูกลบ/เรียงใหม่ ตำแหน่งจะเลื่อน แล้วลบผิดแถว
+// และลบทุกแถวของเคลมนี้ (1 อะไหล่ = 1 แถว) ไม่ใช่แค่แถวแรก
+async function _deleteSheetRowByGidVerified(token, c, gid){
+  const tabPrefix = `'${String(c.sheetTabTitle).replace(/'/g,"''")}'!`;
+  const r = c.sheetRowIndex;
+  const vr = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${c.sheetSpreadsheetId}/values/${encodeURIComponent(tabPrefix+'A'+r+':Z'+r)}`, { headers:{ Authorization:`Bearer ${token}` } });
+  if(!vr.ok){ console.warn('อ่านแถว Sheet เพื่อตรวจก่อนลบไม่สำเร็จ — ข้ามการลบแถว'); return; }
+  const rowText = ((await vr.json()).values||[[]])[0].join('\u0001');
+  const ids = [c.serialNumber, c.claimant, c.siteName].map(v=>String(v||'').trim()).filter(Boolean);
+  if(ids.length && !ids.some(v=>rowText.indexOf(v)>=0)){ console.warn('แถวใน Sheet ไม่ตรงกับเคลมนี้ (ตำแหน่งอาจเลื่อน) — ข้ามการลบแถว กันลบผิด'); showToast('⚠ ไม่ลบแถวใน Sheet เพราะตำแหน่งแถวไม่ตรงกับเคลมนี้ ตรวจแล้วลบเองได้'); return; }
+  await _deleteSheetRowByGid(token, c.sheetSpreadsheetId, gid, r, c.sheetRowCount||Math.max(1,(c.parts||[]).length));
+}
+async function _deleteSheetRowByGid(token, spreadsheetId, sheetId, rowIndex, count){
   // rowIndex เป็น 1-based (เช่น แถว 5 = startIndex:4, endIndex:5)
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
     method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId, dimension:'ROWS', startIndex: rowIndex-1, endIndex: rowIndex } } }] })
+    body: JSON.stringify({ requests:[{ deleteDimension:{ range:{ sheetId, dimension:'ROWS', startIndex: rowIndex-1, endIndex: rowIndex-1+(count||1) } } }] })
   });
   if(!res.ok) throw new Error('Sheets batchUpdate deleteDimension ล้มเหลว: '+await googleApiErrorMessage(res));
 }
@@ -3265,7 +3355,7 @@ async function upsertProfileRowInSheet(email, p){
     const writeRange = `${PROFILES_SHEET_TAB_TITLE}!A${targetRow1based}`;
     const putRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(writeRange)}?valueInputOption=USER_ENTERED`, {
       method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
-      body: JSON.stringify({ values: [buildProfileSheetRow(email, p, neededProvinceCols)] })
+      body: JSON.stringify({ values: sheetSafeRows([buildProfileSheetRow(email, p, neededProvinceCols)]) })
     });
     if(!putRes.ok) throw new Error('บันทึกแถวโปรไฟล์ลง Sheet ไม่สำเร็จ: '+await googleApiErrorMessage(putRes));
   }catch(e){ console.warn('ซิงก์โปรไฟล์ไปยัง Google Sheet ไม่สำเร็จ (ไม่กระทบข้อมูลหลักใน Firestore):', e.message); }
@@ -3393,10 +3483,10 @@ async function deleteDriveFolderForError(err){
     const errorFolderName = err.errorCode ? `${err.errorCode} - ${err.symptom}` : err.symptom;
     const f5 = await findDriveFolder(errorFolderName, f4); if(!f5) return;
     const token = await ensureDriveAccess();
-    const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${f5}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-    if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status);
+    await driveDeleteFile(f5);
   }catch(e){
     console.error('ลบโฟลเดอร์ Drive ของ Error ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e);
+    showToast('⚠ ลบรูปของ Error ใน Drive ไม่สำเร็จ: '+e.message+' — ใช้ปุ่ม "ตรวจไฟล์ตกค้าง" ตรวจสอบภายหลังได้');
   }finally{ hideLoadingOverlay(); }
 }
 // ย้ายโฟลเดอร์ Drive ทั้งก้อนของรุ่นนี้ จากผู้ดูแลเก่าไปผู้ดูแลใหม่ (แค่เปลี่ยน parent ไม่ต้อง copy ไฟล์ทีละไฟล์ เร็วและไม่เสียโควต้าอัปโหลดซ้ำ)
@@ -3418,6 +3508,7 @@ async function moveDriveFolderForModel(category, model, oldOwnerName, newOwnerNa
       method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
     });
     if(!res.ok) throw new Error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+    _driveFolderCache.clear(); // path เปลี่ยนแล้ว ทิ้งแคชทั้งหมดกันชี้ผิดที่
   }catch(e){ console.error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ (ข้อมูลหลักย้ายสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
 }
 // ลบโฟลเดอร์ Drive ทั้งก้อนของรุ่นนี้ (รวมเอกสารและรูป/วิดีโอ Troubleshooting ข้างในทั้งหมด) — ใช้ตอนลบ Product/รุ่นออกจากระบบ ถ้าผู้ใช้เลือกให้ลบไฟล์ด้วย
@@ -3428,8 +3519,7 @@ async function deleteDriveFolderForModel(category, model, ownerName){
     const catFolderId = await findDriveFolder(category, ownerFolderId); if(!catFolderId) return;
     const modelFolderId = await findDriveFolder(model, catFolderId); if(!modelFolderId) return;
     const token = await ensureDriveAccess();
-    const delRes = await fetch(`https://www.googleapis.com/drive/v3/files/${modelFolderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-    if(!delRes.ok) throw new Error('Drive ตอบกลับรหัส '+delRes.status);
+    await driveDeleteFile(modelFolderId);
   }catch(e){ console.error('ลบโฟลเดอร์ Drive ของรุ่นนี้ไม่สำเร็จ (ข้อมูลหลักลบสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
 }
 
@@ -3603,10 +3693,8 @@ async function checkDuplicateFiles(){
         d.url = keeperUrl; d.groupId = groupId;
       }
       if(!keeper.groupId){ await fsUpdateDocument(keeper.id, { groupId }); keeper.groupId = groupId; }
-      for(const fid of redundantFileIds){
-        try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ซ้ำไม่สำเร็จ (ข้าม):', fid, e.message); }
-      }
-      showToast(`✓ รวมเป็นเอกสารเดียวแล้ว (ลบไฟล์ซ้ำ ${redundantFileIds.size} ไฟล์)`);
+      const dupRes = await driveDeleteMany(Array.from(redundantFileIds));
+      showToast(dupRes.failed.length ? `⚠ รวมเอกสารแล้ว แต่ลบไฟล์ซ้ำใน Drive ไม่สำเร็จ ${driveFailSummary(dupRes)}` : `✓ รวมเป็นเอกสารเดียวแล้ว (ลบไฟล์ซ้ำ ${dupRes.done} ไฟล์)`);
       renderAll();
       checkDuplicateFiles();
     }catch(e){ showToast('⚠ รวมไม่สำเร็จ: '+e.message); btn.disabled=false; btn.textContent='🔗 รวมเป็นเอกสารเดียว (ลบไฟล์ซ้ำ เหลือไฟล์เดียว)'; }
@@ -3664,10 +3752,12 @@ async function syncAndCheckDriveDocumentsInner(){
       const typeFolderId = await findDriveFolder(job.label, modelFolderId); if(!typeFolderId) return;
 
       const q = encodeURIComponent(`'${typeFolderId}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'`);
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-      if(!res.ok) return;
-      const data = await res.json();
-      const filesInDrive = data.files || [];
+      const filesInDrive = []; let pageTok = '';
+      do{
+        const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1000&fields=nextPageToken,files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true${pageTok?'&pageToken='+pageTok:''}`, { headers:{ Authorization:`Bearer ${token}` } });
+        if(!res.ok) return;
+        const data = await res.json(); filesInDrive.push(...(data.files||[])); pageTok = data.nextPageToken||'';
+      }while(pageTok);
       const existingFileIds = new Set(existingDocsForJob.map(d=>extractDriveFileId(d.url)).filter(Boolean));
 
       // มีไฟล์ใน Drive แต่ยังไม่มีลิงก์ในระบบ → เพิ่มลิงก์ใหม่ให้
@@ -3733,6 +3823,170 @@ async function syncAndCheckDriveDocumentsInner(){
   }
 }
 $('sync-drive-docs-btn').addEventListener('click', syncAndCheckDriveDocuments);
+/* ===================== v8.88 — ตรวจไฟล์ตกค้างใน Google Drive / Sheet (ปุ่ม 🧹 ในแต่ละหน้า) =====================
+   วิธีทำงาน: (1) รวบรวม "ทุก File ID ที่ระบบอ้างอิงอยู่" จาก Firestore (เอกสาร, วิธีแก้ Error, เคลม, Cer, ส่งคืนอะไหล่ ฯลฯ)
+              (2) ไล่โฟลเดอร์ Service Center ใน Drive ทั้งหมด (3) ไฟล์ที่อยู่ใน Drive แต่ไม่มีรายการไหนอ้างอิง = "ตกค้าง"
+   ปลอดภัย: ไม่ลบอัตโนมัติ — ต้องติ๊กเลือกเอง · ข้ามไฟล์ที่เพิ่งอัปโหลดไม่ถึง 15 นาที · ข้าม Backups · ถ้าอ่าน Firestore ไม่ครบ จะไม่ให้ลบ */
+const ORPHAN_MIN_AGE_MS = 15*60*1000;
+const KNOWN_APP_SHEETS = () => new Set([CLAIMS_SHEET_NAME, PROFILES_SHEET_NAME, RP_SHEET_NAME]);
+function orphanCollectIds(v, key, set){
+  if(v==null) return;
+  if(typeof v==='string'){
+    if(/fileid|folderid/i.test(key||'') && /^[A-Za-z0-9_-]{15,}$/.test(v)) set.add(v);
+    if(v.indexOf('google')>=0){
+      const id = driveFileIdFromUrl(v); if(id) set.add(id);
+      const fm = v.match(/\/folders\/([A-Za-z0-9_-]+)/); if(fm) set.add(fm[1]);
+    }
+    return;
+  }
+  if(Array.isArray(v)){ v.forEach(x=>orphanCollectIds(x, key, set)); return; }
+  if(typeof v==='object'){ Object.keys(v).forEach(k=>orphanCollectIds(v[k], k, set)); }
+}
+async function orphanGatherRefs(setStatus){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const refs = new Set(); const problems = [];
+  const cols = ['documents','proposals','pendingErrors','errors','claims','certificates','returnParts','userProfiles'];
+  for(const col of cols){
+    setStatus('อ่านข้อมูลอ้างอิงจาก Firestore: '+col+' ...');
+    try{ const snap = await sdk.getDocs(sdk.collection(db,col)); snap.forEach(d=>orphanCollectIds(d.data(), '', refs)); }
+    catch(e){ problems.push(col+': '+e.message); }
+  }
+  setStatus('อ่านวิธีแก้ของ Error (solutions) ...');
+  try{
+    const snap = await sdk.getDocs(sdk.collectionGroup(db,'solutions')); snap.forEach(d=>orphanCollectIds(d.data(), '', refs));
+  }catch(e1){
+    try{
+      const errs = await sdk.getDocs(sdk.collection(db,'errors')); let n=0;
+      for(const ed of errs.docs){ n++; if(n%20===0) setStatus('อ่านวิธีแก้ของ Error ... '+n+'/'+errs.size);
+        const ss = await sdk.getDocs(sdk.collection(db,'errors',ed.id,'solutions')); ss.forEach(d=>orphanCollectIds(d.data(), '', refs)); }
+    }catch(e2){ problems.push('solutions: '+e2.message); }
+  }
+  return { refs, problems };
+}
+async function orphanListTree(setStatus){
+  const token = await ensureDriveAccess(); const auth = { Authorization:`Bearer ${token}` };
+  const files = []; let foldersSeen = 0;
+  let level = [{ id:DRIVE_ROOT_FOLDER_ID, path:'' }];
+  while(level.length){
+    const next = [];
+    await runWithConcurrency(level, 6, async (f)=>{
+      let pageToken = '';
+      do{
+        const q = encodeURIComponent(`'${f.id}' in parents and trashed=false`);
+        const url = `https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1000&fields=nextPageToken,files(id,name,mimeType,createdTime,size,webViewLink)&supportsAllDrives=true&includeItemsFromAllDrives=true${pageToken?'&pageToken='+pageToken:''}`;
+        const res = await fetch(url, { headers:auth });
+        if(!res.ok) throw new Error('ไล่โฟลเดอร์ "'+(f.path||'root')+'" ไม่สำเร็จ ('+res.status+')');
+        const data = await res.json(); pageToken = data.nextPageToken || '';
+        for(const x of (data.files||[])){
+          if(x.mimeType==='application/vnd.google-apps.folder'){ foldersSeen++; next.push({ id:x.id, path: f.path ? f.path+'/'+x.name : x.name }); }
+          else files.push({ ...x, path:f.path, parentId:f.id });
+        }
+      }while(pageToken);
+    });
+    setStatus('ไล่โฟลเดอร์ใน Drive ... พบ '+files.length+' ไฟล์ ใน '+foldersSeen+' โฟลเดอร์');
+    level = next;
+  }
+  return { files, foldersSeen };
+}
+function orphanFmtSize(b){ b = Number(b||0); return b>=1048576 ? (b/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(b/1024))+' KB'; }
+let _orphanState = null;
+async function openDriveOrphanScanner(scope){
+  if(!(isEditor() || isAdminService())){ showToast('⚠ ฟังก์ชันนี้สำหรับ Sup Product / Admin เท่านั้น'); return; }
+  let ov = $('orphan-scan-modal');
+  if(!ov){
+    ov = document.createElement('div'); ov.className='modal-overlay'; ov.id='orphan-scan-modal';
+    ov.innerHTML = `<div class="modal" style="max-width:720px;max-height:88vh;overflow:auto;">
+      <button class="modal-close-x" id="orphan-close-x">✕</button>
+      <h3>🧹 ตรวจไฟล์ตกค้างใน Google Drive / Sheet</h3>
+      <p class="panel-sub">เทียบไฟล์ที่อยู่ใน Drive กับรายการในแอป — ไฟล์ที่ไม่มีรายการไหนอ้างอิงจะแสดงให้เลือกลบ (ไม่ลบอัตโนมัติ)</p>
+      <div id="orphan-status" style="font-size:12.5px;color:var(--text-faint);margin:8px 0;"></div>
+      <div id="orphan-body"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn btn-ghost btn-sm" id="orphan-refresh-btn">🔄 Refresh ตรวจใหม่</button>
+        <button class="btn btn-ghost btn-sm" id="orphan-close-btn">ปิด</button>
+      </div></div>`;
+    document.body.appendChild(ov);
+    const close = ()=>ov.classList.remove('show');
+    $('orphan-close-x').addEventListener('click', close); $('orphan-close-btn').addEventListener('click', close);
+    $('orphan-refresh-btn').addEventListener('click', ()=>runOrphanScan(_orphanState && _orphanState.scope));
+  }
+  ov.classList.add('show');
+  runOrphanScan(scope);
+}
+async function runOrphanScan(scope){
+  const statusEl = $('orphan-status'), bodyEl = $('orphan-body'), btn = $('orphan-refresh-btn');
+  _orphanState = { scope: scope||'all', orphans:[], sheets:[], safe:true };
+  btn.disabled = true; bodyEl.innerHTML = '';
+  const setStatus = t=>{ statusEl.textContent = t; };
+  try{
+    const { refs, problems } = await orphanGatherRefs(setStatus);
+    const tree = await orphanListTree(setStatus);
+    const now = Date.now(), known = KNOWN_APP_SHEETS();
+    const orphans = [], sheets = [];
+    let backupCount = 0, tooNew = 0, doneClaimFiles = 0;
+    for(const f of tree.files){
+      if(f.path==='Backups' || f.path.indexOf('Backups/')===0){ backupCount++; continue; }
+      if(f.mimeType==='application/vnd.google-apps.spreadsheet'){ if(!known.has(f.name)) sheets.push(f); continue; }
+      if(refs.has(f.id)) continue;
+      // v8.90 — ไฟล์ใน <ผู้ดูแล>/Claim/… ที่ไม่มี Firestore อ้างอิง มักเป็นเคลมที่จบเคสแล้วย้ายไป Sheet (Sheet อ้างอิงแค่โฟลเดอร์) — ไม่เสนอให้ลบ
+      if((f.path||'').split('/')[1]==='Claim'){ doneClaimFiles++; continue; }
+      if(now - new Date(f.createdTime).getTime() < ORPHAN_MIN_AGE_MS){ tooNew++; continue; }
+      orphans.push(f);
+    }
+    _orphanState.orphans = orphans; _orphanState.sheets = sheets; _orphanState.safe = problems.length===0;
+    const tops = Array.from(new Set(orphans.map(o=>(o.path||'(root)').split('/')[0]))).sort();
+    const defaultTop = (scope==='cert') ? 'Certificate' : '';
+    _orphanState.topFilter = tops.includes(defaultTop) ? defaultTop : '';
+    setStatus(`✓ ตรวจเสร็จ — ไฟล์ใน Drive ${tree.files.length} ไฟล์ · พบตกค้าง ${orphans.length} ไฟล์ (${new Date().toLocaleTimeString('th-TH')})` + (tooNew?` · ข้าม ${tooNew} ไฟล์ที่เพิ่งอัปโหลด`:'') + (backupCount?` · ข้าม Backups ${backupCount} ไฟล์`:'') + (doneClaimFiles?` · ข้ามไฟล์เคลมที่จบแล้ว ${doneClaimFiles} ไฟล์ (ไม่ลบให้)`:''));
+    renderOrphanBody(tops, problems);
+  }catch(e){ setStatus('⚠ ตรวจไม่สำเร็จ: '+e.message); }
+  finally{ btn.disabled = false; }
+}
+function renderOrphanBody(tops, problems){
+  const st = _orphanState, bodyEl = $('orphan-body');
+  const shown = st.orphans.filter(o=> !st.topFilter || (o.path||'(root)').split('/')[0]===st.topFilter);
+  let html = '';
+  if(problems && problems.length){
+    html += `<div style="border:1px solid var(--red);border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:12px;color:var(--red);">⚠ อ่านข้อมูลอ้างอิงจาก Firestore ไม่ครบ จึง <b>ปิดการลบ</b> เพื่อความปลอดภัย (กันลบไฟล์ที่ยังใช้งานอยู่)<br>${problems.map(escapeHtml).join('<br>')}</div>`;
+  }
+  if(st.orphans.length===0){ html += `<div style="padding:14px;text-align:center;color:var(--green,#2a9d5c);font-size:13.5px;">✓ ไม่พบไฟล์ตกค้างใน Drive</div>`; }
+  else{
+    html += `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+      <label style="font-size:12px;">โฟลเดอร์หลัก: <select id="orphan-top-filter" style="font-size:12px;"><option value="">ทั้งหมด (${st.orphans.length})</option>${tops.map(t=>`<option value="${escapeHtml(t)}" ${t===st.topFilter?'selected':''}>${escapeHtml(t)} (${st.orphans.filter(o=>(o.path||'(root)').split('/')[0]===t).length})</option>`).join('')}</select></label>
+      <label style="font-size:12px;"><input type="checkbox" id="orphan-select-all"> เลือกทั้งหมดที่แสดง (${shown.length})</label></div>`;
+    html += shown.map(o=>`<div class="admin-row" style="align-items:flex-start;"><input type="checkbox" class="orphan-chk" value="${escapeHtml(o.id)}" style="margin:4px 8px 0 0;">
+      <div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(o.name)} <span class="mono" style="font-size:10.5px;color:var(--text-faint);">${orphanFmtSize(o.size)} · ${new Date(o.createdTime).toLocaleDateString('th-TH')}</span></span>
+      <span class="mono" style="font-size:10.5px;color:var(--text-faint);">📁 ${escapeHtml(o.path||'(root)')}</span></div>
+      ${o.webViewLink?`<a href="${escapeHtml(o.webViewLink)}" target="_blank" rel="noopener" style="font-size:12px;">เปิด</a>`:''}</div>`).join('');
+    html += `<button class="btn btn-primary btn-sm" id="orphan-delete-btn" style="margin-top:10px;" ${st.safe?'':'disabled'}>🗑️ ลบไฟล์ที่เลือกออกจาก Google Drive</button>`;
+  }
+  if(st.sheets.length){
+    html += `<div style="border-top:1px solid var(--border);margin-top:14px;padding-top:10px;"><p style="font-size:12px;font-weight:600;margin:0 0 6px;">📊 Google Sheet ที่แอปไม่รู้จัก (${st.sheets.length}) — ไม่ใช่ไฟล์ของระบบ (${[...KNOWN_APP_SHEETS()].map(escapeHtml).join(' / ')})</p>` +
+      st.sheets.map(f=>`<div class="admin-row"><div class="admin-row-main"><span style="font-size:12.5px;">${escapeHtml(f.name)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">📁 ${escapeHtml(f.path||'(root)')}</span></div>${f.webViewLink?`<a href="${escapeHtml(f.webViewLink)}" target="_blank" rel="noopener" style="font-size:12px;">เปิด</a>`:''}</div>`).join('') +
+      `<p style="font-size:11.5px;color:var(--text-faint);margin:6px 0 0;">Sheet เหล่านี้อาจเป็นไฟล์ที่ทำเอง หรือสำเนาซ้ำ — แอปไม่ลบให้อัตโนมัติ ตรวจแล้วลบเองใน Drive ได้</p></div>`;
+  }
+  bodyEl.innerHTML = html;
+  const tf = $('orphan-top-filter'); if(tf) tf.addEventListener('change', ()=>{ st.topFilter = tf.value; renderOrphanBody(tops, problems); });
+  const sa = $('orphan-select-all'); if(sa) sa.addEventListener('change', ()=>bodyEl.querySelectorAll('.orphan-chk').forEach(c=>c.checked = sa.checked));
+  const db_ = $('orphan-delete-btn');
+  if(db_) db_.addEventListener('click', async ()=>{
+    const ids = Array.from(bodyEl.querySelectorAll('.orphan-chk:checked')).map(c=>c.value);
+    if(!ids.length){ showToast('ยังไม่ได้เลือกไฟล์'); return; }
+    if(!confirm(`ลบไฟล์ตกค้าง ${ids.length} ไฟล์ออกจาก Google Drive?\n(ถ้าเป็นไฟล์ของอีกบัญชี จะย้ายลงถังขยะแทน)`)) return;
+    showLoadingOverlay('กำลังลบไฟล์ตกค้าง...');
+    const r = await driveDeleteMany(ids);
+    hideLoadingOverlay();
+    const gone = new Set(ids.filter(id=>!r.failed.some(f=>f.id===id)));
+    st.orphans = st.orphans.filter(o=>!gone.has(o.id));
+    showToast(r.failed.length ? `⚠ ลบแล้ว ${gone.size} ไฟล์ · ไม่สำเร็จ ${driveFailSummary(r)}` : `✓ ลบไฟล์ตกค้างแล้ว ${gone.size} ไฟล์`);
+    const tops2 = Array.from(new Set(st.orphans.map(o=>(o.path||'(root)').split('/')[0]))).sort();
+    if(st.topFilter && !tops2.includes(st.topFilter)) st.topFilter = '';
+    renderOrphanBody(tops2, problems);
+  });
+}
+document.addEventListener('click', e=>{ const b = e.target.closest && e.target.closest('.drive-orphan-btn'); if(b) openDriveOrphanScanner(b.getAttribute('data-scope')||'all'); });
+
+
 
 // fix-hyperlinks-btn ถูกลบออกจาก UI แล้ว (v7.94) — ไม่ต้องผูก event
 
@@ -3921,7 +4175,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${v.localUrl}"></video>`;
+  return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
 async function handleGisCredential(response){
   try{
@@ -3990,6 +4244,18 @@ $('access-request-logout-btn').addEventListener('click', async ()=>{
 // ครอบคลุมทั้ง 2 กรณี: เพิ่งเลือกบัญชี Google ผ่าน GIS สำเร็จ, และเคย login ค้างไว้แล้ว (ไม่ต้อง login ซ้ำทุกครั้ง)
 // สำคัญ: จะไม่ซ่อนหน้าจอ login (ปิด overlay) จนกว่า loadData() จะโหลดเสร็จจริง กันไม่ให้มีช่วงเวลาที่หน้าจอดูเหมือนใช้งานได้
 // แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เคยแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
+// v8.90 — ล้างทุกอย่างที่ผูกกับบัญชีเดิมตอนสลับบัญชี/ออกจากระบบ (token Drive, แคชโฟลเดอร์, id ชีต, โปรไฟล์, แคช Cer) กันบัญชีถัดไปใช้สิทธิ์/ข้อมูลของคนก่อนหน้า
+function resetPerAccountCaches(){
+  try{ driveAccessToken = null; driveTokenExpiry = 0; _driveFolderCache.clear(); _driveFolderInFlight.clear(); }catch(e){}
+  try{ _claimsSheetIdCache = null; _profilesSheetIdCache = null; _sheetDoneCountCache = {}; }catch(e){}
+  try{ myUserProfile = null; _engCertDataCache = null; _supCertDataCache = null; }catch(e){}
+}
+// เทียบเลขเวอร์ชันแบบตัวเลข (เช่น 8.9 < 8.10) — ใช้กันเครื่องที่ค้างโค้ดเก่าเขียนเวอร์ชันถอยหลัง
+function versionGreater(a, b){
+  const pa = String(a||'0').split('.').map(n=>parseInt(n,10)||0), pb = String(b||'0').split('.').map(n=>parseInt(n,10)||0);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){ const d=(pa[i]||0)-(pb[i]||0); if(d) return d>0; }
+  return false;
+}
 async function resolveAuthAndStart(){
   await initFirebase();
   const sdk = window._firebaseSdk;
@@ -4006,6 +4272,7 @@ async function resolveAuthAndStart(){
       // จะขอสิทธิ์ก็ต่อเมื่อผู้ใช้กดปุ่มที่ต้องใช้ Drive จริงๆ (อัปโหลดรูป/วิดีโอ/เอกสาร, เช็คขนาดไฟล์ ฯลฯ) ซึ่งเป็นการแตะหน้าจอโดยตรงอยู่แล้ว ไม่โดนบล็อก
       if(!window._appStarted || accountChanged){
         window._appStarted = true;
+        if(accountChanged) resetPerAccountCaches();
         DATA = null; // ล้างข้อมูลของบัญชีเก่าทิ้งก่อนโหลดใหม่ กันโชว์ข้อมูลของบัญชีเก่าค้างไว้ระหว่างที่กำลังเช็คสิทธิ์บัญชีใหม่
         checkAccessAndLoad();
       } else {
@@ -4014,6 +4281,7 @@ async function resolveAuthAndStart(){
       }
     } else {
       myGoogleId = null; myUserName = null; myUserEmail = null;
+      resetPerAccountCaches();
       // รีเซ็ต _appStarted ตอนออกจากระบบ — กันบั๊ก: ถ้าไม่รีเซ็ต แล้วมีคนกดปุ่ม "ออกจากระบบ" (เช่นจากหน้าจอรอสิทธิ์) แล้วสลับไป login บัญชีอื่น
       // โค้ดจะเข้าเงื่อนไข "เคย start แอปไปแล้ว" (เข้า else ด้านบนแทนที่จะเรียก checkAccessAndLoad ใหม่) เลยข้ามการเช็คสิทธิ์/แสดงหน้าจอขอสิทธิ์ไปเฉยๆ
       // ทำให้ผู้ใช้ที่ login ใหม่เจอหน้าจอค้างเปล่าๆ ไม่มีทั้งปุ่ม login และปุ่มขอสิทธิ์
@@ -4042,7 +4310,7 @@ function initVersionCheck(){
     // ป้องกัน 1 write ต่อ login ต่อ user ที่เกิดขึ้นโดยไม่จำเป็น
     sdk.getDoc(verRef).then(snap=>{
       const serverVersion = snap.exists() ? snap.data().version : null;
-      if(!serverVersion || serverVersion !== APP_VERSION){
+      if(!serverVersion || versionGreater(APP_VERSION, serverVersion)){ // v8.90 — เขียนเฉพาะเมื่อเวอร์ชันของเราใหม่กว่า (เครื่องที่ค้างโค้ดเก่าจะไม่ถอยเวอร์ชันของทุกคน)
         sdk.setDoc(verRef, { version: APP_VERSION, updatedAt: Date.now() })
           .catch(e=>console.warn('บันทึกเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
       }
@@ -4050,7 +4318,7 @@ function initVersionCheck(){
     sdk.onSnapshot(verRef, (snap)=>{
       if(!snap.exists()) return;
       const serverVersion = snap.data().version;
-      if(serverVersion && serverVersion !== APP_VERSION) showVersionUpdateBanner(serverVersion);
+      if(serverVersion && versionGreater(serverVersion, APP_VERSION)) showVersionUpdateBanner(serverVersion);
     }, (e)=>console.warn('ฟังการเปลี่ยนแปลงเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
   }catch(e){ console.warn('เริ่มเช็คเวอร์ชันแอปไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
 }
@@ -4564,8 +4832,8 @@ function showProfileModal(isFirstTime, editingEmail, editingProfile){
     clearProfileForm();
   } else if(rosterEditingEmail){
     const p = editingProfile || {};
-    $('profile-modal-title').textContent = `แก้ไขโปรไฟล์ (Manager): ${escapeHtml(orgChartDisplayName({...p, email:rosterEditingEmail}))}`;
-    $('profile-modal-sub').textContent = `กำลังแก้ไขข้อมูลของ ${escapeHtml(rosterEditingEmail)} — สิทธิ์ Manager แก้ได้ทุกช่อง`;
+    $('profile-modal-title').textContent = `แก้ไขโปรไฟล์ (Manager): ${orgChartDisplayName({...p, email:rosterEditingEmail})}`;
+    $('profile-modal-sub').textContent = `กำลังแก้ไขข้อมูลของ ${rosterEditingEmail} — สิทธิ์ Manager แก้ได้ทุกช่อง`;
     $('profile-modal-close-x').style.display = '';
     $('profile-cancel-btn').style.display = 'block';
     $('profile-save-btn').textContent = 'บันทึก';
@@ -4775,8 +5043,15 @@ async function saveUserProfile(){
     await initFirebase();
     const sdk = window._firebaseSdk;
     const docId = (isEditingOther ? rosterEditingEmail : myUserEmail).toLowerCase();
-    const existing = isEditingOther ? (rosterProfiles.find(p=>p.email===docId) || null) : myUserProfile;
+    let existing = isEditingOther ? (rosterProfiles.find(p=>p.email===docId) || null) : myUserProfile;
+    if(!existing){ // v8.90 — อ่านเอกสารจริงซ้ำ กันกรณีโปรไฟล์ในหน่วยความจำเป็น null (โหลดพลาด/สลับบัญชี) แล้วเขียนทับ createdAt
+      try{ const sn = await sdk.getDoc(sdk.doc(db,'userProfiles', docId)); if(sn.exists()) existing = { email:docId, ...sn.data() }; }catch(e){}
+    }
     if(!existing) payload.createdAt = Date.now();
+    // v8.90 — ตำแหน่ง/เขต/จังหวัดที่ดูแล/วันที่เริ่มงาน ล็อกไว้หลังกรอกครั้งแรก: ผู้ที่ไม่ใช่ Manager แก้ผ่าน DOM/console ไม่ได้ (บังคับที่ตัวบันทึกด้วย ไม่ใช่แค่ซ่อนช่อง)
+    if(!isEditingOther && !profileModalIsFirstTime && !isManager() && existing){
+      ['position','area','provincesCovered','startDate'].forEach(k=>{ if(existing[k]!==undefined) payload[k] = existing[k]; else delete payload[k]; });
+    }
     await sdk.setDoc(sdk.doc(db,'userProfiles', docId), payload, { merge:true });
     const merged = { ...(existing||{}), ...payload };
     if(isEditingOther){
@@ -5064,8 +5339,8 @@ function renderRoster(){
       <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
-      <td style="padding:6px 8px;">${p.birthDate?isoToDDMMYYYY(p.birthDate):''}${age?` (${age})`:''}</td>
-      <td style="padding:6px 8px;">${p.startDate?isoToDDMMYYYY(p.startDate):''}${tenure?` (${tenure})`:''}</td>
+      <td style="padding:6px 8px;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?` (${age})`:''}</td>
+      <td style="padding:6px 8px;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?` (${tenure})`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
         <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
@@ -5536,7 +5811,7 @@ function renderSolutionCard(err, s, idx){
     <div class="solution-num">สาเหตุที่ ${idx+1}</div>
     ${s.title ? `<div class="solution-desc" style="font-weight:600;margin-bottom:4px;">${escapeHtml(s.title)}</div>` : ''}
     <div class="solution-desc">${escapeHtml(s.desc)}</div>
-    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${imgSrcOf(img)}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
+    ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${escapeHtml(imgSrcOf(img)||'')}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
     <div class="meta-grid">
       <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(s.tools)}</div></div>
@@ -5570,14 +5845,27 @@ async function submitUp(solId){
     // เคยกดแล้ว — กดซ้ำ = ยกเลิก (เผื่อกดผิด)
     for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=(sol.feedback||[]).filter(f=>f.ts!==existing.ts || f.name!==existing.name); e.totalUps=Math.max(0,(e.totalUps||0)-1); break; } }
     delete myVotes['up:'+solId];
-    try{ await fsRemoveFeedback(targetErrId, solId, existing); }catch(e){ showToast('⚠ ยกเลิกไม่สำเร็จ: '+e.message); }
-    showToast('ยกเลิกการโหวตแล้ว');
+    let removeOk = true;
+    try{ await fsRemoveFeedback(targetErrId, solId, existing); }
+    catch(e){
+      removeOk = false; showToast('⚠ ยกเลิกไม่สำเร็จ: '+e.message);
+      // v8.90 — เขียนไม่สำเร็จ: คืนค่าในหน้าจอกลับ ไม่แสดงว่าสำเร็จ
+      for(const er of DATA.errors){ const sol=(er.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(existing); er.totalUps=(er.totalUps||0)+1; break; } }
+      myVotes['up:'+solId] = existing;
+    }
+    if(removeOk) showToast('ยกเลิกการโหวตแล้ว');
   } else {
     const entry = {type:'up', name:myClaimantName(), ts:Date.now()};
     for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=sol.feedback||[]; sol.feedback.push(entry); e.totalUps=(e.totalUps||0)+1; break; } }
     myVotes['up:'+solId]=entry;
-    try{ await fsAddFeedback(targetErrId, solId, entry); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
-    showToast('✓ บันทึก feedback แล้วในชื่อ '+myClaimantName());
+    let addOk = true;
+    try{ await fsAddFeedback(targetErrId, solId, entry); }
+    catch(e){
+      addOk = false; showToast('⚠ บันทึกไม่สำเร็จ: '+e.message);
+      for(const er of DATA.errors){ const sol=(er.solutions||[]).find(x=>x.id===solId); if(sol){ sol.feedback=(sol.feedback||[]).filter(f=>f!==entry); er.totalUps=Math.max(0,(er.totalUps||0)-1); break; } }
+      delete myVotes['up:'+solId];
+    }
+    if(addOk) showToast('✓ บันทึก feedback แล้วในชื่อ '+myClaimantName());
   }
   renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
   if(openErrorDetailId) renderErrorDetailPanel();
@@ -5741,7 +6029,7 @@ async function renderNotifList(){
       html += pendingMyClaims.map(c=>{
         const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
         const partInfo = c.parts && c.parts.length>0
-          ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${p.count||1}`).join(', ')
+          ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${escapeHtml(String(p.qty||p.count||1))}`).join(', ')
           : '';
         const sn = c.serialNumber ? ` · S/N ${escapeHtml(c.serialNumber)}` : '';
         return `<div class="admin-row" data-notif-claim-open="${c.id}" style="cursor:pointer;flex-direction:column;align-items:flex-start;">
@@ -6045,7 +6333,7 @@ function docCard(d){
 function bindDocOpenButtons(){
   document.querySelectorAll('[data-openfile]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ const doc=DATA.documents.find(d=>d.id===btn.getAttribute('data-openfile')); if(!doc) return;
-      if(doc.method==='link'){ window.open(doc.url, '_blank'); } else{ showToast('🖨 จำลอง: กำลังเปิดไฟล์ "'+doc.fileName+'"'); } });
+      if(doc.method==='link'){ const _u = safeHttpUrl(doc.url); if(_u) window.open(_u, '_blank', 'noopener'); else showToast('⚠ ลิงก์ไม่ถูกต้อง (รองรับเฉพาะ http/https)'); } else{ showToast('🖨 จำลอง: กำลังเปิดไฟล์ "'+doc.fileName+'"'); } });
   });
 }
 function renderEngDocResults(){
@@ -6109,7 +6397,7 @@ function renderEngSolutionsEditor(){
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
-            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
             <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
@@ -6227,11 +6515,11 @@ function renderErrorCountSummary(){
     </div>
   `).join('');
   statusEl.querySelectorAll('[data-addformodel]').forEach(b=>b.addEventListener('click', ()=>{
-    const [cat,model] = b.getAttribute('data-addformodel').split('|');
+    const [cat,model] = splitCatModel(b.getAttribute('data-addformodel'));
     openAddErrorForModel(cat, model);
   }));
   statusEl.querySelectorAll('[data-viewmodelerrors]').forEach(b=>{ if(b.disabled) return; b.addEventListener('click', ()=>{
-    const [cat,model] = b.getAttribute('data-viewmodelerrors').split('|');
+    const [cat,model] = splitCatModel(b.getAttribute('data-viewmodelerrors'));
     openModelErrorsModal(cat, model);
   }); });
 }
@@ -6346,7 +6634,7 @@ function renderSolutionsEditor(){
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
-            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${imgSrcOf(img)}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
+            ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
             <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-upload="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
@@ -6381,15 +6669,16 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
   await fsSaveError(errorId, fields);
   const keepIds = new Set(validSolutions.map(s=>s.id));
-  if(originalSolutionIds){
-    for(const oldId of originalSolutionIds){ if(!keepIds.has(oldId)) await fsDeleteSolution(errorId, oldId); }
-  }
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
     const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
-    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, feedback:s.feedback||[] });
+    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
+  }
+  // v8.90 — ลบวิธีแก้ที่ถูกเอาออก "หลัง" บันทึก/อัปโหลดของใหม่สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าอัปโหลดพลาดข้อมูลเดิมหายแต่ของใหม่ไม่ถูกบันทึก)
+  if(originalSolutionIds){
+    for(const oldId of originalSolutionIds){ if(!keepIds.has(oldId)) await fsDeleteSolution(errorId, oldId); }
   }
 }
 
@@ -6418,7 +6707,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
 
   if(reviewingPendingErrorId){
     const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
-    const newId = uid('e');
+    const newId = pe ? ('e_'+pe.id) : uid('e'); // v8.90 — id คงที่ต่อรายการรออนุมัติ กด/ลองซ้ำไม่สร้าง Error ซ้ำ
     const fields = {category, model, errorCode, symptom, viewCount:0, totalUps:0};
     try{
       await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
@@ -6451,8 +6740,16 @@ $('save-error-btn').addEventListener('click', async ()=>{
   renderAll(); renderErrorCountSummary();
 });
 
+// v8.90 — ตรวจสิทธิ์ในฟังก์ชันเอง (เดิมพึ่งแค่ dropdown เลือกตัวตน Sup): ต้องเป็น Editor ขึ้นไป และเป็นผู้ดูแลรุ่นนั้น (Manager/Super Admin ผ่านทุกรุ่น)
+function canManageErrorOf(category, model){
+  if(!isEditor()){ showToast('⚠ ไม่มีสิทธิ์ทำรายการนี้'); return false; }
+  if(isSuperAdmin()) return true;
+  if(ownerOf(category, model)!==currentSupIdentity){ showToast('⚠ รุ่นนี้ไม่ใช่ Product ที่คุณดูแล'); return false; }
+  return true;
+}
 async function startEditError(id){
   const err = DATA.errors.find(e=>e.id===id); if(!err) return;
+  if(!canManageErrorOf(err.category, err.model)) return;
   await loadSolutionsFor(id);
   editingErrorId = id; reviewingPendingErrorId = null; _originalSolutionIds = err.solutions.map(s=>s.id);
   $('f-category-field').style.display=''; $('f-model-field').style.display=''; // แก้ไข Error เดิม ยังเปลี่ยนประเภท/รุ่นได้ตามปกติ เผื่อจัดหมวดผิด
@@ -6477,8 +6774,9 @@ function snapshotErrorEditState(){
   };
 }
 async function deleteError(id){
-  if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
   const err = DATA.errors.find(e=>e.id===id);
+  if(err && !canManageErrorOf(err.category, err.model)) return;
+  if(!confirm('ยืนยันการลบ Error นี้? (จะลบรูปภาพที่เก็บใน Google Drive ของ Error นี้ด้วย)')) return;
   try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
   if(err && err.category) { invalidateErrorsCacheForCategory(err.category); fsBumpCategoryVersion(err.category); }
   DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); showToast('ลบแล้ว');
@@ -6522,14 +6820,19 @@ function startReviewPendingError(id){
   editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
   renderSolutionsEditor();
 }
+const _approvingPending = new Set();
 async function quickApprovePendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
-  const newId = uid('e');
+  if(!canManageErrorOf(pe.category, pe.model)) return;
+  if(pe.status!=='pending' || _approvingPending.has(id)) return; // v8.90 กันกดซ้ำ
+  _approvingPending.add(id);
+  const newId = 'e_'+pe.id;
   const fields = {category:pe.category, model:pe.model, errorCode:pe.errorCode||'', symptom:pe.symptom, viewCount:0, totalUps:0};
   try{
     await saveErrorWithSolutions(newId, fields, pe.solutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
     await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()});
-  }catch(e){ showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
+  }catch(e){ _approvingPending.delete(id); showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return; }
+  _approvingPending.delete(id);
   DATA.errors.push({id:newId, ...fields, solutions: pe.solutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
   pe.status='approved'; pe.reviewedAt=Date.now();
   renderAll();
@@ -6537,6 +6840,7 @@ async function quickApprovePendingError(id){
 }
 async function rejectPendingError(id){
   const pe = DATA.pendingErrors.find(p=>p.id===id); if(!pe) return;
+  if(!canManageErrorOf(pe.category, pe.model)) return;
   const reason = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ — Engineer จะเห็นข้อความนี้)') || '';
   if(!confirm('ยืนยันการปฏิเสธ Error นี้?')) return;
   try{ await fsUpdatePendingError(pe.id, {status:'rejected', rejectionReason:reason, reviewedAt:Date.now()}); }
@@ -6577,7 +6881,7 @@ function renderProposals(){
           <div class="field-wrap"><label>อะไหล่</label>${renderItemListRows(editingProposalDraft.parts, 'propedit', 'parts')}</div>
           <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" id="prop-edit-time-${p.id}" value="${escapeHtml(p.time||'')}"></div>
         </div>
-        ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
+        ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${escapeHtml(imgSrcOf(img)||'')}">`).join('')}</div>`:''}
         ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin:10px 0;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button class="btn btn-primary btn-sm" data-savepropedit="${p.id}">บันทึกการแก้ไข</button>
@@ -6589,7 +6893,7 @@ function renderProposals(){
       ${metaLine}
       ${p.title ? `<div class="proposal-text" style="font-weight:600;margin-bottom:2px;">${escapeHtml(p.title)}</div>` : ''}
       <div class="proposal-text">${escapeHtml(p.desc)}</div>
-      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${imgSrcOf(img)}">`).join('')}</div>`:''}
+      ${p.images && p.images.length ? `<div class="solution-imgs" style="margin-bottom:10px;">${p.images.map(img=>`<img src="${escapeHtml(imgSrcOf(img)||'')}">`).join('')}</div>`:''}
       ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin-bottom:10px;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
         <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(p.tools)}</div></div>
@@ -6644,10 +6948,11 @@ function renderProposals(){
 async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
-  await loadSolutionsFor(err.id);
+  if(!canManageErrorOf(err.category, err.model)) return;
   const newSol = {id:uid('sol'), title:p.title||'', desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), time:p.time||'', feedback:[]};
   try{
-    await fsSaveSolution(err.id, newSol.id, {desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    await loadSolutionsFor(err.id);
+    await fsSaveSolution(err.id, newSol.id, {title:newSol.title, desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
     const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
     const newHasVideos = err.solutions.concat([newSol]).some(s=>(s.videos||[]).length>0);
     const errUpdateFields = {};
@@ -6663,6 +6968,7 @@ async function acceptProposal(pid){
 }
 async function rejectProposal(pid){
   const p=DATA.proposals.find(x=>x.id===pid); if(!p) return;
+  { const e0 = DATA.errors.find(e=>e.id===p.errorId); if(e0 && !canManageErrorOf(e0.category, e0.model)) return; }
   try{ await fsUpdateProposal(pid, {status:'rejected'}); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
   p.status='rejected'; renderAll(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง');
 }
@@ -6724,7 +7030,7 @@ function renderDocLinkListItems(){
   wrap.innerHTML = docs.length===0
     ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มีลิงก์ในช่องนี้</p>`
     : docs.map(d=>`<div class="admin-row">
-        <div class="admin-row-main"><a href="${escapeHtml(d.url)}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(d.title)}</a></div>
+        <div class="admin-row-main"><a href="${escapeHtml(safeHttpUrl(d.url))}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(d.title)}</a></div>
         <div style="display:flex;gap:4px;flex-shrink:0;">
           <button class="icon-btn btn-sm" data-editlink="${d.id}">แก้ไข</button>
           <button class="icon-btn danger btn-sm" data-dellink="${d.id}">ลบ</button>
@@ -7107,12 +7413,12 @@ async function renderAccessRequestsPanel(){
         showToast('⚠ อนุมัติไม่สำเร็จ: '+e.message); return;
       }
     }
-    try{ await fsUpdateAccessRequest(id, {status:'approved', reviewedAt:Date.now()}); }catch(e){ showToast('⚠ อัปเดตคำขอไม่สำเร็จ: '+e.message); }
+    try{ await fsUpdateAccessRequest(id, {status:'approved', reviewedAt:Date.now()}); }catch(e){ showToast('⚠ อัปเดตคำขอไม่สำเร็จ (คำขอยังค้างอยู่): '+e.message); return; } // v8.90 — ไม่แสดงว่าสำเร็จถ้าปิดคำขอไม่ได้
     invalidatePendingAccessReqsCache(); // (v8.00) ล้างแคชหลัง approve ให้ badge อัปเดตทันที
     renderAccessRequestsPanel(); renderUnifiedPermissionList();
     const roleLabel = {approved:'Engineer', editor:'แก้ไขข้อมูล/Sup Product', adminService:'Admin Service', manager:'Manager', ceo:'CEO'}[role];
     fsWriteLog(`อนุมัติสิทธิ์เข้าถึงให้ ${email} (${roleLabel})`);
-    showToast(`✓ อนุมัติแล้ว เป็น ${roleLabel}`);
+    showToast(alreadyInSomeList ? 'ℹ อีเมลนี้มีสิทธิ์อยู่แล้ว — ปิดคำขอให้แล้ว (ไม่ได้เปลี่ยนระดับสิทธิ์ ปรับได้ที่รายการสิทธิ์)' : `✓ อนุมัติแล้ว เป็น ${roleLabel}`);
   }));
   list.querySelectorAll('[data-rejectreq]').forEach(b=>b.addEventListener('click', async ()=>{
     const id = b.getAttribute('data-rejectreq');
@@ -8005,7 +8311,7 @@ function renderClaimAttachGroupRow(groupKey){
     div.className = 'img-thumb';
     if(att.kind==='image'){
       // att.dataUrl = base64 จากไฟล์ใหม่ที่เพิ่งเลือก, att.url = Drive URL ของไฟล์เดิม (ต้องแปลงเป็น thumbnail URL ก่อนใช้ใน <img>)
-      div.innerHTML = `<img src="${att.dataUrl || driveImgSrc(att.url)}"><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
+      div.innerHTML = `<img src="${escapeHtml(att.dataUrl || driveImgSrc(att.url) || '')}"><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
     } else {
       div.innerHTML = `<div style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--panel-alt);border-radius:6px;">📄</div><button data-rmclaimfile="${groupKey}:${i}">✕</button>`;
     }
@@ -8364,10 +8670,14 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       serialNumber: claimDraft.serialNumber, problem: claimDraft.problem, solution: claimDraft.solution,
       problemDate: claimDraft.problemDate, fixDate: claimDraft.fixDate||'', problemDetail: claimDraft.problemDetail||'',
       parts: cleanParts, jobFactorium: claimDraft.jobFactorium, loanSlipNo: claimDraft.loanSlipNo,
-      attachments: uploadedAttachments, submittedBy: myUserEmail, submitterName: myClaimantName(),
+      attachments: uploadedAttachments,
+      // v8.90 — แก้เคลมต้องไม่เขียนทับผู้แจ้งเดิม (ไม่งั้นเคลมของ Engineer หลุดจากรายการของเขา)
+      submittedBy: (claimEditingId && (DATA.claims.find(x=>x.id===claimEditingId)||{}).submittedBy) || myUserEmail,
+      submitterName: (claimEditingId && (DATA.claims.find(x=>x.id===claimEditingId)||{}).submitterName) || myClaimantName(),
       driveFolderUrl: `https://drive.google.com/drive/folders/${folderId}`,
     };
     if(claimEditingId){
+      let orphanIdsAfterSave = [];
       // ลบไฟล์ Drive ที่ถูกลบออกจากเคลมระหว่างแก้ไข (orphan files)
       const oldClaim = DATA.claims.find(x=>x.id===claimEditingId);
       if(oldClaim && oldClaim.attachments){
@@ -8375,14 +8685,14 @@ $('claim-save-btn').addEventListener('click', async ()=>{
           CLAIM_ATTACHMENT_GROUPS.flatMap(g=>(uploadedAttachments[g.key]||[]).map(a=>a.driveFileId||extractDriveFileId(a.url||'')).filter(Boolean))
         );
         const oldAtts = CLAIM_ATTACHMENT_GROUPS.flatMap(g=>(oldClaim.attachments[g.key]||[]));
-        for(const a of oldAtts){
-          const fileId = a.driveFileId || extractDriveFileId(a.url||'');
-          if(fileId && !newFileIds.has(fileId)){
-            try{ await driveDeleteFile(fileId); }catch(e){ console.warn('ลบ orphan Drive file ไม่สำเร็จ (ข้ามต่อ):', fileId, e.message); }
-          }
-        }
+        orphanIdsAfterSave = oldAtts.map(a=>a.driveFileId || extractDriveFileId(a.url||'')).filter(f=>f && !newFileIds.has(f));
       }
       await fsUpdateClaim(claimEditingId, fields);
+      // v8.90 — ลบไฟล์เก่าใน Drive "หลัง" บันทึก Firestore สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าบันทึกพลาดไฟล์หายแต่รายการยังอ้างอิง)
+      if(orphanIdsAfterSave.length){
+        const orphanRes = await driveDeleteMany(orphanIdsAfterSave);
+        if(orphanRes.failed.length) showToast('⚠ ลบไฟล์แนบเก่าใน Drive ไม่สำเร็จ '+driveFailSummary(orphanRes)+' — ใช้ปุ่ม "ตรวจไฟล์ตกค้าง" ตรวจสอบภายหลังได้');
+      }
       const c = DATA.claims.find(x=>x.id===claimEditingId); if(c) Object.assign(c, fields);
       // อัปเดตรูปสรุปเมื่อแก้ไขเคลม — ⚠ +1 Firestore write
       try{ await updateSummaryImageForClaim({ id:claimEditingId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (แก้ไขเคลม) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
@@ -8451,14 +8761,7 @@ function buildClaimSummaryHTML(c){
     ${attKeys ? `<div class="meta-item"><div class="k">ไฟล์แนบ</div><div class="v">${attKeys}</div></div>` : ''}
   `;
 }
-// ลบไฟล์ใน Drive ตาม fileId (ใช้สำหรับลบรูปสรุปเก่าก่อนอัปโหลดใหม่)
-async function driveDeleteFile(fileId){
-  if(!fileId) return;
-  try{
-    const token = await ensureDriveAccess();
-    await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-  } catch(e){ console.warn('driveDeleteFile ล้มเหลว (ไม่กระทบหลัก):', e.message); }
-}
+// (v8.88) driveDeleteFile ตัวซ้ำที่กลืน error ถูกลบออกแล้ว — ใช้ตัวเดียวด้านบน (ใกล้ extractDriveFileId)
 // จับภาพ element → อัปโหลดเป็น PNG ไปยัง Drive folder → คืน {fileId, url}
 // el: DOM element ที่จะ capture; driveFolderUrl: URL ของโฟลเดอร์ปลายทาง
 async function captureElementAndUploadToDrive(el, driveFolderUrl){
@@ -8506,30 +8809,35 @@ async function updateSummaryImageForClaim(c){
   // ดึง summaryImageFileId จาก DATA.claims ด้วย เพื่อกันกรณี c เป็น draft/copy ที่ไม่มี field นี้
   const existingClaim = (DATA.claims||[]).find(x=>x.id===c.id);
   const oldFileId = c.summaryImageFileId || (existingClaim && existingClaim.summaryImageFileId) || '';
-  // ลบรูปเก่าถ้ามี
-  if(oldFileId){ await driveDeleteFile(oldFileId); }
   // Render สรุปเคลมลงใน hidden div
   const renderDiv = $('claim-summary-render-area');
   if(!renderDiv){ console.warn('updateSummaryImageForClaim: ไม่พบ claim-summary-render-area'); return {fileId:'',url:''}; }
   renderDiv.innerHTML = buildClaimSummaryHTML(c);
-  // ต้องทำให้ div visible ชั่วคราว เพราะ html2canvas จับ element ที่ visibility:hidden ไม่ได้ (ได้แค่กระดาษขาว)
-  renderDiv.style.visibility = 'visible';
-  renderDiv.style.zIndex = '9999';
-  // รอ 2 frame + 100ms ให้ browser render font/layout เสร็จก่อน capture
-  await new Promise(r => requestAnimationFrame(r));
-  await new Promise(r => requestAnimationFrame(r));
-  await new Promise(r => setTimeout(r, 100));
-  const result = await captureElementAndUploadToDrive(renderDiv, c.driveFolderUrl||'');
-  // ซ่อนกลับทันทีหลัง capture
-  renderDiv.style.visibility = 'hidden';
-  renderDiv.style.zIndex = '-1';
-  renderDiv.innerHTML = ''; // เคลียร์หลัง capture
+  let result;
+  try{
+    // ต้องทำให้ div visible ชั่วคราว เพราะ html2canvas จับ element ที่ visibility:hidden ไม่ได้ (ได้แค่กระดาษขาว)
+    renderDiv.style.visibility = 'visible';
+    renderDiv.style.zIndex = '9999';
+    // รอ 2 frame + 100ms ให้ browser render font/layout เสร็จก่อน capture
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => requestAnimationFrame(r));
+    await new Promise(r => setTimeout(r, 100));
+    result = await captureElementAndUploadToDrive(renderDiv, c.driveFolderUrl||'');
+  } finally {
+    // v8.90 — ซ่อนกลับเสมอ แม้ capture/อัปโหลดพลาด (เดิมค้างทับหน้าจอ z-index 9999)
+    renderDiv.style.visibility = 'hidden';
+    renderDiv.style.zIndex = '-1';
+    renderDiv.innerHTML = ''; // เคลียร์หลัง capture
+  }
   if(result.fileId){
     // บันทึก fileId และ url ลง Firestore — backward compat: เคลมเก่าไม่มี field นี้ ค่า default = ''
     try{
       await fsUpdateClaim(c.id, { summaryImageFileId: result.fileId, summaryImageUrl: result.url });
       c.summaryImageFileId = result.fileId;
       c.summaryImageUrl = result.url;
+      if(existingClaim && existingClaim!==c){ existingClaim.summaryImageFileId = result.fileId; existingClaim.summaryImageUrl = result.url; } // v8.90 — อัปเดตสำเนาใน DATA.claims ด้วย กันรอบหน้าไม่เห็น id เดิมแล้วรูปเก่าค้าง Drive
+      // v8.90 — ลบรูปเก่า "หลัง" ได้รูปใหม่และบันทึกสำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าถ่าย/อัปโหลดพลาดเคลมจะเหลือ id ที่ไม่มีไฟล์)
+      if(oldFileId && oldFileId!==result.fileId){ try{ await driveDeleteFile(oldFileId); }catch(e){ console.warn('ลบรูปสรุปเก่าไม่สำเร็จ:', e.message); showToast('⚠ ลบรูปสรุปเก่าใน Drive ไม่สำเร็จ: '+e.message); } }
     } catch(e){ console.warn('บันทึก summaryImageFileId ลง Firestore ไม่สำเร็จ:', e.message); }
   }
   return result;
@@ -8853,7 +9161,7 @@ function renderClaimsSheetHistoryLink(){
   const heading = `<h2 style="margin-bottom:6px;">🗄️ ฐานข้อมูลประวัติเคลม (Google Sheet)</h2>`;
   // ลิงก์โฟลเดอร์ Google Drive หลักที่เก็บไฟล์แนบ (รูป/เอกสาร/วีดิโอ) ของเคลมทั้งหมด — ค้างไว้ถาวรท้ายสุดของหน้าคู่กับลิงก์ Sheet ด้านบน (ตามคำขอ)
   const driveLinkHtml = `<p style="font-size:12.5px;margin-top:6px;"><a href="https://drive.google.com/drive/folders/${DRIVE_ROOT_FOLDER_ID}" target="_blank" rel="noopener">📁 เปิดโฟลเดอร์ Google Drive เก็บไฟล์แนบเคลมทั้งหมด</a></p>`;
-  const myTabTitle = (isEditor() && !isSuperAdmin() && currentSupIdentity) ? sanitizeSheetTabName(currentSupIdentity) : null;
+  const myTabTitle = (isEditor() && !isSuperAdmin() && currentSupIdentity) ? sanitizeSheetTabName(`${currentSupIdentity} - ${currentYearAD()}`) : null; // v8.90 — ชื่อแท็บจริงมีปีต่อท้าย (เดิมหาไม่เจอ ค้าง "กำลังเตรียม Sheet" ตลอด)
   const iHaveMyTabAlready = !myTabTitle || (meta.tabs && meta.tabs[myTabTitle]!==undefined);
   // ยังไม่เคยสร้างสเปรดชีต (หรือ Sup Product คนนี้ยังไม่เคยมีแท็บของตัวเอง) -> เตรียมให้ล่วงหน้าทันที ไม่ต้องรอเคลมจบเคสก่อนแล้ว (ค้างไว้ "กำลังเตรียม..." ระหว่างรอ)
   if(!meta.spreadsheetId || !iHaveMyTabAlready){
@@ -9038,9 +9346,9 @@ function openClaimDetail(id){
       if(a.kind==='image'){
         const fid = driveFileIdFromUrl(a.url);
         const thumbSrc = fid ? `https://drive.google.com/thumbnail?id=${fid}&sz=w200` : driveImgSrc(a.url);
-        return `<a href="${a.url}" target="_blank" rel="noopener"><img src="${thumbSrc}" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>`;
+        return `<a href="${escapeHtml(safeHttpUrl(a.url))}" target="_blank" rel="noopener"><img src="${escapeHtml(thumbSrc||'')}" loading="lazy" style="width:70px;height:70px;object-fit:cover;border-radius:6px;margin:4px;"></a>`;
       }
-      return `<a href="${a.url}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`;
+      return `<a href="${escapeHtml(safeHttpUrl(a.url))}" target="_blank" rel="noopener" style="display:inline-block;margin:4px;font-size:12px;">📄 ${escapeHtml(a.name||'ไฟล์')}</a>`;
     }).join('');
     return `<div style="margin-bottom:8px;"><div style="font-size:12px;font-weight:600;color:var(--text-faint);margin-bottom:2px;">${escapeHtml(g.label)}</div>${files}</div>`;
   }).join('');
@@ -9133,8 +9441,13 @@ function openClaimDetail(id){
     });
     $('claim-detail-edit-btn').addEventListener('click', ()=>{ $('claim-detail-modal').classList.remove('show'); openClaimModal(c); });
     $('claim-detail-delete-btn').addEventListener('click', async ()=>{
-      if(!confirm('ยืนยันการลบเคลมนี้? ลบแล้วกู้คืนไม่ได้')) return;
+      if(!confirm('ยืนยันการลบเคลมนี้? ลบแล้วกู้คืนไม่ได้\n(ไฟล์แนบและรูปสรุปใน Google Drive จะถูกลบด้วย)')) return;
       try{
+        // v8.88 — ลบไฟล์ใน Drive ก่อน ถ้าพลาดให้ถามก่อนว่าจะลบเฉพาะในแอปไหม
+        showLoadingOverlay('กำลังลบไฟล์ใน Drive...');
+        const dr = await deleteClaimDriveAssets(c);
+        hideLoadingOverlay();
+        if(dr.failed.length && !confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ '+driveFailSummary(dr)+'\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?')) return;
         // ถ้าเคลมนี้เคยถูกย้ายไป Sheet แล้วแต่ลบจาก Firestore ไม่สำเร็จ (ค้างอยู่) — ลบแถว Sheet ก่อน
         await deleteSheetRowIfTracked(c);
         await fsDeleteClaim(c.id); DATA.claims = DATA.claims.filter(x=>x.id!==c.id); $('claim-detail-modal').classList.remove('show'); renderClaimsView(); showToast('✓ ลบแล้ว');
@@ -9161,11 +9474,12 @@ function openClaimDetail(id){
         $('claim-detail-modal').classList.remove('show');
         showLoadingOverlay('กำลังลบรายการเคลม...');
         try{
-          // ลบไฟล์แนบทุกไฟล์จาก Google Drive
-          const allAttachments = Object.values(c.attachments||{}).flat();
-          for(const a of allAttachments){
-            const fileId = a.driveFileId || extractDriveFileId(a.url||'');
-            if(fileId){ try{ await driveDeleteFile(fileId); }catch(e){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ (ข้ามต่อ):', fileId, e.message); } }
+          // ลบไฟล์แนบ/รูปสรุป/โฟลเดอร์เคลมจาก Google Drive (v8.88 — เช็คผลจริง)
+          const dr = await deleteClaimDriveAssets(c);
+          if(dr.failed.length){
+            hideLoadingOverlay();
+            if(!confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ '+driveFailSummary(dr)+'\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?')) return;
+            showLoadingOverlay('กำลังลบรายการเคลม...');
           }
           // ลบ claimNotice ของเคลมนี้ (doc id = claim id)
           await fsDeleteClaimNotice(c.id);
@@ -9332,7 +9646,7 @@ function renderCatModelManage(){
   // เปลี่ยนผู้ดูแลรายรุ่น — เปลี่ยนทันทีที่เลือก ไม่ต้องกดยืนยันแยก
   wrap.querySelectorAll('[data-modelownerselect]').forEach(sel=>sel.addEventListener('change', async ()=>{
     const key = sel.getAttribute('data-modelownerselect');
-    const [cat, model] = key.split('|');
+    const [cat, model] = splitCatModel(key);
     const val = sel.value;
     const newOwnerDisplay = val===NO_OWNER ? 'ยังไม่มีผู้ดูแล' : val;
     const oldOwner = ownerOf(cat, model);
@@ -9356,15 +9670,16 @@ function renderCatModelManage(){
     let total;
     try{
       await initFirebase(); const sdk = window._firebaseSdk;
-      const [errCount, docCount, pendCount] = await Promise.all([
+      const [errCount, docCount, pendCount, claimCount] = await Promise.all([
         sdk.getCountFromServer(sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',cat))),
         sdk.getCountFromServer(sdk.query(sdk.collection(db,'documents'), sdk.where('category','==',cat))),
         sdk.getCountFromServer(sdk.query(sdk.collection(db,'pendingErrors'), sdk.where('category','==',cat))),
+        sdk.getCountFromServer(sdk.query(sdk.collection(db,'claims'), sdk.where('category','==',cat))), // v8.90 — เคลมและ Cer ที่ผูกอยู่ก็ต้องกันลบด้วย
       ]);
-      total = errCount.data().count + docCount.data().count + pendCount.data().count;
+      total = errCount.data().count + docCount.data().count + pendCount.data().count + claimCount.data().count;
     }catch(e){ showToast('⚠ เช็คข้อมูลไม่สำเร็จ: '+e.message); b.disabled=false; b.textContent=originalLabel; return; }
     b.disabled = false; b.textContent = originalLabel;
-    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
+    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติ/เคลมผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
     if(!confirm(`ยืนยันการลบประเภท "${cat}" ทั้งหมด? การลบนี้ย้อนกลับไม่ได้`)) return;
     const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของประเภทนี้ทั้งหมดด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
     const modelsWithOwners = (DATA.categories[cat]||[]).map(m=>({ model:m, owner: ownerOf(cat,m) })); // เก็บไว้ก่อนลบข้อมูลจริง เพราะ ownerOf ต้องใช้ DATA.categories/owners ที่ยังไม่ถูกลบ
@@ -9375,7 +9690,11 @@ function renderCatModelManage(){
     renderAll(); showToast('ลบประเภทแล้ว');
     if(deleteDriveToo){
       showLoadingOverlay('กำลังลบโฟลเดอร์ใน Google Drive...');
-      try{ for(const {model,owner} of modelsWithOwners){ await deleteDriveFolderForModel(cat, model, owner); } showToast('✓ ลบโฟลเดอร์ใน Drive แล้ว'); }
+      try{
+        for(const {model,owner} of modelsWithOwners){ await deleteDriveFolderForModel(cat, model, owner); }
+        let certFail = 0; for(const {model} of modelsWithOwners){ const cr = await deleteCertificatesForModel(cat, model); certFail += cr.failed.length; }
+        showToast(certFail ? `⚠ ลบโฟลเดอร์แล้ว แต่ลบ Cer ไม่สำเร็จ ${certFail} ใบ` : '✓ ลบโฟลเดอร์และใบ Cer ใน Drive แล้ว');
+      }
       catch(e){ showToast('⚠ ลบบางโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
       finally{ hideLoadingOverlay(); }
     }
@@ -9383,22 +9702,24 @@ function renderCatModelManage(){
 
   // ลบรุ่น
   wrap.querySelectorAll('[data-delmodel]').forEach(b=>b.addEventListener('click', async ()=>{
-    const [cat,model]=b.getAttribute('data-delmodel').split('|');
+    const [cat,model]=splitCatModel(b.getAttribute('data-delmodel'));
     b.disabled = true;
     let total;
     try{
       await initFirebase(); const sdk = window._firebaseSdk;
       // เช็คแบบไม่ต้องใช้ composite index (category+model) — ดึงเฉพาะ category แล้วกรอง model เอง เร็วกว่าและไม่ต้องพึ่ง index ที่อาจยังไม่ได้สร้างไว้
-      const [errSnap, docSnap, pendSnap] = await Promise.all([
+      const [errSnap, docSnap, pendSnap, claimSnap, certSnap] = await Promise.all([
         sdk.getDocs(sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',cat))),
         sdk.getDocs(sdk.query(sdk.collection(db,'documents'), sdk.where('category','==',cat))),
         sdk.getDocs(sdk.query(sdk.collection(db,'pendingErrors'), sdk.where('category','==',cat))),
+        sdk.getDocs(sdk.query(sdk.collection(db,'claims'), sdk.where('category','==',cat))), // v8.90 — เคลมที่ผูกกับรุ่นนี้อยู่ต้องกันลบ
       ]);
-      let c=0; errSnap.forEach(d=>{ if(d.data().model===model) c++; }); docSnap.forEach(d=>{ if(d.data().model===model) c++; }); pendSnap.forEach(d=>{ if(d.data().model===model) c++; });
+      let c=0; errSnap.forEach(d=>{ if(d.data().model===model) c++; }); docSnap.forEach(d=>{ if(d.data().model===model) c++; }); pendSnap.forEach(d=>{ if(d.data().model===model) c++; }); claimSnap.forEach(d=>{ if(d.data().model===model) c++; });
+      // Cer ของรุ่นนี้ไม่กันลบ (ถูกลบพร้อมกันตอนเลือกลบไฟล์ใน Drive) แต่ถ้าไม่ลบ Drive ด้วยจะไม่แตะ
       total = c;
     }catch(e){ showToast('⚠ เช็คข้อมูลไม่สำเร็จ: '+e.message); b.disabled=false; return; }
     b.disabled = false;
-    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
+    if(total > 0){ alert(`ลบไม่ได้ครับ — ยังมี Error/เอกสาร/รายการรออนุมัติ/เคลมผูกอยู่จริง ${total} รายการในเซิร์ฟเวอร์ (เช็คสดแล้ว)`); return; }
     if(!confirm(`ยืนยันการลบรุ่น "${model}"? การลบนี้ย้อนกลับไม่ได้`)) return;
     const deleteDriveToo = confirm(`ต้องการลบโฟลเดอร์เอกสาร/รูป/วิดีโอใน Google Drive ของรุ่นนี้ด้วยหรือไม่?\n\n(กด "ตกลง" = ลบไฟล์ใน Drive ด้วย — ย้อนกลับไม่ได้\nกด "ยกเลิก" = ลบแค่ในระบบ ไฟล์ใน Drive จะยังอยู่)`);
     const owner = ownerOf(cat, model); // เก็บไว้ก่อนลบข้อมูลจริง
@@ -9408,7 +9729,11 @@ function renderCatModelManage(){
     renderAll(); showToast('ลบรุ่นแล้ว');
     if(deleteDriveToo){
       showLoadingOverlay('กำลังลบโฟลเดอร์ใน Google Drive...');
-      try{ await deleteDriveFolderForModel(cat, model, owner); showToast('✓ ลบโฟลเดอร์ใน Drive แล้ว'); }
+      try{
+        await deleteDriveFolderForModel(cat, model, owner);
+        const cr = await deleteCertificatesForModel(cat, model);
+        showToast(cr.failed.length ? `⚠ ลบโฟลเดอร์แล้ว แต่ลบ Cer ไม่สำเร็จ ${cr.failed.length} ใบ: ${cr.failed[0]}` : '✓ ลบโฟลเดอร์และใบ Cer ใน Drive แล้ว');
+      }
       catch(e){ showToast('⚠ ลบโฟลเดอร์ใน Drive ไม่สำเร็จ (ข้อมูลในระบบลบแล้ว): '+e.message); }
       finally{ hideLoadingOverlay(); }
     }
@@ -9439,7 +9764,7 @@ function renderCatModelManage(){
   wrap.querySelectorAll('[data-cancelmodelname]').forEach(b=>b.addEventListener('click', ()=>{ editingModelKey=null; renderCatModelManage(); }));
   wrap.querySelectorAll('[data-confirmmodelname]').forEach(b=>b.addEventListener('click', async ()=>{
     const key = b.getAttribute('data-confirmmodelname');
-    const [cat, oldModel] = key.split('|');
+    const [cat, oldModel] = splitCatModel(key);
     const input = b.parentElement.querySelector('.edit-model-name-input');
     const newModel = input.value.trim();
     if(!newModel){ showToast('⚠ กรุณาพิมพ์ชื่อรุ่น'); return; }
@@ -9501,6 +9826,13 @@ async function migrateLegacyCategoryNames(){
   for(const [o,n] of todo){ await renameCategoryEverywhere(o, n); }
 }
 
+// v8.90 — หา id ของเอกสารที่ category (และ model) ตรงกัน "จาก Firestore โดยตรง" — ไม่พึ่ง DATA.* ที่โหลดมาแค่บางประเภท (เดิมทำให้ Error ของประเภทที่ยังไม่เคยเปิดไม่ถูกเปลี่ยนชื่อ)
+async function fsIdsByCategoryModel(col, category, model){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.query(sdk.collection(db,col), sdk.where('category','==',category)));
+  const ids = []; snap.forEach(d=>{ if(model===undefined || d.data().model===model) ids.push(d.id); });
+  return ids;
+}
 // เปลี่ยนชื่อประเภท — ปรับทุกจุดที่อ้างอิงชื่อเดิม (ผู้ดูแล, ข้อยกเว้นรายรุ่น, และ Error/เอกสาร/รายการรออนุมัติทุกรายการ)
 async function renameCategoryEverywhere(oldCat, newCat){
   const backup = JSON.parse(JSON.stringify(DATA.categories));
@@ -9516,14 +9848,13 @@ async function renameCategoryEverywhere(oldCat, newCat){
     });
     DATA.owners.modelOverrides = newOverrides;
 
-    const errIds = DATA.errors.filter(e=>e.category===oldCat).map(e=>e.id);
-    const docIds = DATA.documents.filter(d=>d.category===oldCat).map(d=>d.id);
-    const pendIds = DATA.pendingErrors.filter(p=>p.category===oldCat).map(p=>p.id);
+    const [errIds, docIds, pendIds] = await Promise.all([ fsIdsByCategoryModel('errors', oldCat), fsIdsByCategoryModel('documents', oldCat), fsIdsByCategoryModel('pendingErrors', oldCat) ]);
 
-    await fsSaveCategoriesDoc();
+    // v8.90 — แก้เอกสารลูกก่อน แล้วค่อยบันทึก meta/categories เป็นขั้นสุดท้าย (ถ้าพลาดกลางทาง ชื่อประเภทยังเป็นของเดิม รันซ้ำได้ ไม่ทิ้งข้อมูลสองชื่อปนกัน)
     await fsBatchUpdateField('errors', errIds, {category:newCat});
     await fsBatchUpdateField('documents', docIds, {category:newCat});
     await fsBatchUpdateField('pendingErrors', pendIds, {category:newCat});
+    await fsSaveCategoriesDoc();
     try{ await fsRenameCertRelated(oldCat, newCat); }catch(e){ console.warn('ปรับชื่อประเภทในข้อมูล Cer/เคลมไม่สำเร็จบางส่วน:', e.message); showToast('⚠ ปรับชื่อในข้อมูล Cer/เคลมไม่ครบ: '+e.message); }
 
     DATA.errors.forEach(e=>{ if(e.category===oldCat) e.category=newCat; });
@@ -9550,14 +9881,12 @@ async function renameModelEverywhere(cat, oldModel, newModel){
     const oldKey = cat+'|'+oldModel, newKey = cat+'|'+newModel;
     if(DATA.owners.modelOverrides[oldKey]!==undefined){ DATA.owners.modelOverrides[newKey]=DATA.owners.modelOverrides[oldKey]; delete DATA.owners.modelOverrides[oldKey]; }
 
-    const errIds = DATA.errors.filter(e=>e.category===cat && e.model===oldModel).map(e=>e.id);
-    const docIds = DATA.documents.filter(d=>d.category===cat && d.model===oldModel).map(d=>d.id);
-    const pendIds = DATA.pendingErrors.filter(p=>p.category===cat && p.model===oldModel).map(p=>p.id);
+    const [errIds, docIds, pendIds] = await Promise.all([ fsIdsByCategoryModel('errors', cat, oldModel), fsIdsByCategoryModel('documents', cat, oldModel), fsIdsByCategoryModel('pendingErrors', cat, oldModel) ]);
 
-    await fsSaveCategoriesDoc();
     await fsBatchUpdateField('errors', errIds, {model:newModel});
     await fsBatchUpdateField('documents', docIds, {model:newModel});
     await fsBatchUpdateField('pendingErrors', pendIds, {model:newModel});
+    await fsSaveCategoriesDoc();
     try{ await fsRenameCertRelated(cat, cat, oldModel, newModel); }catch(e){ console.warn('ปรับชื่อรุ่นในข้อมูล Cer/เคลมไม่สำเร็จบางส่วน:', e.message); showToast('⚠ ปรับชื่อในข้อมูล Cer/เคลมไม่ครบ: '+e.message); }
 
     DATA.errors.forEach(e=>{ if(e.category===cat && e.model===oldModel) e.model=newModel; });
@@ -9729,7 +10058,7 @@ function renderMgrPendingClaims(){
       const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '';
       // แสดง part info เพื่อบอกว่าเคลมอะไร
       const partInfo = c.parts && c.parts.length>0
-        ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${p.count||1}`).join(', ')
+        ? c.parts.map(p=>`${escapeHtml(p.partNumber||'-')} ${escapeHtml(p.partName||'')} ×${escapeHtml(String(p.qty||p.count||1))}`).join(', ')
         : '';
       return `<div class="admin-row" data-claim-open="${c.id}" style="margin-bottom:4px;cursor:pointer;flex-direction:column;align-items:flex-start;">
         <div class="admin-row-main" style="width:100%;justify-content:space-between;">
@@ -9795,42 +10124,38 @@ async function gatherFullBackup(statusElId){
     const catData = catDoc.exists() ? catDoc.data() : {categories:{}, owners:{}};
     const allCategoryNames = Object.keys(catData.categories||{});
 
-    // เช็คแคชในเครื่อง (ตัวเดียวกับที่ใช้ตอนค้นหา) ก่อนเสมอ — Product ไหนแคชยังไม่หมดอายุและไม่มีใครแก้ไข ใช้ข้อมูลเดิมได้เลยไม่ต้องดึงจาก Firestore ซ้ำ
+    // v8.90 — ดึง Error "ทุกรายการ" จาก Firestore ตรงๆ (เดิมใช้แคชในเครื่องซึ่งไม่มีวิธีแก้ (solutions) และดึงตามรายชื่อประเภทเท่านั้น ทำให้ Backup ตกหล่นเงียบๆ)
     const errors = [];
-    const catsNeedFetch = [];
-    for(const cat of allCategoryNames){
-      const cached = loadErrorsCacheFromStorage(cat);
-      if(cached){ errors.push(...cached); }
-      else{ catsNeedFetch.push(cat); }
+    const CHUNK_SIZE = 100;
+    if(statusEl) statusEl.textContent = 'กำลังดึง Error ทั้งหมด...';
+    const errorsSnap = await sdk.getDocs(sdk.collection(db,'errors'));
+    for(let i=0;i<errorsSnap.docs.length;i+=CHUNK_SIZE){
+      const chunk = errorsSnap.docs.slice(i, i+CHUNK_SIZE);
+      const chunkResults = await Promise.all(chunk.map(async d=>{
+        const err = { id:d.id, ...d.data(), solutions:[] };
+        const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
+        solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
+        err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
+        return err;
+      }));
+      errors.push(...chunkResults);
+      if(statusEl) statusEl.textContent = `กำลังดึง Error ... ${Math.min(i+CHUNK_SIZE, errorsSnap.docs.length)}/${errorsSnap.docs.length}`;
     }
-    if(statusEl) statusEl.textContent = `ใช้ข้อมูลจากแคช ${allCategoryNames.length - catsNeedFetch.length} Product · กำลังดึงใหม่ ${catsNeedFetch.length} Product...`;
 
-    const CHUNK_SIZE = 100; // ดึงพร้อมกันทีละก้อน แทนที่จะรอทีละ Error (เร็วขึ้นมาก)
-    for(const cat of catsNeedFetch){
-      const q = sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',cat));
-      const errorsSnap = await sdk.getDocs(q);
-      const catErrors = [];
-      for(let i=0;i<errorsSnap.docs.length;i+=CHUNK_SIZE){
-        const chunk = errorsSnap.docs.slice(i, i+CHUNK_SIZE);
-        const chunkResults = await Promise.all(chunk.map(async d=>{
-          const err = { id:d.id, ...d.data(), solutions:[] };
-          const solSnap = await sdk.getDocs(sdk.collection(db,'errors', d.id, 'solutions'));
-          solSnap.forEach(sd=> err.solutions.push({ id:sd.id, ...sd.data() }));
-          err.solutions.sort((a,b)=>(a.order??0)-(b.order??0));
-          return err;
-        }));
-        catErrors.push(...chunkResults);
-      }
-      errors.push(...catErrors);
-      saveErrorsCacheToStorage(cat, catErrors); // แคชไว้เผื่อรอบหน้าไม่ต้องดึงซ้ำอีก
-      if(statusEl) statusEl.textContent = `กำลังดึง Product: ${cat}...`;
+    // v8.90 — คอลเลกชันอื่นที่เดิมไม่อยู่ใน Backup (อ่านไม่ได้ก็บันทึกเป็น warning ไม่ทำให้ทั้งหมดล้ม)
+    const extra = {}; const backupWarnings = [];
+    for(const col of ['claims','certificates','engineerResponsibility','returnParts','userProfiles','nicknames']){
+      try{ const sn = await sdk.getDocs(sdk.collection(db,col)); extra[col] = []; sn.forEach(d=>extra[col].push({id:d.id, ...d.data()})); }
+      catch(e){ backupWarnings.push(col+': '+e.message); }
     }
+    try{ const cr = await sdk.getDoc(sdk.doc(db,'meta','certRequirements')); if(cr.exists()) extra.certRequirements = cr.data(); }catch(e){ backupWarnings.push('meta/certRequirements: '+e.message); }
+    if(backupWarnings.length) showToast('⚠ Backup ไม่ครบบางคอลเลกชัน: '+backupWarnings.join(' | '));
 
     const documents = []; docsSnap.forEach(d=>documents.push({id:d.id, ...d.data()}));
     const proposals = []; propSnap.forEach(d=>proposals.push({id:d.id, ...d.data()}));
     const pendingErrors = []; pendSnap.forEach(d=>pendingErrors.push({id:d.id, ...d.data()}));
     if(statusEl) statusEl.textContent = '';
-    return { exportedAt: new Date().toISOString(), errors, documents, proposals, pendingErrors, categories: catData.categories||{}, owners: catData.owners||{} };
+    return { exportedAt: new Date().toISOString(), errors, documents, proposals, pendingErrors, categories: catData.categories||{}, owners: catData.owners||{}, ...extra, backupWarnings };
   }finally{ hideLoadingOverlay(); }
 }
 function downloadBlob(content, filename, mime){
@@ -10040,12 +10365,17 @@ async function cleanupOldBackupsInDrive(folderId, daysToKeep){
   const token = await ensureDriveAccess();
   const cutoff = new Date(Date.now() - daysToKeep*24*60*60*1000).toISOString();
   const q = encodeURIComponent(`'${folderId}' in parents and trashed=false and createdTime < '${cutoff}'`);
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, { headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok) return; // ไม่ต้องทำให้การ backup ล้มเหลวถ้าลบไฟล์เก่าไม่สำเร็จ แค่ข้ามไป
-  const data = await res.json();
-  for(const f of (data.files||[])){
-    try{ await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } }); }catch(e){}
-  }
+  // v8.90 — แบ่งหน้า + เช็คผลลัพธ์ + ไม่แตะ backup-status.json (ไฟล์สถานะของสคริปต์อัตโนมัติ)
+  let pageTok = '';
+  do{
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=200&fields=nextPageToken,files(id,name)&supportsAllDrives=true&includeItemsFromAllDrives=true${pageTok?'&pageToken='+pageTok:''}`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(!res.ok){ console.warn('ค้นหา Backup เก่าไม่สำเร็จ ('+res.status+')'); return; } // ไม่ทำให้การ backup ล้มเหลว
+    const data = await res.json(); pageTok = data.nextPageToken||'';
+    for(const f of (data.files||[])){
+      if(f.name==='backup-status.json') continue;
+      try{ await driveDeleteFile(f.id); }catch(e){ console.warn('ลบ Backup เก่าไม่สำเร็จ:', f.name, e.message); }
+    }
+  }while(pageTok);
 }
 /* ===================== เช็คสถานะ Backup อัตโนมัติล่าสุด (อ่านไฟล์ที่สคริปต์อัตโนมัติเขียนไว้) ===================== */
 async function fetchBackupStatus(){
@@ -10521,7 +10851,7 @@ async function rpSheetAppendRow(rowsData, year, tabOverride){
   const resp = await fetch(url, {
     method:'POST',
     headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body: JSON.stringify({ values: rows })
+    body: JSON.stringify({ values: sheetSafeRows(rows) })
   });
   if(!resp.ok){ const t=await resp.text(); throw new Error('Sheets append failed: '+t); }
   return await resp.json();
@@ -10816,7 +11146,7 @@ function rpToggleDetail(containerId, d, canEdit){
       <div class="rp-spo-num">${escapeHtml(w.num||'-')}</div>
       ${thumb
         ? `<div class="rp-thumb-row"><div class="rp-thumb-item" data-lbidx="${imgIdx}"><img src="${thumb}" alt="ใบเบิก" loading="lazy"><div class="rp-thumb-label">ใบเบิก</div></div></div>`
-        : (w.driveUrl ? `<a href="${escapeHtml(w.driveUrl)}" target="_blank" rel="noopener" class="rp-thumb-file">📄 ดูไฟล์ใบเบิก</a>` : '')}
+        : (w.driveUrl ? `<a href="${escapeHtml(safeHttpUrl(w.driveUrl))}" target="_blank" rel="noopener" class="rp-thumb-file">📄 ดูไฟล์ใบเบิก</a>` : '')}
     </div>`;
   }).join('');
 
@@ -10839,7 +11169,7 @@ function rpToggleDetail(containerId, d, canEdit){
   const evHtml = d.evidenceUrl
     ? (evThumb
         ? `<div class="rp-thumb-row"><div class="rp-thumb-item" data-lbidx="${evIdx}"><img src="${evThumb}" alt="หลักฐาน" loading="lazy"><div class="rp-thumb-label">หลักฐาน</div></div></div>`
-        : `<a href="${escapeHtml(d.evidenceUrl)}" target="_blank" rel="noopener" class="rp-thumb-file">🧾 ดูหลักฐาน</a>`)
+        : `<a href="${escapeHtml(safeHttpUrl(d.evidenceUrl))}" target="_blank" rel="noopener" class="rp-thumb-file">🧾 ดูหลักฐาน</a>`)
     : '';
 
   const dateStr = d.dateStr || (d.createdAt ? new Date(d.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}) : '');
@@ -11401,8 +11731,9 @@ function certTypeLabel(t){ return t==='internal' ? 'ภายใน' : 'ผู�
 // โฟลเดอร์: Service Center/Certificate/[ภายใน|ผู้ผลิต]/[ชื่อผู้อัปโหลด]/[Category]/[Model]/
 async function ensureCertificateFolderPath(certType, ownerName, category, model){
   const f1 = await driveFindOrCreateFolder('Certificate', DRIVE_ROOT_FOLDER_ID);
-  const f2 = await driveFindOrCreateFolder(certTypeLabel(certType), f1);
-  const f3 = await driveFindOrCreateFolder(ownerName || 'ไม่ระบุชื่อ', f2);
+  // v8.89 — โครงสร้างใหม่: Certificate / ชื่อผู้อัปโหลด (ชื่อเล่น - เขต) / ภายใน|ผู้ผลิต / ประเภทเครื่อง / รุ่น / ไฟล์
+  const f2 = await driveFindOrCreateFolder(sanitizeFolderName(ownerName || 'ไม่ระบุชื่อ'), f1);
+  const f3 = await driveFindOrCreateFolder(certTypeLabel(certType), f2);
   const f4 = await driveFindOrCreateFolder(category, f3);
   const f5 = await driveFindOrCreateFolder(model, f4);
   return f5;
@@ -11428,30 +11759,67 @@ async function fsUploadCertificate(ownerEmail, ownerName, role, certType, catego
   await initFirebase(); const sdk = window._firebaseSdk;
   // v8.86 — แนบได้หลายใบต่อ 1 ช่อง: ทุกครั้งที่อัปโหลดสร้างเอกสารใหม่เสมอ (id ไม่ซ้ำ) ไม่ทับ/ไม่ลบไฟล์เดิมอีกต่อไป
   const cid = certDocId(ownerEmail, certType, category, model) + '__' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-  const folderId = await ensureCertificateFolderPath(certType, ownerName, category, model);
+  const uploaderFolder = (ownerEmail===myUserEmail) ? myClaimantName() : (ownerName || ownerEmail);
+  const folderId = await ensureCertificateFolderPath(certType, uploaderFolder, category, model);
   const fileUrl = await driveUploadLargeFile(file, file.name, folderId);
   const payload = {
     ownerEmail, ownerName, role, certType, category, model,
     fileUrl, fileName: file.name, uploadedAt: Date.now(),
     score: null, status: 'pending', reviewedBy: '', reviewedAt: null, reviewNote: '',
   };
-  await sdk.setDoc(sdk.doc(db,'certificates', cid), payload);
+  try{ await sdk.setDoc(sdk.doc(db,'certificates', cid), payload); }
+  catch(e){ try{ await driveDeleteFile(driveFileIdFromUrl(fileUrl)); }catch(_){} throw e; } // v8.90 — บันทึกรายการไม่สำเร็จ → เก็บกวาดไฟล์ที่เพิ่งอัปโหลด
   fsWriteLog(`อัปโหลด Certificate (${certTypeLabel(certType)}) ${category}/${model} — ${ownerName}`);
   return cid;
 }
 // v8.86 — ลบ Cer: ลบไฟล์ใน Google Drive จริง แล้วค่อยลบรายการในแอป (ถ้าลบใน Drive ไม่สำเร็จจะ throw — ผู้เรียกตัดสินใจว่าจะลบเฉพาะในแอปหรือไม่)
 async function certDriveDeleteStrict(fileUrl){
   const fileId = fileUrl ? driveFileIdFromUrl(fileUrl) : null;
-  if(!fileId) return;
-  const token = await ensureDriveAccess();
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok && res.status!==404) throw new Error('ลบไฟล์ใน Google Drive ไม่สำเร็จ ('+res.status+')');
+  if(!fileId) throw new Error('หา File ID จากลิงก์ไฟล์ไม่ได้ ('+(fileUrl||'ไม่มีลิงก์')+')');
+  const r = await driveDeleteFile(fileId);
+  if(r==='missing') throw new Error('ไม่พบไฟล์ใน Drive ด้วยบัญชีนี้ (อาจถูกลบไปแล้ว หรือเป็นไฟล์ของบัญชีอื่น)');
 }
 async function fsDeleteCertificate(cert, opts){
   if(!(opts && opts.skipDrive)) await certDriveDeleteStrict(cert.fileUrl);
   await initFirebase(); const sdk = window._firebaseSdk;
   await sdk.deleteDoc(sdk.doc(db,'certificates', cert.id));
   fsWriteLog(`ลบ Certificate (${certTypeLabel(cert.certType)}) ${cert.category}/${cert.model} — ${cert.fileName||''}`);
+}
+// v8.88 — ลบโฟลเดอร์ว่างต่อเนื่องขึ้นไปไม่เกิน maxUp ระดับ
+async function driveDeleteEmptyFolderChain(folderId, maxUp){
+  if(!folderId || maxUp<=0) return;
+  const token = await ensureDriveAccess(); const auth = { Authorization:`Bearer ${token}` };
+  const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1&fields=files(id)&supportsAllDrives=true&includeItemsFromAllDrives=true`, { headers:auth });
+  if(!r.ok) return;
+  if(((await r.json()).files||[]).length>0) return;
+  const g = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=parents&supportsAllDrives=true`, { headers:auth });
+  const parent = g.ok ? ((await g.json()).parents||[])[0] : null;
+  await driveDeleteFile(folderId);
+  if(parent) await driveDeleteEmptyFolderChain(parent, maxUp-1);
+}
+// v8.88 — ลบ Cer ทั้งหมดของรุ่นนี้ (ไฟล์ใน Drive + รายการในแอป + โฟลเดอร์ว่าง) — ใช้ตอนลบรุ่น/ประเภท พร้อมเลือกลบไฟล์ใน Drive
+async function deleteCertificatesForModel(category, model){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'certificates'), sdk.where('category','==',category)));
+  const list = []; snap.forEach(d=>{ if(d.data().model===model) list.push({ id:d.id, ...d.data() }); });
+  const out = { total:list.length, failed:[] };
+  const parents = new Set();
+  const token = list.length ? await ensureDriveAccess() : null;
+  for(const c of list){
+    try{
+      const fid = c.fileUrl ? driveFileIdFromUrl(c.fileUrl) : null;
+      if(fid){
+        try{ const g = await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?fields=parents&supportsAllDrives=true`, { headers:{ Authorization:`Bearer ${token}` } }); if(g.ok){ const pr=((await g.json()).parents||[])[0]; if(pr) parents.add(pr); } }catch(e){}
+        const dr = await driveDeleteFile(fid);
+        if(dr==='missing') throw new Error('ไม่พบไฟล์ใน Drive ด้วยบัญชีนี้ (เก็บรายการไว้ ลบเฉพาะในแอปจากหน้า Cer ได้)');
+      }
+      await sdk.deleteDoc(sdk.doc(db,'certificates', c.id));
+    }catch(e){ out.failed.push(`${c.fileName||c.id}: ${e.message}`); }
+  }
+  for(const pf of parents){ try{ await driveDeleteEmptyFolderChain(pf, 4); }catch(e){ console.warn('เก็บกวาดโฟลเดอร์ Cer ว่างไม่สำเร็จ:', e.message); } }
+  if(list.length) fsWriteLog(`ลบ Certificate ทั้งหมดของรุ่น ${category}/${model} (${list.length} ใบ)`);
+  return out;
 }
 async function fsScoreCertificate(certIdVal, score, note){
   await initFirebase(); const sdk = window._firebaseSdk;
@@ -11483,7 +11851,7 @@ async function fsSaveCertRequirement(category, model, value){
   const key = category+'|'+model;
   if(value){ certRequirements[key] = value; } else { delete certRequirements[key]; }
   await initFirebase(); const sdk = window._firebaseSdk;
-  await sdk.setDoc(sdk.doc(db,'meta','certRequirements'), { requirements: certRequirements }, { merge:true });
+  await sdk.setDoc(sdk.doc(db,'meta','certRequirements'), { requirements: certRequirements }); // v8.90 — ไม่ใช้ merge: merge ลึกทำให้การลบข้อกำหนดไม่ถูกบันทึกจริง (กลับมาตอนโหลดใหม่)
 }
 
 // ---- UI: Engineer — modal เลือกพื้นที่รับผิดชอบ ----
@@ -11533,7 +11901,7 @@ $('eng-resp-save-btn').addEventListener('click', async ()=>{
 // ---- UI: Engineer — แท็บ Certificate ----
 function certStatusBadge(cert){
   if(!cert) return `<span style="color:var(--text-faint);font-size:12px;">— ยังไม่อัปโหลด —</span>`;
-  if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${cert.score}/5</span>`;
+  if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${escapeHtml(String(cert.score))}/5</span>`;
   return `<span style="color:var(--amber);font-size:12px;">⏳ รอ Manager ตรวจ</span>`;
 }
 function certReqBadgeHtml(category, model){
@@ -11641,7 +12009,7 @@ function renderCertDetailList(){
     ? `<p style="font-size:12.5px;color:var(--text-faint);margin:8px 0;">ยังไม่มีใบ Cer — กด "+ เพิ่มใบ Cer" เพื่อแนบ (เลือกหลายไฟล์พร้อมกันได้)</p>`
     : list.map(c=>`<div class="admin-row">
         <div class="admin-row-main" style="min-width:0;">
-          <a href="${escapeHtml(c.fileUrl)}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(c.fileName||'ไฟล์ Cer')}</a>
+          <a href="${escapeHtml(safeHttpUrl(c.fileUrl))}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(c.fileName||'ไฟล์ Cer')}</a>
           <div style="font-size:11.5px;margin-top:2px;">${certStatusBadge(c)} <span style="color:var(--text-faint);">· ${fmtCertDate(c.uploadedAt)}</span></div>
         </div>
         <button class="icon-btn danger btn-sm" data-delcert="${escapeHtml(c.id)}" style="flex-shrink:0;">ลบ</button>
@@ -11667,18 +12035,20 @@ async function deleteCertFromModal(certId){
   if(!confirm(`ลบใบ Cer "${cert.fileName||''}" ?\nไฟล์จะถูกลบออกจากแอปและ Google Drive ถาวร กู้คืนไม่ได้`)) return;
   const role = _certDetailCtx.role;
   showLoadingOverlay('กำลังลบ...');
+  let skippedDrive = false;
   try{
     try{
-      await fsDeleteCertificate(cert);
+      await certDriveDeleteStrict(cert.fileUrl);
     }catch(driveErr){
       hideLoadingOverlay();
       if(!confirm(`ลบไฟล์ใน Google Drive ไม่สำเร็จ: ${driveErr.message}\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?`)) return;
       showLoadingOverlay('กำลังลบ...');
-      await fsDeleteCertificate(cert, { skipDrive:true });
+      skippedDrive = true;
     }
+    await fsDeleteCertificate(cert, { skipDrive:true });
     await refreshCertCaches(role);
     hideLoadingOverlay();
-    showToast('✓ ลบใบ Cer แล้ว (ทั้งในแอปและ Google Drive)');
+    showToast(skippedDrive ? "ลบเฉพาะในแอปแล้ว (ไฟล์ใน Drive ยังอยู่)" : "✓ ลบใบ Cer แล้ว (ทั้งในแอปและ Google Drive)");
     renderCertDetailList();
   }catch(err){ hideLoadingOverlay(); alert('ลบไม่สำเร็จ: '+err.message); }
 }
@@ -11688,8 +12058,9 @@ $('cert-detail-upload-input').addEventListener('change', async e=>{
   const { role, certType, category, model } = _certDetailCtx;
   const ownerName = nicknamesMap[myUserEmail] || myUserEmail;
   let ok = 0; const errs = [];
+  showLoadingOverlay(`กำลังอัปโหลด Certificate 1/${files.length}...`); // v8.90 — เรียกครั้งเดียว (ตัวนับ overlay) แล้วอัปเดตแค่ข้อความ
   for(let i=0;i<files.length;i++){
-    showLoadingOverlay(`กำลังอัปโหลด Certificate ${i+1}/${files.length}...`);
+    updateLoadingOverlayText(`กำลังอัปโหลด Certificate ${i+1}/${files.length}...`);
     try{ await fsUploadCertificate(myUserEmail, ownerName, role, certType, category, model, files[i]); ok++; }
     catch(err){ errs.push(files[i].name+': '+err.message); }
   }
@@ -11784,7 +12155,9 @@ async function renderSupCertReqList(){
 async function renderMgrCertList(){
   const wrap = $('mgr-cert-list');
   wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-  const all = await fsListAllCertificates();
+  let all;
+  try{ all = await fsListAllCertificates(); }
+  catch(e){ wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(e.message)}</div>`; throw e; }
   const pending = all.filter(c=>c.status!=='reviewed').sort((a,b)=>(a.uploadedAt||0)-(b.uploadedAt||0));
   const badge = $('cert-manager-badge');
   if(pending.length>0){ badge.style.display='inline-block'; badge.textContent = pending.length; } else { badge.style.display='none'; }
@@ -11801,7 +12174,7 @@ async function renderMgrCertList(){
           <div style="color:var(--text-dim);margin-top:2px;">${escapeHtml(c.category)} / ${escapeHtml(c.model)} — ${certTypeLabel(c.certType)}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
-          <a href="${escapeHtml(c.fileUrl)}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>
+          <a href="${escapeHtml(safeHttpUrl(c.fileUrl))}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>
           <button class="btn btn-primary btn-sm cert-score-btn" data-id="${escapeHtml(c.id)}">✅ ให้คะแนน</button>
         </div>
       </div>
@@ -11835,7 +12208,7 @@ $('cert-score-save-btn').addEventListener('click', async ()=>{
     await fsScoreCertificate(cid, score, note);
     hideLoadingOverlay();
     showToast('✓ บันทึกคะแนนแล้ว');
-    renderMgrCertList();
+    renderMgrCertList().catch(e=>showToast('⚠ โหลดรายการ Cer ไม่สำเร็จ: '+e.message));
   }catch(e){ hideLoadingOverlay(); alert('บันทึกคะแนนไม่สำเร็จ: '+e.message); }
 });
 
@@ -11846,7 +12219,10 @@ $('mgr-cert-collapse-header').addEventListener('click', ()=>{
   _mgrCertOpen = !_mgrCertOpen;
   $('mgr-cert-collapse-body').style.display = _mgrCertOpen ? 'block' : 'none';
   $('mgr-cert-collapse-icon').textContent = _mgrCertOpen ? '▲ ซ่อน' : '▼ แสดง';
-  if(_mgrCertOpen && !_mgrCertListLoaded){ renderMgrCertList(); _mgrCertListLoaded = true; }
+  if(_mgrCertOpen && !_mgrCertListLoaded){
+    // v8.90 — ตั้งธง "โหลดแล้ว" เฉพาะเมื่อสำเร็จ และจับ error (เดิมพลาดแล้วค้าง "กำลังโหลด..." ถาวร)
+    renderMgrCertList().then(()=>{ _mgrCertListLoaded = true; }).catch(e=>{ showToast('⚠ โหลดรายการ Cer ไม่สำเร็จ: '+e.message); });
+  }
 });
 
 /* ---- v8.50: Admin Service — แสดงรายการรอตรวจรับ ---- */
@@ -11978,7 +12354,7 @@ async function rpConfirmReceive(d, evalResults, score){
 
   const withdrawals = d.withdrawals||[];
   const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ') || '-';
-  const evCell = d.evidenceUrl ? `=HYPERLINK("${d.evidenceUrl}";"หลักฐาน")` : '';
+  const evCell = safeHttpUrl(d.evidenceUrl) ? `=HYPERLINK("${safeHttpUrl(d.evidenceUrl).replace(/"/g,'%22')}";"หลักฐาน")` : '';
   const evalStr = evalResults.length>0 ? evalResults.join(' / ') : 'เรียบร้อยสมบูรณ์';
   const scoreVal = (typeof score === 'number') ? score : 5;
 
@@ -11996,31 +12372,32 @@ async function rpConfirmReceive(d, evalResults, score){
   for(let i=0;i<totalWiCols;i++){
     const it = wiItems[i];
     const label = it ? (it.label || `ไฟล์ ${i+1}`).replace(/"/g,'') : '';
-    wiCells.push(it ? `=HYPERLINK("${it.url}";"${label}")` : '');
+    wiCells.push(it && safeHttpUrl(it.url) ? `=HYPERLINK("${safeHttpUrl(it.url).replace(/"/g,'%22')}";"${label}")` : '');
   }
 
   // base 9 คอลัมน์ (v8.61 — คะแนน > รูปหลักฐาน > รูปใบเบิก ท้ายสุด):
   // วันที่บันทึก, วันที่ตรวจรับ, ผู้ส่ง, เลขที่ใบเบิก, วิธีการส่ง, ผู้ตรวจรับ, ผลการประเมิน, คะแนน, รูปหลักฐาน, [รูปใบเบิก 1, 2, ...]
   const row = [recordDate, receiveDate, d.senderName||'', spoNums, d.returnMethodLabel||'', receiverName, evalStr, scoreVal, evCell, ...wiCells];
 
+  // v8.90 — กันยืนยันซ้ำ (เช่น Admin 2 คนกดพร้อมกัน): ต้องยังมีรายการนี้อยู่ใน Firestore ถึงจะเขียนประวัติลง Sheet
+  const curSnap = await sdk.getDoc(sdk.doc(db,'returnParts', d.id));
+  if(!curSnap.exists()) throw new Error('รายการนี้ถูกยืนยันรับไปแล้ว (รีเฟรชรายการ)');
+
   const appendResult = await rpSheetAppendRow([row], nowDate.getFullYear().toString(), histTabName);
 
-  // 3) ลบ Drive files ทีละไฟล์
+  // 3) ลบรายการใน Firestore ก่อน (v8.90 — เดิมลบไฟล์ก่อน ถ้าลบรายการพลาดจะเหลือรายการ pending ที่ไฟล์หายไปแล้ว) แล้วค่อยลบไฟล์ใน Drive
+  await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
+  fsBumpRpActivity();
+
+  // 4) ลบ Drive files ทีละไฟล์
   const fileIds = d.driveFileIds || [];
   // backward compat: เพิ่ม evidenceFileId และ withdrawal fileIds ถ้า driveFileIds ว่าง
   if(fileIds.length===0){
     if(d.evidenceFileId) fileIds.push(d.evidenceFileId);
     (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) fileIds.push(w.driveFileId); });
   }
-  for(const fid of fileIds){
-    if(fid) try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ (ข้าม):', fid, e.message); }
-  }
-
-  // 4) ลบ Firestore doc
-  await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
-
-  // 5) แจ้ง realtime listeners
-  fsBumpRpActivity();
+  const rpRes = await driveDeleteMany(fileIds);
+  if(rpRes.failed.length) showToast('⚠ ลบไฟล์ RP ใน Drive ไม่สำเร็จ '+driveFailSummary(rpRes)+' — ตรวจได้ที่ปุ่ม "ตรวจไฟล์ตกค้าง"');
 
   fsWriteLog(`Admin Service ยืนยันรับอะไหล่จาก ${d.senderName||d.senderEmail} ผลประเมิน: ${evalStr} (${scoreVal}/5 คะแนน)`);
 }
@@ -12031,10 +12408,7 @@ async function rpDeleteDriveFolder(folderUrl){
   const m = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
   if(!m) return;
   const folderId = m[1];
-  const token = await ensureDriveAccess();
-  // Drive API: deleting a folder also deletes its contents
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token}` } });
-  if(!res.ok && res.status!==404) throw new Error('ลบโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+  await driveDeleteFile(folderId); // Drive API: ลบโฟลเดอร์ = ลบไฟล์ข้างในด้วย
 }
 
 /* ---- v8.50: ลบรายการ RP — Firestore + Drive files (ไม่ลบ Sheet — เป็น history เท่านั้น) ---- */
@@ -12055,8 +12429,11 @@ async function rpConfirmDelete(d, containerId){
       if(d.evidenceFileId) fileIds.push(d.evidenceFileId);
       (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) fileIds.push(w.driveFileId); });
     }
-    for(const fid of fileIds){
-      if(fid) try{ await driveDeleteFile(fid); }catch(e){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ (ข้าม):', fid, e.message); }
+    const rpRes = await driveDeleteMany(fileIds);
+    if(rpRes.failed.length){
+      hideLoadingOverlay();
+      if(!confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ '+driveFailSummary(rpRes)+'\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?')) return;
+      showLoadingOverlay('กำลังลบข้อมูล...');
     }
 
     // 2) ลบ Firestore doc
@@ -12117,7 +12494,7 @@ function rpOpenEditModal(d, containerId){
   const prevEl = $('rp-edit-evidence-preview');
   if(prevEl){
     if(rpEditEvidenceExistingUrl){
-      prevEl.innerHTML = `<a href="${escapeHtml(rpEditEvidenceExistingUrl)}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 หลักฐานปัจจุบัน</a>
+      prevEl.innerHTML = `<a href="${escapeHtml(safeHttpUrl(rpEditEvidenceExistingUrl))}" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent);">🧾 หลักฐานปัจจุบัน</a>
       <button class="icon-btn" id="rp-edit-ev-clear" style="margin-left:8px;font-size:11px;">✕ ลบออก</button>`;
       document.getElementById('rp-edit-ev-clear')?.addEventListener('click', ()=>{ rpEditEvidenceExistingUrl=''; rpEditEvidenceFile=null; prevEl.innerHTML=''; });
     } else {
@@ -12156,7 +12533,7 @@ function rpEditRenderWithdrawalList(){
         ${w.file
           ? `📎 ${escapeHtml(w.file.name)} — กดเพื่อเปลี่ยน`
           : w.existingUrl
-            ? `✅ ${escapeHtml(w.existingFileName||'ไฟล์เดิม')} — <a href="${escapeHtml(w.existingUrl)}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11px;">ดู</a> · กดเพื่อเปลี่ยน`
+            ? `✅ ${escapeHtml(w.existingFileName||'ไฟล์เดิม')} — <a href="${escapeHtml(safeHttpUrl(w.existingUrl))}" target="_blank" rel="noopener" style="color:var(--accent);font-size:11px;">ดู</a> · กดเพื่อเปลี่ยน`
             : '📸 แตะเพื่อแนบรูปใบเบิก'
         }
         <input type="file" accept="image/*,application/pdf" style="display:none;" data-ewid="${w.id}" class="rp-edit-wi-file-input">
@@ -12276,8 +12653,9 @@ document.querySelectorAll('input[name="rp-edit-method"]').forEach(r=>{
 $('rp-edit-save-btn').addEventListener('click', rpEditSave);
 
 async function rpEditSave(){
+  // v8.90 — เขียนใหม่: รายการส่งคืนอะไหล่ที่ยังรอรับเก็บอยู่ใน Firestore (returnParts) แล้ว ไม่ใช่แถวใน Google Sheet อีกต่อไป
   const d = _rpEditRow;
-  if(!d){ alert('ข้อมูลไม่ครบ'); return; }
+  if(!d || !d.id){ alert('ข้อมูลไม่ครบ'); return; }
 
   const method = (document.querySelector('input[name="rp-edit-method"]:checked')||{}).value||'';
   if(!method){ alert('กรุณาเลือกรูปแบบการส่งคืน'); return; }
@@ -12288,78 +12666,71 @@ async function rpEditSave(){
 
   showLoadingOverlay('กำลังบันทึกการแก้ไข...');
   try{
-    // Get drive folder id from existing URL
-    const driveFolderUrl = d.driveFolder||'';
-    const folderMatch = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-    const folderId = folderMatch ? folderMatch[1] : null;
-
-    // Upload new files for withdrawals that changed
+    await initFirebase(); const sdk = window._firebaseSdk;
     const token = await ensureDriveAccess();
+    const oldFileIds = [...(d.driveFileIds||[])];
+    if(oldFileIds.length===0){
+      if(d.evidenceFileId) oldFileIds.push(d.evidenceFileId);
+      (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) oldFileIds.push(w.driveFileId); });
+    }
+    // หาโฟลเดอร์ปลายทาง: ใช้โฟลเดอร์ที่ไฟล์เดิมอยู่ ถ้าไม่มีไฟล์เดิมเลยค่อยสร้างตามชื่อผู้ส่ง
+    let folderId = null;
+    if(oldFileIds[0]){
+      try{ const g = await fetch(`https://www.googleapis.com/drive/v3/files/${oldFileIds[0]}?fields=parents&supportsAllDrives=true`, { headers:{ Authorization:`Bearer ${token}` } }); if(g.ok) folderId = ((await g.json()).parents||[])[0] || null; }catch(e){}
+    }
+    const needUpload = rpEditWithdrawals.some(w=>w.file) || !!rpEditEvidenceFile;
+    if(!folderId && needUpload) folderId = await ensureReturnPartsFolderPath(d.senderName||d.senderEmail||'');
+
     const newWithdrawals = [];
     for(let i=0;i<rpEditWithdrawals.length;i++){
       const w = rpEditWithdrawals[i];
       updateLoadingOverlayText(`กำลังประมวลผลใบเบิก ${i+1}/${rpEditWithdrawals.length}...`);
-      if(w.file && folderId){
-        // Upload new file
+      if(w.file){
         const safeNum = sanitizeFolderName(w.num||`withdrawal-${i+1}`);
         const ext = w.file.name.split('.').pop();
         const fname = `ใบเบิก_${safeNum}.${ext}`;
         const fileId = await driveUploadFile(w.file, fname, w.file.type||'application/octet-stream', folderId);
-        const url = `https://drive.google.com/file/d/${fileId}/view`;
-        newWithdrawals.push({ num: w.num.trim(), driveFileId: fileId, driveUrl: url, fileName: fname });
+        newWithdrawals.push({ num: w.num.trim(), driveFileId: fileId, driveUrl: `https://drive.google.com/file/d/${fileId}/view`, fileName: fname });
       } else if(w.existingUrl){
-        // Keep existing file reference
-        const existingW = (d.withdrawals||[]).find(x=>x.num===w.num) || (d.withdrawals||[])[i];
-        newWithdrawals.push({ num: w.num.trim(), driveFileId: existingW?.driveFileId||'', driveUrl: w.existingUrl, fileName: w.existingFileName });
+        const existingW = (d.withdrawals||[]).find(x=>x.driveUrl===w.existingUrl) || (d.withdrawals||[])[i] || {};
+        newWithdrawals.push({ num: w.num.trim(), driveFileId: existingW.driveFileId||driveFileIdFromUrl(w.existingUrl)||'', driveUrl: w.existingUrl, fileName: w.existingFileName||existingW.fileName||'' });
       } else {
         newWithdrawals.push({ num: w.num.trim(), driveFileId: '', driveUrl: '', fileName: '' });
       }
     }
 
-    // Upload new evidence if changed
-    let newEvidUrl = rpEditEvidenceExistingUrl||'';
-    if(rpEditEvidenceFile && folderId){
+    let newEvid = { id: d.evidenceFileId||'', url: rpEditEvidenceExistingUrl||'', name: d.evidenceName||'' };
+    if(rpEditEvidenceFile){
       updateLoadingOverlayText('กำลังอัปโหลดหลักฐาน...');
       const ext2 = rpEditEvidenceFile.name.split('.').pop();
       const fname2 = `หลักฐาน_${bangkokDateFolder()}.${ext2}`;
       const fileId2 = await driveUploadFile(rpEditEvidenceFile, fname2, rpEditEvidenceFile.type||'application/octet-stream', folderId);
-      newEvidUrl = `https://drive.google.com/file/d/${fileId2}/view`;
+      newEvid = { id:fileId2, url:`https://drive.google.com/file/d/${fileId2}/view`, name:fname2 };
     } else if(!rpEditEvidenceExistingUrl){
-      newEvidUrl = '';
+      newEvid = { id:'', url:'', name:'' };
     }
 
     const methodLabel = {self:'ด้วยตนเอง ที่ Office',parcel:'ส่งพัสดุ',truck:'คืนกลับรถ Office'}[method]||method;
-    const yearAD = d.yearAD||new Date().getFullYear().toString();
-    const tabOverride = d.isLegacy ? yearAD : rpWaitingTabName(yearAD);
+    const newDriveFileIds = [];
+    newWithdrawals.forEach(w=>{ if(w.driveFileId) newDriveFileIds.push(w.driveFileId); });
+    if(newEvid.id) newDriveFileIds.push(newEvid.id);
 
-    updateLoadingOverlayText('กำลังอัปเดต Google Sheet...');
-    if(d.isLegacy){
-      // legacy: single row update (old format)
-      const spoText = newWithdrawals.map(w=>w.num||'').filter(Boolean).join(', ');
-      const wiLinks = newWithdrawals.map(w=>w.driveUrl||'').filter(Boolean).join('\n');
-      const updatedRow = [d.dateStr, d.senderName, spoText, methodLabel, wiLinks, newEvidUrl, 'รอรับ'];
-      await rpUpdateSheetRow(d.rowIndex, yearAD, updatedRow, tabOverride);
-    } else {
-      // v8.34: delete old rows + append new rows (handles row count change)
-      const evidCell = newEvidUrl ? `=HYPERLINK("${newEvidUrl}";"หลักฐาน")` : '';
-      const newRows = newWithdrawals.map((w, i) => {
-        const wiCell = w.driveUrl ? `=HYPERLINK("${w.driveUrl}";"รูปใบเบิก")` : '';
-        if(i===0) return [d.dateStr, d.senderName||'', w.num||'', methodLabel, wiCell, evidCell, 'รอรับ'];
-        else       return ['', '', w.num||'', '', wiCell, '', ''];
-      });
-      if(newRows.length===0) newRows.push([d.dateStr, d.senderName||'', '', methodLabel, '', evidCell, 'รอรับ']);
-      const oldRowCount = d.rowCount||1;
-      // ลบ old rows ก่อน แล้ว insert new rows ที่ตำแหน่งเดิม
-      await rpDeleteSheetRows(d.rowIndex, oldRowCount, yearAD, tabOverride);
-      // หลังลบแล้ว insert ที่แถวก่อน rowIndex (index shifted — ใช้ insertAt)
-      await rpSheetInsertRowsAt(d.rowIndex, newRows, yearAD, tabOverride);
-    }
+    updateLoadingOverlayText('กำลังบันทึก...');
+    const patch = { returnMethod: method, returnMethodLabel: methodLabel, withdrawals: newWithdrawals,
+      evidenceFileId: newEvid.id, evidenceUrl: newEvid.url, evidenceName: newEvid.name, driveFileIds: newDriveFileIds, editedAt: Date.now() };
+    await sdk.updateDoc(sdk.doc(db,'returnParts', d.id), patch);
+    Object.assign(d, patch);
+    fsBumpRpActivity();
+
+    // ลบไฟล์เดิมที่ถูกแทนที่/เอาออก "หลัง" บันทึกสำเร็จแล้วเท่านั้น
+    const stale = oldFileIds.filter(f=>f && !newDriveFileIds.includes(f));
+    const sr = await driveDeleteMany(stale);
 
     hideLoadingOverlay();
     $('rp-edit-modal').classList.remove('show');
-    showToast('✓ แก้ไขเรียบร้อย');
+    showToast(sr.failed.length ? ('✓ แก้ไขแล้ว แต่ลบไฟล์เดิมใน Drive ไม่สำเร็จ '+driveFailSummary(sr)) : '✓ แก้ไขเรียบร้อย');
     if(_rpEditContainerId==='rp-manager-list') loadReturnPartsManagerList();
-    else if(_rpEditContainerId==='eng-mywork-rp-list') renderEngMyWorkRpSection(); // v8.41
+    else if(_rpEditContainerId==='eng-mywork-rp-list') renderEngMyWorkRpSection();
     else loadMyReturnParts();
   }catch(e){
     hideLoadingOverlay();
