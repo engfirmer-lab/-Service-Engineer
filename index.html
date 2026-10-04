@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.90
-  อัปเดตล่าสุด   : 4 ตุลาคม 2569 11:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.91
+  อัปเดตล่าสุด   : 4 ตุลาคม 2569 12:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.90</title>
+<title>F1 Service — v8.91</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1826,8 +1826,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.90";
-const APP_UPDATED_AT = "4 ตุลาคม 2569 11:30 น. เวลาไทย";
+const APP_VERSION = "8.91";
+const APP_UPDATED_AT = "4 ตุลาคม 2569 12:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4231,11 +4231,13 @@ async function clearAllAuthCache(){
   }catch(e){}
 }
 $('change-name-btn').addEventListener('click', async ()=>{
+  if(!confirm('ยืนยันออกจากระบบ?')) return;
   await clearAllAuthCache();
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
 // ปุ่มออกจากระบบตอนหน้าจอ "รอสิทธิ์เข้าถึง" — เผื่อกดขอสิทธิ์ผิดบัญชี จะได้ออกแล้วเข้าใหม่ด้วยบัญชีอื่นได้เลย ไม่ต้องรอ
 $('access-request-logout-btn').addEventListener('click', async ()=>{
+  if(!confirm('ยืนยันออกจากระบบ / เปลี่ยนบัญชี?')) return;
   await clearAllAuthCache();
   try{ await initFirebase(); await window._firebaseSdk.signOut(auth); }catch(e){}
 });
@@ -4433,7 +4435,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const btn = $('maintenance-mode-save-btn');
   if(btn) btn.addEventListener('click', fsSaveMaintenanceMode);
 });
-$('maintenance-lock-logout-btn')?.addEventListener('click', ()=>{ try{ window._firebaseSdk.signOut(auth); }catch(e){} location.reload(); });
+$('maintenance-lock-logout-btn')?.addEventListener('click', ()=>{ if(!confirm('ยืนยันออกจากระบบ / เปลี่ยนบัญชี?')) return; try{ window._firebaseSdk.signOut(auth); }catch(e){} location.reload(); });
 
 /* ===================== เรียลไทม์รายการเคลม/แจ้งเตือน — ไม่ต้องกดรีเฟรชจอเอง ===================== */
 // ใช้หลักการเดียวกับ initVersionCheck ด้านบน: ฟังเรียลไทม์แค่เอกสารเล็กๆ 1 ตัว (meta/claimsActivity) แทนการเปิด listener ทั้ง collection claims/claimNotices
@@ -5339,8 +5341,8 @@ function renderRoster(){
       <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
-      <td style="padding:6px 8px;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?` (${age})`:''}</td>
-      <td style="padding:6px 8px;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?` (${tenure})`:''}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(age)}</span>`:''}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(tenure)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
         <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
@@ -7436,8 +7438,8 @@ function renderUnifiedPermissionList(){
   const noteEl = $('perm-list-note');
   const canEdit = isSuperAdmin();
   noteEl.textContent = canEdit
-    ? '✓ คุณคือ Super Admin — จัดการสิทธิ์ทั้งหมดนี้ได้'
-    : `⚠ จัดการสิทธิ์ได้เฉพาะ Super Admin (${SUPER_ADMIN_EMAIL}) เท่านั้น — บัญชีที่ login อยู่ตอนนี้ (${escapeHtml(myUserEmail||'-')}) ดูรายชื่อได้อย่างเดียว`;
+    ? '✓ คุณมีสิทธิ์ Super Admin / Manager / CEO — เปลี่ยนสิทธิ์ได้ทุกตำแหน่ง (ยกเว้นของตัวเอง)'
+    : `⚠ จัดการสิทธิ์ได้เฉพาะ Super Admin / Manager / CEO เท่านั้น — บัญชีที่ login อยู่ตอนนี้ (${escapeHtml(myUserEmail||'-')}) ดูรายชื่อได้อย่างเดียว`;
   $('new-perm-email-input').disabled = !canEdit;
   $('new-perm-role-select').disabled = !canEdit;
   $('add-perm-email-btn').disabled = !canEdit;
@@ -7449,26 +7451,30 @@ function renderUnifiedPermissionList(){
   const ceos = ceoEmails.slice().sort(naturalSort);
   const approved = approvedUsers.slice().sort(naturalSort);
 
-  // row สำหรับ Manager/AdminService ที่ Super Admin จัดการเองได้
-  function specialRowHtml(email, tier){
+  const ROLE_OPTS = [['manager','Manager'],['ceo','CEO'],['editor','แก้ไขข้อมูล (Sup)'],['adminService','Admin Service'],['approved','Engineer']];
+  function roleSelectHtml(email, role){
+    return `<select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" data-curtier="${role}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">${ROLE_OPTS.map(([v,l])=>`<option value="${v}" ${role===v?'selected':''}>${l}</option>`).join('')}</select>`;
+  }
+  function permLabel(email){
     const nick = nicknamesMap[email.toLowerCase()];
-    const label = nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
+    return nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
+  }
+  // row สำหรับ Manager/CEO/AdminService
+  function specialRowHtml(email, tier){
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">${label}</span></div>
-      ${canEdit ? `<button class="icon-btn danger" data-delspecial="${escapeHtml(email)}" data-tier="${tier}">ลบ</button>` : ''}
+      <div class="admin-row-main"><span style="font-size:13px;">${permLabel(email)}</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        ${canEdit ? roleSelectHtml(email, tier) : ''}
+        ${canEdit ? `<button class="icon-btn danger" data-delspecial="${escapeHtml(email)}" data-tier="${tier}">ลบ</button>` : ''}
+      </div>
     </div>`;
   }
 
   function userRowHtml(email, role){
-    const nick = nicknamesMap[email.toLowerCase()];
-    const label = nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
     return `<div class="admin-row">
-      <div class="admin-row-main"><span style="font-size:13px;">${label}</span></div>
+      <div class="admin-row-main"><span style="font-size:13px;">${permLabel(email)}</span></div>
       <div style="display:flex;gap:6px;align-items:center;">
-        <select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">
-          <option value="approved" ${role==='approved'?'selected':''}>Engineer</option>
-          <option value="editor" ${role==='editor'?'selected':''}>แก้ไขข้อมูล (Sup)</option>
-        </select>
+        ${roleSelectHtml(email, role)}
         <button class="icon-btn danger" data-delperm="${escapeHtml(email)}" ${canEdit?'':'disabled style="opacity:.35;cursor:not-allowed;"'}>ลบ</button>
       </div>
     </div>`;
@@ -7585,20 +7591,38 @@ function renderUnifiedPermissionList(){
   list.querySelectorAll('[data-permrole]').forEach(sel=>sel.addEventListener('change', async ()=>{
     if(!isSuperAdmin()) return;
     const email = sel.getAttribute('data-permrole');
+    const oldRole = sel.getAttribute('data-curtier');
     const newRole = sel.value;
-    const prevAdmin = [...adminEmails]; const prevApproved = [...approvedUsers];
-    if(newRole==='editor'){
-      if(!adminEmails.includes(email)) adminEmails = [...adminEmails, email];
-      approvedUsers = approvedUsers.filter(e=>e!==email);
-    } else {
-      adminEmails = adminEmails.filter(e=>e!==email);
-      if(!approvedUsers.includes(email)) approvedUsers = [...approvedUsers, email];
+    if(newRole===oldRole) return;
+    if(email===myUserEmail && myUserEmail!==SUPER_ADMIN_EMAIL){ sel.value=oldRole; showToast('⚠ เปลี่ยนสิทธิ์ของตัวเองไม่ได้ (กันล็อกตัวเองออกจากระบบ)'); return; }
+    const names = {manager:'Manager', ceo:'CEO', editor:'แก้ไขข้อมูล (Sup)', adminService:'Admin Service', approved:'Engineer'};
+    if(!confirm(`เปลี่ยนสิทธิ์ ${email}\nจาก ${names[oldRole]} เป็น ${names[newRole]} ใช่ไหม?`)){ sel.value = oldRole; return; }
+    const lists = { manager:'managerEmails', ceo:'ceoEmails', editor:'adminEmails', adminService:'adminServiceEmails', approved:'approvedUsers' };
+    const savers = { manager:fsSaveManagerEmails, ceo:fsSaveCeoEmails, editor:fsSaveAdminEmails, adminService:fsSaveAdminServiceEmails, approved:fsSaveApprovedUsers };
+    const get = k=>({managerEmails,ceoEmails,adminEmails,adminServiceEmails,approvedUsers})[k];
+    const set = (k,v)=>{ if(k==='managerEmails') managerEmails=v; else if(k==='ceoEmails') ceoEmails=v; else if(k==='adminEmails') adminEmails=v; else if(k==='adminServiceEmails') adminServiceEmails=v; else approvedUsers=v; };
+    const prev = {}; Object.values(lists).forEach(k=>{ prev[k]=[...get(k)]; });
+    // ย้ายเข้ากลุ่มใหม่ก่อน แล้วค่อยเอาออกจากกลุ่มอื่น — ระหว่างบันทึกจะไม่มีช่วงที่คนนี้ไม่มีสิทธิ์เลย
+    Object.entries(lists).forEach(([role,k])=>{
+      const cur = get(k).filter(e=>e!==email);
+      set(k, role===newRole ? [...cur, email] : cur);
+    });
+    const order = [newRole, ...Object.keys(lists).filter(r=>r!==newRole)];
+    const changed = order.filter(r=> JSON.stringify(prev[lists[r]]) !== JSON.stringify(get(lists[r])));
+    const done = [];
+    try{
+      for(const r of changed){ await savers[r](); done.push(r); }
+    }catch(e){
+      Object.values(lists).forEach(k=>set(k, prev[k]));
+      // พยายามคืนค่าที่บันทึกไปแล้วบางส่วน
+      for(const r of done){ try{ await savers[r](); }catch(_){} }
+      showToast('⚠ เปลี่ยนสิทธิ์ไม่สำเร็จ: '+e.message);
+      renderUnifiedPermissionList();
+      return;
     }
-    try{ await Promise.all([fsSaveAdminEmails(), fsSaveApprovedUsers()]); }
-    catch(e){ adminEmails = prevAdmin; approvedUsers = prevApproved; showToast('⚠ เปลี่ยนสิทธิ์ไม่สำเร็จ: '+e.message); renderUnifiedPermissionList(); return; }
     renderUnifiedPermissionList();
-    fsWriteLog(`ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'Engineer'}`);
-    showToast(`✓ ย้ายสิทธิ์ ${email} เป็น ${newRole==='editor'?'แก้ไขข้อมูล':'Engineer'} แล้ว`);
+    fsWriteLog(`ย้ายสิทธิ์ ${email} จาก ${names[oldRole]} เป็น ${names[newRole]}`);
+    showToast(`✓ ย้ายสิทธิ์ ${email} เป็น ${names[newRole]} แล้ว`);
   }));
   list.querySelectorAll('[data-delperm]').forEach(b=>b.addEventListener('click', async ()=>{
     if(!isSuperAdmin()) return;
