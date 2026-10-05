@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.92
-  อัปเดตล่าสุด   : 5 ตุลาคม 2569 11:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.93
+  อัปเดตล่าสุด   : 5 ตุลาคม 2569 12:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.92</title>
+<title>F1 Service — v8.93</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1826,8 +1826,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.92";
-const APP_UPDATED_AT = "5 ตุลาคม 2569 11:15 น. เวลาไทย";
+const APP_VERSION = "8.93";
+const APP_UPDATED_AT = "5 ตุลาคม 2569 12:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4822,7 +4822,7 @@ async function checkUserProfileGate(){
 function showProfileModal(isFirstTime, editingEmail, editingProfile){
   profileModalIsFirstTime = isFirstTime !== false;
   rosterEditingEmail = editingEmail || null;
-  loadThaiAddressData().then(()=>populateProfileProvinceSelect());
+  loadThaiAddressData().then(()=>{ populateProfileProvinceSelect(); if(_profileFillSource && !$('profile-province').value && _profileFillSource.province) fillProfileForm(_profileFillSource); });
   populateProfileProvinceCoveredList();
 
   if(profileModalIsFirstTime){
@@ -4853,6 +4853,7 @@ function showProfileModal(isFirstTime, editingEmail, editingProfile){
 }
 
 function clearProfileForm(){
+  _profileFillSource = null;
   ['firstNameTh','lastNameTh','nicknameTh','firstNameEn','lastNameEn','nicknameEn','phone','birthDate','houseNo','companyEmail','startDate','mindrayAccount'].forEach(f=>{ $('profile-'+f).value=''; });
   $('profile-position').value = '';
   $('profile-area').value = '';
@@ -4867,7 +4868,10 @@ function clearProfileForm(){
   $('profile-tenure-hint').textContent = '';
 }
 
+let _profileFillSource = null; // โปรไฟล์ที่กำลังเติมในฟอร์ม — ใช้เติมจังหวัด/อำเภอ/ตำบลซ้ำถ้าข้อมูลจังหวัดโหลดมาช้ากว่าการเติมฟอร์ม
 function fillProfileForm(p){
+  _profileFillSource = p;
+  populateProfileProvinceSelect(); // ต้องมีรายการจังหวัดใน dropdown ก่อน ไม่งั้นการตั้งค่าจังหวัดด้านล่างจะไม่ติด (ต้องกรอกใหม่)
   $('profile-firstNameTh').value = p.firstNameTh||'';
   $('profile-lastNameTh').value = p.lastNameTh||'';
   $('profile-nicknameTh').value = p.nicknameTh||'';
