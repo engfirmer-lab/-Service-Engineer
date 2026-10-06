@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.93
-  อัปเดตล่าสุด   : 5 ตุลาคม 2569 12:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.98
+  อัปเดตล่าสุด   : 6 ตุลาคม 2569 17:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.93</title>
+<title>F1 Service — v8.98</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -276,20 +276,22 @@
   .orgchart-edit-row{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
   .orgchart-edit-row select{font-size:11px;padding:2px 4px;}
   /* ===== แผนผังองค์กรแบบ Tree (เส้นเชื่อมกล่อง) — CSS-only, ไม่พึ่ง library ===== */
-  .orgchart-tree{--line:var(--border);overflow-x:auto;padding-bottom:8px;}
-  .orgchart-manager-row{display:flex;justify-content:center;margin-bottom:0;}
+  .orgchart-tree{overflow-x:auto;padding:4px 4px 12px;}
+  .orgchart-inner{position:relative;width:max-content;min-width:100%;display:flex;flex-direction:column;align-items:center;}
+  .orgchart-lines{position:absolute;left:0;top:0;pointer-events:none;color:var(--text-faint);opacity:.55;overflow:visible;}
   .orgchart-manager-box{background:#14532D;color:#fff;border-radius:10px;padding:12px 26px;text-align:center;min-width:140px;}
   .orgchart-manager-box .lbl{font-size:10.5px;opacity:.8;}
   .orgchart-manager-box .nm{font-size:14.5px;font-weight:700;margin-top:2px;}
-  .orgchart-trunk{width:2px;height:22px;background:var(--line);margin:0 auto;}
-  .orgchart-branches{display:flex;justify-content:center;gap:0;position:relative;padding-top:22px;min-width:max-content;}
-  .orgchart-branches::before{content:'';position:absolute;top:0;left:50%;width:2px;height:22px;background:var(--line);}
-  .orgchart-branch{position:relative;padding-top:22px;min-width:160px;margin:0 11px;box-sizing:border-box;}
-  .orgchart-branch::before{content:'';position:absolute;top:0;left:50%;width:2px;height:22px;background:var(--line);z-index:1;}
-  .orgchart-branch::after{content:'';position:absolute;top:0;left:-11px;right:-11px;height:2px;background:var(--line);}
-  .orgchart-branch:only-child::after{display:none;}
-  .orgchart-branch:first-child:not(:only-child)::after{left:50%;}
-  .orgchart-branch:last-child:not(:only-child)::after{right:50%;}
+  .orgchart-manager-row{display:flex;justify-content:center;gap:14px;position:relative;z-index:1;}
+  .orgchart-manager-row:empty{display:none;}
+  .orgchart-manager-row + .orgchart-manager-row{margin-top:34px;}
+  .orgchart-manager-box.clickable .nm,.orgchart-card-name.clickable{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px;}
+  .orgchart-groups{display:flex;align-items:flex-start;justify-content:center;gap:44px;margin-top:40px;position:relative;z-index:1;}
+  .orgchart-group{display:flex;flex-direction:column;align-items:center;}
+  .orgchart-group-title{font-size:12.5px;font-weight:700;color:var(--text-dim);background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 16px;margin-bottom:34px;text-align:center;}
+  .orgchart-branches{display:flex;justify-content:center;align-items:stretch;gap:14px;}
+  .orgchart-branch{flex:0 0 172px;width:172px;box-sizing:border-box;display:flex;}
+  .orgchart-branch > .orgchart-col{flex:1 1 auto;}
   .orgchart-section-label{font-size:11px;font-weight:700;color:var(--text-faint);text-align:center;margin:26px 0 2px;letter-spacing:.3px;}
   .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .form-grid.two{grid-template-columns:1fr 1fr;}
@@ -1562,20 +1564,19 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     </div>
     <div class="panel-block" style="overflow-x:auto;">
       <div class="orgchart-tree">
-        <div class="orgchart-manager-row" id="orgchart-ceo-row"></div>
-        <div class="orgchart-trunk" id="orgchart-ceo-trunk" style="display:none;"></div>
-        <div class="orgchart-manager-row" id="orgchart-manager-row"></div>
-        <div class="orgchart-trunk"></div>
-        <div class="orgchart-branches">
-          <div class="orgchart-branch" style="min-width:auto;">
-            <div class="orgchart-col-title" style="margin-bottom:10px;">สำนักงานใหญ่ (ส่วนกลาง / Office)</div>
-            <div class="orgchart-trunk"></div>
-            <div class="orgchart-branches" id="orgchart-office"></div>
-          </div>
-          <div class="orgchart-branch" style="min-width:auto;">
-            <div class="orgchart-col-title" style="margin-bottom:10px;">ทีมภาคสนาม (ตามเขตพื้นที่)</div>
-            <div class="orgchart-trunk"></div>
-            <div class="orgchart-branches" id="orgchart-field"></div>
+        <div class="orgchart-inner" id="orgchart-inner">
+          <svg class="orgchart-lines" id="orgchart-lines" aria-hidden="true"></svg>
+          <div class="orgchart-manager-row" id="orgchart-ceo-row"></div>
+          <div class="orgchart-manager-row" id="orgchart-manager-row"></div>
+          <div class="orgchart-groups">
+            <div class="orgchart-group">
+              <div class="orgchart-group-title" id="orgchart-title-office">สำนักงานใหญ่ (ส่วนกลาง / Office)</div>
+              <div class="orgchart-branches" id="orgchart-office"></div>
+            </div>
+            <div class="orgchart-group">
+              <div class="orgchart-group-title" id="orgchart-title-field">ทีมภาคสนาม (ตามเขตพื้นที่)</div>
+              <div class="orgchart-branches" id="orgchart-field"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1826,8 +1827,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.93";
-const APP_UPDATED_AT = "5 ตุลาคม 2569 12:30 น. เวลาไทย";
+const APP_VERSION = "8.98";
+const APP_UPDATED_AT = "6 ตุลาคม 2569 17:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5066,6 +5067,7 @@ async function saveUserProfile(){
       const oIdx = orgChartProfiles.findIndex(p=>p.email===docId);
       if(oIdx>=0) orgChartProfiles[oIdx] = { email:docId, ...merged };
       renderRoster();
+      try{ renderOrgChart(); }catch(_){}
       showToast('✅ บันทึกโปรไฟล์ของผู้ใช้งานเรียบร้อย');
     } else {
       myUserProfile = merged;
@@ -5197,20 +5199,17 @@ function renderOrgChart(){
 
   // ---- กล่อง CEO บนสุดสุดของแผนผัง (เหนือ Manager) — ใช้แค่ nickname ไม่บังคับกรอกโปรไฟล์เต็ม ----
   const ceoProfiles = orgChartProfiles.filter(p=>ceoEmails.includes(p.email));
-  const ceoTrunkEl = $('orgchart-ceo-trunk');
   if(ceoProfiles.length){
-    $('orgchart-ceo-row').innerHTML = ceoProfiles.map(p=>`<div class="orgchart-manager-box" style="background:#78350F;"><div class="lbl">CEO</div><div class="nm">${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('');
-    ceoTrunkEl.style.display = '';
+    $('orgchart-ceo-row').innerHTML = ceoProfiles.map(p=>`<div class="orgchart-manager-box${canEdit?' clickable':''}" style="background:#78350F;"><div class="lbl">CEO</div><div class="nm" ${canEdit?`data-ceoedit="${escapeHtml(p.email)}" title="กดเพื่อแก้ชื่อเล่น"`:''}>${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('');
   } else {
     $('orgchart-ceo-row').innerHTML = '';
-    ceoTrunkEl.style.display = 'none';
   }
 
   // ---- กล่อง Manager บนสุดของแผนผัง (โหนดราก) ----
   const managers = officeProfiles.filter(p=>p.position==='Manager');
   const officeRest = officeProfiles.filter(p=>p.position!=='Manager');
   $('orgchart-manager-row').innerHTML = managers.length
-    ? managers.map(p=>`<div class="orgchart-manager-box"><div class="lbl">Manager</div><div class="nm">${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('')
+    ? managers.map(p=>`<div class="orgchart-manager-box${canEdit?' clickable':''}"><div class="lbl">Manager</div><div class="nm" ${canEdit?`data-editprofile="${escapeHtml(p.email)}" title="กดเพื่อแก้ไขโปรไฟล์"`:''}>${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('')
     : `<div class="orgchart-manager-box" style="opacity:.5;"><div class="lbl">Manager</div><div class="nm">(ยังไม่มี)</div></div>`;
 
   // ---- สำนักงานใหญ่: จัดเป็นกิ่งตาม position ที่มีจริง (ไม่รวม Manager ซึ่งอยู่บนสุดแล้ว) ----
@@ -5220,7 +5219,7 @@ function renderOrgChart(){
 
   let officeHtml = '';
   if(officePositionsPresent.length===0){
-    officeHtml = '<div class="orgchart-branch" style="min-width:auto;padding-top:0;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตส่วนกลาง</div></div>';
+    officeHtml = '<div class="orgchart-branch" style="flex:0 0 auto;width:auto;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตส่วนกลาง</div></div>';
   } else {
     officePositionsPresent.forEach(pos=>{
       const people = officeRest.filter(p=>p.position===pos);
@@ -5255,10 +5254,90 @@ function renderOrgChart(){
         ${people.map(p=>orgChartCardHtml(p, canEdit)).join('')}
       </div></div>`;
   });
-  $('orgchart-field').innerHTML = fieldHtml || '<div class="orgchart-branch" style="min-width:auto;padding-top:0;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตภาคสนาม</div></div>';
+  $('orgchart-field').innerHTML = fieldHtml || '<div class="orgchart-branch" style="flex:0 0 auto;width:auto;"><div style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์เขตภาคสนาม</div></div>';
 
   if(canEdit) wireOrgChartEditControls();
+  requestAnimationFrame(drawOrgChartLines);
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>requestAnimationFrame(drawOrgChartLines)); }
 }
+
+// ===== เส้นเชื่อมผังองค์กร — วาดด้วย SVG จากตำแหน่งจริงของกล่อง (กึ่งกลางพ่อ → เส้นรวมแนวนอน → กึ่งกลางลูกทุกกล่อง) เส้นจึงตรงและสมดุลไม่ว่าจะมีกี่เขต/กี่คน =====
+function drawOrgChartLines(){
+  const inner = $('orgchart-inner'), svg = $('orgchart-lines');
+  if(!inner || !svg) return;
+  const base = inner.getBoundingClientRect();
+  if(base.width===0 || base.height===0){ svg.innerHTML=''; return; } // หน้าถูกซ่อนอยู่ — รอ ResizeObserver เรียกใหม่ตอนแสดงผล
+  const W = Math.ceil(Math.max(inner.offsetWidth, inner.scrollWidth)), H = Math.ceil(Math.max(inner.offsetHeight, inner.scrollHeight));
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); // ผูกระบบพิกัดกับขนาดจริงเสมอ กันเส้นเพี้ยนเมื่อ CSS ปรับความกว้างของ SVG
+  svg.style.width = W+'px'; svg.style.height = H+'px'; svg.style.maxWidth = 'none';
+  // หน้านี้ตั้ง html{zoom:1.1} — getBoundingClientRect คืนค่าหน่วยที่ซูมแล้ว ต้องหารด้วยอัตราซูมจริงก่อนวาดใน SVG (วัดจากกล่องรวม)
+  const k = (inner.offsetWidth ? base.width/inner.offsetWidth : 1) || 1;
+  const box = el=>{ const r=el.getBoundingClientRect(); return { l:(r.left-base.left)/k, r:(r.right-base.left)/k, t:(r.top-base.top)/k, b:(r.bottom-base.top)/k, cx:((r.left+r.right)/2-base.left)/k }; };
+  const unionOf = rowEl=>{
+    const kids = [...rowEl.children]; if(!kids.length) return null;
+    const bs = kids.map(box);
+    return { cx:(Math.min(...bs.map(x=>x.l))+Math.max(...bs.map(x=>x.r)))/2, t:Math.min(...bs.map(x=>x.t)), b:Math.max(...bs.map(x=>x.b)) };
+  };
+  const R = Math.round;
+  let d = '';
+  const link = (p, kids)=>{
+    if(!p || !kids.length) return;
+    const topY = Math.min(...kids.map(k=>k.t));
+    const midY = R(p.b + (topY - p.b)/2);
+    const xs = kids.map(k=>R(k.cx)).concat([R(p.cx)]);
+    d += `M${R(p.cx)} ${R(p.b)}V${midY}`;
+    d += `M${Math.min(...xs)} ${midY}H${Math.max(...xs)}`;
+    kids.forEach(k=>{ d += `M${R(k.cx)} ${midY}V${R(k.t)}`; });
+  };
+  // จัด Manager/CEO ให้อยู่กึ่งกลางระหว่างหัวกลุ่ม 2 ฝั่งพอดี (สองฝั่งกว้างไม่เท่ากัน ถ้าไม่ขยับจะดูเอียง)
+  ['orgchart-ceo-row','orgchart-manager-row'].forEach(id=>{ $(id).style.transform=''; });
+  {
+    const tb = [$('orgchart-title-office'), $('orgchart-title-field')].map(box);
+    const mid = (tb[0].cx + tb[1].cx)/2;
+    const m0 = unionOf($('orgchart-manager-row')) || unionOf($('orgchart-ceo-row'));
+    if(m0){ const dx = Math.round(mid - m0.cx); ['orgchart-ceo-row','orgchart-manager-row'].forEach(id=>{ $(id).style.transform = `translateX(${dx}px)`; }); }
+  }
+  const ceo = unionOf($('orgchart-ceo-row'));
+  const mgr = unionOf($('orgchart-manager-row'));
+  if(ceo && mgr) link(ceo, [mgr]);
+  const titles = [$('orgchart-title-office'), $('orgchart-title-field')].map(box);
+  link(mgr, titles);
+  [['orgchart-title-office','orgchart-office'],['orgchart-title-field','orgchart-field']].forEach(([tid,cid])=>{
+    const kids = [...$(cid).children].filter(c=>c.querySelector('.orgchart-col')).map(box);
+    link(box($(tid)), kids);
+  });
+  svg.innerHTML = `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`;
+}
+(function initOrgChartLines(){
+  const inner = $('orgchart-inner');
+  if(!inner) return;
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(()=>requestAnimationFrame(drawOrgChartLines));
+    // ดูทั้งกล่องรวม กลุ่ม ชื่อกลุ่ม และแถว Manager/CEO — ขนาดเปลี่ยน (เช่นฟอนต์ไทยโหลดเสร็จทีหลัง) เส้นจะวาดใหม่ให้ตรงเสมอ
+    [inner, inner.querySelector('.orgchart-groups'), $('orgchart-title-office'), $('orgchart-title-field'), $('orgchart-manager-row'), $('orgchart-ceo-row'), $('orgchart-office'), $('orgchart-field')].forEach(el=>{ if(el) ro.observe(el); });
+  }
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>requestAnimationFrame(drawOrgChartLines)); }
+  window.addEventListener('resize', ()=>requestAnimationFrame(drawOrgChartLines));
+  // กดชื่อในผังเพื่อแก้ไข (Manager เท่านั้น) — เปิดฟอร์มโปรไฟล์เดียวกับหน้ารายชื่อ / CEO แก้ชื่อเล่นอย่างเดียว
+  $('view-orgchart').addEventListener('click', async (ev)=>{
+    const t = ev.target.closest('[data-editprofile],[data-ceoedit]');
+    if(!t || !isManager()) return;
+    const ceoEmail = t.getAttribute('data-ceoedit');
+    if(ceoEmail){
+      const cur = orgChartProfiles.find(p=>p.email===ceoEmail);
+      const val = prompt('แก้ชื่อเล่น CEO:', (cur && cur.nicknameTh) || '');
+      if(val===null || !val.trim()) return;
+      try{
+        await initFirebase(); const sdk = window._firebaseSdk;
+        await sdk.setDoc(sdk.doc(db,'userProfiles', ceoEmail.toLowerCase()), { nicknameTh: val.trim(), updatedAt: Date.now() }, { merge:true });
+        if(cur) cur.nicknameTh = val.trim();
+        renderOrgChart(); showToast('✅ บันทึกชื่อเล่นเรียบร้อย');
+      }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+      return;
+    }
+    openEditOtherProfile(t.getAttribute('data-editprofile'));
+  });
+})();
 
 function orgChartEmptyCardHtml(){
   return `<div class="orgchart-card" style="opacity:.5;font-style:italic;">(ยังไม่มี)</div>`;
@@ -5278,7 +5357,7 @@ function orgChartCardHtml(p, canEdit, isLead){
         </select>
       </div>` : '';
   return `<div class="orgchart-card${isLead?' orgchart-card-lead':''}" title="${fullName}">
-      <div class="orgchart-card-name">${isLead?'⭐ ':''}${name}</div>
+      <div class="orgchart-card-name${canEdit?' clickable':''}" ${canEdit?`data-editprofile="${email}" title="กดเพื่อแก้ไขโปรไฟล์"`:''}>${isLead?'⭐ ':''}${name}</div>
       ${editControls}
     </div>`;
 }
@@ -8086,6 +8165,11 @@ function findConfidentCategoryModelMatch(rawModel){
     for(const model of (cats[cat]||[])){
       if(normalizeModelForMatch(model) === target) return { category: cat, model };
     }
+    // v8.98 — รุ่นที่ตั้งชื่อรวมหลายรุ่นในระบบ: เทียบกับแต่ละรุ่นเดี่ยวด้วย
+    for(const model of (cats[cat]||[])){
+      const hit = splitCombinedModelName(model).find(x=>normalizeModelForMatch(x) === target);
+      if(hit) return { category: cat, model: hit };
+    }
   }
   return null;
 }
@@ -8235,11 +8319,25 @@ function populateClaimCategorySelect(){
   sel.innerHTML = `<option value="">-- เลือก Product --</option>` + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   populateClaimModelSelect();
 }
+// v8.98 — รุ่นที่ตั้งชื่อรวมหลายรุ่น (มี & / + , หรือ "และ") แตกเป็นรุ่นเดี่ยวๆ ในตัวเลือกเคลม เพื่อให้บันทึกได้ชัดว่ารุ่นไหนเสียจริง
+function splitCombinedModelName(name){
+  const parts = String(name||'').split(/\s*(?:&|\+|\/|,|;|\sand\s|\sและ\s)\s*/i).map(x=>x.trim()).filter(Boolean);
+  return parts.length ? parts : [String(name||'').trim()].filter(Boolean);
+}
+function claimModelListFor(cat){
+  const seen = new Set(); const out = [];
+  (DATA.categories[cat]||[]).forEach(m=>{ splitCombinedModelName(m).forEach(x=>{ const k=x.toLowerCase(); if(!seen.has(k)){ seen.add(k); out.push(x); } }); });
+  return out.sort(naturalSort);
+}
 function populateClaimModelSelect(){
   const cat = $('claim-f-category').value;
-  const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
+  const models = claimModelListFor(cat);
   // รุ่น บังคับกรอกเช่นกัน — ตัวเลือกว่างบนสุดเป็นแค่ placeholder
-  $('claim-f-model').innerHTML = `<option value="">-- เลือกรุ่น --</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  let html = `<option value="">-- เลือกรุ่น --</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  // เคลมเก่าที่บันทึกเป็นชื่อรวมหลายรุ่นไว้ — คงตัวเลือกเดิมไว้ให้เห็น (ผู้ใช้เปลี่ยนเป็นรุ่นเดี่ยวได้)
+  const cur = (typeof claimDraft!=='undefined' && claimDraft && claimDraft.category===cat) ? claimDraft.model : '';
+  if(cur && !models.includes(cur)) html += `<option value="${escapeHtml(cur)}">${escapeHtml(cur)} (ชื่อเดิม — แนะนำเลือกรุ่นเดี่ยว)</option>`;
+  $('claim-f-model').innerHTML = html;
 }
 $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
@@ -8684,10 +8782,22 @@ $('claim-save-btn').addEventListener('click', async ()=>{
         if(!att.pending){ uploadedAttachments[g.key].push({kind:att.kind, name:att.name, url:att.url}); continue; }
         fileIndex++;
         const fileToUpload = att.blob || att.file;
-        const fileName = att.name || ('attachment_'+Date.now());
+        // v8.96 — ตั้งชื่อไฟล์ตามหัวข้อการแนบ: ถ้าหัวข้อนั้นมีไฟล์เดียวใช้ "หัวข้อ.นามสกุล" ถ้ามีมากกว่า 1 ต่อท้าย _1, _2, ... ตามลำดับ (ไม่ซ้ำกับไฟล์เดิมที่แนบไว้แล้ว)
+        const origName = att.name || ('attachment_'+Date.now());
+        const extMatch = origName.match(/\.[A-Za-z0-9]{1,5}$/);
+        let ext = extMatch ? extMatch[0].toLowerCase() : '';
+        if(att.blob && att.blob.type){ const mt = {'image/jpeg':'.jpeg','image/png':'.png','image/webp':'.webp'}[att.blob.type]; if(mt) ext = mt; }
+        const stem = g.label.replace(/[\\/:*?"<>|]/g,'-');
+        const groupList = claimDraft.attachments[g.key];
+        const usedNames = new Set(uploadedAttachments[g.key].map(a=>a.name));
+        groupList.forEach(a=>{ if(!a.pending && a.name) usedNames.add(a.name); });
+        if(att.kind==='image' && !att.blob && /^\.(jfif|jpg|jpe|pjpeg)$/.test(ext)) ext = '.jpeg';
+        let fileName;
+        if(groupList.length===1){ fileName = stem+ext; }
+        else { let n = 1; while(usedNames.has(`${stem}_${n}${ext}`)) n++; fileName = `${stem}_${n}${ext}`; }
         updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${fileIndex}/${totalFiles} (${g.label})...`);
-        const subFolderId = await driveFindOrCreateFolder(g.label, folderId);
-        const url = await driveUploadLargeFile(fileToUpload, fileName, subFolderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${fileIndex}/${totalFiles} (${g.label})... ${pct}%`); });
+        // v8.95 — ไม่แยกโฟลเดอร์ย่อยตามหัวข้อการแนบแล้ว: รวมทุกไฟล์ไว้ในโฟลเดอร์เคลมเดียวกัน (ชื่อไฟล์บอกหัวข้ออยู่แล้ว ดูด้านบน)
+        const url = await driveUploadLargeFile(fileToUpload, fileName, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${fileIndex}/${totalFiles} (${g.label})... ${pct}%`); });
         uploadedAttachments[g.key].push({ kind: att.kind, name: fileName, url });
       }
     }
