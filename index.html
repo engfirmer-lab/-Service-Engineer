@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.03
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.04
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:15 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.03</title>
+<title>F1 Service — v9.04</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -124,7 +124,15 @@
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
   /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ทำให้กล่องตารางเป็นกรอบเลื่อนของตัวเอง (สูงไม่เกิน 65% ของจอ) แล้วปักหัวตารางให้ติดอยู่กับที่ภายในกรอบนี้เสมอ
      (รอบก่อนลองให้หัวตารางติดกับการเลื่อนทั้งหน้าแทน แต่ overflow-x:auto ของกล่องห่อ ทำให้เบราว์เซอร์บังคับปิดการ sticky ข้ามกล่องไปหาหน้าเว็บไม่ได้ — วิธีนี้แก้ตรงจุด) */
-  #eng-cert-matrix thead th{ background:var(--panel); white-space:nowrap; }
+  #eng-cert-matrix{ table-layout:fixed; width:100%; border-collapse:collapse; }
+  #eng-cert-matrix th, #eng-cert-matrix td{ padding:8px 4px; vertical-align:middle; }
+  #eng-cert-matrix th:first-child, #eng-cert-matrix td:first-child{ padding-left:8px; }
+  #eng-cert-matrix th:nth-child(n+2), #eng-cert-matrix td:nth-child(n+2){ width:68px; text-align:center; }
+  #eng-cert-matrix thead th{ background:var(--panel); white-space:nowrap; font-size:12px; letter-spacing:0; text-transform:none; }
+  #eng-cert-sum-table{ table-layout:fixed; width:100%; border-collapse:collapse; font-size:12.5px; }
+  #eng-cert-sum-table th, #eng-cert-sum-table td{ padding:8px 4px; text-align:center; white-space:nowrap; letter-spacing:0; text-transform:none; }
+  #eng-cert-sum-table th:first-child, #eng-cert-sum-table td:first-child{ text-align:left; white-space:normal; padding-left:8px; }
+  #eng-cert-sum-table th:nth-child(n+2), #eng-cert-sum-table td:nth-child(n+2){ width:62px; }
   #eng-cert-matrix, #eng-cert-summary{ overscroll-behavior:contain; }
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
@@ -1841,8 +1849,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.03";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 14:00 น. เวลาไทย";
+const APP_VERSION = "9.04";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 14:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12084,7 +12092,7 @@ function certReqBadgeHtml(category, model){
 }
 // v8.86 — Certificate แบบ matrix เหมือน "จัดการเอกสาร" ของ Sup Product: ช่อง "+" = ยังไม่แนบ · ตัวเลข = จำนวนใบ Cer ที่แนบแล้ว (แนบได้หลายใบ)
 // หัวตารางบอกชัดว่าช่องไหนคือ "ภายใน" / "ผู้ผลิต" · ป้าย "ดูแล" + แถบเขียวด้านซ้าย = รุ่นที่ตัวเองดูแล (ไม่ว่าจะแนบ Cer แล้วหรือยัง)
-const CERT_CELL_W = 64; // px — ความกว้างช่อง (ใช้ร่วมกันทั้งหัวตารางและปุ่ม ให้ตรงคอลัมน์กัน)
+const CERT_CELL_W = 56; // px — ความกว้างช่อง (ใช้ร่วมกันทั้งหัวตารางและปุ่ม ให้ตรงคอลัมน์กัน)
 function groupCertsByCell(certs, withType){
   const m = {};
   certs.forEach(c=>{ const k = c.category+'|'+c.model+(withType?('|'+c.certType):''); (m[k] = m[k] || []).push(c); });
@@ -12177,8 +12185,8 @@ async function renderEngCertTab(forceReload){
           ${tile('ภายใน', st.hi, st.ni)}
           ${tile('ผู้ผลิต', st.hm, st.nm)}
         </div>
-        <table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-          <thead><tr><th style="text-align:left;">Product</th><th style="text-align:center;">ภายใน</th><th style="text-align:center;">ผู้ผลิต</th><th style="text-align:center;">ขาด</th></tr></thead>
+        <table id="eng-cert-sum-table">
+          <thead><tr><th>ประเภท</th><th>ภายใน</th><th>ผู้ผลิต</th><th>ขาด</th></tr></thead>
           <tbody>${st.rows.map(r=>{ const m=(r.ni-r.hi)+(r.nm-r.hm); return `<tr><td>${escapeHtml(r.cat)}</td>
             <td style="text-align:center;white-space:nowrap;">${r.hi}/${r.ni}</td><td style="text-align:center;white-space:nowrap;">${r.hm}/${r.nm}</td>
             <td style="text-align:center;white-space:nowrap;">${m>0?`<b style="color:${red};">${m}</b>`:'<span style="color:var(--green);font-weight:700;">✓</span>'}</td></tr>`; }).join('')}</tbody>
@@ -12205,8 +12213,8 @@ async function renderEngCertTab(forceReload){
     const myCountInCat = _myCnt(cat);
     const withI = models.filter(m=>(certMap[cat+'|'+m+'|internal']||[]).length>0).length;
     const withM = models.filter(m=>(certMap[cat+'|'+m+'|manufacturer']||[]).length>0).length;
-    const gcell = (n)=>`<td style="background:rgba(128,128,128,.12);border-top:2px solid var(--border);text-align:center;font-size:12px;font-weight:700;padding:8px 4px;white-space:nowrap;color:${n===models.length?'var(--green)':'var(--text)'};">${n}/${models.length}</td>`;
-    rows += `<tr class="eng-cert-grp" data-grp="${escapeHtml(cat)}" style="cursor:pointer;"><td style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:8px 10px;border-top:2px solid var(--border);${myCountInCat>0?'border-left:4px solid var(--green);':''}">${hid?'▶':'▼'} ${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?` · <b style="color:var(--green);">ดูแล ${myCountInCat}</b>`:''})</span></td>${gcell(withI)}${gcell(withM)}</tr>`;
+    const gcell = (n)=>`<td style="background:rgba(128,128,128,.12);border-top:2px solid var(--border);font-size:13px;font-weight:700;white-space:nowrap;color:${n===models.length?'var(--green)':'var(--text)'};">${n}/${models.length}</td>`;
+    rows += `<tr class="eng-cert-grp" data-grp="${escapeHtml(cat)}" style="cursor:pointer;"><td style="background:rgba(128,128,128,.12);border-top:2px solid var(--border);border-left:4px solid ${myCountInCat>0?'var(--green)':'transparent'};"><div style="font-weight:700;font-size:13.5px;">${hid?'▶':'▼'} ${escapeHtml(cat)}</div><div style="font-size:11.5px;color:var(--text-faint);white-space:nowrap;margin-left:18px;">${models.length} รุ่น${myCountInCat>0?` · <b style="color:var(--green);">ดูแล ${myCountInCat}</b>`:''}</div></td>${gcell(withI)}${gcell(withM)}</tr>`;
     if(hid) return;
     models.forEach(model=>{
       const isMine = myModelSet.has(cat+'|'+model);
@@ -12214,13 +12222,13 @@ async function renderEngCertTab(forceReload){
       const internal = certMap[cat+'|'+model+'|internal'] || [];
       const manu = certMap[cat+'|'+model+'|manufacturer'] || [];
       rows += `<tr${isMine?' class="mine"':''}><td style="${isMine?'border-left:4px solid var(--green);background:rgba(34,197,94,.06);':'border-left:4px solid transparent;'}">${isMine?CERT_MINE_PILL:''}<strong>${escapeHtml(model)}</strong>${certReqBadgeHtml(cat,model)}</td>
-        <td class="chk" style="text-align:center;">${certCountBtn(base+' data-certtype="internal"', internal.length)}</td>
-        <td class="chk" style="text-align:center;">${certCountBtn(base+' data-certtype="manufacturer"', manu.length)}</td></tr>`;
+        <td class="chk">${certCountBtn(base+' data-certtype="internal"', internal.length)}</td>
+        <td class="chk">${certCountBtn(base+' data-certtype="manufacturer"', manu.length)}</td></tr>`;
     });
   });
   wrap.innerHTML = !anyModel
     ? `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นเครื่องในระบบ</div>`
-    : `<div style="border:1px solid var(--border);border-radius:8px;"><table id="eng-cert-matrix" style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;">Product / รุ่นเครื่อง</th><th style="text-align:center;width:90px;">Cer ภายใน</th><th style="text-align:center;width:90px;">Cer ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    : `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table id="eng-cert-matrix"><thead><tr><th style="text-align:left;">ประเภท / รุ่น</th><th>ภายใน</th><th>ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   wrap.querySelectorAll('.eng-cert-grp').forEach(tr=>tr.addEventListener('click', ()=>{
     const g = tr.getAttribute('data-grp');
     if(_engCertHiddenCats.has(g)) _engCertHiddenCats.delete(g); else _engCertHiddenCats.add(g);
