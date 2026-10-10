@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.06
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.07
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 15:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.06</title>
+<title>F1 Service — v9.07</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -303,6 +303,24 @@
   .orgchart-branch{flex:0 0 172px;width:172px;box-sizing:border-box;display:flex;}
   .orgchart-branch > .orgchart-col{flex:1 1 auto;}
   .orgchart-section-label{font-size:11px;font-weight:700;color:var(--text-faint);text-align:center;margin:26px 0 2px;letter-spacing:.3px;}
+  /* ===== v9.07 ผังองค์กรบนมือถือ: เรียงแนวตั้ง อ่านง่าย ไม่ต้องเลื่อนซ้ายขวา ===== */
+  @media (max-width:600px){
+    .orgchart-tree{ overflow:visible; padding:0; }
+    .orgchart-inner{ width:100%; min-width:0; align-items:stretch; }
+    .orgchart-lines{ display:none; }
+    .orgchart-manager-row{ transform:none!important; flex-wrap:wrap; gap:8px; }
+    .orgchart-manager-row + .orgchart-manager-row{ margin-top:8px; }
+    .orgchart-manager-box{ padding:8px 18px; min-width:0; }
+    .orgchart-groups{ flex-direction:column; align-items:stretch; gap:14px; margin-top:12px; }
+    .orgchart-group{ align-items:stretch; }
+    .orgchart-group-title{ margin-bottom:8px; border-radius:8px; padding:6px 12px; text-align:left; }
+    .orgchart-branches{ flex-direction:column; gap:8px; }
+    .orgchart-branch{ flex:1 1 auto; width:100%; }
+    .orgchart-col{ display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
+    .orgchart-col-title{ grid-column:1/-1; text-align:left; margin-bottom:0; }
+    .orgchart-card{ margin-bottom:0; }
+    .orgchart-section-label{ margin:12px 0 2px; }
+  }
   .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .form-grid.two{grid-template-columns:1fr 1fr;}
   .form-grid .full{grid-column:1/-1;}
@@ -1872,8 +1890,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.06";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 14:50 น. เวลาไทย";
+const APP_VERSION = "9.07";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 15:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
