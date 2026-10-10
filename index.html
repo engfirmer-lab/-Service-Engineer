@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.00
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.01
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 13:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.00</title>
+<title>F1 Service — v9.01</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -124,7 +124,8 @@
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
   /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ทำให้กล่องตารางเป็นกรอบเลื่อนของตัวเอง (สูงไม่เกิน 65% ของจอ) แล้วปักหัวตารางให้ติดอยู่กับที่ภายในกรอบนี้เสมอ
      (รอบก่อนลองให้หัวตารางติดกับการเลื่อนทั้งหน้าแทน แต่ overflow-x:auto ของกล่องห่อ ทำให้เบราว์เซอร์บังคับปิดการ sticky ข้ามกล่องไปหาหน้าเว็บไม่ได้ — วิธีนี้แก้ตรงจุด) */
-  #eng-cert-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); white-space:nowrap; }
+  #eng-cert-matrix thead th{ background:var(--panel); white-space:nowrap; }
+  #eng-cert-matrix, #eng-cert-summary{ overscroll-behavior:contain; }
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
@@ -745,9 +746,19 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         </div>
       </div>
       <div class="panel-block">
-        <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">ตารางแบ่งกลุ่มตาม Product (ประเภทเครื่อง) · ด้านบนคือ <b>Cer ภายใน</b> / <b>Cer ผู้ผลิต</b> ของแต่ละรุ่น กด <b>+</b> เพื่อแนบใบ Cer — แนบแล้วจะขึ้น<b>ตัวเลขจำนวนใบ</b> (กดดู/เพิ่ม/ลบได้) · ป้าย <span style="display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 7px;">ดูแล</span> + แถบเขียว = รุ่นที่คุณดูแล · 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+          <h2 style="margin:0;">Certificate ของฉัน</h2>
+          <button class="btn btn-ghost btn-sm" id="eng-cert-hide-btn">🙈 ซ่อน</button>
+        </div>
+        <div id="eng-cert-body">
+        <p class="panel-sub">ตารางแบ่งกลุ่มตาม Product (ประเภทเครื่อง) กดชื่อกลุ่มเพื่อซ่อน/แสดงรุ่นในกลุ่ม · ด้านบนคือ <b>Cer ภายใน</b> / <b>Cer ผู้ผลิต</b> ของแต่ละรุ่น กด <b>+</b> เพื่อแนบใบ Cer — แนบแล้วจะขึ้น<b>ตัวเลขจำนวนใบ</b> (กดดู/เพิ่ม/ลบได้) · ป้าย <span style="display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 7px;">ดูแล</span> + แถบเขียว = รุ่นที่คุณดูแล · 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
+        <div id="eng-cert-summary"></div>
+        <div id="eng-cert-toolbar" style="display:flex;gap:6px;margin:8px 0;">
+          <button class="btn btn-ghost btn-sm" id="eng-cert-collapse-all">ซ่อนทุกประเภท</button>
+          <button class="btn btn-ghost btn-sm" id="eng-cert-expand-all">แสดงทุกประเภท</button>
+        </div>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1828,8 +1839,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.00";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 14:00 น. เวลาไทย";
+const APP_VERSION = "9.01";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 13:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1984,6 +1995,8 @@ let DATA = null;
 let myResponsibility = []; // [{category, model}] รุ่นเครื่องที่ดูแลของ Engineer ที่ login อยู่ (v8.58) — ใช้แค่แสดงผล ไม่ใช้กั้นการอัปโหลด Cer (v8.60)
 let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
+let _engCertHiddenCats = new Set(); // ประเภทที่ซ่อนไว้ (v9.01)
+let _engCertSummaryHidden = false;
 let _engCertOpenCats = new Set(); // Category ไหนเปิด accordion อยู่บ้างในแท็บ Certificate ของ Engineer (v8.60)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
@@ -3630,11 +3643,11 @@ async function precreateDocumentFolders(){
 $('precreate-folders-btn').addEventListener('click', precreateDocumentFolders);
 
 // v8.64 — ปุ่ม "ซ่อน/แสดง" แบบ generic สำหรับ panel-block ใดๆ ในแท็บ "จัดการเอกสาร" — จำสถานะไว้ใน localStorage ต่อ Sup Product คนนั้น
-function wirePanelHideToggle(btnId, bodyId, storageKey){
+function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
   const btn = $(btnId), body = $(bodyId);
   if(!btn || !body) return;
   // v8.65 — ค่าเริ่มต้นซ่อนไว้ก่อนเสมอ (ผู้ใช้ต้องกดแสดงเอง) จนกว่าจะเคยกดเปลี่ยนค่าไว้ใน localStorage แล้ว
-  let hidden = true;
+  let hidden = defaultHidden!==false;
   try{ const saved = localStorage.getItem(storageKey); if(saved!==null) hidden = saved==='1'; }catch(e){}
   const apply = ()=>{ body.style.display = hidden ? 'none' : ''; btn.textContent = hidden ? '👁 แสดง' : '🙈 ซ่อน'; };
   apply();
@@ -3644,6 +3657,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey){
     apply();
   });
 }
+wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert', false);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 wirePanelHideToggle('sup-cert-req-hide-btn', 'sup-cert-req-body', 'hide_sup_cert_req');
 
@@ -12120,14 +12134,65 @@ async function renderEngCertTab(forceReload){
   }
   const { certMap, myModelSet } = _engCertDataCache;
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
+  // ---- สรุป (v9.01) ----
+  let allInt=0, allMan=0, needInt=0, needMan=0, haveInt=0, haveMan=0, mineModels=0;
+  const sumRows = [];
+  cats.forEach(cat=>{
+    const models = (DATA.categories[cat]||[]);
+    let c = {n:0, ni:0, nm:0, hi:0, hm:0, ti:0, tm:0};
+    models.forEach(model=>{
+      const ni = (certMap[cat+'|'+model+'|internal']||[]).length;
+      const nm = (certMap[cat+'|'+model+'|manufacturer']||[]).length;
+      c.ti += ni; c.tm += nm;
+      if(!myModelSet.has(cat+'|'+model)) return;
+      const req = certRequirements[cat+'|'+model] || 'both';
+      c.n++;
+      if(req==='internal'||req==='both'){ c.ni++; if(ni>0) c.hi++; }
+      if(req==='manufacturer'||req==='both'){ c.nm++; if(nm>0) c.hm++; }
+    });
+    allInt+=c.ti; allMan+=c.tm; needInt+=c.ni; needMan+=c.nm; haveInt+=c.hi; haveMan+=c.hm; mineModels+=c.n;
+    if(c.n>0) sumRows.push({cat, ...c});
+  });
+  const missInt = needInt-haveInt, missMan = needMan-haveMan;
+  const missCell = (m)=> m>0 ? `<b style="color:var(--red,#dc2626);">ขาด ${m}</b>` : `<span style="color:var(--green);font-weight:700;">ครบ ✓</span>`;
+  const sumEl = $('eng-cert-summary');
+  if(sumEl){
+    const bodyHtml = mineModels===0
+      ? `<p style="font-size:12.5px;color:var(--text-faint);margin:8px 0;">ยังไม่ได้เลือกรุ่นเครื่องที่ดูแล — กด "เลือก/แก้ไขรุ่นเครื่องที่ดูแล" ด้านบนก่อน จึงจะสรุปว่าขาดกี่ใบ</p>`
+      : `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <thead><tr><th style="text-align:left;">Product</th><th>รุ่นที่ดูแล</th><th>Cer ภายใน<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>Cer ผู้ผลิต<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>ขาดอีก</th></tr></thead>
+          <tbody>${sumRows.map(r=>`<tr><td>${escapeHtml(r.cat)}</td><td style="text-align:center;">${r.n}</td>
+            <td style="text-align:center;">${r.hi}/${r.ni}</td><td style="text-align:center;">${r.hm}/${r.nm}</td>
+            <td style="text-align:center;">${(r.ni-r.hi)+(r.nm-r.hm)>0?`<b style="color:var(--red,#dc2626);">${(r.ni-r.hi)+(r.nm-r.hm)} ใบ</b>`:`<span style="color:var(--green);font-weight:700;">ครบ ✓</span>`}</td></tr>`).join('')}</tbody>
+          <tfoot><tr style="font-weight:700;border-top:2px solid var(--border);"><td>รวมที่ดูแล</td><td style="text-align:center;">${mineModels}</td>
+            <td style="text-align:center;">${haveInt}/${needInt}<br>${missCell(missInt)}</td><td style="text-align:center;">${haveMan}/${needMan}<br>${missCell(missMan)}</td>
+            <td style="text-align:center;">${(missInt+missMan)>0?`<b style="color:var(--red,#dc2626);">${missInt+missMan} ใบ</b>`:`<span style="color:var(--green);">ครบ ✓</span>`}</td></tr></tfoot>
+        </table></div>
+        <p style="font-size:11.5px;color:var(--text-faint);margin:6px 0 0;">นับ "มี" = จำนวนรุ่นที่ดูแลซึ่งแนบ Cer ชนิดนั้นแล้วอย่างน้อย 1 ใบ · "ต้องมี" ตามที่ Sup Product กำหนด (ถ้ายังไม่กำหนด นับว่าต้องมีทั้งภายใน+ผู้ผลิต)</p>`;
+    sumEl.innerHTML = `<div class="panel-block" style="margin:8px 0;padding:10px 12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <div style="font-weight:700;font-size:13.5px;">📊 สรุปใบ Cer</div>
+        <button class="btn btn-ghost btn-sm" id="eng-cert-sum-toggle">${_engCertSummaryHidden?'👁 แสดง':'🙈 ซ่อน'}</button>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:6px;">
+        <div>ทั้งหมดที่แนบ: <b>ภายใน ${allInt}</b> · <b>ผู้ผลิต ${allMan}</b> ใบ</div>
+        <div>เฉพาะรุ่นที่ดูแล: ภายใน ${missCell(missInt)} · ผู้ผลิต ${missCell(missMan)}</div>
+      </div>
+      ${_engCertSummaryHidden?'':bodyHtml}
+    </div>`;
+    $('eng-cert-sum-toggle').addEventListener('click', ()=>{ _engCertSummaryHidden = !_engCertSummaryHidden; renderEngCertTab(); });
+  }
+  // ---- ตารางหลัก ----
   let rows = '';
   let anyModel = false;
   cats.forEach(cat=>{
     const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
     if(models.length===0) return;
     anyModel = true;
+    const hid = _engCertHiddenCats.has(cat);
     const myCountInCat = models.filter(m=>myModelSet.has(cat+'|'+m)).length;
-    rows += `<tr class="eng-cert-grp"><td colspan="3" style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:7px 10px;border-top:2px solid var(--border);">${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></td></tr>`;
+    rows += `<tr class="eng-cert-grp" data-grp="${escapeHtml(cat)}" style="cursor:pointer;"><td colspan="3" style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:8px 10px;border-top:2px solid var(--border);">${hid?'▶':'▼'} ${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></td></tr>`;
+    if(hid) return;
     models.forEach(model=>{
       const isMine = myModelSet.has(cat+'|'+model);
       const base = `data-cat="${escapeHtml(cat)}" data-model="${escapeHtml(model)}"`;
@@ -12140,7 +12205,15 @@ async function renderEngCertTab(forceReload){
   });
   wrap.innerHTML = !anyModel
     ? `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นเครื่องในระบบ</div>`
-    : `<div style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;"><table id="eng-cert-matrix" style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;">Product / รุ่นเครื่อง</th><th style="text-align:center;width:90px;">Cer ภายใน</th><th style="text-align:center;width:90px;">Cer ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    : `<div style="border:1px solid var(--border);border-radius:8px;"><table id="eng-cert-matrix" style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;">Product / รุ่นเครื่อง</th><th style="text-align:center;width:90px;">Cer ภายใน</th><th style="text-align:center;width:90px;">Cer ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  wrap.querySelectorAll('.eng-cert-grp').forEach(tr=>tr.addEventListener('click', ()=>{
+    const g = tr.getAttribute('data-grp');
+    if(_engCertHiddenCats.has(g)) _engCertHiddenCats.delete(g); else _engCertHiddenCats.add(g);
+    renderEngCertTab();
+  }));
+  const _ca = $('eng-cert-collapse-all'), _ea = $('eng-cert-expand-all');
+  if(_ca) _ca.onclick = ()=>{ cats.forEach(c=>_engCertHiddenCats.add(c)); renderEngCertTab(); };
+  if(_ea) _ea.onclick = ()=>{ _engCertHiddenCats.clear(); renderEngCertTab(); };
   wrap.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       openCertDetailModal('engineer', btn.getAttribute('data-certtype'), btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
