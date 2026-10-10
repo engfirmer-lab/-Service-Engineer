@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.98
-  อัปเดตล่าสุด   : 6 ตุลาคม 2569 17:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 8.99
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 13:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.98</title>
+<title>F1 Service — v8.99</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1827,8 +1827,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.98";
-const APP_UPDATED_AT = "6 ตุลาคม 2569 17:20 น. เวลาไทย";
+const APP_VERSION = "8.99";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 13:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2771,9 +2771,22 @@ function initDriveTokenClient(){
     error_callback: (err)=>{ if(_driveTokenReject) _driveTokenReject(new Error('ขอสิทธิ์ Google Drive ไม่สำเร็จ ('+((err && err.type) || 'ป๊อปอัปถูกปิด/ถูกบล็อก')+')')); },
   });
 }
+// v8.99 — เก็บ token Drive/Sheets ไว้ใน sessionStorage (ผูกกับอีเมลที่ login) กัน "รีโหลดหน้า/สลับแท็บแล้วถูกขอสิทธิ์ใหม่" — หายเองเมื่อปิดแท็บ
+const DRIVE_TOKEN_SS_KEY = 'f1_drive_token_v1';
+function driveTokenSave(){
+  try{ sessionStorage.setItem(DRIVE_TOKEN_SS_KEY, JSON.stringify({ t:driveAccessToken, exp:driveTokenExpiry, em:(myUserEmail||'').toLowerCase() })); }catch(e){}
+}
+function driveTokenRestore(){
+  try{
+    const o = JSON.parse(sessionStorage.getItem(DRIVE_TOKEN_SS_KEY)||'null');
+    if(o && o.t && o.exp > Date.now() + 3*60*1000 && o.em && o.em === (myUserEmail||'').toLowerCase()){ driveAccessToken = o.t; driveTokenExpiry = o.exp; return true; }
+  }catch(e){}
+  return false;
+}
 function ensureDriveAccess(){
   // reuse token ถ้ายังไม่หมดอายุ (เผื่อ 3 นาทีล่วงหน้า)
   if(driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000) return Promise.resolve(driveAccessToken);
+  if(!driveAccessToken && driveTokenRestore()) return Promise.resolve(driveAccessToken);
   // v8.90 — ใช้ promise เดียวร่วมกัน (เดิมทุกครั้งที่เรียกทับ callback ตัวเดิม เรียกขนานกัน 6 งานแล้วค้าง 5 งาน)
   if(_driveTokenInFlight) return _driveTokenInFlight;
   _driveTokenInFlight = new Promise((resolve, reject)=>{
@@ -2787,10 +2800,13 @@ function ensureDriveAccess(){
       driveAccessToken = resp.access_token;
       // Google token อายุ 3600 วินาที — เก็บเวลาหมดอายุไว้
       driveTokenExpiry = Date.now() + (resp.expires_in || 3600) * 1000;
+      driveTokenSave();
       resolve(driveAccessToken);
     };
     // prompt:'' = silent refresh ถ้า session ยังอยู่ ไม่ต้อง login ซ้ำ
-    driveTokenClient.requestAccessToken({ prompt: '' });
+    // v8.99 — ส่ง hint=อีเมลที่ login แอปอยู่ เพื่อให้ Google ใช้บัญชีนั้นเลย ไม่เด้งหน้า "เลือกบัญชี" (เครื่องที่ล็อกอิน Google หลายบัญชีโดนบ่อยมาก)
+    const _hint = (myUserEmail||'').toLowerCase();
+    driveTokenClient.requestAccessToken(_hint ? { prompt: '', hint: _hint } : { prompt: '' });
   }).finally(()=>{ _driveTokenInFlight = null; _driveTokenReject = null; });
   return _driveTokenInFlight;
 }
@@ -4249,7 +4265,7 @@ $('access-request-logout-btn').addEventListener('click', async ()=>{
 // แต่ DATA ยังเป็น null อยู่ (ต้นตอของบั๊กที่เคยแก้ไป — คลิกอะไรตอนนั้นจะพังเพราะ DATA ยังไม่มา)
 // v8.90 — ล้างทุกอย่างที่ผูกกับบัญชีเดิมตอนสลับบัญชี/ออกจากระบบ (token Drive, แคชโฟลเดอร์, id ชีต, โปรไฟล์, แคช Cer) กันบัญชีถัดไปใช้สิทธิ์/ข้อมูลของคนก่อนหน้า
 function resetPerAccountCaches(){
-  try{ driveAccessToken = null; driveTokenExpiry = 0; _driveFolderCache.clear(); _driveFolderInFlight.clear(); }catch(e){}
+  try{ driveAccessToken = null; driveTokenExpiry = 0; _driveFolderCache.clear(); _driveFolderInFlight.clear(); sessionStorage.removeItem(DRIVE_TOKEN_SS_KEY); }catch(e){}
   try{ _claimsSheetIdCache = null; _profilesSheetIdCache = null; _sheetDoneCountCache = {}; }catch(e){}
   try{ myUserProfile = null; _engCertDataCache = null; _supCertDataCache = null; }catch(e){}
 }
