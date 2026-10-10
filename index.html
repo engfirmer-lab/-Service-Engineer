@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.04
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.05
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.04</title>
+<title>F1 Service — v9.05</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -372,6 +372,30 @@
 
   .stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
   @media (max-width:760px){.stat-cards{grid-template-columns:1fr 1fr;}}
+  /* ===== v9.05 มือถือ: กระชับระยะห่าง ลดช่องว่าง ===== */
+  @media (max-width:600px){
+    html{ zoom:1; }
+    main{ padding:10px 8px 40px; }
+    .panel-block{ padding:12px; margin-bottom:10px; border-radius:9px; }
+    .panel-block h2{ font-size:14px; margin-bottom:2px; }
+    .panel-sub{ margin-bottom:8px; line-height:1.4; }
+    .subtab-bar{ margin-bottom:10px; gap:5px; }
+    .subtab-bar button{ padding:6px 11px; font-size:12px; }
+    .status-line{ margin-bottom:8px; }
+    .modal{ padding:14px; }
+    .btn{ padding:8px 13px; }
+    .btn-sm{ padding:5px 9px; }
+    th{ padding:7px 6px; }
+    td{ padding:8px 6px; }
+    .stat-cards{ gap:8px; margin-bottom:12px; }
+    .stat-card{ padding:10px 12px; }
+    .stat-card .value{ font-size:21px; }
+    .card{ margin-bottom:8px; }
+    .card-head{ padding:10px 12px; gap:8px; }
+    .filter-row{ margin-bottom:8px; }
+    .console-row{ padding:8px 10px; }
+    .desktop-hint{ margin-bottom:8px; }
+  }
   .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:15px;}
   .stat-card .label{font-family:'IBM Plex Mono';font-size:10px;color:var(--text-faint);text-transform:uppercase;margin-bottom:6px;}
   .stat-card .value{font-size:24px;font-weight:700;}
@@ -748,7 +772,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div>
             <h2 style="margin-bottom:2px;font-size:14px;">รุ่นเครื่องที่ดูแล</h2>
-            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ไว้ระบุว่าคุณดูแลรุ่นไหนบ้าง (ไม่กระทบการอัปโหลด Cer — อัปโหลดรุ่นไหนก็ได้แม้ไม่ได้ดูแล)</p>
+            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ใช้ระบุรุ่นที่คุณดูแล เพื่อสรุปว่า Cer ขาดกี่ใบ (แนบใบรุ่นอื่นได้ตามปกติ)</p>
           </div>
           <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขรุ่นเครื่องที่ดูแล</button>
         </div>
@@ -796,18 +820,18 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <h2 style="margin-bottom:0;">สรุปจำนวน Error แต่ละรุ่นที่ดูแล</h2>
           <button class="btn btn-ghost btn-sm" id="export-my-errors-btn">📤 Export Error ทั้งหมดของฉัน</button>
         </div>
-        <p class="panel-sub">จำนวน Error ที่กรอกไว้แล้ว แยกตามรุ่น — กด "+ เพิ่ม Error" ที่รุ่นไหนก็เพิ่ม Error ให้รุ่นนั้นได้เลย หรือกด "ดูทั้งหมด" เพื่อดู/แก้ไข Error ที่มีอยู่</p>
+        <p class="panel-sub">จำนวน Error แยกตามรุ่น — กด “+ เพิ่ม Error” เพื่อเพิ่ม หรือ “ดูทั้งหมด” เพื่อดู/แก้ไข</p>
         <div id="error-count-summary" style="margin-top:10px;"></div>
       </div>
       <!-- ฟอร์มเพิ่ม/แก้ไข Error ย้ายไปเป็น Modal แล้ว (ดูด้านล่างสุดของไฟล์ ใกล้ๆ modal อื่นๆ) -->
       <div class="panel-block">
         <h2>Error ใหม่จาก Engineer รอตรวจสอบ <span class="badge-count" id="pending-error-count">0</span></h2>
-        <p class="panel-sub">Engineer ส่งเข้ามาโดยตรง — ยังไม่เผยแพร่จนกว่าคุณจะอนุมัติ (แก้ไขก่อนอนุมัติได้)</p>
+        <p class="panel-sub">Engineer ส่งมา — รออนุมัติก่อนเผยแพร่ (แก้ไขก่อนอนุมัติได้)</p>
         <div id="pending-errors-list"></div>
       </div>
       <div class="panel-block">
         <h2>ข้อเสนอวิธีแก้ใหม่รอตรวจสอบ <span class="badge-count" id="proposal-count">0</span></h2>
-        <p class="panel-sub">มาจาก Engineer ที่กด "ลองทุกวิธีแล้วไม่ได้ผล" แล้วบอกวิธีที่ใช้แก้จริง</p>
+        <p class="panel-sub">จาก Engineer ที่ลองทุกวิธีแล้วไม่ได้ผล พร้อมวิธีที่แก้ได้จริง</p>
         <div id="proposals-list"></div>
       </div>
     </div>
@@ -819,7 +843,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <button class="btn btn-ghost btn-sm" id="sup-doc-matrix-hide-btn">🙈 ซ่อน</button>
         </div>
         <div id="sup-doc-matrix-body">
-          <p class="panel-sub">เห็นทุกรุ่น ทุกประเภทเอกสารในตารางเดียว — ✅ = มีลิงก์แล้ว (กดเพื่อดู/แก้ไข) · ➕ = ยังไม่มี (กดเพื่อใส่ลิงก์)</p>
+          <p class="panel-sub">ทุกรุ่น ทุกประเภทเอกสาร — ✅ มีลิงก์ (กดดู/แก้) · ➕ ยังไม่มี (กดใส่ลิงก์)</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             <button class="btn btn-ghost btn-sm" id="check-dup-files-btn">🔍 ตรวจสอบไฟล์ซ้ำ</button>
             <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="docs" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
@@ -835,20 +859,20 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <button class="btn btn-ghost btn-sm" id="sup-cert-req-hide-btn">🙈 ซ่อน</button>
         </div>
         <div id="sup-cert-req-body">
-          <p class="panel-sub">เลือกได้ว่ารุ่นไหนต้องมีใบ Cer ภายใน / ผู้ผลิต / ทั้งคู่ / หรือไม่บังคับเลย — Engineer จะเห็นเป็นป้าย 📌 เตือนในแท็บ Certificate ของเขา</p>
+          <p class="panel-sub">ตั้งว่ารุ่นไหนต้องมี Cer ภายใน / ผู้ผลิต / ทั้งคู่ — Engineer จะเห็นป้าย 📌</p>
           <div id="sup-cert-req-list"></div>
         </div>
       </div>
       <div class="panel-block">
         <h2>Google Drive Database</h2>
-        <p class="panel-sub">สร้างโฟลเดอร์ทุกรุ่น/ทุกประเภทเอกสารที่ฉันดูแลไว้ล่วงหน้า (ยังไม่ต้องมีไฟล์) — เผื่อจะเอาไฟล์ไปวางเองใน Google Drive ทีหลังโดยตรง ไม่ต้องผ่านปุ่มอัปโหลดในแอป</p>
+        <p class="panel-sub">สร้างโฟลเดอร์ล่วงหน้าทุกรุ่น/ประเภทเอกสารที่ดูแล เพื่อวางไฟล์ใน Drive เองได้</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm" id="precreate-folders-btn">สร้าง Folder ทั้งหมดบน Google Drive</button>
           <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
         </div>
         <div id="precreate-folders-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
         <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
-        <p class="panel-sub"><b>วางไฟล์เองใน Drive แล้ว หรือลบไฟล์ทิ้งไปแล้ว?</b> กดปุ่มนี้เพื่อให้แอปไปสำรวจโฟลเดอร์ครั้งเดียว — เจอไฟล์ใหม่จะสร้างลิงก์ให้อัตโนมัติ เจอลิงก์ที่ไฟล์หายไปแล้วจะแจ้งให้ลบออกจากระบบ</p>
+        <p class="panel-sub"><b>วางหรือลบไฟล์ใน Drive เอง?</b> กดสำรวจครั้งเดียว — ไฟล์ใหม่สร้างลิงก์ให้ ไฟล์ที่หายจะแจ้งให้ลบ</p>
         <button class="btn btn-ghost btn-sm" id="sync-drive-docs-btn">🔄 ซิงค์ + ตรวจสอบลิงก์เสีย</button>
         <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="all" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button>
         <div id="sync-drive-docs-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
@@ -858,7 +882,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
     <div id="sup-tab-claims" style="display:none;">
       <div class="panel-block">
-        <p class="panel-sub">สรุปเคลม/แจ้งปัญหาที่ Engineer และ Sup Product บันทึกเข้ามา — หน้านี้สำหรับดูและติดตามสถานะเท่านั้น (บันทึกเคลมใหม่ได้จากแท็บ Engineer)</p>
+        <p class="panel-sub">เคลม/แจ้งปัญหาที่ Engineer และ Sup Product บันทึก — ดูและติดตามสถานะเท่านั้น</p>
       </div>
       <div class="panel-block">
         <div class="name-select-wrap" id="claims-identity-wrap" style="display:none;margin-bottom:14px;">
@@ -898,7 +922,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div id="sup-tab-cert" style="display:none;">
       <div class="panel-block">
         <h2>Certificate ผู้ผลิตของฉัน</h2>
-        <p class="panel-sub">เฉพาะรุ่นที่คุณดูแล (ตามชื่อที่เลือกด้านบน) <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="cert" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button></p>
+        <p class="panel-sub">เฉพาะรุ่นที่ดูแล <button class="btn btn-ghost btn-sm drive-orphan-btn" data-scope="cert" title="เทียบไฟล์ใน Drive กับรายการในแอป แล้วแจ้งไฟล์ที่ตกค้าง">🧹 ตรวจไฟล์ตกค้าง</button></p>
         <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1160,7 +1184,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         <div style="text-align:center;margin-bottom:14px;">
           <div style="font-size:36px;line-height:1;">✅</div>
           <h3 style="color:var(--green);margin:8px 0 0;">บันทึกสำเร็จ</h3>
-          <p class="panel-sub" style="margin:4px 0 0;">ตรวจสอบรายละเอียดที่บันทึกไปด้านล่าง — ถ้าถูกต้องแล้วกดปิดได้เลย ไม่ต้องกดส่งซ้ำ</p>
+          <p class="panel-sub" style="margin:4px 0 0;">ตรวจรายละเอียดด้านล่าง ถูกต้องแล้วกดปิดได้เลย ไม่ต้องส่งซ้ำ</p>
         </div>
         <div id="claim-success-body"></div>
       </div>
@@ -1188,7 +1212,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
   <div class="modal-overlay" id="nickname-modal">
     <div class="modal" style="max-width:400px;">
       <h3 id="nickname-modal-title">ยินดีต้อนรับ 👋</h3>
-      <p class="panel-sub" id="nickname-modal-sub">ตั้งชื่อเล่นที่จะใช้แสดงในระบบนี้ (ใช้แทนชื่อ/อีเมลบัญชี Google ทุกจุด — กรอกครั้งเดียว ใช้ถาวรจนกว่าแอดมินจะลบสิทธิ์บัญชีนี้)</p>
+      <p class="panel-sub" id="nickname-modal-sub">ชื่อเล่นที่ใช้แสดงในระบบแทนชื่อ/อีเมล Google — กรอกครั้งเดียว</p>
       <div class="field-wrap"><label>ชื่อเล่น <span style="color:var(--red);">*</span></label><input type="text" id="nickname-input" placeholder="เช่น บอย, แจ็ค, น้องฝ้าย" maxlength="40"></div>
       <button class="btn btn-primary" id="nickname-save-btn" style="width:100%;margin-top:10px;">เริ่มใช้งาน</button>
       <button class="btn btn-ghost" id="nickname-cancel-btn" style="width:100%;margin-top:8px;display:none;">ยกเลิก</button>
@@ -1200,7 +1224,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div class="modal" style="max-width:380px;">
       <button class="modal-close-x" id="ceo-nickname-modal-close-x" style="display:none;">✕</button>
       <h3>👋 ยินดีต้อนรับ CEO</h3>
-      <p class="panel-sub">สิทธิ์ CEO ไม่บังคับกรอกข้อมูลส่วนตัว — กรอกแค่ชื่อเล่นสำหรับแสดงในผังองค์กรก็พอ</p>
+      <p class="panel-sub">CEO ไม่ต้องกรอกข้อมูลส่วนตัว — ใส่แค่ชื่อเล่นสำหรับผังองค์กร</p>
       <div class="field-wrap">
         <label>ชื่อเล่น <span style="color:var(--red);">*</span></label>
         <input type="text" id="ceo-nickname-input" placeholder="เช่น บอส">
@@ -1217,7 +1241,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div class="modal">
       <button class="modal-close-x" id="profile-modal-close-x" style="display:none;">✕</button>
       <h3 id="profile-modal-title">ยินดีต้อนรับ 👋 กรุณากรอกข้อมูลส่วนตัว</h3>
-      <p class="panel-sub" id="profile-modal-sub">ข้อมูลนี้ใช้สำหรับระบบงาน Service ภายในบริษัท กรุณากรอกให้ครบก่อนเริ่มใช้งาน (กรอกครั้งเดียว แก้ไขทีหลังได้)</p>
+      <p class="panel-sub" id="profile-modal-sub">ใช้ในระบบงาน Service ภายในบริษัท กรอกให้ครบก่อนเริ่มใช้งาน (แก้ไขทีหลังได้)</p>
 
       <div class="profile-section-title">ข้อมูลส่วนตัว</div>
       <div class="profile-grid">
@@ -1307,14 +1331,14 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div id="settings-tab-access">
     <div class="panel-block" id="access-requests-panel" style="display:none;">
       <h2>คำขอสิทธิ์เข้าถึงที่รอการอนุมัติ <span class="badge-count" id="access-request-count">0</span></h2>
-      <p class="panel-sub">เฉพาะ Super Admin (Visanu) เท่านั้นที่อนุมัติ/ปฏิเสธคำขอได้</p>
+      <p class="panel-sub">เฉพาะ Super Admin (Visanu) อนุมัติ/ปฏิเสธคำขอได้</p>
       <div id="access-requests-list"></div>
     </div>
 
     <!-- โหมดปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานส่วนนี้ได้ (ซ่อนด้วย JS ใน updateModeButtonVisibility) -->
     <div class="panel-block" id="maintenance-mode-panel" style="display:none;">
       <h2>🔧 ล็อกหน้าปิดปรับปรุง</h2>
-      <p class="panel-sub">เลือกติ๊กเฉพาะหน้า (รวมหน้าย่อย) ที่ต้องการปิด — เฉพาะหน้าที่คนอื่น (ไม่ใช่ Super Admin/Manager) ใช้งานเท่านั้น ตั้งค่าระบบ/Manager ไม่อยู่ในรายการนี้เพราะเป็นพื้นที่ของ Super Admin กับ Manager เอง ทุกคนที่กดเข้าหน้าที่ถูกล็อกจะเจอข้อความ "ปิดปรับปรุง" แทนทันที ส่วนหน้าที่ไม่ติ๊กไว้ใช้งานได้ตามปกติ</p>
+      <p class="panel-sub">ติ๊กหน้า (รวมหน้าย่อย) ที่ต้องการปิด — ใช้กับผู้ใช้ทั่วไปเท่านั้น (ไม่รวมตั้งค่าระบบ/Manager) คนที่เข้าหน้านั้นจะเห็นข้อความ “ปิดปรับปรุง”</p>
       <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;padding:10px;border:1px solid var(--red);border-radius:8px;cursor:pointer;background:rgba(220,38,38,0.06);">
         <input type="checkbox" id="maintenance-mode-all-toggle" style="width:19px;height:19px;">
         <span><b style="color:var(--red);">🚫 ปิดทั้งแอปทั้งระบบ</b> — เข้าแอปไม่ได้เลยแม้แต่หน้าเดียว (ใช้ตอนต้องปรับปรุงทั้งระบบ) ยกเว้นติ๊กนี้ อย่างอื่นด้านล่างไม่มีผล</span>
@@ -1327,9 +1351,9 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div class="panel-block">
       <h2>จัดการสิทธิ์ผู้ใช้งาน</h2>
       <p class="panel-sub">
-        <strong>ผู้ใช้ทั่วไป</strong> — เข้าดูข้อมูล โหวต ส่ง Error ใหม่ได้ แต่แก้ไข/ลบข้อมูลโดยตรงไม่ได้<br>
-        <strong>แก้ไขข้อมูล (Editor)</strong> — ทำได้ทุกอย่างข้างบน บวกเพิ่ม/แก้ไข/ลบ Error, เอกสาร, ผู้ดูแล Product ได้ด้วย<br>
-        โยกย้ายสิทธิ์ไปมาระหว่าง 2 ระดับนี้ได้เลยที่นี่ — <strong>เฉพาะ Super Admin เท่านั้นที่โยกย้ายได้ การบังคับใช้จริงอยู่ที่ Firestore Security Rules</strong>
+        <strong>ผู้ใช้ทั่วไป</strong> — ดู โหวต ส่ง Error ใหม่ได้ แก้ไข/ลบไม่ได้<br>
+        <strong>แก้ไขข้อมูล (Editor)</strong> — เหมือนข้างบน + เพิ่ม/แก้/ลบ Error, เอกสาร, ผู้ดูแล Product<br>
+        เปลี่ยนสิทธิ์ได้ที่นี่ — <strong>เฉพาะ Super Admin (บังคับจริงที่ Firestore Rules)</strong>
       </p>
       <p class="panel-sub" id="perm-list-note" style="color:var(--amber);"></p>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
@@ -1350,7 +1374,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
     <div class="panel-block">
       <h2>จัดการรายชื่อ Sup Product</h2>
-      <p class="panel-sub">เพิ่ม/ลบคนในทีม Sup Product — ลบไม่ได้ถ้ายังมี Product/Model ผูกอยู่ (ต้องย้ายงานออกก่อน)</p>
+      <p class="panel-sub">เพิ่ม/ลบคนในทีม Sup Product — ลบไม่ได้ถ้ายังมี Product/รุ่นผูกอยู่</p>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
         <input type="text" id="new-sup-name-input" placeholder="ชื่อ Sup Product คนใหม่" style="flex:1;min-width:200px;">
         <button class="btn btn-primary btn-sm" id="add-sup-name-btn">+ เพิ่มชื่อ</button>
@@ -1365,7 +1389,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
         <h2 style="margin:0;">จัดการ Product ทั้งหมด</h2>
         <button class="btn btn-primary btn-sm" id="toggle-add-model-form-btn">+ เพิ่ม Product/Model</button>
       </div>
-      <p class="panel-sub">แต่ละแถวคือ 1 รุ่น เปลี่ยนผู้ดูแล/แก้ชื่อ/ลบ ได้ในที่เดียว — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
+      <p class="panel-sub">1 แถว = 1 รุ่น เปลี่ยนผู้ดูแล/แก้ชื่อ/ลบได้ที่นี่ — ลบไม่ได้ถ้ายังมี Error/เอกสารผูกอยู่</p>
 
       <div id="add-model-form" style="display:none;background:var(--panel-alt);border-radius:10px;padding:14px;margin-bottom:14px;">
         <div class="form-grid">
@@ -1411,7 +1435,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <!-- ข้อมูล Troubleshoot — แสดงทันที ไม่ต้องกดดู -->
       <div class="panel-block">
         <h2>📊 ข้อมูล Troubleshoot</h2>
-        <p class="panel-sub">ตัวเลขดิบ ไม่มีสูตรคำนวณ % หรือระดับคะแนน — ดูแล้วตีความเอง</p>
+        <p class="panel-sub">ตัวเลขดิบ ไม่คำนวณ % หรือคะแนน</p>
         <div id="mgr-trbl-content">
           <button class="btn btn-ghost btn-sm" id="mgr-table-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
           <div id="mgr-table-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
@@ -1422,7 +1446,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <!-- ความครบถ้วนของเอกสาร — แสดงทันที ไม่ต้องกดดู -->
       <div class="panel-block">
         <h2>📄 ความครบถ้วนของเอกสาร (แยกตามคน)</h2>
-        <p class="panel-sub">ตัวเลข = จำนวนรุ่นที่มีเอกสารประเภทนั้นแล้ว / จำนวนรุ่นทั้งหมดที่ดูแล</p>
+        <p class="panel-sub">ตัวเลข = รุ่นที่มีเอกสารแล้ว / รุ่นที่ดูแลทั้งหมด</p>
         <div id="mgr-doc-content">
           <button class="btn btn-ghost btn-sm" id="mgr-doc-cols-toggle-btn" style="margin-bottom:10px;">🎛️ เลือกคอลัมน์ที่แสดง</button>
           <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
@@ -1440,7 +1464,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <h2 style="font-size:14px;margin:0;">🔔 รายการรอดำเนินการ <span class="badge-count" id="mgr-claims-pending-badge" style="display:none;margin-left:4px;">0</span></h2>
           <span id="mgr-claims-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
         </div>
-        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">เคลมอะไหล่ที่ยังไม่ถูกดำเนินการ แยกตาม Sup Product</p>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">เคลมอะไหล่ที่ยังไม่ดำเนินการ แยกตาม Sup Product</p>
         <div id="mgr-pending-claims-list" style="display:none;margin-top:10px;"><div style="color:var(--text-faint);font-size:13px;text-align:center;padding:16px;">กำลังโหลด...</div></div>
       </div>
 
@@ -1450,7 +1474,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <h2 style="margin:0;font-size:14px;">📦 รายการรอตรวจรับอะไหล่ <span class="badge-count" id="rp-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
           <span id="mgr-rp-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
         </div>
-        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service จัดการรับใน Google Sheet โดยตรง</p>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Engineer ส่งอะไหล่คืน — Admin Service รับใน Google Sheet</p>
         <div id="mgr-rp-collapse-body" style="display:none;margin-top:10px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
             <div style="display:flex;flex:1;min-width:180px;align-items:center;gap:6px;background:var(--surface2,rgba(0,0,0,.06));border:1px solid var(--border);border-radius:8px;padding:5px 10px;">
@@ -1473,7 +1497,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <h2 style="margin:0;font-size:14px;">🎓 Certificate รอตรวจให้คะแนน <span class="badge-count" id="cert-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
           <span id="mgr-cert-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
         </div>
-        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Cer ที่ Engineer/Sup Product อัปโหลดเข้ามา รอ Manager เปิดดูและให้คะแนน</p>
+        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Cer ที่อัปโหลดเข้ามา รอ Manager ให้คะแนน</p>
         <div id="mgr-cert-collapse-body" style="display:none;margin-top:10px;">
           <div id="mgr-cert-list"></div>
         </div>
@@ -1507,7 +1531,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
     <div class="panel-block" id="backup-schedule-panel" style="display:none;">
       <h2>ตั้งค่า Backup อัตโนมัติ</h2>
-      <p class="panel-sub">แก้ไขได้เฉพาะ Super Admin เท่านั้น — ระบบจะเช็คทุกชั่วโมงว่าถึงเวลาตามที่ตั้งไว้หรือยัง</p>
+      <p class="panel-sub">แก้ไขได้เฉพาะ Super Admin · ระบบเช็คทุกชั่วโมง</p>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <label class="toggle-switch"><input type="checkbox" id="backup-schedule-enabled"><span class="toggle-slider"></span></label>
         <span style="font-size:13px;">เปิดใช้งาน Backup อัตโนมัติ</span>
@@ -1543,13 +1567,13 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
     <div class="panel-block">
       <h2>สถานะ Backup อัตโนมัติล่าสุด</h2>
-      <p class="panel-sub">กดเช็คว่าครั้งล่าสุดสำเร็จหรือไม่ (ต้องขอสิทธิ์ Google Drive ก่อน จึงให้กดเช็คเองแทนที่จะเช็คอัตโนมัติ)</p>
+      <p class="panel-sub">เช็คว่า Backup ครั้งล่าสุดสำเร็จไหม (ต้องขอสิทธิ์ Drive ก่อน)</p>
       <button class="btn btn-ghost btn-sm" id="check-backup-status-btn">🔍 เช็คสถานะ Backup ล่าสุด</button>
       <div id="auto-backup-status" style="font-size:13px;margin-top:10px;"></div>
     </div>
     <div class="panel-block">
       <h2>สำรองข้อมูล (Backup)</h2>
-      <p class="panel-sub">ดึงข้อมูลทั้งหมดจาก Firestore ณ ตอนนี้ เก็บไว้เป็นสำรองส่วนตัว — เน้น Error Code, อาการเสีย, วิธีการ, อุปกรณ์ที่ใช้, อะไหล่ที่ใช้, เวลาที่ใช้ ส่วนข้อมูลอื่น (เอกสาร) จะแสดงเป็นลิงก์อ้างอิงเท่านั้น</p>
+      <p class="panel-sub">ดึงข้อมูลจาก Firestore ตอนนี้เป็นสำรองส่วนตัว — เน้น Error Code, อาการ, วิธีแก้, อุปกรณ์, อะไหล่, เวลา · เอกสารเป็นลิงก์อ้างอิง</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-primary btn-sm" id="backup-json-btn">⬇ ดาวน์โหลด Backup (JSON)</button>
         <button class="btn btn-ghost btn-sm" id="backup-excel-btn">⬇ ดาวน์โหลด Excel</button>
@@ -1559,19 +1583,19 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     </div>
     <div class="panel-block" id="export-log-panel" style="display:none;">
       <h2>Export ประวัติการใช้งาน (Log)</h2>
-      <p class="panel-sub">บันทึกเฉพาะการกระทำสำคัญ (ลบ, ดาวน์โหลด Backup, แก้ไขสิทธิ์) ไม่บันทึกทุกคลิก — เก็บไว้ตลอดไป เห็นเฉพาะ Super Admin เท่านั้น</p>
+      <p class="panel-sub">บันทึกเฉพาะการกระทำสำคัญ (ลบ, ดาวน์โหลด Backup, แก้สิทธิ์) · เห็นเฉพาะ Super Admin</p>
       <button class="btn btn-primary btn-sm" id="export-log-excel-btn">⬇ Export Log เป็น Excel</button>
       <span class="mono" id="export-log-status" style="font-size:12px;color:var(--text-faint);margin-left:8px;"></span>
     </div>
     <div class="panel-block" id="tech-docs-panel" style="display:none;">
       <h2>เอกสารทางเทคนิค (สำหรับแก้ไขโค้ดในอนาคต)</h2>
-      <p class="panel-sub">สรุปไว้ให้กลับมาแก้ไขโค้ดได้ง่ายขึ้น เห็นเฉพาะ Super Admin เท่านั้น</p>
+      <p class="panel-sub">สรุปไว้ช่วยแก้โค้ด · เห็นเฉพาะ Super Admin</p>
       <button class="btn btn-ghost btn-sm" id="tech-docs-toggle-btn">แสดง/ซ่อนรายละเอียด</button>
       <div id="tech-docs-content" style="display:none;margin-top:14px;font-size:12.5px;line-height:1.8;"></div>
     </div>
     <div class="panel-block">
       <h2>Google Drive Database</h2>
-      <p class="panel-sub">เข้าไปดูไฟล์เอกสาร/รูป/วิดีโอ/Backup ทั้งหมดที่เก็บไว้จริงใน Google Drive ได้โดยตรง</p>
+      <p class="panel-sub">ดูไฟล์เอกสาร/รูป/วิดีโอ/Backup ทั้งหมดใน Google Drive</p>
       <a class="btn btn-ghost btn-sm" href="https://drive.google.com/drive/folders/1YU4DnoLvTTos9cquH6c7kXczXKMYpAQu" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 เปิด Google Drive ที่เก็บ Database</a>
     </div>
   </div>
@@ -1602,7 +1626,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           </div>
         </div>
       </div>
-      <p class="panel-sub" style="margin-top:18px;">"Sup Area" ของแต่ละเขตจะแสดงเด่น (⭐) เป็นหัวหน้าเขต (เป็นการแสดงผลเท่านั้น ไม่ใช่ field บังคับ)</p>
+      <p class="panel-sub" style="margin-top:18px;">⭐ = Sup Area หัวหน้าเขต (แสดงผลเท่านั้น)</p>
     </div>
     <div style="font-size:11px;color:var(--text-faint);padding:4px 2px;">* แสดงเฉพาะผู้ที่กรอกโปรไฟล์ (userProfiles) แล้วเท่านั้น คนที่ยังไม่เคยกรอกจะยังไม่ปรากฏในผังนี้</div>
   </div>
@@ -1643,7 +1667,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div class="desktop-hint">📦 ตรวจรับอะไหล่คืน Office — Admin Service เท่านั้น</div>
     <div class="panel-block">
       <h2>รายการรอตรวจรับ</h2>
-      <p class="panel-sub">รายการส่งคืนอะไหล่ที่ Engineer ส่งมา รอการตรวจรับและประเมิน</p>
+      <p class="panel-sub">ส่งคืนอะไหล่จาก Engineer รอตรวจรับและประเมิน</p>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
         <div style="display:flex;flex:1;min-width:180px;align-items:center;gap:6px;background:var(--surface2,rgba(0,0,0,.06));border:1px solid var(--border);border-radius:8px;padding:5px 10px;">
           <span style="color:var(--text-faint);">🔍</span>
@@ -1703,7 +1727,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
     <div class="modal" style="max-width:520px;max-height:80vh;overflow:auto;">
       <button class="modal-close-x" id="eng-resp-modal-close">✕</button>
       <h3>เลือกรุ่นเครื่องที่ดูแล</h3>
-      <p class="panel-sub">ติ๊กเลือกได้หลายรุ่น — เลือกไว้ครั้งเดียว แก้ไขทีหลังได้ตลอด</p>
+      <p class="panel-sub">ติ๊กได้หลายรุ่น — แก้ไขทีหลังได้</p>
       <div id="eng-resp-checklist" style="margin:14px 0;"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-ghost btn-sm" id="eng-resp-cancel-btn">ยกเลิก</button>
@@ -1849,8 +1873,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.04";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 14:15 น. เวลาไทย";
+const APP_VERSION = "9.05";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 14:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3941,7 +3965,7 @@ async function openDriveOrphanScanner(scope){
     ov.innerHTML = `<div class="modal" style="max-width:720px;max-height:88vh;overflow:auto;">
       <button class="modal-close-x" id="orphan-close-x">✕</button>
       <h3>🧹 ตรวจไฟล์ตกค้างใน Google Drive / Sheet</h3>
-      <p class="panel-sub">เทียบไฟล์ที่อยู่ใน Drive กับรายการในแอป — ไฟล์ที่ไม่มีรายการไหนอ้างอิงจะแสดงให้เลือกลบ (ไม่ลบอัตโนมัติ)</p>
+      <p class="panel-sub">เทียบไฟล์ใน Drive กับรายการในแอป — ไฟล์ไม่มีรายการอ้างอิงจะให้เลือกลบ (ไม่ลบอัตโนมัติ)</p>
       <div id="orphan-status" style="font-size:12.5px;color:var(--text-faint);margin:8px 0;"></div>
       <div id="orphan-body"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;">
@@ -9729,7 +9753,7 @@ function renderPendingDriveMovesPanel(){
   el.style.display='block';
   el.innerHTML = `
     <h2 style="color:var(--red);">⚠️ ย้ายโฟลเดอร์ Drive ยังไม่สำเร็จ (${pendingDriveMoves.length} รายการ)</h2>
-    <p class="panel-sub">ข้อมูลผู้ดูแลในระบบเปลี่ยนแล้ว แต่โฟลเดอร์ไฟล์ใน Google Drive ยังย้ายไม่สำเร็จ — กด "ลองอีกครั้ง" จนกว่าจะขึ้นว่าสำเร็จ ไม่งั้นไฟล์จะยังอยู่ผิดที่</p>
+    <p class="panel-sub">ย้ายผู้ดูแลแล้ว แต่โฟลเดอร์ใน Drive ยังย้ายไม่สำเร็จ — กด “ลองอีกครั้ง” จนสำเร็จ ไม่งั้นไฟล์จะอยู่ผิดที่</p>
     ${pendingDriveMoves.map((p,i)=>`
       <div class="admin-row">
         <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(p.category)} · ${escapeHtml(p.model)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(p.oldOwner)} → ${escapeHtml(p.newOwner==='ยังไม่มีผู้ดูแล'?'ไม่มีผู้รับผิดชอบ':p.newOwner)}</span></div>
