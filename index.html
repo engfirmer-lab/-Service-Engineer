@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.21
+  เวอร์ชันปัจจุบัน : 9.22
   อัปเดตล่าสุด   : 10 ตุลาคม 2569 21:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.21</title>
+<title>F1 Service — v9.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1534,6 +1534,7 @@ setTimeout(function(){
     <!-- Sub-tab bar (v8.36) -->
     <div id="mgr-subtabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;">
       <button class="btn btn-ghost btn-sm active" data-mgrtab="summary" style="white-space:nowrap;">📊 สรุปข้อมูล</button>
+      <button class="btn btn-ghost btn-sm" data-mgrtab="cert" style="white-space:nowrap;">🎓 Certificate</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="pending" style="white-space:nowrap;">🔔 งานค้างทั้งหมด <span class="badge-count" id="mgr-pending-total-badge" style="display:none;margin-left:4px;">0</span></button>
     </div>
 
@@ -1559,6 +1560,25 @@ setTimeout(function(){
           <div id="mgr-doc-cols-panel" style="display:none;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;"></div>
           <div style="overflow-x:auto;"><table id="mgr-doc-summary"></table></div>
         </div>
+      </div>
+    </div>
+
+    <!-- v9.22 — Dashboard Certificate (Manager + Sup ดูอย่างเดียว) -->
+    <div id="mgr-sub-cert" style="display:none;">
+      <div class="panel-block">
+        <h2>🎓 Dashboard Certificate</h2>
+        <p class="panel-sub">% = ใบที่มีแล้ว ÷ ใบที่ต้องมี ของรุ่นที่แต่ละคนรับผิดชอบ (ตามที่ Sup กำหนดว่าต้องมี Cer) · ใบรุ่นอื่นไม่นับใน %</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0;">
+          <span style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><button id="cd-v-person" style="border:0;background:var(--amber);color:#fff;padding:7px 12px;font:inherit;cursor:pointer;">👤 ตามคน</button><button id="cd-v-model" style="border:0;background:none;color:inherit;padding:7px 12px;font:inherit;cursor:pointer;">🔧 ตามรุ่น (ใครมี Cer รุ่นนี้)</button></span>
+          <input id="cd-q" placeholder="🔍 ชื่อคน / Product / รุ่น" style="flex:1;width:auto;min-width:180px;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;background:var(--panel);color:inherit;">
+          <select id="cd-role" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ทุกบทบาท</option><option>Engineer</option><option>Sup</option></select>
+          <select id="cd-prod" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ทุก Product</option></select>
+          <select id="cd-stat" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ทุกสถานะ</option><option value="miss">เฉพาะที่ยังขาด</option><option value="full">เฉพาะที่ครบ</option></select>
+          <button class="btn btn-ghost btn-sm" id="cd-refresh">🔄 รีเฟรช</button>
+          <button class="btn btn-ghost btn-sm" id="cd-export">📥 Export Excel</button>
+        </div>
+        <div id="cd-body"></div>
+        <p class="panel-sub" style="margin-top:8px;">แตะแถวเพื่อดูตารางรุ่น × ชนิด และไฟล์ · ⚠ รุ่นอื่น = ใบที่ไม่ใช่รุ่นที่รับผิดชอบ</p>
       </div>
     </div>
 
@@ -1599,7 +1619,7 @@ setTimeout(function(){
       </div>
 
       <!-- v8.58 — Certificate รอตรวจให้คะแนน — collapsible -->
-      <div class="panel-block" style="border:1.5px solid var(--amber);">
+      <div class="panel-block" style="border:1.5px solid var(--amber);display:none;"><!-- v9.22 — ซ่อนรายการรอตรวจให้คะแนน (ไม่ใช้แล้ว) ใช้ Dashboard Certificate แทน -->
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="mgr-cert-collapse-header">
           <h2 style="margin:0;font-size:14px;">🎓 Certificate รอตรวจให้คะแนน <span class="badge-count" id="cert-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
           <span id="mgr-cert-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
@@ -1984,7 +2004,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.21";
+const APP_VERSION = "9.22";
 const APP_UPDATED_AT = "10 ตุลาคม 2569 21:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -12434,6 +12454,7 @@ function switchMgrSubTab(tab){
   _mgrSubActive = tab;
   $('mgr-sub-summary').style.display = tab==='summary' ? 'block' : 'none';
   $('mgr-sub-pending').style.display = tab==='pending' ? 'block' : 'none';
+  $('mgr-sub-cert').style.display = tab==='cert' ? 'block' : 'none';
   document.querySelectorAll('#mgr-subtabs [data-mgrtab]').forEach(btn=>{
     btn.classList.toggle('active', btn.getAttribute('data-mgrtab')===tab);
   });
@@ -12442,6 +12463,7 @@ function switchMgrSubTab(tab){
     renderMgrPendingClaims();
     updateMgrPendingBadge();
   }
+  if(tab==='cert') cdLoad(false);
 }
 
 document.querySelectorAll('#mgr-subtabs [data-mgrtab]').forEach(btn=>{
@@ -13043,6 +13065,191 @@ $('mgr-cert-collapse-header').addEventListener('click', ()=>{
     renderMgrCertList().then(()=>{ _mgrCertListLoaded = true; }).catch(e=>{ showToast('⚠ โหลดรายการ Cer ไม่สำเร็จ: '+e.message); });
   }
 });
+
+/* ===================== v9.22 — Dashboard Certificate (ภาพรวมรายคน/รายรุ่น + % ความครบถ้วน) ===================== */
+let _cdState = { loaded:false, loading:false, certs:[], resps:[], view:'person', open:{}, openP:{} };
+async function cdLoad(force){
+  if(_cdState.loading) return;
+  if(_cdState.loaded && !force) { cdRender(); return; }
+  _cdState.loading = true;
+  const box = $('cd-body'); if(box) box.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const [certs, rsnap] = await Promise.all([ fsListAllCertificates(), sdk.getDocs(sdk.collection(db,'engineerResponsibility')), fsLoadCertRequirements() ]);
+    _cdState.certs = certs;
+    _cdState.resps = []; rsnap.forEach(d=>_cdState.resps.push({ id:d.id, ...d.data() }));
+    _cdState.loaded = true;
+  }catch(e){
+    if(box) box.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
+    _cdState.loading = false; return;
+  }
+  _cdState.loading = false; cdRender();
+}
+function cdPersonName(email, fallback){
+  const lbl = profileLabelMap[email]; if(lbl) return String(lbl).split(' - ')[0];
+  return nicknamesMap[email] || fallback || email;
+}
+function cdSupNameFor(email){
+  const cands = [ (profileLabelMap[email]||'').split(' - ')[0], nicknamesMap[email] ].filter(Boolean);
+  for(const c of cands){
+    const hit = SUP_PRODUCTS.find(n=> n===c || n.includes(c) || c.includes(n.replace(/\s*\(.*\)/,'').trim()));
+    if(hit) return hit;
+  }
+  return null;
+}
+// คำนวณข้อมูลรายคน: รุ่นที่รับผิดชอบ / ต้องมี / มีแล้ว / ขาด / ใบรุ่นอื่น
+function cdCompute(){
+  const certs = _cdState.certs, cats = DATA.categories||{};
+  const lc = x=>String(x||'').toLowerCase();
+  const emails = new Set([...approvedUsers, ...adminEmails].map(lc));
+  certs.forEach(c=>{ if(c.ownerEmail) emails.add(lc(c.ownerEmail)); });
+  _cdState.resps.forEach(r=>{ if((r.models||[]).length) emails.add(lc(r.id)); });
+  [...adminServiceEmails.map(lc)].forEach(e=>{ if(!approvedUsers.map(lc).includes(e) && !adminEmails.map(lc).includes(e) && !certs.some(c=>lc(c.ownerEmail)===e)) emails.delete(e); });
+  const out = [];
+  let unsetKeys = new Set();
+  emails.forEach(e=>{
+    if(!e) return;
+    const mine = certs.filter(c=>lc(c.ownerEmail)===e);
+    const isSup = adminEmails.map(lc).includes(e) || mine.some(c=>c.role==='supproduct');
+    if(!isSup && !approvedUsers.map(lc).includes(e) && !mine.length) return;
+    const supName = isSup ? cdSupNameFor(e) : null;
+    let models = [];
+    if(isSup){
+      if(supName) Object.keys(cats).forEach(cat=> (cats[cat]||[]).forEach(m=>{ if(ownerOf(cat,m)===supName) models.push({category:cat, model:m}); }));
+    } else {
+      const rd = _cdState.resps.find(r=>lc(r.id)===e);
+      models = ((rd && rd.models)||[]).filter(m=> (cats[m.category]||[]).includes(m.model));
+    }
+    const respSet = new Set(models.map(m=>m.category+'|'+m.model));
+    let reqI=0, reqM=0, hasI=0, hasM=0; const miss = [], reqMap = {};
+    models.forEach(({category,model})=>{
+      const key = category+'|'+model, req = certRequirements[key];
+      if(!req){ unsetKeys.add(key); return; }
+      let needI = (req==='internal'||req==='both'), needM = (req==='manufacturer'||req==='both');
+      if(isSup){ needI = false; } // Sup แนบเฉพาะ Cer ผู้ผลิต
+      reqMap[key] = [needI, needM];
+      if(needI){ reqI++; if(mine.some(c=>c.category===category && c.model===model && c.certType==='internal')) hasI++; else miss.push({category, model, type:'ภายใน'}); }
+      if(needM){ reqM++; if(mine.some(c=>c.category===category && c.model===model && c.certType==='manufacturer')) hasM++; else miss.push({category, model, type:'ผู้ผลิต'}); }
+    });
+    const other = mine.filter(c=>!respSet.has(c.category+'|'+c.model)).length;
+    const prods = [...new Set(models.map(m=>m.category))].sort(naturalSort);
+    out.push({ email:e, name: cdPersonName(e, (mine[0]&&mine[0].ownerName)), role: isSup?'Sup':'Engineer', supName, noMatch: isSup && !supName, models, reqMap, prods, certs: mine, reqI, reqM, hasI, hasM, miss, other });
+  });
+  out.sort((a,b)=> (a.role===b.role ? String(a.name).localeCompare(String(b.name),'th') : (a.role==='Sup'?-1:1)));
+  return { people: out, unset: unsetKeys.size };
+}
+function cdPct(h,r){ if(!r) return '<span style="color:var(--text-faint);">—</span>'; const v=Math.round(h*100/r), c=v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)'; return `<b style="color:${c};display:block;line-height:1.15;">${v}%</b><small style="display:block;font-size:10px;color:var(--text-faint);">${h}/${r}</small>`; }
+function cdBar(h,r){ if(!r) return '<span style="color:var(--text-faint);">—</span>'; const v=Math.round(h*100/r), c=v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)'; return `<b style="display:block;line-height:1.15;">${v}%</b><div style="height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:3px;"><i style="display:block;height:100%;width:${v}%;background:${c};"></i></div>`; }
+function cdChip(t, kind){ const st = kind==='m' ? 'background:rgba(220,38,38,.12);color:var(--red);' : kind==='ok' ? 'background:rgba(34,197,94,.14);color:var(--green);' : kind==='w' ? 'background:rgba(245,158,11,.16);color:var(--amber);' : 'background:var(--panel-alt);color:var(--text-dim);'; return `<span style="display:inline-block;font-size:10.5px;border-radius:5px;padding:1px 6px;margin:1px 2px 1px 0;white-space:nowrap;${st}">${t}</span>`; }
+function cdProdChips(p){
+  const n = p.prods.length, all = Object.keys(DATA.categories||{}).length;
+  const tog = `onclick="_cdState.openP['${escapeHtml(p.email)}']=!_cdState.openP['${escapeHtml(p.email)}'];cdRender()"`;
+  const op = _cdState.openP[p.email];
+  const rest = a=> '<div style="margin-top:4px;">'+a.map(x=>cdChip(escapeHtml(x))).join('')+'</div>';
+  if(!n) return '<span style="color:var(--text-faint);font-size:12px;">ยังไม่ได้เลือก</span>';
+  if(n===all && n>3) return `<span ${tog} style="cursor:pointer;">${cdChip('ทุก Product ('+n+') '+(op?'▲':'▼'),'ok')}</span>`+(op?rest(p.prods):'');
+  if(n<=3) return p.prods.map(x=>cdChip(escapeHtml(x))).join('');
+  return p.prods.slice(0,2).map(x=>cdChip(escapeHtml(x))).join('') + `<span ${tog} style="cursor:pointer;">${cdChip('+'+(n-2)+' '+(op?'▲':'▼'),'ok')}</span>` + (op?rest(p.prods.slice(2)):'');
+}
+function cdFiltered(data){
+  const q = ($('cd-q')||{}).value||'', fr = ($('cd-role')||{}).value||'', fp = ($('cd-prod')||{}).value||'', fs = ($('cd-stat')||{}).value||'';
+  const ql = q.trim().toLowerCase();
+  return data.people.filter(p=>{
+    if(fr && p.role!==fr) return false;
+    if(fp && !p.prods.includes(fp)) return false;
+    if(fs==='miss' && !p.miss.length) return false;
+    if(fs==='full' && (p.miss.length || !(p.reqI+p.reqM))) return false;
+    if(ql){ const hay = (p.name+' '+p.prods.join(' ')+' '+p.models.map(m=>m.model).join(' ')+' '+p.certs.map(c=>c.model).join(' ')).toLowerCase(); if(!hay.includes(ql)) return false; }
+    return true;
+  });
+}
+function cdFileLinks(list){ return list.map((c,i)=>{ const u = safeHttpUrl(c.fileUrl); return u ? `<a href="${escapeHtml(u)}" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;margin-right:6px;" title="${escapeHtml(c.fileName||'')}">👁${list.length>1?(i+1):''}</a>` : ''; }).join(''); }
+function cdDetailHtml(p){
+  const keys = [...new Set([ ...Object.keys(p.reqMap), ...p.certs.map(c=>c.category+'|'+c.model) ])].sort((a,b)=>naturalSort(a,b));
+  if(!keys.length) return '<div style="color:var(--text-faint);font-size:12.5px;">ยังไม่มีรุ่นที่ต้องมี Cer หรือใบที่แนบ</div>';
+  const th = 'border:1px solid var(--border);padding:5px 9px;font-size:12px;background:var(--panel-alt);';
+  const td = 'border:1px solid var(--border);padding:5px 9px;font-size:12px;';
+  const cell = (key,type,idx)=>{
+    const [cat,model] = key.split('|'); const r = p.reqMap[key];
+    const list = p.certs.filter(c=>c.category===cat && c.model===model && c.certType===type);
+    if(list.length) return `<span style="color:var(--green);font-weight:700;">✓ ${list.length}</span> ${cdFileLinks(list)}`;
+    if(r && r[idx]) return '<span style="color:var(--red);font-weight:700;">ขาด</span>';
+    return '<span style="color:var(--text-faint);">'+(r?'ไม่ต้องมี':'—')+'</span>';
+  };
+  return `<table style="border-collapse:collapse;"><tr><th style="${th}">รุ่น</th><th style="${th}">ภายใน</th><th style="${th}">ผู้ผลิต</th></tr>` + keys.map(key=>{
+    const [cat,model] = key.split('|'); const inResp = p.models.some(m=>m.category===cat && m.model===model);
+    return `<tr><td style="${td}"><span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b>${inResp?'':' '+cdChip('⚠ รุ่นอื่น','w')}${inResp && !(key in p.reqMap)?' '+cdChip('ยังไม่กำหนดว่าต้องมี'):''}</td><td style="${td}">${cell(key,'internal',0)}</td><td style="${td}">${cell(key,'manufacturer',1)}</td></tr>`;
+  }).join('') + '</table>';
+}
+function cdRender(){
+  const body = $('cd-body'); if(!body || !_cdState.loaded) return;
+  const data = cdCompute();
+  // เติมตัวเลือก Product
+  const fp = $('cd-prod'); if(fp && !fp.dataset.f){ fp.innerHTML = '<option value="">ทุก Product</option>'+Object.keys(DATA.categories||{}).sort(naturalSort).map(c=>`<option>${escapeHtml(c)}</option>`).join(''); fp.dataset.f='1'; }
+  const L = cdFiltered(data);
+  const sum = L.reduce((a,p)=>({ri:a.ri+p.reqI, rm:a.rm+p.reqM, hi:a.hi+p.hasI, hm:a.hm+p.hasM}), {ri:0,rm:0,hi:0,hm:0});
+  const R = sum.ri+sum.rm, H = sum.hi+sum.hm;
+  const kp = (lab,h,r)=>{ const v = r?Math.round(h*100/r):null; const c = v===null?'var(--text-faint)':v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)'; return `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">${lab}</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${c};">${v===null?'—':v+'%'}</div><div style="font-size:11px;color:var(--text-faint);">${r?`มี ${h} / ต้องมี ${r} · ขาด ${r-h} ใบ`:'ยังไม่มีรุ่นที่กำหนด'}</div>${r?`<div style="height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:${v}%;background:${c};"></i></div>`:''}</div>`; };
+  let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0;">${kp('ครบรวม',H,R)}${kp('ภายใน',sum.hi,sum.ri)}${kp('ผู้ผลิต',sum.hm,sum.rm)}</div>`;
+  if(data.unset>0) h += `<div style="background:rgba(245,158,11,.12);border:1px solid var(--amber);border-radius:8px;padding:7px 10px;font-size:12px;margin-bottom:8px;">⚠ มี <b>${data.unset}</b> รุ่น (ที่มีคนรับผิดชอบ) ที่ Sup ยังไม่ได้กำหนดว่าต้องมี Cer — ไม่นับใน %</div>`;
+  const thS = 'padding:8px 6px;font-size:11px;color:var(--text-faint);font-weight:600;background:var(--panel-alt);text-align:center;';
+  const tdS = 'padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;';
+  const q = (($('cd-q')||{}).value||'').trim().toLowerCase();
+  if(_cdState.view==='person'){
+    h += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:900px;"><thead><tr><th style="${thS}text-align:left;">ชื่อ</th><th style="${thS}">บทบาท</th><th style="${thS}">Product ที่รับผิดชอบ</th><th style="${thS}">รุ่นที่ต้องมี</th><th style="${thS}">ภายใน</th><th style="${thS}">ผู้ผลิต</th><th style="${thS}min-width:110px;">ครบรวม</th><th style="${thS}">ขาด (ใบ)</th><th style="${thS}text-align:left;">ที่ยังขาด</th><th style="${thS}">รุ่นอื่น</th></tr></thead><tbody>`;
+    L.forEach(p=>{
+      const k = escapeHtml(p.email);
+      const reqModels = Object.keys(p.reqMap).length;
+      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11px;color:var(--text-faint);">${p.role}</td><td style="${tdS}" onclick="event.stopPropagation()">${cdProdChips(p)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td><td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?p.miss.map(x=>cdChip(escapeHtml(x.model)+' '+x.type,'m')).join(''):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
+      if(_cdState.open[p.email]) h += `<tr><td colspan="10" style="padding:10px 14px;background:var(--panel-alt);">${cdDetailHtml(p)}</td></tr>`;
+    });
+    if(!L.length) h += '<tr><td colspan="10" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
+    h += '</tbody></table></div>';
+  } else {
+    const M = {};
+    L.forEach(p=>{ [...new Set([...p.models.map(m=>m.category+'|'+m.model), ...p.certs.map(c=>c.category+'|'+c.model)])].forEach(k=>{ (M[k]=M[k]||[]).push(p); }); });
+    h += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">มีใบ Cer แล้ว (ใคร · ชนิด)</th><th style="${thS}text-align:left;">ยังขาด (ใคร · ชนิด)</th></tr></thead><tbody>`;
+    let rows = 0;
+    Object.keys(M).sort(naturalSort).forEach(k=>{
+      const [cat,model] = k.split('|');
+      if(q && !(cat+' '+model).toLowerCase().includes(q) && !M[k].some(p=>p.name.toLowerCase().includes(q))) return;
+      const has = [], miss = [];
+      M[k].forEach(p=>{
+        p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const own = p.models.some(m=>m.category===cat&&m.model===model); has.push(cdChip(escapeHtml(p.name)+' · '+certTypeLabel(c.certType)+(own?'':' ⚠'), own?'ok':'w')+cdFileLinks([c])); });
+        miss.push(...p.miss.filter(x=>x.category===cat && x.model===model).map(x=>cdChip(escapeHtml(p.name)+' · '+x.type,'m')));
+      });
+      rows++;
+      h += `<tr><td style="${tdS}text-align:left;"><span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b></td><td style="${tdS}text-align:left;">${has.join('')||'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'}</td><td style="${tdS}text-align:left;">${miss.join('')||cdChip('ครบ','ok')}</td></tr>`;
+    });
+    if(!rows) h += '<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
+    h += '</tbody></table></div>';
+  }
+  body.innerHTML = h;
+  $('cd-v-person').style.background = _cdState.view==='person' ? 'var(--amber)' : ''; $('cd-v-person').style.color = _cdState.view==='person' ? '#fff' : '';
+  $('cd-v-model').style.background = _cdState.view==='model' ? 'var(--amber)' : ''; $('cd-v-model').style.color = _cdState.view==='model' ? '#fff' : '';
+}
+function cdExport(){
+  if(typeof XLSX==='undefined'){ showToast('⚠ ยังโหลดตัวส่งออก Excel ไม่ได้ (ต้องต่ออินเทอร์เน็ต)'); return; }
+  const data = cdCompute(), L = cdFiltered(data), rows = [];
+  L.forEach(p=>{
+    const keys = [...new Set([ ...Object.keys(p.reqMap), ...p.certs.map(c=>c.category+'|'+c.model) ])];
+    if(!keys.length) rows.push({ ชื่อ:p.name, บทบาท:p.role, Product:'', รุ่น:'', 'ต้องมีภายใน':'', 'ต้องมีผู้ผลิต':'', 'มีภายใน(ใบ)':'', 'มีผู้ผลิต(ใบ)':'', หมายเหตุ:'ยังไม่มีรุ่นที่กำหนด/ไม่มีใบ' });
+    keys.forEach(key=>{ const [cat,model] = key.split('|'); const r = p.reqMap[key]; const inResp = p.models.some(m=>m.category===cat&&m.model===model);
+      rows.push({ ชื่อ:p.name, บทบาท:p.role, Product:cat, รุ่น:model, 'ต้องมีภายใน': r?(r[0]?'ใช่':'ไม่'):'ยังไม่กำหนด', 'ต้องมีผู้ผลิต': r?(r[1]?'ใช่':'ไม่'):'ยังไม่กำหนด',
+        'มีภายใน(ใบ)': p.certs.filter(c=>c.category===cat&&c.model===model&&c.certType==='internal').length, 'มีผู้ผลิต(ใบ)': p.certs.filter(c=>c.category===cat&&c.model===model&&c.certType==='manufacturer').length,
+        หมายเหตุ: inResp ? '' : 'รุ่นอื่น (ไม่นับใน %)' }); });
+  });
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Certificate');
+  XLSX.writeFile(wb, `certificate-overview-${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+(function cdBind(){
+  const b = $('cd-v-person'); if(!b) return;
+  $('cd-v-person').addEventListener('click', ()=>{ _cdState.view='person'; cdRender(); });
+  $('cd-v-model').addEventListener('click', ()=>{ _cdState.view='model'; cdRender(); });
+  ['cd-q','cd-role','cd-prod','cd-stat'].forEach(id=>{ const el=$(id); if(el) el.addEventListener(id==='cd-q'?'input':'change', cdRender); });
+  $('cd-refresh').addEventListener('click', ()=>cdLoad(true));
+  $('cd-export').addEventListener('click', cdExport);
+})();
 
 /* ---- v8.50: Admin Service — แสดงรายการรอตรวจรับ ---- */
 // v8.53: เพิ่ม search bar — กรอง client-side
