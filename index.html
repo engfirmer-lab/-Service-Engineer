@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.10
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 16:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.11
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 16:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.10</title>
+<title>F1 Service — v9.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1651,8 +1651,8 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
   <!-- ===== หน้า รายชื่อผู้ใช้งาน — Manager เท่านั้น: ดู/แก้ไข/ลบโปรไฟล์ทุกคน + ซิงก์ Google Sheet (เดิมเรียก "Roster" ในคอมเมนต์ เปลี่ยนมาเรียก "รายชื่อผู้ใช้งาน" ให้ตรงกับ UI เพื่อไม่ให้สับสนกับ "ผังองค์กร" ซึ่งเป็นคนละหน้ากัน) ===== -->
   <div id="view-roster" style="display:none;">
     <div class="subtab-bar team-subtabs"><button data-tsub="orgchart">🗂 ผังองค์กร</button><button data-tsub="roster" class="team-roster-tab">📋 รายชื่อ</button></div>
-    <div class="desktop-hint">📋 รายชื่อ — เฉพาะ Manager · แก้ไข/ลบจริงทำที่นี่เท่านั้น (Google Sheet ไว้ดู/ค้นหาอย่างเดียว)</div>
-    <div class="panel-block">
+    <div class="desktop-hint" id="roster-hint">📋 รายชื่อ — แก้ไข/ลบจริงทำที่นี่เท่านั้น (เฉพาะ Manager) · Google Sheet ไว้ดู/ค้นหาอย่างเดียว</div>
+    <div class="panel-block" id="roster-options-panel">
       <h2>ตัวเลือก</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-ghost btn-sm" id="roster-open-sheet-btn">🔗 เปิด Google Sheet</button>
@@ -1669,10 +1669,10 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
             <th style="padding:6px 8px;">ชื่อเล่น</th>
             <th style="padding:6px 8px;">ตำแหน่ง</th>
             <th style="padding:6px 8px;">เขตพื้นที่</th>
-            <th style="padding:6px 8px;">เบอร์โทร</th>
-            <th style="padding:6px 8px;">วันเกิด / อายุ</th>
-            <th style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
-            <th style="padding:6px 8px;"></th>
+            <th class="r-full" style="padding:6px 8px;">เบอร์โทร</th>
+            <th class="r-full" style="padding:6px 8px;">วันเกิด / อายุ</th>
+            <th class="r-full" style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
+            <th class="r-full" style="padding:6px 8px;"></th>
           </tr></thead>
           <tbody id="roster-tbody"></tbody>
         </table>
@@ -1891,8 +1891,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.10";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 16:10 น. เวลาไทย";
+const APP_VERSION = "9.11";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 16:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4664,7 +4664,7 @@ function updateModeButtonVisibility(){
     if(btnBackup)       btnBackup.style.display       = 'none';
     if(btnAdminService) btnAdminService.style.display = 'none';
     if(btnOrgChart)     btnOrgChart.style.display     = isApproved() ? '' : 'none';
-    if(btnRoster)       btnRoster.style.display       = 'none'; // roster เฉพาะ Manager เท่านั้น
+    if(btnRoster)       btnRoster.style.display       = isApproved() ? '' : 'none'; // roster: ทุกคนดูได้ (ดูอย่างเดียว) · Manager แก้ไขได้
   } else {
     // Editor / Manager / SuperAdmin: เห็นทุก button รวม admin-service + ผังองค์กร — roster เฉพาะ Manager จริงๆ เท่านั้น (Editor ที่ไม่ใช่ Manager ไม่เห็น)
     if(btnEng)          btnEng.style.display          = '';
@@ -4674,7 +4674,7 @@ function updateModeButtonVisibility(){
     if(btnBackup)       btnBackup.style.display       = '';
     if(btnAdminService) btnAdminService.style.display = '';
     if(btnOrgChart)     btnOrgChart.style.display     = isApproved() ? '' : 'none';
-    if(btnRoster)       btnRoster.style.display       = isManager() ? '' : 'none';
+    if(btnRoster)       btnRoster.style.display       = isApproved() ? '' : 'none';
   }
 
   { const bt = $('mode-team'); if(bt) bt.style.display = ((btnOrgChart && btnOrgChart.style.display==='') || (btnRoster && btnRoster.style.display==='')) ? '' : 'none'; } // ทีมงาน = ผังองค์กร + รายชื่อ
@@ -5545,7 +5545,7 @@ async function saveOrgChartReassignment(email, newPosition, newArea){
    ลบ = ลบเอกสาร userProfiles/{email} เท่านั้น ไม่แตะ approvedUsers/adminEmails/managerEmails — ผลคือคนนั้นโดนบังคับกรอกโปรไฟล์ใหม่ตอน login ครั้งถัดไป แต่ไม่เสียสิทธิ์เข้าระบบ */
 let rosterLoading = false;
 async function loadAndRenderRoster(){
-  if(!isManager()) return;
+  if(!isApproved() && !isManager()) return;
   if(rosterLoading) return;
   rosterLoading = true;
   $('roster-tbody').innerHTML = `<tr><td colspan="7" style="padding:10px;color:var(--text-faint);">⏳ กำลังโหลดข้อมูล...</td></tr>`;
@@ -5559,6 +5559,10 @@ async function loadAndRenderRoster(){
   }
 }
 function renderRoster(){
+  const full = isManager(); // Manager เห็น/แก้ไขได้ครบ · คนอื่นเห็นแค่ชื่อ ตำแหน่ง เขต (ดูอย่างเดียว)
+  document.querySelectorAll('#roster-table .r-full').forEach(th=>{ th.style.display = full ? '' : 'none'; });
+  const opt = $('roster-options-panel'); if(opt) opt.style.display = full ? '' : 'none';
+  const hint = $('roster-hint'); if(hint) hint.textContent = full ? '📋 รายชื่อ — แก้ไข/ลบจริงทำที่นี่เท่านั้น (เฉพาะ Manager) · Google Sheet ไว้ดู/ค้นหาอย่างเดียว' : '📋 รายชื่อ — ดูอย่างเดียว';
   const sorted = rosterProfiles.slice().sort((a,b)=> orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
   $('roster-count').textContent = `(${sorted.length} คน)`;
   $('roster-tbody').innerHTML = sorted.map(p=>{
@@ -5568,15 +5572,16 @@ function renderRoster(){
       <td style="padding:6px 8px;">${escapeHtml(orgChartDisplayName(p))}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
-      <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
+    ${full ? `      <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
       <td style="padding:6px 8px;white-space:nowrap;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(age)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(tenure)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
         <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
       </td>
+` : ''}
     </tr>`;
-  }).join('') || `<tr><td colspan="7" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
+  }).join('') || `<tr><td colspan="${full?7:3}" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
   document.querySelectorAll('#roster-tbody .roster-edit-btn').forEach(btn=>btn.addEventListener('click', ()=>openEditOtherProfile(btn.getAttribute('data-email'))));
   document.querySelectorAll('#roster-tbody .roster-delete-btn').forEach(btn=>btn.addEventListener('click', ()=>deleteRosterProfile(btn.getAttribute('data-email'))));
 }
@@ -5610,7 +5615,7 @@ function requestModeSwitch(mode){
   if(mode==='eng'){ switchMode(mode); return; }
   if(mode==='orgchart'){ switchMode(mode); return; } // ผังองค์กร: ทุกคนที่ isApproved() ดูได้ (ปุ่มถูกซ่อนไว้แล้วถ้าไม่ผ่าน ไม่ต้องเช็ค Editor)
   if(mode==='roster'){
-    if(!isManager()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้ — เฉพาะ Manager เท่านั้น'); return; } // ป้องกันซ้อน ไม่พึ่งแค่ซ่อนปุ่ม
+    if(!isApproved() && !isManager()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้'); return; } // ป้องกันซ้อน ไม่พึ่งแค่ซ่อนปุ่ม
     switchMode(mode); return;
   }
   if(!isEditor()){
@@ -5675,7 +5680,7 @@ function switchMode(mode){
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
   if(mode==='admin-service'){ renderAdminServiceView(); }
   if(mode==='orgchart'){ loadAndRenderOrgChart(); }
-  if(mode==='roster'){ if(!isManager()){ switchMode('eng'); return; } loadAndRenderRoster(); } // กันเผื่อเรียก switchMode('roster') ตรงๆ ข้าม requestModeSwitch
+  if(mode==='roster'){ if(!isApproved() && !isManager()){ switchMode('eng'); return; } loadAndRenderRoster(); } // กันเผื่อเรียก switchMode('roster') ตรงๆ ข้าม requestModeSwitch
 }
 async function loadAllErrorsThenRenderMgr(){
   const remaining = Object.keys(DATA.categories).filter(c=>!loadedErrorCategories.has(c));
@@ -5696,11 +5701,11 @@ let _teamLast = 'orgchart';
 function refreshTeamSubtabs(){
   document.querySelectorAll('.team-subtabs').forEach(bar=>{
     bar.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tsub')===currentMode));
-    const r = bar.querySelector('.team-roster-tab'); if(r) r.style.display = isManager() ? '' : 'none'; // รายชื่อ: เฉพาะ Manager
+    const r = bar.querySelector('.team-roster-tab'); if(r) r.style.display = (isApproved() || isManager()) ? '' : 'none';
   });
 }
 document.querySelectorAll('.team-subtabs button').forEach(b=>b.addEventListener('click', ()=>requestModeSwitch(b.getAttribute('data-tsub'))));
-$('mode-team').addEventListener('click', ()=>requestModeSwitch(_teamLast==='roster' && isManager() ? 'roster' : 'orgchart'));
+$('mode-team').addEventListener('click', ()=>requestModeSwitch(_teamLast==='roster' ? 'roster' : 'orgchart'));
 $('mode-orgchart').addEventListener('click', ()=>requestModeSwitch('orgchart'));
 $('mode-roster').addEventListener('click', ()=>requestModeSwitch('roster'));
 
