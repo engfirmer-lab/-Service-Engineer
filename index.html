@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.18
+  เวอร์ชันปัจจุบัน : 9.21
   อัปเดตล่าสุด   : 10 ตุลาคม 2569 21:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.18</title>
+<title>F1 Service — v9.21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -204,6 +204,8 @@
   .navx-l3 button{background:none;border:none;border-bottom:2px solid transparent;font-family:'Sarabun';font-size:13px;font-weight:600;padding:7px 2px;color:var(--text-dim);cursor:pointer;white-space:nowrap;margin-bottom:-1px;}
   .navx-l3 button.active{color:var(--amber);border-bottom-color:var(--amber);}
   .navx-bn{background:rgba(232,163,61,.14);border:1px solid var(--amber);color:var(--text);font-size:12px;border-radius:8px;padding:6px 10px;margin-bottom:8px;}
+  #view-sup > .name-select-wrap, #claims-identity-wrap{display:none !important;}
+  .navx-bn select{font-size:12px;padding:2px 4px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);max-width:100%;}
   .navx-bn u{cursor:pointer;color:var(--amber);font-weight:700;margin-left:6px;}
   .navx-bdg{display:inline-block;min-width:16px;background:var(--red);color:#fff;border-radius:99px;font-size:10px;line-height:16px;padding:0 5px;margin-left:5px;text-align:center;font-weight:700;}
 
@@ -449,6 +451,15 @@
     .stat-cards{ gap:8px; margin-bottom:12px; }
     .stat-card{ padding:10px 12px; }
     .stat-card .value{ font-size:21px; }
+    /* v9.18 — Dashboard เคลมบนมือถือ: เคลมอะไหล่ 3 ช่อง 1 แถว / แจ้งปัญหา 2 ช่อง 1 แถว */
+    #claims-dashboard{ grid-template-columns:repeat(6,1fr); gap:6px; }
+    #claims-dashboard .cd-c3{ grid-column:span 2; }
+    #claims-dashboard .cd-c2{ grid-column:span 3; }
+    #claims-dashboard .stat-card{ padding:8px 8px; min-width:0; }
+    #claims-dashboard .stat-card .label{ font-size:9.5px; line-height:1.25; margin-bottom:3px; flex-wrap:wrap; gap:3px; }
+    #claims-dashboard .stat-card .value{ font-size:19px; }
+    #claims-dashboard .cd-sub{ display:none; }
+    #claims-dashboard #sheet-done-year-sel{ font-size:10px !important; padding:0 2px !important; }
     .card{ margin-bottom:8px; }
     .card-head{ padding:10px 12px; gap:8px; }
     .filter-row{ margin-bottom:8px; }
@@ -1405,6 +1416,7 @@ setTimeout(function(){
     <div class="subtab-bar" id="settings-subtabs" style="margin-bottom:14px;">
       <button data-stab="access" class="active">🔐 สิทธิ์ผู้ใช้</button>
       <button data-stab="owner">🗂️ Product & Category</button>
+      <button data-stab="menuacc">🧩 สิทธิ์เมนู</button>
     </div>
 
     <!-- Sub-page: สิทธิ์ผู้ใช้ (เดิมคือ view-access) -->
@@ -1449,6 +1461,21 @@ setTimeout(function(){
     </div><!-- /settings-tab-access -->
 
     <!-- Sub-page: Product & Category (เดิมคือ view-owner) -->
+    <!-- v9.21 — สิทธิ์เมนูตามบทบาท (เฉพาะ Manager/CEO/Super Admin) -->
+    <div id="settings-tab-menuacc" style="display:none;">
+      <div class="panel-block">
+        <h2>🧩 สิทธิ์เมนูตามบทบาท</h2>
+        <p class="panel-sub">ติ๊ก = บทบาทนั้นเห็นเมนูนั้น · Manager/CEO เห็นทุกเมนูเสมอ (แก้ไม่ได้) · ช่อง "—" คือบทบาทนั้นใช้เมนูนี้ไม่ได้อยู่แล้ว</p>
+        <div style="overflow-x:auto;"><table id="menuacc-table" style="width:100%;border-collapse:collapse;"></table></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;">
+          <button class="btn btn-primary btn-sm" id="menuacc-save-btn">💾 บันทึก</button>
+          <button class="btn btn-ghost btn-sm" id="menuacc-reset-btn">↺ คืนค่าเริ่มต้น (เห็นทั้งหมด)</button>
+          <span id="menuacc-dirty" style="font-size:12px;color:var(--amber);"></span>
+        </div>
+        <p class="panel-sub" style="margin-top:10px;">⚠️ เป็นการซ่อนเมนูในหน้าแอป — ข้อมูลจริงยังป้องกันด้วย Firestore Rules ตามเดิม · บันทึกแล้วมีผลกับทุกคนทันที</p>
+      </div>
+    </div>
+
     <div id="settings-tab-owner" style="display:none;">
     <div class="desktop-hint" style="margin-bottom:10px;">🗂️ หน้านี้กระทบข้อมูลทั้งระบบ — เข้าถึงได้เฉพาะผู้ดูแลระบบ (Editor)</div>
 
@@ -1957,7 +1984,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.18";
+const APP_VERSION = "9.21";
 const APP_UPDATED_AT = "10 ตุลาคม 2569 21:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -2121,6 +2148,7 @@ let categoryVersionsFromServer = {}; // เวลาล่าสุดที่�
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
 let currentMode = 'eng';
 let currentSupIdentity = SUP_PRODUCTS[0];
+const NAVX_NOSUP = '\u0000ยังไม่ได้ตั้งชื่อ';
 let engActiveTab = 'trbl';
 let supActiveTab = 'trbl';
 // (supDocTypeActive ไม่ใช้แล้ว — เปลี่ยนเป็นตาราง matrix แสดงทุกประเภทพร้อมกัน)
@@ -4602,7 +4630,78 @@ function initMaintenanceWatch(){
       }
     }, (e)=>console.warn('ฟังสถานะล็อกหน้าปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
   }catch(e){ console.warn('เริ่มเช็คสถานะล็อกหน้าปิดปรับปรุงไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
+  initMenuAccessWatch();
 }
+/* ===================== v9.21 — สิทธิ์เมนูตามบทบาท (meta/menuAccess) ===================== */
+let _menuAccessWatchStarted = false, _maDraft = null, _maDirty = false;
+function initMenuAccessWatch(){
+  if(_menuAccessWatchStarted) return; _menuAccessWatchStarted = true;
+  try{
+    const sdk = window._firebaseSdk;
+    sdk.onSnapshot(sdk.doc(db,'meta','menuAccess'), (snap)=>{
+      _menuAccess = (snap.exists() && snap.data().items) ? snap.data().items : {};
+      try{ navxRender(); navxEnsureVisible(); }catch(e){}
+      if(currentMode==='settings' && _settingsSubActive==='menuacc' && !_maDirty) renderMenuAccessView(true);
+    }, (e)=>console.warn('อ่านสิทธิ์เมนูไม่สำเร็จ (ใช้ค่าเริ่มต้น):', e));
+  }catch(e){ console.warn('เริ่มอ่านสิทธิ์เมนูไม่สำเร็จ:', e); }
+}
+// ถ้าหน้าที่เปิดอยู่ถูกซ่อนจากบทบาทนี้ (เช่น Manager เพิ่งปิดสิทธิ์) ให้พาไปเมนูแรกที่เห็น
+function navxEnsureVisible(){
+  const vis = navxVisible(); if(!vis.length) return;
+  if(!DATA && !isAdminService()) return;
+  let found = false; vis.forEach(G=>G.items.forEach(X=>X.subs.forEach(sb=>{ if(navxMatch(sb)) found = true; })));
+  if(!found) navxGoSub(navxPickSub(vis[0], vis[0].items[0]));
+}
+function maRows(){
+  const rows = [];
+  NAVX.forEach(g=>{
+    rows.push({ head:g.label });
+    g.items.forEach(it=>{
+      const subs = it.subs || [it];
+      subs.forEach(sb=>{ if(!sb.k || !sb.cap) return; rows.push({ k:sb.k, cap:sb.cap, label: it.subs ? (it.t+' › '+sb.t) : it.t }); });
+    });
+  });
+  return rows;
+}
+function renderMenuAccessView(fresh){
+  const tbl = $('menuacc-table'); if(!tbl) return;
+  if(fresh || !_maDraft){ _maDraft = JSON.parse(JSON.stringify(_menuAccess||{})); _maDirty = false; }
+  const roles = [['e','Engineer'],['s','Sup Product'],['a','Admin Service']];
+  let h = '<thead><tr><th style="text-align:left;padding:6px 4px;font-size:12px;color:var(--text-faint);">เมนู</th>'+roles.map(r=>`<th style="padding:6px 4px;font-size:12px;color:var(--text-faint);">${r[1]}</th>`).join('')+'</tr></thead><tbody>';
+  maRows().forEach(r=>{
+    if(r.head){ h += `<tr><td colspan="4" style="background:var(--panel-alt);font-weight:700;font-size:12.5px;padding:7px 8px;">${escapeHtml(r.head)}</td></tr>`; return; }
+    h += `<tr><td style="padding:7px 4px;font-size:13px;border-bottom:1px solid var(--border);">${escapeHtml(r.label)}</td>` + roles.map(([c])=>{
+      if(r.cap.indexOf(c)<0) return `<td style="text-align:center;color:var(--text-faint);border-bottom:1px solid var(--border);">—</td>`;
+      const on = !(_maDraft[r.k] && _maDraft[r.k][c]===false);
+      return `<td style="text-align:center;border-bottom:1px solid var(--border);"><input type="checkbox" class="ma-cb" data-k="${r.k}" data-r="${c}" ${on?'checked':''} style="width:20px;height:20px;"></td>`;
+    }).join('') + '</tr>';
+  });
+  tbl.innerHTML = h + '</tbody>';
+  $('menuacc-dirty').textContent = _maDirty ? 'มีการแก้ไขที่ยังไม่บันทึก' : '';
+}
+(function maBind(){
+  const t = $('menuacc-table'); if(!t) return;
+  t.addEventListener('change', e=>{
+    const cb = e.target.closest('.ma-cb'); if(!cb) return;
+    const k = cb.getAttribute('data-k'), r = cb.getAttribute('data-r');
+    _maDraft[k] = _maDraft[k] || {}; _maDraft[k][r] = !!cb.checked; _maDirty = true;
+    $('menuacc-dirty').textContent = 'มีการแก้ไขที่ยังไม่บันทึก';
+  });
+  $('menuacc-reset-btn').addEventListener('click', ()=>{ _maDraft = {}; _maDirty = true; renderMenuAccessView(false); });
+  $('menuacc-save-btn').addEventListener('click', async ()=>{
+    if(!isSuperAdmin()) return; // Firestore Rules เป็นตัวบังคับจริง
+    const items = {};
+    Object.keys(_maDraft).forEach(k=>{ const c = _maDraft[k]; const o = {}; ['e','s','a'].forEach(r=>{ if(c && c[r]===false) o[r] = false; }); if(Object.keys(o).length) items[k] = o; });
+    showLoadingOverlay('กำลังบันทึก...');
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      await sdk.setDoc(sdk.doc(db,'meta','menuAccess'), { items, updatedAt: Date.now(), updatedBy: myUserEmail || null });
+      _menuAccess = items; _maDirty = false; _maDraft = JSON.parse(JSON.stringify(items));
+      showToast('✅ บันทึกสิทธิ์เมนูแล้ว'); renderMenuAccessView(false); try{ navxRender(); }catch(e){}
+    }catch(err){ showToast('❌ บันทึกไม่สำเร็จ — ต้อง Publish Firestore Rules ชุดล่าสุดก่อน'); console.warn(err); }
+    finally{ hideLoadingOverlay(); }
+  });
+})();
 async function fsSaveMaintenanceMode(){
   if(!isSuperAdmin()) return; // ป้องกันซ้อน — Firestore Rules เป็นตัวบังคับจริง
   const lockedModes = {};
@@ -5714,12 +5813,15 @@ function switchSettingsSubTab(tab){
     showToast('🔒 '+maintenanceLockMessage());
     return;
   }
+  if(tab==='menuacc' && !isSuperAdmin()) return; // เฉพาะ Manager/CEO/Super Admin
   _settingsSubActive = tab;
+  $('settings-tab-menuacc').style.display = tab==='menuacc' ? 'block' : 'none';
   $('settings-tab-access').style.display = tab==='access' ? 'block' : 'none';
   $('settings-tab-owner').style.display  = tab==='owner'  ? 'block' : 'none';
   document.querySelectorAll('#settings-subtabs button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-stab')===tab));
   if(tab==='access') renderAccessView();
   if(tab==='owner')  renderOwnerView();
+  if(tab==='menuacc') renderMenuAccessView(true);
   try{ navxRender(); }catch(e){}
 }
 document.querySelectorAll('#settings-subtabs button').forEach(b=>{
@@ -5799,32 +5901,33 @@ $('mode-roster').addEventListener('click', ()=>requestModeSwitch('roster'));
 const NAVX = [
   { id:'field', label:'👷 หน้างาน', lvl:'eng', items:[
     { t:'🛠 เครื่องมือ', subs:[
-      { t:'Troubleshooting', m:'eng', tab:'trbl' },
-      { t:'เอกสาร Service',  m:'eng', tab:'service_docs' } ] },
+      { t:'Troubleshooting', m:'eng', tab:'trbl', k:'f_trbl', cap:'es' },
+      { t:'เอกสาร Service',  m:'eng', tab:'service_docs', k:'f_docs', cap:'es' } ] },
     { t:'📋 บันทึกข้อมูล', badge:'eng-mywork-badge', subs:[
-      { t:'แจ้งเคลม/ปัญหา', m:'eng', tab:'claim', rsub:'claim_report' },
-      { t:'ส่งคืนอะไหล่',   m:'eng', tab:'claim', rsub:'return_parts' },
-      { t:'รายการของฉัน',   m:'eng', tab:'my_work', badge:'eng-mywork-badge' } ] },
+      { t:'แจ้งเคลม/ปัญหา', m:'eng', tab:'claim', rsub:'claim_report', k:'f_claim', cap:'es' },
+      { t:'ส่งคืนอะไหล่',   m:'eng', tab:'claim', rsub:'return_parts', k:'f_return', cap:'es' },
+      { t:'รายการของฉัน',   m:'eng', tab:'my_work', badge:'eng-mywork-badge', k:'f_mywork', cap:'es' } ] },
     { t:'🎓 Certificate', subs:[
-      { t:'ของฉัน',          m:'eng', tab:'cert' },
-      { t:'ผู้ผลิตที่ดูแล', m:'sup', tab:'cert', need:'editor' } ] },
+      { t:'ของฉัน',          m:'eng', tab:'cert', k:'f_cert', cap:'es' },
+      { t:'ผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
     { t:'👥 ทีมงาน', subs:[
-      { t:'ผังองค์กร', m:'orgchart' },
-      { t:'รายชื่อ',    m:'roster' } ] }
+      { t:'ผังองค์กร', m:'orgchart', k:'f_org', cap:'es' },
+      { t:'รายชื่อ',    m:'roster', k:'f_roster', cap:'es' } ] }
   ]},
   { id:'manage', label:'📋 จัดการ', lvl:'editor', items:[
-    { t:'🔧 เคลม/แจ้งปัญหา', m:'sup', tab:'claims', badge:'claims-tab-badge' },
-    { t:'🩺 จัดการ Error',    m:'sup', tab:'trbl' },
-    { t:'📁 จัดการเอกสาร',   m:'sup', tab:'docs' },
-    { t:'📊 Dashboard',       m:'mgr' },
-    { t:'📤 Export/Backup',   m:'backup' }
+    { t:'🔧 เคลม/แจ้งปัญหา', m:'sup', tab:'claims', badge:'claims-tab-badge', k:'mg_claims', cap:'s' },
+    { t:'🩺 จัดการ Error',    m:'sup', tab:'trbl', k:'mg_err', cap:'s' },
+    { t:'📁 จัดการเอกสาร',   m:'sup', tab:'docs', k:'mg_docs', cap:'s' },
+    { t:'📊 Dashboard',       m:'mgr', k:'mg_dash', cap:'s' },
+    { t:'📤 Export/Backup',   m:'backup', k:'mg_backup', cap:'s' }
   ]},
   { id:'recv', label:'📦 ตรวจรับ', lvl:'recv', items:[
-    { t:'📦 ตรวจรับอะไหล่', m:'admin-service' }
+    { t:'📦 ตรวจรับอะไหล่', m:'admin-service', k:'recv_main', cap:'sa' }
   ]},
   { id:'sys', label:'⚙️ ระบบ', lvl:'editor', items:[
-    { t:'🔐 สิทธิ์ผู้ใช้',       m:'settings', stab:'access' },
-    { t:'🗂 Product & Category', m:'settings', stab:'owner' }
+    { t:'🔐 สิทธิ์ผู้ใช้',       m:'settings', stab:'access', k:'sys_access', cap:'s' },
+    { t:'🗂 Product & Category', m:'settings', stab:'owner', k:'sys_owner', cap:'s' },
+    { t:'🧩 สิทธิ์เมนู',         m:'settings', stab:'menuacc', k:'sys_menu', cap:'' }
   ]}
 ];
 const NAVX_ROLES = {
@@ -5849,11 +5952,19 @@ function navxRoleName(r){
   if(r==='m'){ if(isCEO()) return 'CEO'; return myUserEmail===SUPER_ADMIN_EMAIL ? 'Super Admin' : 'Manager'; }
   return NAVX_ROLES[r] ? NAVX_ROLES[r].n : '';
 }
+// v9.21 — สิทธิ์เมนู: cap = บทบาทที่ "ทำได้จริงทางเทคนิค" (e=Engineer, s=Sup, a=Admin Service) / Manager เห็นทุกเมนูเสมอ
+// _menuAccess[k] = {e,s,a} ตั้งโดย Manager ผ่านหน้า ⚙️ ระบบ › สิทธิ์เมนู (เก็บที่ meta/menuAccess) — ไม่มีค่า = เห็นตามค่าเริ่มต้น
+let _menuAccess = {};
+function navxAllowed(sb, v){
+  if(v==='m') return true;
+  if(!sb.k || (sb.cap||'').indexOf(v)<0) return false;
+  const c = _menuAccess[sb.k];
+  return !(c && c[v]===false);
+}
 function navxVisible(){
   const v = navxView(); if(!v) return [];
-  const gOk = g => (g.lvl==='eng' && 'esm'.includes(v)) || (g.lvl==='editor' && 'sm'.includes(v)) || (g.lvl==='recv' && 'sma'.includes(v));
-  const sOk = sb => !(sb.need==='editor' && !'sm'.includes(v));
-  return NAVX.filter(gOk).map(g=>({ g, items: g.items.map((it,i)=>({ it, i, subs:(it.subs||[it]).filter(sOk) })).filter(x=>x.subs.length) })).filter(G=>G.items.length);
+  const sOk = sb => navxAllowed(sb, v);
+  return NAVX.map(g=>({ g, items: g.items.map((it,i)=>({ it, i, subs:(it.subs||[it]).filter(sOk) })).filter(x=>x.subs.length) })).filter(G=>G.items.length);
 }
 function navxActiveRsub(){ const b = document.querySelector('#eng-record-subtabs button.active'); return b ? b.getAttribute('data-rsub') : 'claim_report'; }
 function navxMatch(sb){
@@ -5938,8 +6049,16 @@ function navxRender(){
   l3.innerHTML = showL3 ? X.subs.map((sb,c)=>`<button type="button" data-c="${c}" class="${c===si?'active':''}" style="${navxLocked(sb)?'opacity:.4;':''}">${sb.t}${navxBdg(navxBadgeOf(sb.badge))}</button>`).join('') : '';
   // แถบเตือนโหมดดูมุมมองอื่น (Manager/Super)
   const viewing = navxRealRole()==='m' && !!_navxViewAs;
-  if(bn){ bn.style.display = viewing ? '' : 'none'; if(viewing) bn.innerHTML = `👁 กำลังดูในมุมมอง <b>${NAVX_ROLES[_navxViewAs].n}</b> · เปลี่ยนแค่หน้าจอ <u id="navx-back">กลับมุมมองตัวเอง</u>`; }
-  sw.style.display = (showL3 || viewing) ? '' : 'none';
+  const _v = navxView(); const picker = navxRealRole()==='m' && (_v==='m' || _v==='s') && currentMode==='sup';
+  const noSup = isEditor() && !isSuperAdmin() && currentSupIdentity===NAVX_NOSUP;
+  let bh = '';
+  if(viewing) bh += `👁 กำลังดูในมุมมอง <b>${NAVX_ROLES[_navxViewAs].n}</b> · `;
+  if(picker) bh += `ดูข้อมูลของ Sup: <select id="navx-supsel">${SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}"${n===currentSupIdentity?' selected':''}>${escapeHtml(n)}</option>`).join('')}</select> · `;
+  if(viewing) bh += `เปลี่ยนแค่หน้าจอ <u id="navx-back">กลับมุมมองตัวเอง</u>`;
+  if(noSup){ bh = '⚠ <b>ยังไม่ได้ตั้งชื่อ Sup Product ของคุณในโปรไฟล์</b> — จึงยังไม่แสดงข้อมูล กรุณาแจ้ง Manager'; }
+  const showBn = !!bh;
+  if(bn){ bn.style.display = showBn ? '' : 'none'; if(bn._h!==bh){ bn._h=bh; bn.innerHTML=bh; } bn.style.borderColor = noSup ? 'var(--red)' : ''; }
+  sw.style.display = (showL3 || showBn) ? '' : 'none';
 }
 (function navxBind(){
   const l1=$('navx-l1'), l2=$('navx-l2'), l3=$('navx-l3'), rb=$('role-btn'), rm=$('role-menu'), bn=$('navx-bn');
@@ -5965,6 +6084,7 @@ function navxRender(){
     });
   }
   if(bn) bn.addEventListener('click', e=>{ if(e.target.id==='navx-back'){ _navxViewAs=null; navxRender(); } });
+  if(bn) bn.addEventListener('change', e=>{ if(e.target.id!=='navx-supsel') return; const si=$('sup-identity'); if(!si) return; si.value=e.target.value; si.dispatchEvent(new Event('change')); navxRender(); });
   // ตัวเลขแจ้งเตือนบนเมนู ดึงจาก badge เดิม (อัปเดตเองเมื่อ badge เดิมเปลี่ยน)
   try{
     const mo = new MutationObserver(navxRenderSoon);
@@ -6185,7 +6305,7 @@ const MANUAL_TOPICS = [
     <p class="panel-sub"><b>การแจ้งเตือน:</b> กดกระดิ่งมุมขวาบนดูสถานะสิ่งที่เคยส่งไป — รายการ "รอตรวจสอบ" ค้างไว้จนกว่าจะมีผล ส่วนรายการที่จบสถานะแล้วโชว์ผลแค่ครั้งเดียวแล้วหายไป</p>
   `},
   { id:'sup', icon:'🛠️', title:'Sup Product', img:'sup', body:`
-    <p class="panel-sub"><b>เลือกตัวเอง:</b> เลือกชื่อจาก dropdown "คุณคือ:" ก่อนเริ่มใช้งาน ตัวเลขสรุปและรายการต่างๆ จะกรองตามคนที่เลือก</p>
+    <p class="panel-sub"><b>ข้อมูลของฉัน:</b> ระบบเลือกชื่อ Sup Product ให้อัตโนมัติจากโปรไฟล์ ตัวเลขสรุปและรายการต่างๆ จะกรองตามชื่อนั้น (Manager เลือกดูของแต่ละคนได้ที่แถบด้านบน)</p>
     <p class="panel-sub"><b>สรุปจำนวน Error แต่ละรุ่นที่ดูแล:</b> แสดงอัตโนมัติทันทีที่เข้าหน้านี้ (ไม่ต้องกดเช็ค) แยกตามประเภท/รุ่น พร้อมจำนวน Error ที่มีอยู่แล้ว</p>
     <p class="panel-sub"><b>+ เพิ่ม Error:</b> กดที่รุ่นไหนในสรุปจำนวน ก็เพิ่ม Error ให้รุ่นนั้นได้เลย — ไม่ต้องเลือกประเภท/รุ่นเอง ระบบล็อกให้อัตโนมัติตามรุ่นที่กด</p>
     <p class="panel-sub"><b>ดูทั้งหมด:</b> กดที่รุ่นไหนที่มี Error แล้ว จะเปิดหน้าต่างแสดง Error ทั้งหมดของรุ่นนั้น (เรียงตาม Error Code) มีช่องค้นหาในตัว พิมพ์แล้วกด "🔍 ค้นหา" หรือกด "แสดงทั้งหมด" — แก้ไข/ลบ Error ได้จากในนี้เลย</p>
@@ -7001,6 +7121,7 @@ function renderSupIdentityOptions(){
   // Super Admin ยังคงเลือกได้ทุก Product เหมือนเดิม
   const shouldLock = isEditor() && !isSuperAdmin() && !!autoMatch;
   $('sup-identity').disabled = shouldLock;
+  { const w = $('sup-identity').closest('.name-select-wrap'); if(w) w.style.display = 'none'; } // v9.19 — ตัดช่อง "คุณคือ" ออกจากทุกหน้า: Manager เลือกชื่อ Sup ที่แถบด้านบนแทน (navx-supsel)
   $('sup-identity').title = shouldLock ? `ล็อกเป็น Product ของคุณ (${currentSupIdentity})` : '';
   { // v9.14 — ถ้าจับคู่ชื่อกับโปรไฟล์ไม่ได้ (และไม่ใช่ Super Admin) บอกให้เลือกชื่อเอง แทนที่จะแสดงชื่อแรกในรายการเงียบๆ
     const note = $('sup-identity-note');
@@ -7011,6 +7132,7 @@ function renderSupIdentityOptions(){
       note.style.fontWeight = unmatched ? '700' : '';
     }
   }
+  if(isEditor() && !isSuperAdmin() && !autoMatch) currentSupIdentity = NAVX_NOSUP; // v9.19 — จับคู่ชื่อไม่ได้: ไม่แสดงข้อมูลของใครเลย (เดิมเลือกชื่อแรกเงียบๆ เสี่ยงเห็นของคนอื่น)
   if($('claims-sup-identity')){ $('claims-sup-identity').innerHTML = $('sup-identity').innerHTML; $('claims-sup-identity').value = currentSupIdentity; $('claims-sup-identity').disabled = shouldLock; }
 }
 function myOwnedCategories(){
@@ -9704,22 +9826,22 @@ function renderClaimsDashboard(){
   const curYr = parseInt(currentYearAD(), 10);
   const yearOptions = [curYr, curYr-1, curYr-2].map(y=>`<option value="${y}"${y===parseInt(yr,10)?' selected':''}>${y}</option>`).join('');
   const doneCell = canSeeSheet
-    ? `<div class="stat-card" id="sheet-done-stat-card">
+    ? `<div class="stat-card cd-c3" id="sheet-done-stat-card">
         <div class="label" style="display:flex;align-items:center;gap:6px;">เสร็จสิ้น (ประวัติ)
           <select id="sheet-done-year-sel" style="font-size:11px;padding:1px 4px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text-main);cursor:pointer;" onclick="event.stopPropagation();">${yearOptions}</select>
         </div>
         <div class="value green" id="sheet-done-count-val">${cachedCount !== undefined ? cachedCount : '...'}</div>
-        <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div>
+        <div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div>
       </div>`
-    : `<div class="stat-card"><div class="label">เสร็จสิ้น (ในแอป)</div><div class="value green">${count('received')}</div></div>`;
+    : `<div class="stat-card cd-c3"><div class="label">เสร็จสิ้น (ในแอป)</div><div class="value green">${count('received')}</div></div>`;
   $('claims-dashboard').innerHTML = `
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:2px 0 2px;">🔧 เคลมอะไหล่</div>
-    <div class="stat-card"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
-    <div class="stat-card"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
-    <div class="stat-card"><div class="label">จำนวนทั้งหมด</div><div class="value" style="color:var(--blue);">${reports.length}</div><div style="font-size:10px;color:var(--text-faint);margin-top:2px;">เฉพาะที่ยังไม่ archive</div></div>
-    <div class="stat-card"><div class="label">แก้ไขแล้ว / ยังไม่แก้ไข</div><div class="value"><span class="green">${reportFixedCount}</span> / <span class="amber">${reportUnfixedCount}</span></div></div>
+    <div class="stat-card cd-c2"><div class="label">จำนวนทั้งหมด</div><div class="value" style="color:var(--blue);">${reports.length}</div><div class="cd-sub" style="font-size:10px;color:var(--text-faint);margin-top:2px;">เฉพาะที่ยังไม่ archive</div></div>
+    <div class="stat-card cd-c2"><div class="label">แก้ไขแล้ว / ยังไม่แก้ไข</div><div class="value"><span class="green">${reportFixedCount}</span> / <span class="amber">${reportUnfixedCount}</span></div></div>
   `;
   // ผูก event dropdown เลือกปี
   const sel = $('sheet-done-year-sel');
@@ -9884,7 +10006,7 @@ document.addEventListener('click', (e)=>{
 
 function renderClaimsView(){
   claimsOpenFilterCol = null; // ตารางถูกสร้างใหม่ทั้งก้อนทุกครั้งที่ render — ดรอปดาวน์ตัวกรอง (ถ้าเปิดค้างอยู่) จะหายไปจาก DOM ไปด้วย ต้องล้างสถานะนี้กันค้าง
-  $('claims-identity-wrap').style.display = (isEditor() && !isSuperAdmin()) ? 'flex' : 'none';
+  $('claims-identity-wrap').style.display = 'none'; // v9.18 — ซ้ำกับช่อง "คุณคือ" ด้านบน ตัดออก
   renderClaimsDashboard();
   renderClaimsSheetHistoryLink();
   const statusFilter = $('claims-filter-status').value;
@@ -12778,7 +12900,7 @@ async function renderSupCertTab(forceReload){
     (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort).forEach(m=> myModels.push({category:cat, model:m}));
   });
   if(myModels.length===0){
-    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่ "${escapeHtml(currentSupIdentity||'-')}" ดูแล<br><span style="font-size:12px;">ถ้าไม่ใช่ชื่อคุณ ให้เลือกชื่อที่ช่อง "คุณคือ" ด้านบนก่อน</span></div>`;
+    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่ "${escapeHtml(currentSupIdentity||'-')}" ดูแล<br><span style="font-size:12px;">ถ้าไม่ใช่ชื่อคุณ ให้ Manager ตั้งชื่อ Sup ในโปรไฟล์ให้ตรงก่อน</span></div>`;
     return;
   }
   if(forceReload || !_supCertDataCache){
