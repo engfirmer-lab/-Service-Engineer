@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.07
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 15:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.10
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 16:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.07</title>
+<title>F1 Service — v9.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -303,23 +303,21 @@
   .orgchart-branch{flex:0 0 172px;width:172px;box-sizing:border-box;display:flex;}
   .orgchart-branch > .orgchart-col{flex:1 1 auto;}
   .orgchart-section-label{font-size:11px;font-weight:700;color:var(--text-faint);text-align:center;margin:26px 0 2px;letter-spacing:.3px;}
-  /* ===== v9.07 ผังองค์กรบนมือถือ: เรียงแนวตั้ง อ่านง่าย ไม่ต้องเลื่อนซ้ายขวา ===== */
+  /* ===== v9.08 ผังองค์กรบนมือถือ: คงรูปต้นไม้เดิม ย่อกรอบ/ตัวหนังสือ + ซูมเข้า-ออกได้ ===== */
+  .orgchart-zoombar{ display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+  .orgchart-zoombar #orgchart-zoom-label{ font-size:12px; color:var(--text-faint); min-width:38px; text-align:center; }
   @media (max-width:600px){
-    .orgchart-tree{ overflow:visible; padding:0; }
-    .orgchart-inner{ width:100%; min-width:0; align-items:stretch; }
-    .orgchart-lines{ display:none; }
-    .orgchart-manager-row{ transform:none!important; flex-wrap:wrap; gap:8px; }
-    .orgchart-manager-row + .orgchart-manager-row{ margin-top:8px; }
-    .orgchart-manager-box{ padding:8px 18px; min-width:0; }
-    .orgchart-groups{ flex-direction:column; align-items:stretch; gap:14px; margin-top:12px; }
-    .orgchart-group{ align-items:stretch; }
-    .orgchart-group-title{ margin-bottom:8px; border-radius:8px; padding:6px 12px; text-align:left; }
-    .orgchart-branches{ flex-direction:column; gap:8px; }
-    .orgchart-branch{ flex:1 1 auto; width:100%; }
-    .orgchart-col{ display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
-    .orgchart-col-title{ grid-column:1/-1; text-align:left; margin-bottom:0; }
-    .orgchart-card{ margin-bottom:0; }
-    .orgchart-section-label{ margin:12px 0 2px; }
+    .orgchart-tree{ overflow:auto; touch-action:pan-x pan-y; }
+    .orgchart-manager-box{ padding:6px 14px; min-width:90px; }
+    .orgchart-manager-box .lbl{ font-size:9.5px; }
+    .orgchart-manager-box .nm{ font-size:12px; }
+    .orgchart-groups{ gap:24px; margin-top:26px; }
+    .orgchart-group-title{ font-size:11px; padding:4px 10px; margin-bottom:22px; }
+    .orgchart-branches{ gap:8px; }
+    .orgchart-branch{ flex:0 0 112px; width:112px; }
+    .orgchart-col{ padding:6px; }
+    .orgchart-col-title{ font-size:10.5px; margin-bottom:5px; }
+    .orgchart-card{ padding:4px 6px; margin-bottom:4px; font-size:11px; }
   }
   .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
   .form-grid.two{grid-template-columns:1fr 1fr;}
@@ -628,8 +626,8 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       <button id="mode-settings">⚙️ ตั้งค่าระบบ</button>
       <button id="mode-mgr">Dashboard</button>
       <button id="mode-backup">Export/Backup</button>
-      <button id="mode-orgchart" style="display:none;">🗂 ผังองค์กร</button>
-      <button id="mode-roster" style="display:none;">👥 รายชื่อผู้ใช้งาน</button>
+      <button id="mode-team" style="display:none;">👥 ทีมงาน</button>
+      <span style="display:none;"><button id="mode-orgchart">🗂 ผังองค์กร</button><button id="mode-roster">📋 รายชื่อ</button></span>
       <button id="mode-admin-service" style="display:none;">📦 ตรวจรับอะไหล่</button>
     </div>
     <div class="mode-toggle-track" id="mode-toggle-track"><div class="mode-toggle-thumb" id="mode-toggle-thumb"></div></div>
@@ -1620,12 +1618,14 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
   <!-- ===== หน้า ผังองค์กร (Org Chart) — สร้างสดจาก userProfiles จริง ไม่ hardcode ชื่อคน ===== -->
   <div id="view-orgchart" style="display:none;">
+    <div class="subtab-bar team-subtabs"><button data-tsub="orgchart">🗂 ผังองค์กร</button><button data-tsub="roster" class="team-roster-tab">📋 รายชื่อ</button></div>
     <div class="desktop-hint">🗂 ผังองค์กร — ดึงสดจากข้อมูลโปรไฟล์ (userProfiles) ทุกคนที่กรอกแล้ว ทุกคนดูได้ แก้ไข (โยกย้ายตำแหน่ง/เขต) ได้เฉพาะ Manager</div>
     <div class="panel-block">
       <h2>ภาพรวม</h2>
       <div id="orgchart-stats" style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;"></div>
     </div>
     <div class="panel-block" style="overflow-x:auto;">
+      <div class="orgchart-zoombar"><button class="btn btn-ghost btn-sm" id="orgchart-zoom-out">−</button><span id="orgchart-zoom-label">100%</span><button class="btn btn-ghost btn-sm" id="orgchart-zoom-in">+</button><button class="btn btn-ghost btn-sm" id="orgchart-zoom-fit">พอดีจอ</button></div>
       <div class="orgchart-tree">
         <div class="orgchart-inner" id="orgchart-inner">
           <svg class="orgchart-lines" id="orgchart-lines" aria-hidden="true"></svg>
@@ -1650,7 +1650,8 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 
   <!-- ===== หน้า รายชื่อผู้ใช้งาน — Manager เท่านั้น: ดู/แก้ไข/ลบโปรไฟล์ทุกคน + ซิงก์ Google Sheet (เดิมเรียก "Roster" ในคอมเมนต์ เปลี่ยนมาเรียก "รายชื่อผู้ใช้งาน" ให้ตรงกับ UI เพื่อไม่ให้สับสนกับ "ผังองค์กร" ซึ่งเป็นคนละหน้ากัน) ===== -->
   <div id="view-roster" style="display:none;">
-    <div class="desktop-hint">👥 รายชื่อผู้ใช้งาน — เฉพาะ Manager · แก้ไข/ลบจริงทำที่นี่เท่านั้น (Google Sheet ไว้ดู/ค้นหาอย่างเดียว)</div>
+    <div class="subtab-bar team-subtabs"><button data-tsub="orgchart">🗂 ผังองค์กร</button><button data-tsub="roster" class="team-roster-tab">📋 รายชื่อ</button></div>
+    <div class="desktop-hint">📋 รายชื่อ — เฉพาะ Manager · แก้ไข/ลบจริงทำที่นี่เท่านั้น (Google Sheet ไว้ดู/ค้นหาอย่างเดียว)</div>
     <div class="panel-block">
       <h2>ตัวเลือก</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -1890,8 +1891,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.07";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 15:10 น. เวลาไทย";
+const APP_VERSION = "9.10";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 16:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2822,15 +2823,17 @@ async function ensureProfileLabels(){ // โหลดโปรไฟล์ทุ
   catch(e){ console.warn('โหลดชื่อจากโปรไฟล์ไม่สำเร็จ:', e.message); return false; }
   finally{ _profileLabelsLoading = false; }
 }
-function nicknameFor(email){ // ชื่อเล่น+เขตจากโปรไฟล์ → ชื่อเล่นเดิม → อีเมล
+function nicknameFor(email){ // CEO → "CEO" · ชื่อเล่น+เขตจากโปรไฟล์ → ชื่อเล่นเดิม → อีเมล
   if(!email) return '';
   const e = email.toLowerCase();
+  if(ceoEmails.includes(e)) return 'CEO';
   return profileLabelMap[e] || nicknamesMap[e] || email;
 }
 function myDisplayName(){ return myClaimantName(); }
 // ชื่อสำหรับช่อง "ผู้เคลม/ผู้แจ้ง": ชื่อเล่น - เขตรับผิดชอบ (ดึงจาก userProfiles)
 // ไม่มีโปรไฟล์ → ชื่อเล่นเดิม → ชื่อบัญชี Google → อีเมล
 function myClaimantName(){
+  if(isCEO()) return 'CEO'; // CEO ไม่ต้องกรอกชื่อเล่น — แสดงเป็น CEO
   const lb = myUserProfile ? profileLabelOf(myUserProfile) : '';
   return lb || (myUserEmail && nicknamesMap[myUserEmail]) || myUserName || myUserEmail || '';
 }
@@ -4459,7 +4462,7 @@ const MAINTENANCE_MODE_LIST = [
     { key:'sup:cert',   label:'Certificate' },
   ]},
   { key:'admin-service', label:'🔧 ตรวจรับอะไหล่ (Admin Service)' },
-  { key:'orgchart',      label:'🗂️ ผังองค์กร' },
+  { key:'orgchart',      label:'👥 ทีมงาน (ผังองค์กร / รายชื่อ)' },
 ];
 let maintenanceMode = { lockedModes:{}, message:'' };
 let _maintenanceWatchStarted = false;
@@ -4674,12 +4677,14 @@ function updateModeButtonVisibility(){
     if(btnRoster)       btnRoster.style.display       = isManager() ? '' : 'none';
   }
 
+  { const bt = $('mode-team'); if(bt) bt.style.display = ((btnOrgChart && btnOrgChart.style.display==='') || (btnRoster && btnRoster.style.display==='')) ? '' : 'none'; } // ทีมงาน = ผังองค์กร + รายชื่อ
   // หน้าที่ถูกล็อกปิดปรับปรุงไว้ — ทำปุ่มให้ดูจางลง (ไม่ได้ซ่อน เพื่อให้รู้ว่ามีหน้านี้แต่ปิดอยู่) ยกเว้น Super Admin ที่เข้าได้ตามปกติ
   if(!isSuperAdmin() && maintenanceMode && maintenanceMode.lockedModes){
     MAINTENANCE_MODE_LIST.forEach(m=>{
       const btn = $('mode-'+m.key);
       if(btn) btn.style.opacity = isModeLocked(m.key) ? '0.4' : '';
     });
+    { const bt = $('mode-team'); if(bt) bt.style.opacity = isModeLocked('orgchart') ? '0.4' : ''; }
   }
 
   // แผงล็อกหน้าปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานได้
@@ -4911,11 +4916,9 @@ async function checkUserProfileGate(){
   if(!myUserEmail){ $('edit-profile-btn').style.display = 'none'; return; }
   const isRealSuperOrManager = myUserEmail===SUPER_ADMIN_EMAIL || managerEmails.includes(myUserEmail);
   if(isRealSuperOrManager){ $('edit-profile-btn').style.display = ''; await userProfileExists(myUserEmail); showSignedInPill(); return; } // ไม่บังคับกรอก แต่มีปุ่มให้กรอกเพื่อใช้ชื่อเล่น+เขต
-  if(isCEO()){
-    $('edit-profile-btn').style.display = ''; // ปุ่มเดิม แต่คลิกแล้วจะเปิด modal ชื่อเล่น (ดู edit-profile-btn click handler)
-    const exists = await userProfileExists(myUserEmail);
+  if(isCEO()){ // CEO: ไม่ต้องกรอกอะไร — แสดงเป็น "CEO" ซ่อนปุ่มโปรไฟล์
+    $('edit-profile-btn').style.display = 'none';
     showSignedInPill();
-    if(!exists || !myUserProfile || !myUserProfile.nicknameTh) showCeoNicknameModal(true);
     return;
   }
   const exists = await userProfileExists(myUserEmail);
@@ -5195,7 +5198,7 @@ $('profile-cancel-btn').addEventListener('click', ()=>{ $('profile-modal').class
 $('profile-modal-close-x').addEventListener('click', ()=>{ $('profile-modal').classList.remove('show'); rosterEditingEmail = null; });
 $('edit-profile-btn').addEventListener('click', async ()=>{
   if(!myUserEmail) return;
-  if(isCEO()){ showCeoNicknameModal(false); return; } // CEO: ปุ่มเดียวกันแต่เปิด modal ชื่อเล่นเบาๆ แทนฟอร์มเต็ม
+  if(isCEO()) return;
   await loadThaiAddressData();
   if(!myUserProfile) await userProfileExists(myUserEmail);
   showProfileModal(false);
@@ -5296,20 +5299,20 @@ async function loadAndRenderOrgChart(){
 
 function renderOrgChart(){
   const canEdit = isManager();
-  const officeProfiles = orgChartProfiles.filter(p=>p.area===ORGCHART_OFFICE_AREA);
-  const fieldProfiles  = orgChartProfiles.filter(p=>p.area && p.area!==ORGCHART_OFFICE_AREA);
+  const _chartPeople = orgChartProfiles.filter(p=>!ceoEmails.includes(p.email)); // CEO แสดงเป็นกล่อง "CEO" ด้านบนสุด ไม่นับเป็นคนในกลุ่ม
+  const officeProfiles = _chartPeople.filter(p=>p.area===ORGCHART_OFFICE_AREA);
+  const fieldProfiles  = _chartPeople.filter(p=>p.area && p.area!==ORGCHART_OFFICE_AREA);
 
   // สถิติสรุป
   $('orgchart-stats').innerHTML = `
-    <div><b>${orgChartProfiles.length}</b> คนทั้งหมด (กรอกโปรไฟล์แล้ว)</div>
+    <div><b>${_chartPeople.length}</b> คนทั้งหมด (กรอกโปรไฟล์แล้ว)</div>
     <div><b>${officeProfiles.length}</b> ส่วนกลาง (Office)</div>
     <div><b>${fieldProfiles.length}</b> ภาคสนาม</div>
   `;
 
   // ---- กล่อง CEO บนสุดสุดของแผนผัง (เหนือ Manager) — ใช้แค่ nickname ไม่บังคับกรอกโปรไฟล์เต็ม ----
-  const ceoProfiles = orgChartProfiles.filter(p=>ceoEmails.includes(p.email));
-  if(ceoProfiles.length){
-    $('orgchart-ceo-row').innerHTML = ceoProfiles.map(p=>`<div class="orgchart-manager-box${canEdit?' clickable':''}" style="background:#78350F;"><div class="lbl">CEO</div><div class="nm" ${canEdit?`data-ceoedit="${escapeHtml(p.email)}" title="กดเพื่อแก้ชื่อเล่น"`:''}>${escapeHtml(orgChartDisplayName(p))}</div></div>`).join('');
+  if(ceoEmails.length){
+    $('orgchart-ceo-row').innerHTML = ceoEmails.map(e=>`<div class="orgchart-manager-box" style="background:#78350F;" title="${escapeHtml(e)}"><div class="nm" style="margin-top:0;">CEO</div></div>`).join('');
   } else {
     $('orgchart-ceo-row').innerHTML = '';
   }
@@ -5368,6 +5371,7 @@ function renderOrgChart(){
   if(canEdit) wireOrgChartEditControls();
   requestAnimationFrame(drawOrgChartLines);
   if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>requestAnimationFrame(drawOrgChartLines)); }
+  if(!_orgFitDone && window.innerWidth<=600) requestAnimationFrame(()=>{ if(fitOrgChart()) _orgFitDone = true; }); // มือถือ: เปิดครั้งแรกให้พอดีจอ
 }
 
 // ===== เส้นเชื่อมผังองค์กร — วาดด้วย SVG จากตำแหน่งจริงของกล่อง (กึ่งกลางพ่อ → เส้นรวมแนวนอน → กึ่งกลางลูกทุกกล่อง) เส้นจึงตรงและสมดุลไม่ว่าจะมีกี่เขต/กี่คน =====
@@ -5417,6 +5421,37 @@ function drawOrgChartLines(){
   });
   svg.innerHTML = `<path d="${d}" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`;
 }
+// ===== ซูมผังองค์กร (ปุ่ม − + พอดีจอ · บีบสองนิ้วบนมือถือ) =====
+let _orgZoom = 1, _orgFitDone = false;
+function applyOrgZoom(z){
+  _orgZoom = Math.max(0.3, Math.min(1.8, z));
+  const t = document.querySelector('.orgchart-tree'); if(!t) return;
+  t.style.zoom = _orgZoom;
+  const lb = $('orgchart-zoom-label'); if(lb) lb.textContent = Math.round(_orgZoom*100)+'%';
+  requestAnimationFrame(drawOrgChartLines);
+}
+function fitOrgChart(){ // คืน true ถ้าคำนวณได้ (หน้าแสดงอยู่)
+  const t = document.querySelector('.orgchart-tree'), inner = $('orgchart-inner');
+  if(!t || !inner) return false;
+  t.style.zoom = 1;
+  const need = inner.scrollWidth, avail = t.clientWidth;
+  if(!need || !avail){ return false; }
+  applyOrgZoom(Math.max(0.4, Math.min(1, (avail-6)/need)));
+  t.scrollLeft = 0;
+  return true;
+}
+(function initOrgChartZoom(){
+  const t = document.querySelector('.orgchart-tree'); if(!t) return;
+  $('orgchart-zoom-out').addEventListener('click', ()=>applyOrgZoom(_orgZoom-0.15));
+  $('orgchart-zoom-in').addEventListener('click', ()=>applyOrgZoom(_orgZoom+0.15));
+  $('orgchart-zoom-fit').addEventListener('click', ()=>{ if(!fitOrgChart()) applyOrgZoom(1); });
+  let d0 = 0, z0 = 1;
+  const dist = e=>Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+  t.addEventListener('touchstart', e=>{ if(e.touches.length===2){ d0 = dist(e); z0 = _orgZoom; } }, {passive:true});
+  t.addEventListener('touchmove', e=>{ if(e.touches.length===2 && d0>0){ e.preventDefault(); applyOrgZoom(z0 * dist(e)/d0); } }, {passive:false});
+  t.addEventListener('touchend', e=>{ if(e.touches.length<2) d0 = 0; });
+})();
+
 (function initOrgChartLines(){
   const inner = $('orgchart-inner');
   if(!inner) return;
@@ -5518,7 +5553,7 @@ async function loadAndRenderRoster(){
     rosterProfiles = await fetchAllUserProfiles();
     renderRoster();
   }catch(e){
-    $('roster-tbody').innerHTML = `<tr><td colspan="7" style="padding:10px;color:var(--red);">⚠ โหลดรายชื่อผู้ใช้งานไม่สำเร็จ: ${escapeHtml(e.message)}</td></tr>`;
+    $('roster-tbody').innerHTML = `<tr><td colspan="7" style="padding:10px;color:var(--red);">⚠ โหลดรายชื่อไม่สำเร็จ: ${escapeHtml(e.message)}</td></tr>`;
   }finally{
     rosterLoading = false;
   }
@@ -5631,6 +5666,8 @@ function switchMode(mode){
   $('mode-admin-service').classList.toggle('active', mode==='admin-service');
   $('mode-orgchart').classList.toggle('active',      mode==='orgchart');
   $('mode-roster').classList.toggle('active',        mode==='roster');
+  $('mode-team').classList.toggle('active',          mode==='orgchart' || mode==='roster');
+  if(mode==='orgchart' || mode==='roster'){ _teamLast = mode; refreshTeamSubtabs(); }
   if(mode==='sup') renderSupView();
   if(mode==='settings') switchSettingsSubTab(_settingsSubActive); // โหลด sub-tab ที่ active ล่าสุด
   // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
@@ -5655,6 +5692,15 @@ $('mode-settings').addEventListener('click', ()=>requestModeSwitch('settings'));
 $('mode-mgr').addEventListener('click', ()=>requestModeSwitch('mgr'));
 $('mode-backup').addEventListener('click', ()=>requestModeSwitch('backup'));
 $('mode-admin-service').addEventListener('click', ()=>switchMode('admin-service'));
+let _teamLast = 'orgchart';
+function refreshTeamSubtabs(){
+  document.querySelectorAll('.team-subtabs').forEach(bar=>{
+    bar.querySelectorAll('button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-tsub')===currentMode));
+    const r = bar.querySelector('.team-roster-tab'); if(r) r.style.display = isManager() ? '' : 'none'; // รายชื่อ: เฉพาะ Manager
+  });
+}
+document.querySelectorAll('.team-subtabs button').forEach(b=>b.addEventListener('click', ()=>requestModeSwitch(b.getAttribute('data-tsub'))));
+$('mode-team').addEventListener('click', ()=>requestModeSwitch(_teamLast==='roster' && isManager() ? 'roster' : 'orgchart'));
 $('mode-orgchart').addEventListener('click', ()=>requestModeSwitch('orgchart'));
 $('mode-roster').addEventListener('click', ()=>requestModeSwitch('roster'));
 
@@ -7654,7 +7700,7 @@ function renderUnifiedPermissionList(){
     return `<select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" data-curtier="${role}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">${ROLE_OPTS.map(([v,l])=>`<option value="${v}" ${role===v?'selected':''}>${l}</option>`).join('')}</select>`;
   }
   function permLabel(email){
-    const nick = profileLabelMap[email.toLowerCase()] || nicknamesMap[email.toLowerCase()];
+    const nick = ceoEmails.includes(email.toLowerCase()) ? 'CEO' : (profileLabelMap[email.toLowerCase()] || nicknamesMap[email.toLowerCase()]);
     return nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
   }
   // row สำหรับ Manager/CEO/AdminService
