@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.01
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 13:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.02
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 13:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.01</title>
+<title>F1 Service — v9.02</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -745,14 +745,16 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
           <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขรุ่นเครื่องที่ดูแล</button>
         </div>
       </div>
+      <div class="panel-block" id="eng-cert-dash-panel">
+        <div id="eng-cert-summary"></div>
+      </div>
       <div class="panel-block">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
-          <h2 style="margin:0;">Certificate ของฉัน</h2>
+          <h2 style="margin:0;">แนบใบ Certificate</h2>
           <button class="btn btn-ghost btn-sm" id="eng-cert-hide-btn">🙈 ซ่อน</button>
         </div>
         <div id="eng-cert-body">
         <p class="panel-sub">ตารางแบ่งกลุ่มตาม Product (ประเภทเครื่อง) กดชื่อกลุ่มเพื่อซ่อน/แสดงรุ่นในกลุ่ม · ด้านบนคือ <b>Cer ภายใน</b> / <b>Cer ผู้ผลิต</b> ของแต่ละรุ่น กด <b>+</b> เพื่อแนบใบ Cer — แนบแล้วจะขึ้น<b>ตัวเลขจำนวนใบ</b> (กดดู/เพิ่ม/ลบได้) · ป้าย <span style="display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 7px;">ดูแล</span> + แถบเขียว = รุ่นที่คุณดูแล · 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
-        <div id="eng-cert-summary"></div>
         <div id="eng-cert-toolbar" style="display:flex;gap:6px;margin:8px 0;">
           <button class="btn btn-ghost btn-sm" id="eng-cert-collapse-all">ซ่อนทุกประเภท</button>
           <button class="btn btn-ghost btn-sm" id="eng-cert-expand-all">แสดงทุกประเภท</button>
@@ -1839,8 +1841,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.01";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 13:30 น. เวลาไทย";
+const APP_VERSION = "9.02";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 13:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -1997,6 +1999,7 @@ let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลัง�
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
 let _engCertHiddenCats = new Set(); // ประเภทที่ซ่อนไว้ (v9.01)
 let _engCertSummaryHidden = false;
+let _engCertSumMode = 'mine'; // 'mine' = เครื่องที่ดูแล · 'other' = เครื่องนอกดูแล
 let _engCertOpenCats = new Set(); // Category ไหนเปิด accordion อยู่บ้างในแท็บ Certificate ของ Engineer (v8.60)
 let categoryVersionsFromServer = {}; // เวลาล่าสุดที่แต่ละ Product ถูกแก้ไขจริงบน Firestore (โหลดครั้งเดียวตอน login) — ใช้เทียบกับแคชในเครื่องว่ายังใหม่อยู่ไหม
 let loadedErrorCategories = new Set(); // เก็บว่า "ประเภทไหนโหลด Error มาแล้วบ้าง" กันโหลดซ้ำ (ระบบโหลด Error แบบทีละประเภท ไม่โหลดทั้งหมดทีเดียวอีกต่อไป)
@@ -3657,7 +3660,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
     apply();
   });
 }
-wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert', false);
+wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 wirePanelHideToggle('sup-cert-req-hide-btn', 'sup-cert-req-body', 'hide_sup_cert_req');
 
@@ -12134,64 +12137,82 @@ async function renderEngCertTab(forceReload){
   }
   const { certMap, myModelSet } = _engCertDataCache;
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
-  // ---- สรุป (v9.01) ----
-  let allInt=0, allMan=0, needInt=0, needMan=0, haveInt=0, haveMan=0, mineModels=0;
-  const sumRows = [];
-  cats.forEach(cat=>{
-    const models = (DATA.categories[cat]||[]);
-    let c = {n:0, ni:0, nm:0, hi:0, hm:0, ti:0, tm:0};
-    models.forEach(model=>{
-      const ni = (certMap[cat+'|'+model+'|internal']||[]).length;
-      const nm = (certMap[cat+'|'+model+'|manufacturer']||[]).length;
-      c.ti += ni; c.tm += nm;
-      if(!myModelSet.has(cat+'|'+model)) return;
-      const req = certRequirements[cat+'|'+model] || 'both';
-      c.n++;
-      if(req==='internal'||req==='both'){ c.ni++; if(ni>0) c.hi++; }
-      if(req==='manufacturer'||req==='both'){ c.nm++; if(nm>0) c.hm++; }
+  // ---- Dashboard สรุป (v9.02) — แยก 2 แบบ: เครื่องที่ดูแล / เครื่องนอกดูแล ----
+  const calcStats = (wantMine)=>{
+    const t = {models:0, ni:0, nm:0, hi:0, hm:0, rows:[]};
+    cats.forEach(cat=>{
+      const c = {cat, n:0, ni:0, nm:0, hi:0, hm:0};
+      (DATA.categories[cat]||[]).forEach(model=>{
+        if(myModelSet.has(cat+'|'+model)!==wantMine) return;
+        const hasI = (certMap[cat+'|'+model+'|internal']||[]).length>0;
+        const hasM = (certMap[cat+'|'+model+'|manufacturer']||[]).length>0;
+        const req = certRequirements[cat+'|'+model] || 'both';
+        c.n++;
+        if(req==='internal'||req==='both'){ c.ni++; if(hasI) c.hi++; }
+        if(req==='manufacturer'||req==='both'){ c.nm++; if(hasM) c.hm++; }
+      });
+      if(c.n>0){ t.rows.push(c); t.models+=c.n; t.ni+=c.ni; t.nm+=c.nm; t.hi+=c.hi; t.hm+=c.hm; }
     });
-    allInt+=c.ti; allMan+=c.tm; needInt+=c.ni; needMan+=c.nm; haveInt+=c.hi; haveMan+=c.hm; mineModels+=c.n;
-    if(c.n>0) sumRows.push({cat, ...c});
-  });
-  const missInt = needInt-haveInt, missMan = needMan-haveMan;
-  const missCell = (m)=> m>0 ? `<b style="color:var(--red,#dc2626);">ขาด ${m}</b>` : `<span style="color:var(--green);font-weight:700;">ครบ ✓</span>`;
+    return t;
+  };
+  let allInt=0, allMan=0;
+  Object.keys(certMap).forEach(k=>{ if(k.endsWith('|internal')) allInt+=certMap[k].length; else if(k.endsWith('|manufacturer')) allMan+=certMap[k].length; });
+  const st = calcStats(_engCertSumMode==='mine');
+  const stMine = calcStats(true), stOther = calcStats(false);
   const sumEl = $('eng-cert-summary');
   if(sumEl){
-    const bodyHtml = mineModels===0
-      ? `<p style="font-size:12.5px;color:var(--text-faint);margin:8px 0;">ยังไม่ได้เลือกรุ่นเครื่องที่ดูแล — กด "เลือก/แก้ไขรุ่นเครื่องที่ดูแล" ด้านบนก่อน จึงจะสรุปว่าขาดกี่ใบ</p>`
-      : `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
-          <thead><tr><th style="text-align:left;">Product</th><th>รุ่นที่ดูแล</th><th>Cer ภายใน<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>Cer ผู้ผลิต<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>ขาดอีก</th></tr></thead>
-          <tbody>${sumRows.map(r=>`<tr><td>${escapeHtml(r.cat)}</td><td style="text-align:center;">${r.n}</td>
+    const red = 'var(--red,#dc2626)';
+    const pct = (h,n)=> n>0 ? Math.round(h*100/n) : 0;
+    const tile = (label,h,n)=>`<div style="flex:1;min-width:130px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+        <div style="font-size:12px;color:var(--text-faint);">${label}</div>
+        <div style="font-size:24px;font-weight:700;line-height:1.2;">${h}<span style="font-size:14px;font-weight:400;color:var(--text-faint);"> / ${n}</span></div>
+        <div style="height:6px;border-radius:3px;background:rgba(128,128,128,.2);margin-top:6px;overflow:hidden;"><div style="height:100%;width:${pct(h,n)}%;background:var(--green);"></div></div>
+        <div style="font-size:12px;margin-top:4px;">${n-h>0?`<b style="color:${red};">ขาด ${n-h}</b>`:'<b style="color:var(--green);">ครบ ✓</b>'}</div></div>`;
+    const modeBtn = (m,label,cnt)=>`<button class="btn btn-sm ${_engCertSumMode===m?'btn-primary':'btn-ghost'}" data-summode="${m}">${label} (${cnt})</button>`;
+    let body = '';
+    if(st.models===0){
+      body = `<p style="font-size:12.5px;color:var(--text-faint);margin:10px 0;">${_engCertSumMode==='mine'?'ยังไม่ได้เลือกรุ่นเครื่องที่ดูแล — กด "เลือก/แก้ไขรุ่นเครื่องที่ดูแล" ด้านบนก่อน':'ไม่มีรุ่นนอกเหนือที่ดูแล'}</p>`;
+    } else {
+      body = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;">
+          ${tile('Cer ภายใน (รุ่นที่มีใบแล้ว / ต้องมี)', st.hi, st.ni)}
+          ${tile('Cer ผู้ผลิต (รุ่นที่มีใบแล้ว / ต้องมี)', st.hm, st.nm)}
+          <div style="flex:1;min-width:130px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:12px;color:var(--text-faint);">ขาดอีกรวม</div>
+            <div style="font-size:24px;font-weight:700;line-height:1.2;color:${(st.ni-st.hi)+(st.nm-st.hm)>0?red:'var(--green)'};">${(st.ni-st.hi)+(st.nm-st.hm)} <span style="font-size:14px;font-weight:400;">ใบ</span></div>
+            <div style="font-size:12px;margin-top:10px;color:var(--text-faint);">จาก ${st.models} รุ่น</div></div>
+        </div>
+        <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+          <thead><tr><th style="text-align:left;">Product</th><th>รุ่น</th><th>ภายใน<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>ผู้ผลิต<br><span style="font-weight:400;">มี/ต้องมี</span></th><th>ขาดอีก</th></tr></thead>
+          <tbody>${st.rows.map(r=>{ const m=(r.ni-r.hi)+(r.nm-r.hm); return `<tr><td>${escapeHtml(r.cat)}</td><td style="text-align:center;">${r.n}</td>
             <td style="text-align:center;">${r.hi}/${r.ni}</td><td style="text-align:center;">${r.hm}/${r.nm}</td>
-            <td style="text-align:center;">${(r.ni-r.hi)+(r.nm-r.hm)>0?`<b style="color:var(--red,#dc2626);">${(r.ni-r.hi)+(r.nm-r.hm)} ใบ</b>`:`<span style="color:var(--green);font-weight:700;">ครบ ✓</span>`}</td></tr>`).join('')}</tbody>
-          <tfoot><tr style="font-weight:700;border-top:2px solid var(--border);"><td>รวมที่ดูแล</td><td style="text-align:center;">${mineModels}</td>
-            <td style="text-align:center;">${haveInt}/${needInt}<br>${missCell(missInt)}</td><td style="text-align:center;">${haveMan}/${needMan}<br>${missCell(missMan)}</td>
-            <td style="text-align:center;">${(missInt+missMan)>0?`<b style="color:var(--red,#dc2626);">${missInt+missMan} ใบ</b>`:`<span style="color:var(--green);">ครบ ✓</span>`}</td></tr></tfoot>
+            <td style="text-align:center;">${m>0?`<b style="color:${red};">${m} ใบ</b>`:'<span style="color:var(--green);font-weight:700;">ครบ ✓</span>'}</td></tr>`; }).join('')}</tbody>
         </table></div>
-        <p style="font-size:11.5px;color:var(--text-faint);margin:6px 0 0;">นับ "มี" = จำนวนรุ่นที่ดูแลซึ่งแนบ Cer ชนิดนั้นแล้วอย่างน้อย 1 ใบ · "ต้องมี" ตามที่ Sup Product กำหนด (ถ้ายังไม่กำหนด นับว่าต้องมีทั้งภายใน+ผู้ผลิต)</p>`;
-    sumEl.innerHTML = `<div class="panel-block" style="margin:8px 0;padding:10px 12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-        <div style="font-weight:700;font-size:13.5px;">📊 สรุปใบ Cer</div>
+        <p style="font-size:11.5px;color:var(--text-faint);margin:6px 0 0;">"มี" = จำนวนรุ่นที่แนบ Cer ชนิดนั้นแล้วอย่างน้อย 1 ใบ · "ต้องมี" ตามที่ Sup Product กำหนด (ยังไม่กำหนด = ต้องมีทั้งภายใน+ผู้ผลิต)</p>`;
+    }
+    sumEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+        <h2 style="margin:0;">📊 สรุปใบ Cer</h2>
         <button class="btn btn-ghost btn-sm" id="eng-cert-sum-toggle">${_engCertSummaryHidden?'👁 แสดง':'🙈 ซ่อน'}</button>
       </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:6px;">
-        <div>ทั้งหมดที่แนบ: <b>ภายใน ${allInt}</b> · <b>ผู้ผลิต ${allMan}</b> ใบ</div>
-        <div>เฉพาะรุ่นที่ดูแล: ภายใน ${missCell(missInt)} · ผู้ผลิต ${missCell(missMan)}</div>
-      </div>
-      ${_engCertSummaryHidden?'':bodyHtml}
-    </div>`;
+      ${_engCertSummaryHidden?'':`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${modeBtn('mine','เครื่องที่ดูแล',stMine.models)}${modeBtn('other','เครื่องนอกดูแล',stOther.models)}</div>
+      <div style="font-size:12px;color:var(--text-faint);margin-top:6px;">ใบ Cer ที่แนบทั้งหมด: ภายใน <b>${allInt}</b> · ผู้ผลิต <b>${allMan}</b> ใบ</div>${body}`}`;
     $('eng-cert-sum-toggle').addEventListener('click', ()=>{ _engCertSummaryHidden = !_engCertSummaryHidden; renderEngCertTab(); });
+    sumEl.querySelectorAll('[data-summode]').forEach(b=>b.addEventListener('click', ()=>{ _engCertSumMode = b.getAttribute('data-summode'); renderEngCertTab(); }));
   }
   // ---- ตารางหลัก ----
   let rows = '';
   let anyModel = false;
-  cats.forEach(cat=>{
+  const _myCnt = c=>(DATA.categories[c]||[]).filter(m=>myModelSet.has(c+'|'+m)).length;
+  const catsOrdered = cats.filter(c=>_myCnt(c)>0).concat(cats.filter(c=>_myCnt(c)===0)); // ประเภทที่ดูแลอยู่ชิดกันด้านบน
+  catsOrdered.forEach(cat=>{
     const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
     if(models.length===0) return;
     anyModel = true;
     const hid = _engCertHiddenCats.has(cat);
-    const myCountInCat = models.filter(m=>myModelSet.has(cat+'|'+m)).length;
-    rows += `<tr class="eng-cert-grp" data-grp="${escapeHtml(cat)}" style="cursor:pointer;"><td colspan="3" style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:8px 10px;border-top:2px solid var(--border);">${hid?'▶':'▼'} ${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></td></tr>`;
+    const myCountInCat = _myCnt(cat);
+    const withI = models.filter(m=>(certMap[cat+'|'+m+'|internal']||[]).length>0).length;
+    const withM = models.filter(m=>(certMap[cat+'|'+m+'|manufacturer']||[]).length>0).length;
+    const gcell = (n)=>`<td style="background:rgba(128,128,128,.12);border-top:2px solid var(--border);text-align:center;font-size:12px;font-weight:700;padding:8px 4px;white-space:nowrap;color:${n===models.length?'var(--green)':'var(--text)'};">${n}/${models.length}</td>`;
+    rows += `<tr class="eng-cert-grp" data-grp="${escapeHtml(cat)}" style="cursor:pointer;"><td style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:8px 10px;border-top:2px solid var(--border);${myCountInCat>0?'border-left:4px solid var(--green);':''}">${hid?'▶':'▼'} ${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?` · <b style="color:var(--green);">ดูแล ${myCountInCat}</b>`:''})</span></td>${gcell(withI)}${gcell(withM)}</tr>`;
     if(hid) return;
     models.forEach(model=>{
       const isMine = myModelSet.has(cat+'|'+model);
