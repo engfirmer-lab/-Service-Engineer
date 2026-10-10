@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 8.99
-  อัปเดตล่าสุด   : 10 ตุลาคม 2569 13:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.00
+  อัปเดตล่าสุด   : 10 ตุลาคม 2569 14:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v8.99</title>
+<title>F1 Service — v9.00</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -124,6 +124,7 @@
   .brand-text p{font-size:10.5px;color:var(--text-faint);font-family:'IBM Plex Mono';margin-top:1px;}
   /* ตาราง "เอกสารทั้งหมดที่ฉันดูแล" — ทำให้กล่องตารางเป็นกรอบเลื่อนของตัวเอง (สูงไม่เกิน 65% ของจอ) แล้วปักหัวตารางให้ติดอยู่กับที่ภายในกรอบนี้เสมอ
      (รอบก่อนลองให้หัวตารางติดกับการเลื่อนทั้งหน้าแทน แต่ overflow-x:auto ของกล่องห่อ ทำให้เบราว์เซอร์บังคับปิดการ sticky ข้ามกล่องไปหาหน้าเว็บไม่ได้ — วิธีนี้แก้ตรงจุด) */
+  #eng-cert-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); white-space:nowrap; }
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
@@ -745,7 +746,7 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
       </div>
       <div class="panel-block">
         <h2>Certificate ของฉัน</h2>
-        <p class="panel-sub">กดเปิดแต่ละ Product เพื่อดูรุ่นทั้งหมด · ช่อง <b>ภายใน</b> / <b>ผู้ผลิต</b> กด <b>+</b> เพื่อแนบใบ Cer — แนบแล้วจะขึ้น<b>ตัวเลขจำนวนใบ</b> (กดดู/เพิ่ม/ลบได้) · ป้าย <span style="display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 7px;">ดูแล</span> + แถบเขียว = รุ่นที่คุณดูแล · 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
+        <p class="panel-sub">ตารางแบ่งกลุ่มตาม Product (ประเภทเครื่อง) · ด้านบนคือ <b>Cer ภายใน</b> / <b>Cer ผู้ผลิต</b> ของแต่ละรุ่น กด <b>+</b> เพื่อแนบใบ Cer — แนบแล้วจะขึ้น<b>ตัวเลขจำนวนใบ</b> (กดดู/เพิ่ม/ลบได้) · ป้าย <span style="display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:1px 7px;">ดูแล</span> + แถบเขียว = รุ่นที่คุณดูแล · 📌 = รุ่นที่ Sup Product กำหนดว่าต้องมี Cer</p>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -1827,8 +1828,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "8.99";
-const APP_UPDATED_AT = "10 ตุลาคม 2569 13:00 น. เวลาไทย";
+const APP_VERSION = "9.00";
+const APP_UPDATED_AT = "10 ตุลาคม 2569 14:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12119,26 +12120,27 @@ async function renderEngCertTab(forceReload){
   }
   const { certMap, myModelSet } = _engCertDataCache;
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
-  wrap.innerHTML = cats.map(cat=>{
+  let rows = '';
+  let anyModel = false;
+  cats.forEach(cat=>{
     const models = (DATA.categories[cat]||[]).slice().sort(naturalSort);
-    if(models.length===0) return '';
-    const isOpen = _engCertOpenCats.has(cat);
+    if(models.length===0) return;
+    anyModel = true;
     const myCountInCat = models.filter(m=>myModelSet.has(cat+'|'+m)).length;
-    return `<div class="panel-block" style="padding:0;margin-bottom:8px;overflow:hidden;">
-      <div class="eng-cert-cat-header" data-cat="${escapeHtml(cat)}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:12px;">
-        <div style="font-weight:600;font-size:13.5px;">${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></div>
-        <span style="font-size:12px;color:var(--text-faint);">${isOpen?'▲ ซ่อน':'▼ แสดง'}</span>
-      </div>
-      ${isOpen ? certColHeaderHtml(['ภายใน','ผู้ผลิต']) + models.map(m=>engCertModelRowHtml(cat,m,certMap,myModelSet.has(cat+'|'+m))).join('') : ''}
-    </div>`;
-  }).join('');
-  wrap.querySelectorAll('.eng-cert-cat-header').forEach(header=>{
-    header.addEventListener('click', ()=>{
-      const cat = header.getAttribute('data-cat');
-      if(_engCertOpenCats.has(cat)) _engCertOpenCats.delete(cat); else _engCertOpenCats.add(cat);
-      renderEngCertTab();
+    rows += `<tr class="eng-cert-grp"><td colspan="3" style="background:rgba(128,128,128,.12);font-weight:700;font-size:13px;padding:7px 10px;border-top:2px solid var(--border);">${escapeHtml(cat)} <span style="font-weight:400;color:var(--text-faint);font-size:12px;">(${models.length} รุ่น${myCountInCat>0?`, ดูแล ${myCountInCat}`:''})</span></td></tr>`;
+    models.forEach(model=>{
+      const isMine = myModelSet.has(cat+'|'+model);
+      const base = `data-cat="${escapeHtml(cat)}" data-model="${escapeHtml(model)}"`;
+      const internal = certMap[cat+'|'+model+'|internal'] || [];
+      const manu = certMap[cat+'|'+model+'|manufacturer'] || [];
+      rows += `<tr${isMine?' class="mine"':''}><td style="${isMine?'border-left:4px solid var(--green);background:rgba(34,197,94,.06);':'border-left:4px solid transparent;'}">${isMine?CERT_MINE_PILL:''}<strong>${escapeHtml(model)}</strong>${certReqBadgeHtml(cat,model)}</td>
+        <td class="chk" style="text-align:center;">${certCountBtn(base+' data-certtype="internal"', internal.length)}</td>
+        <td class="chk" style="text-align:center;">${certCountBtn(base+' data-certtype="manufacturer"', manu.length)}</td></tr>`;
     });
   });
+  wrap.innerHTML = !anyModel
+    ? `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นเครื่องในระบบ</div>`
+    : `<div style="overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;"><table id="eng-cert-matrix" style="width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left;">Product / รุ่นเครื่อง</th><th style="text-align:center;width:90px;">Cer ภายใน</th><th style="text-align:center;width:90px;">Cer ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   wrap.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       openCertDetailModal('engineer', btn.getAttribute('data-certtype'), btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
