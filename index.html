@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.37
-  อัปเดตล่าสุด   : 11 ตุลาคม 2569 23:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.38
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 01:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.37</title>
+<title>F1 Service — v9.38</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -706,6 +706,16 @@
 .ex-table th{background:var(--panel-alt);}
 @media(max-width:560px){.ex-grid2{grid-template-columns:1fr;}.ex-bar{top:54px;}}
 @media print{#view-exam{display:none !important;}}
+
+.ex-hs{position:relative;display:inline-block;max-width:100%;line-height:0;touch-action:manipulation;}
+.ex-hs .ex-hsimg,.ex-hs .ex-qimg{margin-top:0;cursor:crosshair;max-height:none;}
+.ex-hsedit{touch-action:none;cursor:crosshair;}
+.ex-hsdot{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:rgba(220,38,38,.35);border:3px solid #dc2626;pointer-events:none;box-shadow:0 0 0 2px #fff;}
+.ex-hsrect{position:absolute;border:2px solid #16a34a;background:rgba(22,163,74,.22);pointer-events:none;line-height:1;}
+.ex-hsrect b{position:absolute;top:0;left:0;background:#16a34a;color:#fff;font-size:11px;padding:1px 5px;}
+.ex-hsnew{border-style:dashed;}
+.ex-essay{width:100%;min-height:160px;box-sizing:border-box;font-size:15px;line-height:1.5;}
+.ex-ansbox{white-space:pre-wrap;word-break:break-word;background:var(--panel-alt);border-radius:8px;padding:8px 10px;margin:4px 0 8px;font-size:13.5px;line-height:1.55;user-select:text;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script id="pdfjs-embedded">
@@ -2165,8 +2175,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.37";
-const APP_UPDATED_AT = "11 ตุลาคม 2569 23:50 น. เวลาไทย";
+const APP_VERSION = "9.38";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 01:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12014,6 +12024,7 @@ function examRenderHome(){
       let action = '';
       if(i.inProgressAttemptId) action = `<button class="btn btn-primary btn-sm" data-ex="resume" data-id="${exH(i.inProgressAttemptId)}">▶ ทำต่อ</button>`;
       else if(i.passed) action = '';
+      else if(last && last.pendingReview) action = '<span class="ex-hint">รอ Sup ตรวจข้อเขียนก่อน จึงจะสอบใหม่ได้</span>';
       else if(i.locked) action = '<span class="ex-hint">ต้องสอบผ่าน Level ก่อนหน้าก่อน</span>';
       else if(!i.published) action = '<span class="ex-hint">Sup ยังไม่ได้เผยแพร่ข้อสอบชุดนี้</span>';
       else if(!i.isOpen) action = `<span class="ex-hint">${exNow() < i.openAt ? 'ยังไม่ถึงเวลาเปิดรอบ' : 'รอบสอบนี้ปิดแล้ว'}</span>`;
@@ -12022,7 +12033,7 @@ function examRenderHome(){
         <div class="ex-card-h"><div><b>Level ${i.level}</b> · ${exH(i.title)}</div>${examStatusChip(i)}</div>
         <div class="ex-meta">รอบ: ${exH(i.name)} · เปิด ${exFmtDT(i.openAt)} ถึง ${exFmtDT(i.closeAt)}<br>
           ${i.durationMin>0 ? 'เวลาสอบ <b>'+i.durationMin+' นาที</b>' : 'ไม่จำกัดเวลา'} · เกณฑ์ผ่าน <b>${i.passPercent}%</b></div>
-        ${last ? `<div class="ex-meta">ครั้งล่าสุด: <b>${last.scorePct}%</b> ${last.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad')} · สอบมาแล้ว ${i.attempts.length} ครั้ง</div>` : ''}
+        ${last ? `<div class="ex-meta">ครั้งล่าสุด: <b>${last.pendingReview ? '—' : last.scorePct+'%'}</b> ${last.pendingReview ? exChip('รอ Sup ตรวจข้อเขียน','warn') : last.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad')} · สอบมาแล้ว ${i.attempts.length} ครั้ง</div>` : ''}
         ${i.needsRetake ? '<div class="ex-meta ex-warn">ข้อสอบชุดนี้มีการแก้ไขสาระสำคัญ ผลที่ผ่านก่อนหน้าต้องสอบใหม่</div>' : ''}
         <div class="ex-act">${action}</div>
       </div>`;
@@ -12088,7 +12099,8 @@ function exAnswered(q, a){
   if(q.type === 'multi') return Array.isArray(a) && a.length > 0;
   if(q.type === 'match') return a && typeof a === 'object' && q.left.every(l=>a[l.id]);
   if(q.type === 'order') return Array.isArray(a) && a.length > 0;
-  if(q.type === 'short') return String(a).trim() !== '';
+  if(q.type === 'short' || q.type === 'essay') return String(a).trim() !== '';
+  if(q.type === 'hotspot') return !!a && typeof a === 'object' && isFinite(a.x) && isFinite(a.y);
   return String(a) !== '';
 }
 function examWatermark(){
@@ -12139,9 +12151,17 @@ function examRenderQuestion(){
   } else if(q.type === 'short'){
     body = `<input type="text" class="ex-short" data-ex="short" value="${exH(a||'')}" placeholder="พิมพ์คำตอบ" autocomplete="off" autocapitalize="off">`;
   }
+  else if(q.type === 'essay'){
+    body = `<div class="ex-hint">ตอบเป็นข้อความ Sup จะตรวจและให้คะแนนเอง · คะแนนจะประกาศหลัง Sup ตรวจเสร็จ</div><textarea class="ex-essay" data-ex="essay" rows="8" maxlength="4000" placeholder="พิมพ์คำตอบ">${exH(a||'')}</textarea>`;
+  }
+  const hs = q.type === 'hotspot';
+  if(hs){
+    body = `<div class="ex-hint">แตะ/คลิกบนรูปที่ตำแหน่งที่ถูกต้อง (แตะใหม่เพื่อย้ายจุด) ${a && isFinite(a.x) ? '' : '· ยังไม่ได้เลือก'}</div>`;
+  }
   $('ex-q').innerHTML = `<div class="ex-qno">ข้อ ${c.idx+1} / ${n}</div>
     <div class="ex-qtext">${exLines(q.text)}</div>
-    ${q.imageUrl ? `<img class="ex-qimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false">` : ''}
+    ${hs ? `<div class="ex-hs" data-ex="hs"><img class="ex-qimg ex-hsimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false" data-ex="hs">${a && isFinite(a.x) ? `<span class="ex-hsdot" style="left:${a.x*100}%;top:${a.y*100}%"></span>` : ''}</div>` : ''}
+    ${!hs && q.imageUrl ? `<img class="ex-qimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false">` : ''}
     <div class="ex-ans">${body}</div>`;
   examUpdateChrome();
 }
@@ -12234,6 +12254,13 @@ function examFinish(result){
 function examRenderResult(r, roundId){
   const root = $('ex-root');
   const rid = roundId || (EX.data && (EX.data.items.find(i=>i.attempts.some(a=>a.attemptId===r.attemptId))||{}).roundId) || '';
+  if(r.pendingReview || r.status === 'grading'){
+    root.innerHTML = `<div class="panel-block ex-result">
+      <div class="ex-big">📨 ส่งข้อสอบแล้ว</div>
+      <div class="ex-meta">ข้อสอบชุดนี้มีข้อเขียน ต้องรอ Sup ตรวจและให้คะแนน<br>ผลสอบจะแสดงที่หน้า "ข้อสอบของฉัน" เมื่อตรวจเสร็จ</div>
+      <div class="ex-act" style="margin-top:12px;"><button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button></div></div>`;
+    return;
+  }
   root.innerHTML = `<div class="panel-block ex-result ${r.passed?'ex-ok':'ex-bad'}">
     <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
     <div class="ex-score">${r.scorePct}%</div>
@@ -12249,7 +12276,7 @@ function examRenderResult(r, roundId){
    ฝั่ง Sup / Manager — จัดการข้อสอบ รอบสอบ สรุปผล
    ===================================================================== */
 const EXA = { role:'', view:'sets', sets:[], set:null, qs:[], vers:[], qEdit:null, rounds:[], round:null, profiles:null, elig:null, search:'', summary:null, synced:false, busy:false };
-const EX_TYPES = { mcq:'ปรนัย (เลือก 1 ข้อ)', tf:'ถูก / ผิด', multi:'เลือกหลายคำตอบ', match:'จับคู่', order:'เรียงลำดับ', short:'พิมพ์คำตอบสั้น' };
+const EX_TYPES = { mcq:'ปรนัย (เลือก 1 ข้อ)', tf:'ถูก / ผิด', multi:'เลือกหลายคำตอบ', match:'จับคู่', order:'เรียงลำดับ', short:'พิมพ์คำตอบสั้น', hotspot:'คลิกตำแหน่งบนรูป', essay:'ข้อเขียน (Sup ตรวจเอง)' };
 
 async function examAdminEnter(){
   const root = $('exa-root');
@@ -12278,7 +12305,7 @@ async function exaSyncAdmins(){
 function exaTabs(){
   const v = EXA.view;
   const on = (x)=> (v===x || (x==='sets' && v==='set') || (x==='rounds' && (v==='round' || v==='summary'))) ? 'active' : '';
-  return `<div class="subtab-bar"><button class="${on('sets')}" data-ex="atab" data-v="sets">📝 ชุดข้อสอบ</button><button class="${on('rounds')}" data-ex="atab" data-v="rounds">📅 รอบสอบ / สรุปผล</button>
+  return `<div class="subtab-bar"><button class="${on('sets')}" data-ex="atab" data-v="sets">📝 ชุดข้อสอบ</button><button class="${on('rounds')}" data-ex="atab" data-v="rounds">📅 รอบสอบ / สรุปผล</button><button class="${(v==='grading'||v==='grade')?'active':''}" data-ex="atab" data-v="grading">✍️ ตรวจข้อเขียน${EXA.gradeCount?' ('+EXA.gradeCount+')':''}</button>
     ${EXA.role==='manager' ? '<button data-ex="syncadm">🔄 ซิงก์รายชื่อสิทธิ์</button>' : ''}</div>`;
 }
 async function exaGo(view, arg){
@@ -12290,6 +12317,8 @@ async function exaGo(view, arg){
     else if(view === 'set'){ await exaLoadSet(arg); exaRenderSet(); }
     else if(view === 'rounds'){ EXA.rounds = await examApi('adminListRounds'); exaRenderRounds(); }
     else if(view === 'round'){ await exaPrepareRound(arg); exaRenderRoundEditor(); }
+    else if(view === 'grading'){ const r = await examApi('adminListGrading', { roundId:arg||'' }); EXA.grading = r.items; EXA.gradeRound = arg||''; if(!arg) EXA.gradeCount = r.items.length; exaRenderGradingList(); }
+    else if(view === 'grade'){ EXA.grade = await examApi('adminGetGrading', { attemptId:arg }); exaRenderGrade(); }
     else if(view === 'summary'){ EXA.summary = await examApi('adminRoundSummary', { roundId:arg }); exaRenderSummary(); }
   }catch(e){
     root.innerHTML = exaTabs() + `<div class="ex-note ex-bad">⚠ ${exH(e.message)}</div>`;
@@ -12408,7 +12437,7 @@ async function exaPublish(){
 
 /* ---------- ตัวแก้ไขข้อสอบรายข้อ ---------- */
 function exaNewDraft(type){
-  const d = { qid:'', type:type||'mcq', text:'', imageUrl:'', lockPos:false, choices:[], correct:[], tfAnswer:'T', pairs:[{l:'',r:''},{l:'',r:''}], extras:[], items:[{text:''},{text:''},{text:''}], accepted:'' };
+  const d = { qid:'', type:type||'mcq', text:'', imageUrl:'', lockPos:false, choices:[], correct:[], tfAnswer:'T', pairs:[{l:'',r:''},{l:'',r:''}], extras:[], items:[{text:''},{text:''},{text:''}], accepted:'', regions:[], model:'' };
   if(d.type==='mcq' || d.type==='multi') d.choices = [{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''}];
   return d;
 }
@@ -12425,6 +12454,8 @@ function exaDraftFromQuestion(q){
     d.extras = q.choices.right.filter(r=>!used[r.id]).map(r=>r.text);
   }
   else if(q.type==='short'){ d.accepted = (q.answer||[]).join('\n'); }
+  else if(q.type==='hotspot'){ d.regions = (q.answer||[]).map(r=>Object.assign({},r)); }
+  else if(q.type==='essay'){ d.model = typeof q.answer==='string' ? q.answer : ''; }
   return d;
 }
 function exaQEditorHtml(){
@@ -12455,6 +12486,16 @@ function exaQEditorHtml(){
   } else if(d.type==='short'){
     body = `<div class="ex-hint">คำตอบที่ยอมรับ บรรทัดละ 1 แบบ (ไม่สนตัวพิมพ์เล็ก-ใหญ่และช่องว่าง)</div><textarea id="exa-accepted" rows="4">${exH(d.accepted)}</textarea>`;
   }
+  else if(d.type==='hotspot'){
+    body = d.imageUrl
+      ? `<div class="ex-hint">ลากเมาส์/นิ้วบนรูปเพื่อวาดกรอบตำแหน่งที่ <b>ถูก</b> (วาดได้หลายกรอบ สูงสุด 10) · ผู้สอบคลิกจุดเดียว ถ้าจุดอยู่ในกรอบใดกรอบหนึ่งถือว่าถูก</div>
+         <div class="ex-hs ex-hsedit" data-ex="hsdraw" id="exa-hs"><img class="ex-qimg" src="${exH(exImg(d.imageUrl))}" alt="" draggable="false">${d.regions.map((r,i)=>`<span class="ex-hsrect" style="left:${r.x*100}%;top:${r.y*100}%;width:${r.w*100}%;height:${r.h*100}%"><b>${i+1}</b></span>`).join('')}</div>
+         <div class="ex-row">${d.regions.map((r,i)=>`<button class="btn btn-ghost btn-sm" data-ex="rgdel" data-i="${i}">ลบกรอบ ${i+1}</button>`).join('')}${d.regions.length?'':'<span class="ex-hint">ยังไม่มีกรอบ</span>'}</div>`
+      : '<div class="ex-note ex-warn">ข้อนี้ต้องแนบรูปประกอบโจทย์ก่อน (กดปุ่ม "แนบรูปประกอบโจทย์" ด้านบน) แล้วจึงวาดกรอบคำตอบได้</div>';
+  } else if(d.type==='essay'){
+    body = `<div class="ex-hint">ผู้สอบพิมพ์คำตอบยาว (สูงสุด 4,000 ตัวอักษร) · <b>Sup ตรวจและให้คะแนนทุกข้อเอง</b> (ข้อละ 0–1 คะแนน) · แนวคำตอบด้านล่างเห็นเฉพาะ Sup ไม่แสดงให้ผู้สอบ</div>
+      <textarea id="exa-model" rows="4" placeholder="แนวคำตอบ / เกณฑ์ให้คะแนน (ไม่บังคับ)">${exH(d.model)}</textarea>`;
+  }
   return `<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">${d.qid?'แก้ไขข้อ':'ข้อใหม่'}</h2>${d.qid?'<button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="delq">ลบข้อนี้</button>':''}</div>
     <div class="ex-form"><label>รูปแบบข้อสอบ<select id="exa-q-type" data-ex="qtype">${Object.keys(EX_TYPES).map(t=>`<option value="${t}" ${t===d.type?'selected':''}>${EX_TYPES[t]}</option>`).join('')}</select></label></div>
     <label class="ex-block">โจทย์<textarea id="exa-q-text" rows="3">${exH(d.text)}</textarea></label>
@@ -12481,6 +12522,8 @@ function exaReadQForm(){ // คัดลอกค่าในฟอร์มก�
     document.querySelectorAll('.exa-px').forEach(el=>{ d.extras[Number(el.dataset.i)] = el.value; });
   } else if(d.type==='short'){
     const a = $('exa-accepted'); if(a) d.accepted = a.value;
+  } else if(d.type==='essay'){
+    const m = $('exa-model'); if(m) d.model = m.value;
   }
 }
 function exaRefreshEditor(){ const el = $('exa-qeditor'); if(el) el.innerHTML = exaQEditorHtml(); }
@@ -12502,6 +12545,8 @@ function exaBuildQuestion(){ // draft → รูปแบบที่ส่ง�
     out.choices = { left, right };
     out.answer = {}; left.forEach((l,i)=>{ out.answer[l.id] = 'R'+(i+1); });
   } else if(d.type==='short'){ out.answer = d.accepted.split('\n').map(x=>x.trim()).filter(Boolean); }
+  else if(d.type==='hotspot'){ out.answer = d.regions; }
+  else if(d.type==='essay'){ out.answer = d.model.trim(); }
   return out;
 }
 async function exaSaveQ(){
@@ -12618,7 +12663,7 @@ async function exaSaveRound(){
 }
 
 /* ---------- สรุปผลรอบสอบ + ออก Cer ---------- */
-const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''] };
+const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''], grading:['รอ Sup ตรวจ','warn'] };
 function exaRenderSummary(){
   const d = EXA.summary, r = d.round, root = $('exa-root');
   const f = EXA.sumFilter || '';
@@ -12631,7 +12676,8 @@ function exaRenderSummary(){
     <div class="ex-stats">
       <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่าน</span></div>
       <div class="ex-stat"><b style="color:var(--red)">${d.counts.failed}</b><span>ยังไม่ผ่าน</span></div><div class="ex-stat"><b>${d.counts.inprogress}</b><span>กำลังสอบ</span></div>
-      <div class="ex-stat"><b style="color:var(--amber)">${d.counts.none}</b><span>ยังไม่สอบ</span></div></div>
+      <div class="ex-stat"><b style="color:var(--amber)">${d.counts.none}</b><span>ยังไม่สอบ</span></div>
+      ${d.counts.grading ? `<div class="ex-stat"><b style="color:var(--amber)">${d.counts.grading}</b><span>รอตรวจข้อเขียน</span><button class="btn btn-primary btn-sm" data-ex="gradelist" data-id="${exH(r.roundId)}">ตรวจเลย</button></div>` : ''}</div>
     <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">สรุปผู้ตอบ</h2>
       <select id="exa-sum-filter" data-ex="sumfilter"><option value="">ทุกสถานะ</option>${Object.keys(EX_STATUS).map(k=>`<option value="${k}" ${f===k?'selected':''}>${EX_STATUS[k][0]}</option>`).join('')}</select></div>
       <div style="overflow-x:auto"><table class="ex-table"><thead><tr><th>ชื่อ</th><th>ครั้งที่สอบ</th><th>คะแนนล่าสุด</th><th>ดีที่สุด</th><th>สถานะ</th><th>ระดับ</th><th>Cer</th></tr></thead><tbody>
@@ -12640,6 +12686,41 @@ function exaRenderSummary(){
         <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
         <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="7" class="ex-hint">ไม่มีรายการ</td></tr>'}
       </tbody></table></div></div>`;
+}
+function exaRenderGradingList(){
+  const root = $('exa-root'), items = EXA.grading || [];
+  root.innerHTML = exaTabs() + `<div class="panel-block"><h2>ข้อสอบที่รอ Sup ตรวจข้อเขียน ${EXA.gradeRound?'(เฉพาะรอบนี้)':''}</h2>
+    ${items.length ? `<table class="ex-table"><thead><tr><th>ผู้สอบ</th><th>รอบ</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>${items.map(x=>`<tr><td>${exH(x.name)}<small>${exH(x.email)}</small></td><td>${exH(x.roundName)}<small>${exH(x.setTitle)}</small></td><td>${exFmtDT(x.submittedAt)}</td><td><button class="btn btn-primary btn-sm" data-ex="opengrade" data-id="${exH(x.attemptId)}">ตรวจ</button></td></tr>`).join('')}</tbody></table>`
+    : '<div class="ex-hint">ไม่มีข้อสอบที่รอตรวจ ✓</div>'}</div>`;
+}
+const EX_SCORES = [0, 0.25, 0.5, 0.75, 1];
+function exaRenderGrade(){
+  const g = EXA.grade, a = g.attempt, root = $('exa-root');
+  root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="gradelist">← กลับรายการ</button><b>${exH(a.name)}</b><span class="ex-hint">${exH(a.email)}</span></div>
+    <div class="ex-meta">คะแนนปัจจุบัน ${a.scorePct}% (เกณฑ์ผ่าน ${a.passPercent}%) · ข้อเขียนที่ยังไม่ให้คะแนน ${a.pending} ข้อ ${a.hasCert ? '· <b class="ex-warn">ออกใบ Cer แล้ว แก้คะแนนไม่ได้</b>' : ''}</div>
+    ${g.essays.map((q,i)=>`<div class="panel-block" data-q="${exH(q.qid)}"><b>ข้อเขียน ${i+1}</b>
+      <div class="ex-qtext">${exLines(q.text)}</div>${q.imageUrl ? `<img class="ex-qimg" src="${exH(exImg(q.imageUrl))}" alt="">` : ''}
+      <div class="ex-hint">คำตอบของผู้สอบ</div><div class="ex-ansbox">${q.answer.trim() ? exH(q.answer) : '<i>(ไม่ได้ตอบ — ให้ 0 คะแนน)</i>'}</div>
+      ${q.modelAnswer ? `<details><summary class="ex-hint">แนวคำตอบ (เห็นเฉพาะ Sup)</summary><div class="ex-ansbox">${exH(q.modelAnswer)}</div></details>` : ''}
+      <div class="ex-row"><label>คะแนน (เต็ม 1)<select class="exa-gscore">
+        <option value="">— ยังไม่ให้ —</option>${EX_SCORES.map(v=>`<option value="${v}" ${q.score!==undefined && q.score!==null && Number(q.score)===v?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label style="flex:1">ข้อสังเกต (ไม่บังคับ)<input type="text" class="exa-gnote" maxlength="1000" value="${exH(q.note)}"></label></div></div>`).join('')}
+    <div class="ex-row"><button class="btn btn-primary" data-ex="savegrade" ${a.hasCert?'disabled':''}>💾 บันทึกคะแนน</button><span class="ex-hint">ให้คะแนนครบทุกข้อ ระบบจึงสรุปผ่าน/ไม่ผ่านให้ผู้สอบ</span></div>`;
+}
+async function exaSaveGrade(){
+  const scores = {}, notes = {};
+  document.querySelectorAll('#exa-root [data-q]').forEach(box=>{
+    const qid = box.getAttribute('data-q'), v = box.querySelector('.exa-gscore').value;
+    if(v !== '') scores[qid] = Number(v);
+    notes[qid] = box.querySelector('.exa-gnote').value;
+  });
+  showLoadingOverlay('กำลังบันทึกคะแนน...');
+  try{
+    const r = await examApi('adminGradeEssay', { attemptId:EXA.grade.attempt.attemptId, scores, notes });
+    hideLoadingOverlay();
+    showToast(r.finalized ? `✓ ตรวจครบแล้ว ${r.scorePct}% — ${r.passed?'ผ่าน':'ไม่ผ่าน'}` : `✓ บันทึกแล้ว (เหลืออีก ${r.pending} ข้อ)`);
+    await exaGo(r.finalized ? 'grading' : 'grade', r.finalized ? '' : EXA.grade.attempt.attemptId);
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
 }
 async function exaIssueCerts(roundId){
   if(!confirm('ออกใบ Cer เป็น PDF ให้ผู้ที่ผ่านของรอบนี้ (ที่ยังไม่มีใบ)?\nระบบจะเก็บไฟล์ใน Drive และเพิ่มเข้าแท็บ Certificate ของแต่ละคน')) return;
@@ -12675,6 +12756,7 @@ function exOnEvent(e){
   const act = t.getAttribute('data-ex'), ev = e.type, id = t.getAttribute('data-id'), i = Number(t.getAttribute('data-i'));
   const c = EX.cur;
   /* ----- ผู้สอบ ----- */
+  if(ev === 'pointerdown' && act==='hsdraw'){ exaHsStart(e, t); return; }
   if(ev === 'click'){
     if(act==='reload'){ examLoadHome(true); return; }
     if(act==='start'){ examStart(id); return; }
@@ -12698,6 +12780,15 @@ function exOnEvent(e){
     if(act==='pick'){ examSetAnswer(q.qid, t.value); return; }
     if(act==='multi'){ const vals = Array.from(document.querySelectorAll('#ex-q input[data-ex="multi"]:checked')).map(x=>x.value); examSetAnswer(q.qid, vals); return; }
     if(act==='match'){ const m = Object.assign({}, (c.answers[q.qid] && typeof c.answers[q.qid]==='object') ? c.answers[q.qid] : {}); const lid = t.getAttribute('data-left'); if(t.value) m[lid] = t.value; else delete m[lid]; examSetAnswer(q.qid, m); return; }
+  }
+  if(ev === 'input' && c && act==='essay'){ examSetAnswer(c.p.questions[c.idx].qid, t.value); return; }
+  if(ev === 'click' && c && act==='hs'){
+    const q = c.p.questions[c.idx]; const box = t.closest('.ex-hs'); const img = box && box.querySelector('img'); if(!img) return;
+    const rc = img.getBoundingClientRect(); if(!rc.width || !rc.height) return;
+    const x = Math.min(1, Math.max(0, (e.clientX - rc.left)/rc.width)), y = Math.min(1, Math.max(0, (e.clientY - rc.top)/rc.height));
+    examSetAnswer(q.qid, { x:Math.round(x*10000)/10000, y:Math.round(y*10000)/10000 });
+    let dot = box.querySelector('.ex-hsdot'); if(!dot){ dot = document.createElement('span'); dot.className = 'ex-hsdot'; box.appendChild(dot); }
+    dot.style.left = (x*100)+'%'; dot.style.top = (y*100)+'%'; return;
   }
   if(ev === 'input' && c && act==='short'){ examSetAnswer(c.p.questions[c.idx].qid, t.value); return; }
   /* ----- Sup / Manager ----- */
@@ -12730,6 +12821,10 @@ function exOnEvent(e){
       case 'pdel': { exaReadQForm(); const d = EXA.qEdit; if(d.pairs.length<=2){ showToast('ต้องมีอย่างน้อย 2 คู่'); return; } d.pairs.splice(i,1); exaRefreshEditor(); return; }
       case 'xadd': exaReadQForm(); EXA.qEdit.extras.push(''); exaRefreshEditor(); return;
       case 'xdel': exaReadQForm(); EXA.qEdit.extras.splice(i,1); exaRefreshEditor(); return;
+      case 'rgdel': exaReadQForm(); EXA.qEdit.regions.splice(i,1); exaRefreshEditor(); return;
+      case 'gradelist': exaGo('grading', id || ''); return;
+      case 'opengrade': exaGo('grade', id); return;
+      case 'savegrade': exaSaveGrade(); return;
       case 'newround': exaGo('round', ''); return;
       case 'editround': exaGo('round', id); return;
       case 'saveround': exaSaveRound(); return;
@@ -12753,12 +12848,31 @@ function exOnEvent(e){
   }
   if(ev === 'input' && act==='elsearch'){ EXA.search = t.value; const l = $('exa-el-list'); if(l) l.innerHTML = exaEligListHtml(); return; }
 }
+function exaHsStart(e, box){
+  const d = EXA.qEdit; const img = box.querySelector('img'); if(!d || !img) return;
+  exaReadQForm();
+  if(d.regions.length >= 10){ showToast('วาดได้ไม่เกิน 10 กรอบ'); return; }
+  e.preventDefault();
+  const rc = img.getBoundingClientRect(); if(!rc.width || !rc.height) return;
+  const cl = v=>Math.min(1, Math.max(0, v));
+  const px = ev=>({ x:cl((ev.clientX-rc.left)/rc.width), y:cl((ev.clientY-rc.top)/rc.height) });
+  const p0 = px(e); const el = document.createElement('span'); el.className = 'ex-hsrect ex-hsnew'; box.appendChild(el);
+  const draw = ev=>{ const p = px(ev); const x = Math.min(p0.x,p.x), y = Math.min(p0.y,p.y), w = Math.abs(p.x-p0.x), h = Math.abs(p.y-p0.y);
+    el.style.left = x*100+'%'; el.style.top = y*100+'%'; el.style.width = w*100+'%'; el.style.height = h*100+'%'; el._r = {x,y,w,h}; };
+  const end = ev=>{
+    document.removeEventListener('pointermove', draw); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end);
+    const r = el._r; el.remove();
+    if(r && r.w >= 0.01 && r.h >= 0.01){ d.regions.push({ x:Math.round(r.x*10000)/10000, y:Math.round(r.y*10000)/10000, w:Math.round(r.w*10000)/10000, h:Math.round(r.h*10000)/10000 }); }
+    exaRefreshEditor();
+  };
+  document.addEventListener('pointermove', draw); document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+}
 (function exInit(){
   ['ex-root','exa-root'].forEach(id=>{
     const el = $(id); if(!el) return;
-    ['click','change','input'].forEach(ev=>el.addEventListener(ev, exOnEvent));
+    ['click','change','input','pointerdown'].forEach(ev=>el.addEventListener(ev, exOnEvent));
   });
-  const prot = e=>{ if(e.target && e.target.closest && e.target.closest('.ex-protect')){ if(e.target.matches && e.target.matches('input[type="text"]')) return; e.preventDefault(); } };
+  const prot = e=>{ if(e.target && e.target.closest && e.target.closest('.ex-protect')){ if(e.target.matches && e.target.matches('input[type="text"],textarea')) return; e.preventDefault(); } };
   ['contextmenu','copy','cut','dragstart','selectstart'].forEach(ev=>document.addEventListener(ev, prot));
 })();
 
