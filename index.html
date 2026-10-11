@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.30
+  เวอร์ชันปัจจุบัน : 9.31
   อัปเดตล่าสุด   : 10 ตุลาคม 2569 21:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.30</title>
+<title>F1 Service — v9.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2039,7 +2039,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.30";
+const APP_VERSION = "9.31";
 const APP_UPDATED_AT = "10 ตุลาคม 2569 21:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -2758,7 +2758,7 @@ async function fsDeleteError(errorId){ showLoadingOverlay('กำลังลบ
   const batch = sdk.writeBatch(db);
   solSnap.forEach(d=> batch.delete(d.ref));
   batch.delete(sdk.doc(db,'errors',errorId));
-  await batch.commit();
+  await batch.commit(); dxInvalidate();
 }finally{ hideLoadingOverlay(); } }
 async function fsSaveSolution(errorId, solutionId, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId), fields, {merge:true}); }finally{ hideLoadingOverlay(); } }
 async function fsDeleteSolution(errorId, solutionId){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'errors',errorId,'solutions',solutionId)); }finally{ hideLoadingOverlay(); } }
@@ -2791,7 +2791,7 @@ async function fsAddPendingError(fields){ showLoadingOverlay('กำลังบ
 async function fsUpdatePendingError(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'pendingErrors',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsAddDocument(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'documents'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateDocument(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'documents',id), fields); }finally{ hideLoadingOverlay(); } }
-async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); }finally{ hideLoadingOverlay(); } }
+async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); dxInvalidate(); }finally{ hideLoadingOverlay(); } }
 /* ===================== เคลมอะไหล่ ===================== */
 // แจ้งทุกเครื่องที่เปิดแอปค้างไว้ว่า "รายการเคลมมีการเปลี่ยนแปลง" — ใช้หลักการเดียวกับ meta/appVersion (บวก timestamp ที่เอกสารเล็กๆ 1 ตัว แล้วให้ทุกเครื่องฟังแบบเรียลไทม์แค่เอกสารนี้)
 // ไม่ทำ onSnapshot ฟังทั้ง collection claims โดยตรง เพราะจะเปิด listener ทุกเอกสารพร้อมกันทุกเครื่อง เสี่ยงกินโควต้า Firestore สูงเวลามีคนใช้งานพร้อมกันหลายคน
@@ -2814,7 +2814,7 @@ function fsBumpRpActivity(){
 }
 async function fsAddClaim(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'claims'), fields); fsBumpClaimsActivity(); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateClaim(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'claims',id), fields); fsBumpClaimsActivity(); }finally{ hideLoadingOverlay(); } }
-async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); fsBumpClaimsActivity(); }finally{ hideLoadingOverlay(); } }
+async function fsDeleteClaim(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'claims',id)); fsBumpClaimsActivity(); dxInvalidate(); }finally{ hideLoadingOverlay(); } }
 // แจ้งเตือนความคืบหน้าเคลมให้ผู้แจ้ง — เก็บเป็นเอกสารแยกต่างหาก (claimId เป็น doc id เดียวกับเคลม) ไม่ผูกวงจรชีวิตกับเอกสารเคลมหลัก
 // เรียกทุกครั้งที่ Sup Product เปลี่ยนสถานะ/เลข Service Order ของเคลม เพื่อให้เอกสารนี้ "อยู่รอด" ต่อไปได้แม้เคลมหลักจะถูกลบทิ้งตอนย้ายไป Google Sheet (จบเคส)
 // ไม่ critical ถ้าบันทึกไม่สำเร็จ — แค่ผู้แจ้งจะไม่เห็นแจ้งเตือน ไม่กระทบข้อมูลเคลมหลัก
@@ -4194,6 +4194,8 @@ async function runOrphanScan(scope){
   const setStatus = t=>{ statusEl.textContent = t; };
   try{
     const { refs, problems } = await orphanGatherRefs(setStatus);
+    let sheetRefs = null;
+    try{ sheetRefs = await orphanGatherSheetRefs(setStatus); }catch(e){ sheetRefs = null; problems.push('Google Sheet: '+e.message); }
     const tree = await orphanListTree(setStatus);
     const now = Date.now(), known = KNOWN_APP_SHEETS();
     const orphans = [], sheets = [];
@@ -4202,6 +4204,8 @@ async function runOrphanScan(scope){
       if(f.path==='Backups' || f.path.indexOf('Backups/')===0){ backupCount++; continue; }
       if(f.mimeType==='application/vnd.google-apps.spreadsheet'){ if(!known.has(f.name)) sheets.push(f); continue; }
       if(refs.has(f.id)) continue;
+      if(sheetRefs && (sheetRefs.has(f.id) || sheetRefs.has(f.parentId))) continue; // v9.31 — ยังมีลิงก์อยู่ใน Sheet (เคลมจบเคส/ประวัติ RP)
+      if(sheetRefs && (f.path||'').split('/')[1]==='Claim'){ if(now - new Date(f.createdTime).getTime() < ORPHAN_MIN_AGE_MS){ tooNew++; continue; } orphans.push(f); continue; }
       // v8.90 — ไฟล์ใน <ผู้ดูแล>/Claim/… ที่ไม่มี Firestore อ้างอิง มักเป็นเคลมที่จบเคสแล้วย้ายไป Sheet (Sheet อ้างอิงแค่โฟลเดอร์) — ไม่เสนอให้ลบ
       if((f.path||'').split('/')[1]==='Claim'){ doneClaimFiles++; continue; }
       if(now - new Date(f.createdTime).getTime() < ORPHAN_MIN_AGE_MS){ tooNew++; continue; }
@@ -5831,7 +5835,7 @@ async function deleteRosterProfile(email){
     await initFirebase();
     const sdk = window._firebaseSdk;
     await sdk.deleteDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
-    rosterProfiles = rosterProfiles.filter(x=>x.email!==email);
+    rosterProfiles = rosterProfiles.filter(x=>x.email!==email); dxInvalidate();
     orgChartProfiles = orgChartProfiles.filter(x=>x.email!==email);
     renderRoster();
     showToast('✅ ลบโปรไฟล์เรียบร้อย — คนนี้จะต้องกรอกโปรไฟล์ใหม่ตอน login ครั้งถัดไป');
@@ -6367,7 +6371,7 @@ const MANUAL_IMG = {
 };
 const MANUAL_CAPS = {"overview": ["<b>เมนูหลัก</b> — Service · จัดการ · Dashboard · ระบบ (แต่ละคนเห็นตามสิทธิ์)", "<b>เมนูย่อย</b> ของกลุ่มที่เลือก", "<b>แท็บ</b> ภายในหน้า", "สลับโหมดมืด/สว่าง", "บทบาทของคุณ — กดดูสิทธิ์", "🔔 แจ้งเตือนสถานะสิ่งที่ส่ง", "เปิดคู่มือนี้"], "login": ["กด <b>Sign in with Google</b> ด้วยบัญชีของคุณ"], "trbl": ["ส่ง Error ที่ยังไม่มีในระบบ → รอ Sup ตรวจก่อนเผยแพร่", "พิมพ์ error code / รุ่น / อาการ", "กรองตาม Product / Model", "กด <b>ค้นหา</b>"], "trbl_res": ["กดการ์ด Error เพื่อดูวิธีแก้แบบเต็มจอ"], "detail": ["👍 กดเมื่อวิธีนี้แก้ได้จริง", "ลองครบแล้วไม่หาย → เสนอวิธีใหม่ให้ Sup"], "adderr": ["Product · Model · Error Code · อาการ", "วิธีแก้ (ขั้นตอน อุปกรณ์ อะไหล่ รูป/วิดีโอ) — อย่างน้อย 1 วิธี", "กด <b>ส่งให้ Sup Product ตรวจสอบ</b>"], "docs": ["เลือกประเภทเอกสาร (เลื่อนดูได้)", "พิมพ์ชื่อเอกสาร", "กรองตาม Product / Model", "กด <b>ค้นหา</b> — กดชื่อเอกสารเพื่อเปิด"], "return": ["กดเพื่อบันทึกการส่งคืน"], "return_form": ["เลขใบเบิก SPO + รูปใบเบิก (เพิ่มได้หลายใบ)", "เลือกวิธีส่งคืน", "แนบหลักฐานการส่ง", "กด <b>ส่งข้อมูล</b>"], "claim": ["<b>แจ้งปัญหา</b> — แจ้งหน้างานโดยไม่ต้องใช้อะไหล่", "<b>เคลมอะไหล่</b> — ส่งตรงถึง Sup Product"], "claim_form": ["ผู้เคลม (เติมให้อัตโนมัติ) + ชื่อสถานที่", "Product · รุ่น · S/N", "วันที่พบ · อาการ · รายละเอียด · วิธีแก้", "Part number · Part name · จำนวน (เพิ่มได้หลายรายการ)", "Job Factorium · เลขที่ใบยืม (พิมพ์เฉพาะตัวเลข)", "แนบรูป/ไฟล์ (ไม่เกิน 5 MB ต่อไฟล์)", "กด <b>บันทึก</b>"], "mywork": ["เคลมที่รอ Sup ดำเนินการ — กดดู/แก้ไข", "อะไหล่ที่ส่งคืนและรอ Admin ตรวจรับ", "Error ที่ส่งเข้าคิว รอ Sup อนุมัติ"], "cert": ["เลือกรุ่นที่คุณดูแล", "แสดง/ซ่อนรายการ — กด + ที่รุ่นเพื่อแนบ Cer"], "certsup": ["ผู้ผลิต: Sup แนบเฉพาะ Cer ผู้ผลิต — กด + ที่รุ่น"], "team": ["สลับ ผังองค์กร / รายชื่อ", "ย่อ/ขยายผัง"], "mg_err": ["ตัวเลขสรุปของคุณ", "ดาวน์โหลด Error ทั้งหมดที่คุณดูแล", "ดูทั้งหมด / เพิ่ม Error ของรุ่นนั้น"], "mg_err2": ["<b>Error ใหม่</b> — แก้ไขก่อนอนุมัติ / อนุมัติทันที / ปฏิเสธ", "<b>ข้อเสนอวิธีแก้</b> จาก Engineer"], "mg_docs": ["ตารางเอกสารของทุกรุ่น — ✅ มีลิงก์ · ➕ ใส่ลิงก์", "กำหนดว่ารุ่นไหนต้องมี Cer", "สร้างโฟลเดอร์ใน Drive ล่วงหน้า", "ซิงก์ลิงก์กับไฟล์ใน Drive"], "mg_claims": ["เสร็จสิ้น (ประจำปี) จาก Google Sheet", "กรองสถานะ", "ค้นหา สถานที่ / รุ่น / S/N / Part number"], "recv": ["ค้นหาด้วยชื่อหรือเลขใบเบิก", "ดูประวัติที่รับแล้วใน Sheet"], "d_sum": ["<b>แท็บ Dashboard</b> — ภาพรวม · เคลม · Troubleshoot · อะไหล่คืน · Certificate · ผู้ใช้งาน · งานค้าง", "เลือกคอลัมน์ที่แสดง"], "d_claims": ["จำนวนยังไม่เคลม · เคลมแล้ว (รออะไหล่) · แจ้งปัญหายังไม่แก้", "รีเฟรชข้อมูล"], "d_usage": ["จำนวน Error · ยอดเปิดดู · 👍 · ข้อเสนอรออนุมัติ", "Error ที่ถูกใช้งานมากสุด"], "d_return": ["ส่งทั้งหมด = รับแล้ว + รอตรวจรับ", "จำนวนแยกรายผู้ส่ง", "รีเฟรชข้อมูล (ยอดรับแล้วอ่านจาก Google Sheet)"], "d_cert": ["ดูตามคน / ตามรุ่น", "ค้นหาและกรอง", "ส่งออก Excel", "% ความครบถ้วนของ Cer (รวม · ภายใน · ผู้ผลิต)"], "d_people": ["คำขอสิทธิ์ใหม่", "การใช้งานรายคน", "กิจกรรมล่าสุด — ซ่อนไว้ กดแสดงเมื่อต้องการดู"], "d_pending": ["เคลมที่ Sup ยังไม่ดำเนินการ", "อะไหล่คืนที่ Admin ยังไม่ตรวจรับ"], "sys_access": ["อนุมัติ/ปฏิเสธคำขอใหม่ (เฉพาะ Super Admin)", "ล็อกหน้าที่ต้องปิดปรับปรุง", "เพิ่ม/เปลี่ยนสิทธิ์ผู้ใช้ตามอีเมล"], "sys_owner": ["เพิ่ม/ลบรายชื่อ Sup Product", "เพิ่ม Product / รุ่นใหม่", "ค้นหา/กรอง — 1 แถว = 1 รุ่น เปลี่ยนผู้ดูแลได้ทันที"], "sys_menu": ["คอลัมน์ตามบทบาท", "ติ๊ก = เห็นเมนู · เอาออก = ซ่อน (Manager/CEO เห็นเสมอ)"], "sys_backup": ["ตั้งเวลา/ความถี่ Backup อัตโนมัติ", "เช็คสถานะ Backup ล่าสุด", "สำรองด้วยตัวเอง: JSON · Excel · เข้า Drive", "Export ประวัติการใช้งาน"]};
 const MANUAL_MOB = {"overview": false, "login": false, "trbl": true, "trbl_res": true, "detail": true, "adderr": true, "docs": true, "return": true, "return_form": true, "claim": true, "claim_form": true, "mywork": true, "cert": true, "certsup": false, "team": false, "mg_err": false, "mg_err2": false, "mg_docs": false, "mg_claims": false, "recv": false, "d_sum": false, "d_claims": false, "d_usage": false, "d_return": false, "d_cert": false, "d_people": false, "d_pending": false, "sys_access": false, "sys_owner": false, "sys_menu": false, "sys_backup": false};
-const MANUAL_TOPICS = [{"id": "overview", "icon": "📋", "title": "ภาพรวมระบบ", "who": "ทุกคน", "intro": "F1 Service รวมงาน Service ไว้ที่เดียว: ค้นวิธีแก้ · แจ้งเคลม · ส่งคืนอะไหล่ · Certificate · Dashboard", "shots": ["overview"], "body": "<table class=\"mt\"><tr><th>เมนูหลัก</th><th>ใช้ทำอะไร</th><th>ใครเห็น</th></tr>\n  <tr><td>👷 Service</td><td>ค้นวิธีแก้ · แจ้งเคลม · ส่งคืนอะไหล่ · Cer · ทีมงาน</td><td>Engineer · Sup · Manager</td></tr>\n  <tr><td>📋 จัดการ</td><td>อนุมัติ Error · เอกสาร · สรุปเคลม · ตรวจรับอะไหล่</td><td>Sup Product · Manager (ตรวจรับ: + Admin Service)</td></tr>\n  <tr><td>📊 Dashboard</td><td>ภาพรวมเคลม · การใช้งาน · Cer · ผู้ใช้งาน</td><td>Sup Product · Manager</td></tr>\n  <tr><td>⚙️ ระบบ</td><td>สิทธิ์ผู้ใช้ · Product · สิทธิ์เมนู · Backup</td><td>Sup · Manager (บางส่วนเฉพาะ Super Admin)</td></tr></table>\n  <p class=\"mtip\">💡 เมนูที่ไม่มีสิทธิ์จะไม่แสดง — Super Admin ปรับว่าใครเห็นเมนูไหนได้ที่ ระบบ › สิทธิ์เมนู</p>"}, {"id": "login", "icon": "🔑", "title": "เข้าสู่ระบบ", "who": "ทุกคน", "intro": "", "shots": ["login"], "body": "<ul class=\"ml\"><li>บัญชีใหม่: หลัง Sign in จะขึ้นหน้า <b>ขอสิทธิ์เข้าใช้งาน</b> → กดขอ แล้วรอ Super Admin อนุมัติ</li>\n  <li>กรอก <b>โปรไฟล์</b> (ชื่อเล่น · ตำแหน่ง · เขต) ครั้งแรกครั้งเดียว — แก้ไขภายหลังที่ปุ่มโปรไฟล์ข้างชื่อ</li>\n  <li>ระบบจำการเข้าสู่ระบบไว้ ไม่ต้อง Sign in ทุกครั้ง</li></ul>"}, {"id": "trbl", "icon": "🛠", "title": "Troubleshooting — ค้นหา / ส่ง Error", "who": "Engineer · Sup Product · Manager", "intro": "Service › เครื่องมือ › Troubleshooting", "shots": ["trbl", "trbl_res", "detail", "adderr"], "body": "<p class=\"mtip\">💡 ภาพที่ 3: 👍 ช่วยให้วิธีที่ใช้ได้จริงอยู่ลำดับต้น · ภาพที่ 4: Error ใหม่จะขึ้นหน้า Sup เจ้าของรุ่น และ Engineer ดูสถานะได้ที่ 🔔 หรือ รายการของฉัน"}, {"id": "docs", "icon": "📘", "title": "เอกสาร Service", "who": "Engineer · Sup Product · Manager", "intro": "Service › เครื่องมือ › เอกสาร Service", "shots": ["docs"], "body": "<p class=\"mtip\">💡 เอกสารเก็บใน Google Drive — กดชื่อเอกสารเพื่อเปิด (ต้อง Sign in บัญชีที่มีสิทธิ์ดู)</p>"}, {"id": "return", "icon": "📦", "title": "ส่งคืนอะไหล่ Office", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › ส่งคืนอะไหล่", "shots": ["return", "return_form"], "body": "<p class=\"mtip\">💡 พิมพ์เฉพาะตัวเลขใบเบิก ระบบเติม <b>SPO</b> ให้ · ใบเบิกแต่ละใบต้องแนบรูป</p>"}, {"id": "claim", "icon": "🔧", "title": "แจ้งเคลม / ปัญหา", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › แจ้งเคลม/ปัญหา", "shots": ["claim", "claim_form"], "body": "<p class=\"mtip\">💡 มีใบงาน Factorium (PDF)? เลือก <b>แนบใบงาน</b> ระบบจะเติมข้อมูลให้ · ช่องที่มี * ต้องกรอก · ส่งแล้วแก้ไขได้ที่ รายการของฉัน (ก่อน Sup ดำเนินการ)</p>"}, {"id": "mywork", "icon": "🗂", "title": "รายการของฉัน", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › รายการของฉัน", "shots": ["mywork"], "body": "<p class=\"mtip\">💡 ตัวเลขสีแดงบนแท็บ = จำนวนรายการที่ยังค้างอยู่</p>"}, {"id": "cert", "icon": "🎓", "title": "Certificate", "who": "Engineer · Sup Product · Manager", "intro": "Service › Certificate", "shots": ["cert", "certsup"], "body": "<ul class=\"ml\"><li><b>Engineer</b> (ภาพ 1) — เลือกรุ่นที่ดูแล แล้วกด + แนบทั้ง Cer ภายใน/ผู้ผลิต · ป้าย 📌 = Sup กำหนดว่ารุ่นนั้นต้องมี</li>\n  <li><b>Sup Product</b> (ภาพ 2) — แท็บ <b>ผู้ผลิตที่ดูแล</b>: แนบเฉพาะ Cer ผู้ผลิตของรุ่นที่ตัวเองดูแล</li></ul>"}, {"id": "team", "icon": "👥", "title": "ทีมงาน — ผังองค์กร / รายชื่อ", "who": "Engineer · Sup Product · Manager", "intro": "Service › ทีมงาน", "shots": ["team"], "body": "<ul class=\"ml\"><li><b>ผังองค์กร</b> — ทุกคนดูได้ (⭐ = Sup Area) · เฉพาะ Manager โยกย้ายตำแหน่ง/เขตได้</li><li><b>รายชื่อ</b> — เฉพาะ Manager แก้ไข/ลบ และ Sync ขึ้น Google Sheet</li></ul>"}, {"id": "sup", "icon": "📋", "title": "จัดการ (Sup Product)", "who": "Sup Product · Manager", "intro": "จัดการ › จัดการ Error · จัดการเอกสาร · สรุปเคลมอะไหล่/ปัญหา", "shots": ["mg_err", "mg_err2", "mg_docs", "mg_claims"], "body": "<ul class=\"ml\"><li><b>Manager</b> เลือกดูข้อมูลของ Sup แต่ละคนได้จากช่อง “ดูข้อมูลของ Sup” ด้านบน (สรุปเคลมเลือก <b>ทุกคน</b> ได้)</li>\n  <li>เห็นเฉพาะ Product ที่ตัวเองเป็นผู้ดูแล — ชื่อต้องตรงกับชื่อเล่นในโปรไฟล์ ไม่ตรง = ขึ้นแจ้งเตือนสีแดงและยังไม่เห็นข้อมูล (แจ้ง Manager)</li>\n  <li>Sup เป็นคนแนบ <b>ลิงก์/ไฟล์เอกสาร</b> ของรุ่นตัวเอง — วางไฟล์เองใน Drive ได้ แล้วกด ซิงก์</li></ul>"}, {"id": "recv", "icon": "📦", "title": "ตรวจรับอะไหล่ (Admin Service)", "who": "Admin Service · Sup · Manager", "intro": "จัดการ › ตรวจรับอะไหล่", "shots": ["recv"], "body": "<p class=\"mtip\">💡 กดรายการเพื่อตรวจรับ/ประเมิน — ที่รับแล้วบันทึกลง Google Sheet อัตโนมัติ</p>"}, {"id": "dash", "icon": "📊", "title": "Dashboard", "who": "Sup Product · Manager", "intro": "7 แท็บ: ภาพรวม · เคลม · Troubleshoot · อะไหล่คืน · Certificate · ผู้ใช้งาน · งานค้าง", "shots": ["d_sum", "d_claims", "d_usage", "d_return", "d_cert", "d_people", "d_pending"], "body": "<ul class=\"ml\"><li><b>เคลม</b> นับจำนวนที่ยังไม่เคลม · เคลมแล้ว · แจ้งปัญหา (เฉพาะรายการที่ยังอยู่ในระบบ)</li>\n  <li><b>อะไหล่คืน</b> ส่งทั้งหมด = รับแล้ว + รอตรวจรับ · ยอด \"รับแล้ว\" อ่านจาก Google Sheet \"ส่งคืนอะไหล่ Office\" (ต้องเชื่อม Drive) · แยกจากอะไหล่เคลม</li>\n  <li><b>Certificate</b> % = ใบที่มี ÷ ใบที่ต้องมี ตามที่ Sup กำหนด · ใบรุ่นอื่นไม่นับ</li>\n  <li><b>ผู้ใช้งาน</b> — “ขาด” = Cer ที่ Sup กำหนดว่าต้องมี − ที่แนบแล้ว · กิจกรรมล่าสุดซ่อนไว้ กดแสดงได้ · คำขอสิทธิ์และประวัติเห็นเฉพาะ Super Admin</li></ul>"}, {"id": "sys", "icon": "⚙️", "title": "ระบบ", "who": "Sup · Manager (ตามที่ระบุ)", "intro": "ระบบ › สิทธิ์ผู้ใช้ · Product & Category · สิทธิ์เมนู · Export/Backup", "shots": ["sys_access", "sys_owner", "sys_menu", "sys_backup"], "body": "<table class=\"mt\"><tr><th>หน้า</th><th>ทำอะไรได้</th><th>ใคร</th></tr>\n  <tr><td>สิทธิ์ผู้ใช้</td><td>อนุมัติคำขอ · เพิ่ม/เปลี่ยนสิทธิ์ · ล็อกหน้าปิดปรับปรุง</td><td>Super Admin</td></tr>\n  <tr><td>Product & Category</td><td>รายชื่อ Sup · รุ่น/ผู้ดูแล</td><td>Sup (Editor) · Manager</td></tr>\n  <tr><td>สิทธิ์เมนู</td><td>กำหนดว่าบทบาทไหนเห็นเมนูไหน (มีผลทันที)</td><td>Manager / Super Admin</td></tr>\n  <tr><td>Export/Backup</td><td>Backup อัตโนมัติ · ดาวน์โหลด · Log</td><td>Super Admin</td></tr></table>\n  <p class=\"mtip\">⚠️ สิทธิ์เมนูคือการซ่อนเมนู — ข้อมูลจริงยังป้องกันด้วย Firestore Rules</p>"}];
+const MANUAL_TOPICS = [{"id": "overview", "icon": "📋", "title": "ภาพรวมระบบ", "who": "ทุกคน", "intro": "F1 Service รวมงาน Service ไว้ที่เดียว: ค้นวิธีแก้ · แจ้งเคลม · ส่งคืนอะไหล่ · Certificate · Dashboard", "shots": ["overview"], "body": "<table class=\"mt\"><tr><th>เมนูหลัก</th><th>ใช้ทำอะไร</th><th>ใครเห็น</th></tr>\n  <tr><td>👷 Service</td><td>ค้นวิธีแก้ · แจ้งเคลม · ส่งคืนอะไหล่ · Cer · ทีมงาน</td><td>Engineer · Sup · Manager</td></tr>\n  <tr><td>📋 จัดการ</td><td>อนุมัติ Error · เอกสาร · สรุปเคลม · ตรวจรับอะไหล่</td><td>Sup Product · Manager (ตรวจรับ: + Admin Service)</td></tr>\n  <tr><td>📊 Dashboard</td><td>ภาพรวมเคลม · การใช้งาน · Cer · ผู้ใช้งาน</td><td>Sup Product · Manager</td></tr>\n  <tr><td>⚙️ ระบบ</td><td>สิทธิ์ผู้ใช้ · Product · สิทธิ์เมนู · Backup</td><td>Sup · Manager (บางส่วนเฉพาะ Super Admin)</td></tr></table>\n  <p class=\"mtip\">💡 เมนูที่ไม่มีสิทธิ์จะไม่แสดง — Super Admin ปรับว่าใครเห็นเมนูไหนได้ที่ ระบบ › สิทธิ์เมนู</p>"}, {"id": "login", "icon": "🔑", "title": "เข้าสู่ระบบ", "who": "ทุกคน", "intro": "", "shots": ["login"], "body": "<ul class=\"ml\"><li>บัญชีใหม่: หลัง Sign in จะขึ้นหน้า <b>ขอสิทธิ์เข้าใช้งาน</b> → กดขอ แล้วรอ Super Admin อนุมัติ</li>\n  <li>กรอก <b>โปรไฟล์</b> (ชื่อเล่น · ตำแหน่ง · เขต) ครั้งแรกครั้งเดียว — แก้ไขภายหลังที่ปุ่มโปรไฟล์ข้างชื่อ</li>\n  <li>ระบบจำการเข้าสู่ระบบไว้ ไม่ต้อง Sign in ทุกครั้ง</li></ul>"}, {"id": "trbl", "icon": "🛠", "title": "Troubleshooting — ค้นหา / ส่ง Error", "who": "Engineer · Sup Product · Manager", "intro": "Service › เครื่องมือ › Troubleshooting", "shots": ["trbl", "trbl_res", "detail", "adderr"], "body": "<p class=\"mtip\">💡 ภาพที่ 3: 👍 ช่วยให้วิธีที่ใช้ได้จริงอยู่ลำดับต้น · ภาพที่ 4: Error ใหม่จะขึ้นหน้า Sup เจ้าของรุ่น และ Engineer ดูสถานะได้ที่ 🔔 หรือ รายการของฉัน"}, {"id": "docs", "icon": "📘", "title": "เอกสาร Service", "who": "Engineer · Sup Product · Manager", "intro": "Service › เครื่องมือ › เอกสาร Service", "shots": ["docs"], "body": "<p class=\"mtip\">💡 เอกสารเก็บใน Google Drive — กดชื่อเอกสารเพื่อเปิด (ต้อง Sign in บัญชีที่มีสิทธิ์ดู)</p>"}, {"id": "return", "icon": "📦", "title": "ส่งคืนอะไหล่ Office", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › ส่งคืนอะไหล่", "shots": ["return", "return_form"], "body": "<p class=\"mtip\">💡 พิมพ์เฉพาะตัวเลขใบเบิก ระบบเติม <b>SPO</b> ให้ · ใบเบิกแต่ละใบต้องแนบรูป</p>"}, {"id": "claim", "icon": "🔧", "title": "แจ้งเคลม / ปัญหา", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › แจ้งเคลม/ปัญหา", "shots": ["claim", "claim_form"], "body": "<p class=\"mtip\">💡 มีใบงาน Factorium (PDF)? เลือก <b>แนบใบงาน</b> ระบบจะเติมข้อมูลให้ · ช่องที่มี * ต้องกรอก · ส่งแล้วแก้ไขได้ที่ รายการของฉัน (ก่อน Sup ดำเนินการ)</p>"}, {"id": "mywork", "icon": "🗂", "title": "รายการของฉัน", "who": "Engineer · Sup Product · Manager", "intro": "Service › บันทึกข้อมูล › รายการของฉัน", "shots": ["mywork"], "body": "<p class=\"mtip\">💡 ตัวเลขสีแดงบนแท็บ = จำนวนรายการที่ยังค้างอยู่</p>"}, {"id": "cert", "icon": "🎓", "title": "Certificate", "who": "Engineer · Sup Product · Manager", "intro": "Service › Certificate", "shots": ["cert", "certsup"], "body": "<ul class=\"ml\"><li><b>Engineer</b> (ภาพ 1) — เลือกรุ่นที่ดูแล แล้วกด + แนบทั้ง Cer ภายใน/ผู้ผลิต · ป้าย 📌 = Sup กำหนดว่ารุ่นนั้นต้องมี</li>\n  <li><b>Sup Product</b> (ภาพ 2) — แท็บ <b>ผู้ผลิตที่ดูแล</b>: แนบเฉพาะ Cer ผู้ผลิตของรุ่นที่ตัวเองดูแล</li></ul>"}, {"id": "team", "icon": "👥", "title": "ทีมงาน — ผังองค์กร / รายชื่อ", "who": "Engineer · Sup Product · Manager", "intro": "Service › ทีมงาน", "shots": ["team"], "body": "<ul class=\"ml\"><li><b>ผังองค์กร</b> — ทุกคนดูได้ (⭐ = Sup Area) · เฉพาะ Manager โยกย้ายตำแหน่ง/เขตได้</li><li><b>รายชื่อ</b> — เฉพาะ Manager แก้ไข/ลบ และ Sync ขึ้น Google Sheet</li></ul>"}, {"id": "sup", "icon": "📋", "title": "จัดการ (Sup Product)", "who": "Sup Product · Manager", "intro": "จัดการ › จัดการ Error · จัดการเอกสาร · สรุปเคลมอะไหล่/ปัญหา", "shots": ["mg_err", "mg_err2", "mg_docs", "mg_claims"], "body": "<ul class=\"ml\"><li><b>Manager</b> เลือกดูข้อมูลของ Sup แต่ละคนได้จากช่อง “ดูข้อมูลของ Sup” ด้านบน (สรุปเคลมเลือก <b>ทุกคน</b> ได้)</li>\n  <li>เห็นเฉพาะ Product ที่ตัวเองเป็นผู้ดูแล — ชื่อต้องตรงกับชื่อเล่นในโปรไฟล์ ไม่ตรง = ขึ้นแจ้งเตือนสีแดงและยังไม่เห็นข้อมูล (แจ้ง Manager)</li>\n  <li>Sup เป็นคนแนบ <b>ลิงก์/ไฟล์เอกสาร</b> ของรุ่นตัวเอง — วางไฟล์เองใน Drive ได้ แล้วกด ซิงก์</li>\n  <li>ลบประวัติเคลมที่ย้ายไป Sheet แล้ว: ปุ่ม <b>🗂 จัดการ/ลบประวัติ</b> ในหน้าเคลม — ลบแถวและไฟล์ใน Drive พร้อมกัน</li></ul>"}, {"id": "recv", "icon": "📦", "title": "ตรวจรับอะไหล่ (Admin Service)", "who": "Admin Service · Sup · Manager", "intro": "จัดการ › ตรวจรับอะไหล่", "shots": ["recv"], "body": "<p class=\"mtip\">💡 กดรายการเพื่อตรวจรับ/ประเมิน — ที่รับแล้วบันทึกลง Google Sheet อัตโนมัติ · ลบประวัติพร้อมไฟล์ใน Drive ได้ที่ปุ่ม 🗂 จัดการ/ลบประวัติ</p>"}, {"id": "dash", "icon": "📊", "title": "Dashboard", "who": "Sup Product · Manager", "intro": "7 แท็บ: ภาพรวม · เคลม · Troubleshoot · อะไหล่คืน · Certificate · ผู้ใช้งาน · งานค้าง", "shots": ["d_sum", "d_claims", "d_usage", "d_return", "d_cert", "d_people", "d_pending"], "body": "<ul class=\"ml\"><li><b>เคลม</b> นับจำนวนที่ยังไม่เคลม · เคลมแล้ว · แจ้งปัญหา (เฉพาะรายการที่ยังอยู่ในระบบ)</li>\n  <li><b>อะไหล่คืน</b> ส่งทั้งหมด = รับแล้ว + รอตรวจรับ · ยอด \"รับแล้ว\" อ่านจาก Google Sheet \"ส่งคืนอะไหล่ Office\" (ต้องเชื่อม Drive) · แยกจากอะไหล่เคลม</li>\n  <li><b>Certificate</b> % = ใบที่มี ÷ ใบที่ต้องมี ตามที่ Sup กำหนด · ใบรุ่นอื่นไม่นับ</li>\n  <li><b>ผู้ใช้งาน</b> — “ขาด” = Cer ที่ Sup กำหนดว่าต้องมี − ที่แนบแล้ว · กิจกรรมล่าสุดซ่อนไว้ กดแสดงได้ · คำขอสิทธิ์และประวัติเห็นเฉพาะ Super Admin</li></ul>"}, {"id": "sys", "icon": "⚙️", "title": "ระบบ", "who": "Sup · Manager (ตามที่ระบุ)", "intro": "ระบบ › สิทธิ์ผู้ใช้ · Product & Category · สิทธิ์เมนู · Export/Backup", "shots": ["sys_access", "sys_owner", "sys_menu", "sys_backup"], "body": "<table class=\"mt\"><tr><th>หน้า</th><th>ทำอะไรได้</th><th>ใคร</th></tr>\n  <tr><td>สิทธิ์ผู้ใช้</td><td>อนุมัติคำขอ · เพิ่ม/เปลี่ยนสิทธิ์ · ล็อกหน้าปิดปรับปรุง</td><td>Super Admin</td></tr>\n  <tr><td>Product & Category</td><td>รายชื่อ Sup · รุ่น/ผู้ดูแล</td><td>Sup (Editor) · Manager</td></tr>\n  <tr><td>สิทธิ์เมนู</td><td>กำหนดว่าบทบาทไหนเห็นเมนูไหน (มีผลทันที)</td><td>Manager / Super Admin</td></tr>\n  <tr><td>Export/Backup</td><td>Backup อัตโนมัติ · ดาวน์โหลด · Log</td><td>Super Admin</td></tr></table>\n  <p class=\"mtip\">⚠️ สิทธิ์เมนูคือการซ่อนเมนู — ข้อมูลจริงยังป้องกันด้วย Firestore Rules</p>"}];
 function manualFigHtml(k){
   const caps = MANUAL_CAPS[k]||[]; const mob = MANUAL_MOB[k];
   return `<figure class="mfig${mob?' mob':''}"><img src="${MANUAL_IMG[k]}" alt="">${caps.length?`<ol class="mn">${caps.map(c=>`<li>${c}</li>`).join('')}</ol>`:''}</figure>`;
@@ -7432,6 +7436,28 @@ function snapshotErrorEditState(){
     solutions: editingSolutions,
   };
 }
+// v9.31 — เก็บกวาดหลังลบ Error: ข้อเสนอวิธีแก้ทุกสถานะที่ผูกกับ Error นี้ (ลบรูป/วิดีโอใน Drive + ลบรายการ) กันค้างเป็น "ไม่พบ"
+async function purgeProposalsOfError(errorId){
+  const props = (DATA.proposals||[]).filter(p=>p.errorId===errorId); if(!props.length) return;
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const ids = new Set(); props.forEach(p=>orphanCollectIds({ images:p.images, videos:p.videos }, '', ids));
+  if(ids.size) await driveDeleteMany(Array.from(ids));
+  for(const p of props){ try{ await sdk.deleteDoc(sdk.doc(db,'proposals',p.id)); }catch(e){ console.warn('ลบข้อเสนอไม่สำเร็จ:', p.id, e.message); } }
+  DATA.proposals = DATA.proposals.filter(p=>p.errorId!==errorId); renderAll();
+}
+// v9.31 — ปฏิเสธแล้วลบรูป/วิดีโอที่แนบมาใน Drive ทิ้ง (รายการยังอยู่เพื่อแจ้งผลให้ผู้ส่ง แต่ไม่เก็บไฟล์ค้าง)
+async function purgeRejectedMedia(kind, item){
+  try{
+    const ids = new Set();
+    if(kind==='proposal') orphanCollectIds({ images:item.images, videos:item.videos }, '', ids);
+    else (item.solutions||[]).forEach(sl=>orphanCollectIds({ images:sl.images, videos:sl.videos }, '', ids));
+    if(!ids.size) return;
+    const r = await driveDeleteMany(Array.from(ids));
+    if(r.failed.length){ showToast('⚠ ลบไฟล์แนบของรายการที่ปฏิเสธไม่สำเร็จ '+driveFailSummary(r)+' — ตรวจได้ที่ปุ่ม "ตรวจไฟล์ตกค้าง"'); return; }
+    if(kind==='proposal'){ await fsUpdateProposal(item.id, { images:[], videos:[] }); item.images=[]; item.videos=[]; }
+    else { const cleaned = (item.solutions||[]).map(sl=>({ ...sl, images:[], videos:[] })); await fsUpdatePendingError(item.id, { solutions:cleaned }); item.solutions = cleaned; }
+  }catch(e){ console.warn('เก็บกวาดไฟล์แนบของรายการที่ปฏิเสธไม่สำเร็จ:', e.message); }
+}
 async function deleteError(id){
   const err = DATA.errors.find(e=>e.id===id);
   if(err && !canManageErrorOf(err.category, err.model)) return;
@@ -7439,6 +7465,7 @@ async function deleteError(id){
   try{ await fsDeleteError(id); }catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); return; }
   if(err && err.category) { invalidateErrorsCacheForCategory(err.category); fsBumpCategoryVersion(err.category); }
   DATA.errors = DATA.errors.filter(e=>e.id!==id); renderAll(); showToast('ลบแล้ว');
+  purgeProposalsOfError(id).catch(e=>console.warn('เก็บกวาดข้อเสนอของ Error ที่ลบไม่สำเร็จ:', e.message)); // v9.31
   if(err){ deleteDriveFolderForError(err).catch(()=>{}); fsWriteLog(`ลบ Error: ${err.model} — ${err.errorCode||err.symptom}`); }
 }
 
@@ -7505,6 +7532,7 @@ async function rejectPendingError(id){
   try{ await fsUpdatePendingError(pe.id, {status:'rejected', rejectionReason:reason, reviewedAt:Date.now()}); }
   catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
   pe.status='rejected'; pe.rejectionReason=reason; pe.reviewedAt=Date.now();
+  purgeRejectedMedia('pending', pe); // v9.31
   renderAll();
   showToast('ปฏิเสธแล้ว — Engineer จะเห็นผลใน 🔔');
 }
@@ -7629,7 +7657,7 @@ async function rejectProposal(pid){
   const p=DATA.proposals.find(x=>x.id===pid); if(!p) return;
   { const e0 = DATA.errors.find(e=>e.id===p.errorId); if(e0 && !canManageErrorOf(e0.category, e0.model)) return; }
   try{ await fsUpdateProposal(pid, {status:'rejected'}); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
-  p.status='rejected'; renderAll(); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง');
+  p.status='rejected'; renderAll(); purgeRejectedMedia('proposal', p); showToast('ปฏิเสธข้อเสนอแล้ว · จำนวนที่ค้างอยู่ลดลง');
 }
 
 /* ===================== SUP PRODUCT: DOCUMENTS (ตารางเดียว เห็นทุกรุ่น กดใส่ลิงก์ตรงช่อง) ===================== */
@@ -9933,11 +9961,11 @@ function renderClaimsSheetHistoryLink(){
   }
   // ลิงก์เดียวกันสำหรับทุกคน ข้อมูลทั้งหมดอยู่ที่สเปรดชีทเดียวกัน ต่างกันแค่แท็บ (Sheet) ที่พาไปเปิดตรงตามสิทธิ์การมองเห็นของแต่ละคน — ค้างไว้ถาวรที่ล่างสุดของหน้า กดเข้าไปเช็คได้ตลอด เหมือนลิงก์เช็ค Database
   if(isSuperAdmin()){
-    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วทั้งหมด (แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>${driveLinkHtml}`;
+    wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><button class="btn btn-ghost btn-sm" style="float:right;" onclick="openSheetHistoryManager('claims')">🗂 จัดการ/ลบประวัติ</button><a href="${claimsSheetTabLink(meta.spreadsheetId)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วทั้งหมด (แยกแท็บตามผู้ดูแลแต่ละ Product)</a></p>${driveLinkHtml}`;
     return;
   }
   const gid = meta.tabs ? meta.tabs[myTabTitle] : undefined;
-  wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)}</a></p>${driveLinkHtml}`;
+  wrap.innerHTML = `${heading}<p style="font-size:12.5px;"><button class="btn btn-ghost btn-sm" style="float:right;" onclick="openSheetHistoryManager('claims')">🗂 จัดการ/ลบประวัติ</button><a href="${claimsSheetTabLink(meta.spreadsheetId, gid)}" target="_blank" rel="noopener">📊 เปิดประวัติเคลมที่เสร็จแล้วของ ${escapeHtml(currentSupIdentity)}</a></p>${driveLinkHtml}`;
 }
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
@@ -10212,6 +10240,7 @@ function openClaimDetail(id){
         if(dr.failed.length && !confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ '+driveFailSummary(dr)+'\n\nต้องการลบเฉพาะรายการในแอป (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?')) return;
         // ถ้าเคลมนี้เคยถูกย้ายไป Sheet แล้วแต่ลบจาก Firestore ไม่สำเร็จ (ค้างอยู่) — ลบแถว Sheet ก่อน
         await deleteSheetRowIfTracked(c);
+        await fsDeleteClaimNotice(c.id); // v9.31 — ลบแจ้งเตือนของเคลมนี้ด้วย กันค้าง
         await fsDeleteClaim(c.id); DATA.claims = DATA.claims.filter(x=>x.id!==c.id); $('claim-detail-modal').classList.remove('show'); renderClaimsView(); showToast('✓ ลบแล้ว');
       }
       catch(e){ showToast('⚠ ลบไม่สำเร็จ: '+e.message); }
@@ -11650,7 +11679,7 @@ async function rpSetMultiLinkCell(sheetId, tabGid, rowIndex0, colIndex0, items){
 /* v8.61 — จัดการหัวตารางของแท็บ "ประวัติRP" แบบไดนามิก
    Base 9 คอลัมน์คงที่ (RP_HIST_HEADERS_BASE) + "รูปใบเบิก N" ขยายต่อท้ายได้เรื่อยๆ ตามจำนวนใบเบิกสูงสุดที่เคยมีในแถวเดียว
    คืนค่าจำนวนคอลัมน์ "รูปใบเบิก" ทั้งหมดที่มีอยู่ในหัวตารางหลังเรียกฟังก์ชันนี้ (>= neededWiCount) */
-/* v9.30 — ขยายรูปแบบตาราง (banding / filter / หัวตาราง / ตัวอักษร) ให้คลุมคอลัมน์ "รูปใบเบิก N" ทุกคอลัมน์ที่เพิ่มมา
+/* v9.31 — ขยายรูปแบบตาราง (banding / filter / หัวตาราง / ตัวอักษร) ให้คลุมคอลัมน์ "รูปใบเบิก N" ทุกคอลัมน์ที่เพิ่มมา
    + ให้ช่อง "ผลการประเมิน" ขึ้นบรรทัดใหม่ได้ (หลายหัวข้อ = บรรทัดละหัวข้อ) · เรียกซ้ำได้ ไม่ทำให้ข้อมูลเสีย */
 async function rpExtendHistFormat(sheetId, tabGid, totalCols, token){
   if(tabGid===undefined || !(totalCols>0)) return;
@@ -11663,7 +11692,7 @@ async function rpExtendHistFormat(sheetId, tabGid, totalCols, token){
     const requests = [
       { repeatCell:{ range:rng(0,1,0,totalCols), cell:{ userEnteredFormat:{ backgroundColor:{ red:0.957, green:0.8, blue:0.8 }, textFormat:{ bold:true, foregroundColor:{red:0,green:0,blue:0} }, verticalAlignment:'MIDDLE', horizontalAlignment:'CENTER', wrapStrategy:'WRAP' } }, fields:'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,horizontalAlignment,wrapStrategy)' }},
       { repeatCell:{ range:rng(1,10000,0,totalCols), cell:{ userEnteredFormat:{ textFormat:{ foregroundColor:{red:0,green:0,blue:0} }, verticalAlignment:'MIDDLE' } }, fields:'userEnteredFormat(textFormat.foregroundColor,verticalAlignment)' }},
-      { repeatCell:{ range:rng(1,10000,6,7), cell:{ userEnteredFormat:{ wrapStrategy:'WRAP' } }, fields:'userEnteredFormat.wrapStrategy' }},
+      { repeatCell:{ range:rng(1,10000,3,7), cell:{ userEnteredFormat:{ wrapStrategy:'WRAP' } }, fields:'userEnteredFormat.wrapStrategy' }},
       { setBasicFilter:{ filter:{ range:rng(0,null,0,totalCols) } } },
       band
         ? { updateBanding:{ bandedRange:{ bandedRangeId:band.bandedRangeId, range:rng(1,null,0,totalCols), rowProperties:band.rowProperties }, fields:'range' } }
@@ -11770,7 +11799,7 @@ function rpParseSheetRow(r, rowIndex, isLegacy){
   const isV819 = (r[2]||'').includes(',') || (r[4]||'').includes('\n') || (!(r[4]||'').startsWith('=HYPERLINK') && (r[4]||'').startsWith('http'));
   if(isV819){
     const spoText = r[2]||'';
-    const spoNums = spoText.split(',').map(s=>s.trim()).filter(Boolean);
+    const spoNums = spoText.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
     const wiLinksRaw = r[4]||'';
     const wiLinks = wiLinksRaw.split(/\n|,\s*/).map(s=>s.trim()).filter(s=>s.startsWith('http'));
     const withdrawals = spoNums.map((num,i)=>({ num, driveUrl: wiLinks[i]||'', fileName: num }));
@@ -12583,7 +12612,7 @@ async function certDriveDeleteStrict(fileUrl){
 async function fsDeleteCertificate(cert, opts){
   if(!(opts && opts.skipDrive)) await certDriveDeleteStrict(cert.fileUrl);
   await initFirebase(); const sdk = window._firebaseSdk;
-  await sdk.deleteDoc(sdk.doc(db,'certificates', cert.id));
+  await sdk.deleteDoc(sdk.doc(db,'certificates', cert.id)); dxInvalidate();
   fsWriteLog(`ลบ Certificate (${certTypeLabel(cert.certType)}) ${cert.category}/${cert.model} — ${cert.fileName||''}`);
 }
 // v8.88 — ลบโฟลเดอร์ว่างต่อเนื่องขึ้นไปไม่เกิน maxUp ระดับ
@@ -13098,6 +13127,146 @@ $('mgr-cert-collapse-header').addEventListener('click', ()=>{
   }
 });
 
+
+/* ===================== v9.31 — จัดการประวัติใน Google Sheet (ลบแถว + ไฟล์ใน Drive พร้อมกัน) =====================
+   ใช้กับ: ประวัติเคลมที่จบเคสแล้ว (Sheet "บันทึกเคลม") และอะไหล่ส่งคืนที่รับแล้ว (แท็บ "ประวัติRP")
+   ขั้นตอนต่อ 1 รายการ: อ่านแถว (FORMULA) → ดึงลิงก์ Drive → ลบไฟล์/โฟลเดอร์ → ตรวจแถวเดิมยังตรง → ลบแถว
+   ลบไฟล์ใน Drive ไม่สำเร็จ = ถามก่อนว่าจะลบเฉพาะแถวไหม · ลบ Sheet ตรงๆ แอปไม่รู้ → ใช้ปุ่ม "ตรวจไฟล์ตกค้าง" เก็บกวาด */
+const SHM = { kind:'', sheetId:'', tabs:[], tab:'', recs:[], q:'', busy:false };
+function shUrlIds(cell){
+  const out = [], s = String(cell||''), re = /https?:\/\/(?:drive|docs)\.google\.com[^\s"')]*/g; let m;
+  while((m = re.exec(s))){
+    const u = m[0], f = (u.match(/\/folders\/([A-Za-z0-9_-]+)/)||[])[1];
+    if(f){ out.push({ id:f, folder:true }); continue; }
+    const i = driveFileIdFromUrl(u) || ((u.match(/\/(?:file|document|spreadsheets)\/d\/([A-Za-z0-9_-]+)/)||[])[1]); if(i) out.push({ id:i, folder:false });
+  }
+  return out;
+}
+function shCanUse(kind){ return kind==='rp' ? (isSuperAdmin() || isAdminService()) : claimsSheetLinkVisibleToMe(); }
+async function shApi(path, init){
+  const token = await ensureDriveAccess();
+  const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+path, { ...(init||{}), headers:{ Authorization:'Bearer '+token, ...((init&&init.headers)||{}) } });
+  if(!r.ok) throw new Error(await googleApiErrorMessage(r));
+  return r.json();
+}
+async function shListTabs(kind, sheetId){
+  const d = await shApi(sheetId+'?fields=sheets.properties(sheetId,title)');
+  let tabs = (d.sheets||[]).map(s=>({ title:s.properties.title, gid:s.properties.sheetId }));
+  if(kind==='rp') tabs = tabs.filter(t=>/^ประวัติRP/.test(t.title));
+  else {
+    tabs = tabs.filter(t=>/ - \d{4}$/.test(t.title));
+    if(!isSuperAdmin()){ const mine = sanitizeSheetTabName(currentSupIdentity||'')+' - '; tabs = tabs.filter(t=>t.title.indexOf(mine)===0); }
+  }
+  return tabs.sort((a,b)=>b.title.localeCompare(a.title,'th'));
+}
+// อ่านทั้งแท็บแบบ FORMULA (ได้ลิงก์ HYPERLINK) แล้วจัดกลุ่มเป็น "รายการ" (เคลม 1 รายการ = หลายแถวตามจำนวนอะไหล่)
+async function shLoadTab(kind, sheetId, tab){
+  const d = await shApi(`${sheetId}/values/${encodeURIComponent("'"+tab.title.replace(/'/g,"''")+"'!A:Z")}?valueRenderOption=FORMULA`);
+  const vals = d.values||[]; const recs = [];
+  for(let i=1;i<vals.length;i++){
+    const r = vals[i]||[]; if(!r.some(c=>String(c||'').trim())) continue;
+    const ids = []; r.forEach(c=>shUrlIds(c).forEach(x=>ids.push(x)));
+    if(kind==='claims'){
+      const last = recs[recs.length-1];
+      const same = last && !ids.length && [2,3,4,5,6,7].every(k=>String(r[k]||'')===String(last.row[k]||''));
+      if(same){ last.count++; continue; }
+    }
+    recs.push({ start:i+1, count:1, row:r, ids });
+  }
+  return recs.reverse(); // ใหม่สุดก่อน
+}
+function shRecLabel(kind, rec){
+  const r = rec.row.map(c=>String(c==null?'':c).replace(/^'/,'').replace(/^=HYPERLINK\("[^"]*";"([^"]*)"\)$/i,'$1'));
+  if(kind==='rp') return { head:`${r[1]||r[0]||'-'} · ${r[2]||'-'}`, sub:`ใบเบิก: ${(r[3]||'-').replace(/\n/g,', ')}` };
+  return { head:`${r[1]||r[0]||'-'} · ${r[2]||'-'} · ${r[3]||'-'}`, sub:`${r[4]||''} ${r[5]||''} ${r[6]?'S/N '+r[6]:''} — ${String(r[7]||'').slice(0,60)}${rec.count>1?` (${rec.count} อะไหล่)`:''}` };
+}
+function shRender(){
+  const body = $('shm-body'); if(!body) return;
+  const q = SHM.q.toLowerCase();
+  const list = SHM.recs.filter(rec=>!q || rec.row.join(' ').toLowerCase().indexOf(q)>=0).slice(0,200);
+  body.innerHTML = list.length ? list.map(rec=>{ const L = shRecLabel(SHM.kind, rec); const nf = rec.ids.length;
+    return `<div class="admin-row" style="align-items:flex-start;gap:8px;"><div class="admin-row-main" style="min-width:0;"><div style="font-size:13px;font-weight:600;">${escapeHtml(L.head)}</div><div style="font-size:11.5px;color:var(--text-faint);">${escapeHtml(L.sub)}</div><div style="font-size:11px;color:var(--text-faint);">แถว ${rec.start}${rec.count>1?'–'+(rec.start+rec.count-1):''} · ไฟล์/โฟลเดอร์ใน Drive ${nf}</div></div><button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red);flex-shrink:0;" data-shdel="${rec.start}">🗑 ลบ</button></div>`; }).join('')
+    : '<div style="text-align:center;padding:18px;color:var(--text-faint);font-size:13px;">ไม่มีรายการ</div>';
+  body.querySelectorAll('[data-shdel]').forEach(b=>b.addEventListener('click', ()=>shDeleteRec(+b.getAttribute('data-shdel'))));
+}
+async function shLoadCurrent(){
+  const body = $('shm-body'); if(body) body.innerHTML = '<div style="text-align:center;padding:18px;color:var(--text-faint);font-size:13px;">กำลังอ่านจาก Google Sheet...</div>';
+  try{
+    const tab = SHM.tabs.find(t=>t.title===SHM.tab);
+    SHM.recs = tab ? await shLoadTab(SHM.kind, SHM.sheetId, tab) : [];
+    shRender();
+  }catch(e){ if(body) body.innerHTML = `<div style="color:var(--red);font-size:12.5px;padding:10px;">⚠ อ่าน Sheet ไม่สำเร็จ: ${escapeHtml(e.message)}</div>`; }
+}
+async function shDeleteRec(start){
+  if(SHM.busy) return;
+  const rec = SHM.recs.find(r=>r.start===start), tab = SHM.tabs.find(t=>t.title===SHM.tab); if(!rec||!tab) return;
+  const L = shRecLabel(SHM.kind, rec);
+  if(!confirm(`ลบรายการนี้?\n${L.head}\n${L.sub}\n\n• ไฟล์/โฟลเดอร์ใน Google Drive ${rec.ids.length} รายการ จะถูกลบถาวร\n• แถวใน Google Sheet (${rec.count} แถว) จะถูกลบ\nกู้คืนไม่ได้`)) return;
+  SHM.busy = true; showLoadingOverlay('กำลังลบไฟล์ใน Drive...');
+  try{
+    const files = rec.ids.filter(x=>!x.folder).map(x=>x.id), folders = rec.ids.filter(x=>x.folder).map(x=>x.id);
+    const r1 = await driveDeleteMany(files), r2 = await driveDeleteMany(folders);
+    const failed = [...r1.failed, ...r2.failed];
+    if(failed.length){
+      hideLoadingOverlay();
+      if(!confirm('ลบไฟล์ใน Google Drive ไม่สำเร็จ '+failed.length+' รายการ ('+failed[0].msg+')\n\nต้องการลบเฉพาะแถวใน Sheet (ไฟล์ใน Drive จะยังค้างอยู่) หรือไม่?\nกด "ยกเลิก" = ไม่ลบอะไรเพิ่ม')) { SHM.busy=false; return; }
+      showLoadingOverlay('กำลังลบแถวใน Sheet...');
+    } else updateLoadingOverlayText('กำลังลบแถวใน Sheet...');
+    // ตรวจแถวเดิมยังตรงก่อนลบ (กันตำแหน่งเลื่อน)
+    const chk = await shApi(`${SHM.sheetId}/values/${encodeURIComponent("'"+tab.title.replace(/'/g,"''")+"'!A"+rec.start+":Z"+rec.start)}?valueRenderOption=FORMULA`);
+    const cur = (chk.values&&chk.values[0])||[];
+    if(JSON.stringify(cur.slice(0,8)) !== JSON.stringify(rec.row.slice(0,8))) throw new Error('แถวใน Sheet เปลี่ยนไปแล้ว (มีการแก้/ลบแถวอื่น) — เปิดรายการใหม่แล้วลองอีกครั้ง');
+    await _deleteSheetRowByGid(await ensureDriveAccess(), SHM.sheetId, tab.gid, rec.start, rec.count);
+    try{ _sheetDoneCountCache = {}; }catch(e){}
+    try{ dxInvalidate(); }catch(e){}
+    fsWriteLog(`ลบประวัติใน Sheet "${tab.title}" แถว ${rec.start} (${L.head}) + ไฟล์ Drive ${rec.ids.length} รายการ`);
+    hideLoadingOverlay(); showToast('✓ ลบรายการและไฟล์ใน Drive แล้ว');
+    SHM.busy = false; await shLoadCurrent();
+  }catch(e){ hideLoadingOverlay(); SHM.busy = false; showToast('⚠ ลบไม่สำเร็จ: '+e.message); await shLoadCurrent(); }
+}
+async function openSheetHistoryManager(kind){
+  if(!shCanUse(kind)){ showToast('⚠ ไม่มีสิทธิ์ใช้ฟังก์ชันนี้'); return; }
+  SHM.kind = kind; SHM.q = ''; SHM.recs = []; SHM.busy = false;
+  let ov = $('shm-modal'); if(ov) ov.remove();
+  ov = document.createElement('div'); ov.className = 'modal-overlay'; ov.id = 'shm-modal';
+  ov.innerHTML = `<div class="modal" style="max-width:640px;max-height:88vh;overflow:auto;"><button class="modal-close" id="shm-close" aria-label="ปิด">✕</button>
+    <h2 style="margin-top:0;">🗂 จัดการประวัติ${kind==='rp'?'ส่งคืนอะไหล่':'เคลม'}ใน Google Sheet</h2>
+    <p class="panel-sub">ลบรายการพร้อมไฟล์ใน Google Drive ในครั้งเดียว · ลบแถวใน Sheet โดยตรงจะไม่ลบไฟล์ใน Drive</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;"><select id="shm-tab" style="flex:1;min-width:160px;"></select><input id="shm-q" type="text" placeholder="ค้นหา ชื่อ / สถานที่ / รุ่น / S/N / เลขใบเบิก" style="flex:2;min-width:180px;"></div>
+    <div id="shm-body"></div></div>`;
+  document.body.appendChild(ov); ov.classList.add('show');
+  $('shm-close').addEventListener('click', ()=>ov.remove());
+  $('shm-q').addEventListener('input', e=>{ SHM.q = e.target.value; shRender(); });
+  $('shm-body').innerHTML = '<div style="text-align:center;padding:18px;color:var(--text-faint);font-size:13px;">กำลังเตรียม Google Sheet...</div>';
+  try{
+    SHM.sheetId = kind==='rp' ? await ensureReturnPartsSheet() : await ensureClaimsLogSpreadsheet();
+    SHM.tabs = await shListTabs(kind, SHM.sheetId);
+    if(!SHM.tabs.length){ $('shm-body').innerHTML = '<div style="text-align:center;padding:18px;color:var(--text-faint);font-size:13px;">ยังไม่มีประวัติใน Sheet</div>'; return; }
+    const sel = $('shm-tab'); sel.innerHTML = SHM.tabs.map(t=>`<option value="${escapeHtml(t.title)}">${escapeHtml(t.title)}</option>`).join('');
+    SHM.tab = SHM.tabs[0].title; sel.addEventListener('change', ()=>{ SHM.tab = sel.value; shLoadCurrent(); });
+    await shLoadCurrent();
+  }catch(e){ $('shm-body').innerHTML = `<div style="color:var(--red);font-size:12.5px;padding:10px;">⚠ ${escapeHtml(e.message)}</div>`; }
+}
+// Dashboard: ล้างแคชหลังมีการลบข้อมูล ให้เปิดแท็บครั้งต่อไปโหลดใหม่
+function dxInvalidate(){ try{ DX.rps = null; DX.rh = undefined; DX.logs = null; _cdState.loaded = false; _cdState.loading = false; }catch(e){} }
+// อ่านลิงก์ Drive ที่อ้างอิงอยู่ใน Google Sheet (เคลมที่จบเคส + ประวัติ RP) — ใช้ให้ตัวตรวจไฟล์ตกค้างไม่ลบไฟล์ที่ยังมีลิงก์ใน Sheet
+async function orphanGatherSheetRefs(setStatus){
+  const refs = new Set();
+  const ids = [];
+  try{ const meta = DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId; ids.push({ kind:'claims', id: meta || await ensureClaimsLogSpreadsheet() }); }catch(e){ throw new Error('Sheet เคลม: '+e.message); }
+  try{ ids.push({ kind:'rp', id: await ensureReturnPartsSheet() }); }catch(e){ throw new Error('Sheet ส่งคืนอะไหล่: '+e.message); }
+  for(const s of ids){
+    setStatus('อ่านลิงก์ใน Google Sheet ('+(s.kind==='rp'?'ส่งคืนอะไหล่':'เคลม')+') ...');
+    const d = await shApi(s.id+'?fields=sheets.properties.title');
+    for(const sh of (d.sheets||[])){
+      const t = sh.properties.title;
+      const v = await shApi(`${s.id}/values/${encodeURIComponent("'"+t.replace(/'/g,"''")+"'!A:Z")}?valueRenderOption=FORMULA`);
+      (v.values||[]).forEach(row=>row.forEach(c=>shUrlIds(c).forEach(x=>refs.add(x.id))));
+    }
+  }
+  return refs;
+}
+
 /* ===================== v9.24 — Dashboard เพิ่มเติม: เคลม / การใช้งาน Troubleshoot / ผู้ใช้งาน ===================== */
 const DX = { logOpen:false, logs:null, logsErr:'', access:null, accessErr:'', rps:null, rh:undefined, rhErr:'', loaded:{} };
 const DX_DAY = 86400000;
@@ -13193,7 +13362,7 @@ async function dxRenderReturn(force){
   }
   const pend = DX.rps, hist = DX.rh;
   const nP = pend ? pend.length : null, nR = hist ? hist.length : null;
-  const nSpo = a=>a.reduce((n,r)=>n+String(r.spo||'').split(',').map(x=>x.trim()).filter(Boolean).length,0);
+  const nSpo = a=>a.reduce((n,r)=>n+String(r.spo||'').split(/[,\n]/).map(x=>x.trim()).filter(Boolean).length,0);
   const dash = '<span style="color:var(--text-faint);">—</span>';
   let h = dxKpis([
     dxKpi('ส่งทั้งหมด', (nP!==null&&nR!==null)?(nP+nR):dash, 'ครั้งที่ส่งคืน (รับแล้ว + รอรับ)'),
@@ -13524,7 +13693,8 @@ async function renderAdminServiceView(){
     try{
       const rpId = await ensureReturnPartsSheet();
       const lnk = $('admin-rp-sheet-link');
-      if(lnk) lnk.href = `https://docs.google.com/spreadsheets/d/${rpId}/edit`;
+      if(lnk){ lnk.href = `https://docs.google.com/spreadsheets/d/${rpId}/edit`;
+        if(!$('admin-rp-shm-btn')){ const b = document.createElement('button'); b.id='admin-rp-shm-btn'; b.className='btn btn-ghost btn-sm'; b.style.marginLeft='8px'; b.textContent='🗂 จัดการ/ลบประวัติ'; b.addEventListener('click', ()=>openSheetHistoryManager('rp')); lnk.insertAdjacentElement('afterend', b); } }
     }catch(_){}
 
     // วาง search listener (ครั้งแรกที่โหลด)
@@ -13607,7 +13777,7 @@ async function rpConfirmReceive(d, evalResults, score){
   const receiverName = myClaimantName();
 
   const withdrawals = d.withdrawals||[];
-  const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join(', ') || '-';
+  const spoNums = withdrawals.map(w=>w.num||'').filter(Boolean).join('\n') || '-';
   const evCell = safeHttpUrl(d.evidenceUrl) ? `=HYPERLINK("${safeHttpUrl(d.evidenceUrl).replace(/"/g,'%22')}";"หลักฐาน")` : '';
   const evalStr = evalResults.length>0 ? evalResults.join('\n') : 'เรียบร้อยสมบูรณ์';
   const scoreVal = (typeof score === 'number') ? score : 5;
@@ -13641,7 +13811,7 @@ async function rpConfirmReceive(d, evalResults, score){
 
   // 3) ลบรายการใน Firestore ก่อน (v8.90 — เดิมลบไฟล์ก่อน ถ้าลบรายการพลาดจะเหลือรายการ pending ที่ไฟล์หายไปแล้ว) แล้วค่อยลบไฟล์ใน Drive
   await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
-  fsBumpRpActivity();
+  fsBumpRpActivity(); dxInvalidate();
 
   // 4) ลบ Drive files ทีละไฟล์
   const fileIds = d.driveFileIds || [];
@@ -13696,7 +13866,7 @@ async function rpConfirmDelete(d, containerId){
     }
 
     // 3) แจ้ง realtime listeners
-    fsBumpRpActivity();
+    fsBumpRpActivity(); dxInvalidate();
     fsWriteLog(`ลบรายการ RP ของ ${d.senderName||d.senderEmail}`);
 
     hideLoadingOverlay();
