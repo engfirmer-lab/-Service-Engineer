@@ -11906,7 +11906,7 @@ $('backup-drive-now-btn').addEventListener('click', ()=>handleBackupToDriveNow('
    ข้อมูลข้อสอบ ผลสอบ เฉลย และไฟล์ Cer เก็บใน Google Sheet + Google Drive ผ่าน Apps Script (Code.gs) — ไม่เขียน Firestore
    ยกเว้นเอกสาร "certificates" ใบละ 1 เอกสารเมื่อมีผู้สอบผ่าน เพื่อให้ขึ้นในแท็บ Certificate เดิมของ F1
    หน้า Engineer = โหมด 'exam' (#view-exam) · หน้า Sup/Manager = โหมด 'examadmin' (#view-examadmin) */
-const EXAM_API_URL = ""; // ← วาง URL Web App ของ Apps Script (ลงท้าย /exec) หลัง deploy — ดู "คู่มือติดตั้ง.txt"
+const EXAM_API_URL = "https://script.google.com/macros/s/AKfycbyU6jERNLMYvfr2lywCfXRk3YwE02QWhm8DZ6IjeyvGgIST8Ls_qpcFvpgfGQJ0p-J25g/exec"; // ← วาง URL Web App ของ Apps Script (ลงท้าย /exec) หลัง deploy — ดู "คู่มือติดตั้ง.txt"
 const EX_LS_PREFIX = 'f1exam:';
 let _exOffset = 0;      // เวลาเซิร์ฟเวอร์ − เวลาเครื่อง (ใช้จับเวลาโดยไม่ขึ้นกับนาฬิกาเครื่องผู้สอบ)
 let _exToken = '';      // โทเค็นล่าสุด (ใช้ตอนส่ง beacon ก่อนปิดหน้า)
