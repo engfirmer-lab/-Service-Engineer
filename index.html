@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.36
-  อัปเดตล่าสุด   : 11 ตุลาคม 2569 21:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.37
+  อัปเดตล่าสุด   : 11 ตุลาคม 2569 23:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.36</title>
+<title>F1 Service — v9.37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -638,6 +638,74 @@
   .rp-spo-num{font-family:'IBM Plex Mono';font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
   .rp-detail-actions{display:flex;gap:8px;margin-top:12px;}
   .rp-detail-actions .btn{flex:1;justify-content:center;}
+/* ===== v9.37 ระบบสอบภายใน (.ex-*) ===== */
+.ex-note{background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;margin:8px 0;line-height:1.5;}
+.ex-note.ex-bad,.ex-bad{color:var(--red);border-color:var(--red);}
+.ex-warn{color:var(--amber);}
+.ex-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:10px 0;}
+.ex-card-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-weight:700;margin-bottom:6px;}
+.ex-meta{font-size:12px;color:var(--text-dim);margin:3px 0;line-height:1.5;}
+.ex-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center;}
+.ex-hint{font-size:12px;color:var(--text-faint);margin:4px 0;}
+.ex-chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text-dim);}
+.ex-chip.ok{color:var(--green);border-color:var(--green);}
+.ex-chip.bad{color:var(--red);border-color:var(--red);}
+.ex-chip.warn{color:var(--amber);border-color:var(--amber);}
+.ex-chip.acc{color:var(--blue);border-color:var(--blue);}
+.ex-protect{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;position:relative;}
+.ex-protect input[type=text],.ex-protect textarea{-webkit-user-select:text;user-select:text;}
+.ex-wm{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden;}
+.ex-attempt{position:relative;}
+.ex-bar{position:sticky;top:60px;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 12px;margin-bottom:10px;}
+.ex-timer{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:18px;}
+.ex-timer.ex-low{color:var(--amber);}
+.ex-timer.ex-crit{color:var(--red);animation:exblink 1s steps(2) infinite;}
+@keyframes exblink{50%{opacity:.45;}}
+.ex-save{font-size:11px;color:var(--text-faint);}
+.ex-save.ex-warn{color:var(--amber);}
+.ex-q{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;z-index:1;}
+.ex-qno{font-size:12px;color:var(--text-faint);margin-bottom:4px;}
+.ex-qtext{font-size:16px;font-weight:600;line-height:1.55;margin-bottom:10px;white-space:pre-wrap;}
+.ex-opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:6px 0;cursor:pointer;background:var(--panel);}
+.ex-opt:hover{border-color:var(--amber);}
+.ex-opt input{margin-top:3px;flex-shrink:0;}
+.ex-opt small{display:block;color:var(--text-faint);font-size:11px;}
+.ex-cimg,.ex-qimg{display:block;max-width:100%;max-height:320px;border-radius:6px;margin-top:6px;}
+.ex-thumb{max-height:90px;}
+.ex-match{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;}
+.ex-match-l{flex:1 1 140px;font-weight:600;}
+.ex-match select{flex:1 1 140px;}
+.ex-order{display:flex;flex-direction:column;gap:6px;}
+.ex-mv{display:inline-flex;gap:4px;margin-left:auto;}
+.ex-short{width:100%;}
+.ex-nav{display:flex;justify-content:space-between;gap:8px;margin-top:12px;}
+.ex-dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;}
+.ex-dot{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:var(--panel-alt);color:var(--text);cursor:pointer;font-size:12px;}
+.ex-dot.done{background:var(--green);color:#fff;border-color:var(--green);}
+.ex-dot.cur{outline:2px solid var(--amber);}
+.ex-result{text-align:center;padding:24px 12px;}
+.ex-big{font-size:42px;margin-bottom:6px;}
+.ex-score{font-size:34px;font-weight:700;}
+.ex-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ex-form{display:flex;flex-direction:column;gap:8px;}
+.ex-form label{font-size:12px;color:var(--text-dim);display:block;margin-bottom:2px;}
+.ex-form input,.ex-form select,.ex-form textarea{width:100%;box-sizing:border-box;}
+.ex-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0;}
+.ex-qlist{display:flex;flex-direction:column;gap:6px;}
+.ex-qitem{display:flex;gap:8px;align-items:center;border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--panel);}
+.ex-qn{font-weight:700;min-width:26px;color:var(--text-faint);}
+.ex-qt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.ex-chrow{display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap;}
+.ex-block{border:1px dashed var(--border);border-radius:8px;padding:10px;margin:8px 0;}
+.ex-ellist{max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px 8px;}
+.ex-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:8px 0;}
+.ex-stat{background:var(--panel-alt);border-radius:8px;padding:8px;text-align:center;font-size:12px;}
+.ex-stat b{display:block;font-size:20px;}
+.ex-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.ex-table th,.ex-table td{border:1px solid var(--border);padding:5px 8px;text-align:left;}
+.ex-table th{background:var(--panel-alt);}
+@media(max-width:560px){.ex-grid2{grid-template-columns:1fr;}.ex-bar{top:54px;}}
+@media print{#view-exam{display:none !important;}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script id="pdfjs-embedded">
@@ -1883,6 +1951,9 @@ setTimeout(function(){
     </div>
   </div>
 
+  <div id="view-exam" style="display:none;"><div id="ex-root"></div></div>
+  <div id="view-examadmin" style="display:none;"><div id="exa-root"></div></div>
+
   <!-- ===== หน้า Admin Service: ตรวจรับอะไหล่ ===== -->
   <div id="view-admin-service" style="display:none;">
     <div class="panel-block">
@@ -2094,8 +2165,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.36";
-const APP_UPDATED_AT = "11 ตุลาคม 2569 21:20 น. เวลาไทย";
+const APP_VERSION = "9.37";
+const APP_UPDATED_AT = "11 ตุลาคม 2569 23:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6351,6 +6422,7 @@ $('roster-refresh-btn').addEventListener('click', loadAndRenderRoster);
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 function requestModeSwitch(mode){
   if(mode==='eng'){ switchMode(mode); return; }
+  if(mode==='exam'){ if(!isApproved()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้'); return; } switchMode(mode); return; }
   if(mode==='orgchart'){ switchMode(mode); return; } // ผังองค์กร: ทุกคนที่ isApproved() ดูได้ (ปุ่มถูกซ่อนไว้แล้วถ้าไม่ผ่าน ไม่ต้องเช็ค Editor)
   if(mode==='roster'){
     if(!isApproved() && !isManager()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้'); return; } // ป้องกันซ้อน ไม่พึ่งแค่ซ่อนปุ่ม
@@ -6454,6 +6526,7 @@ function switchMode(mode){
   $('view-admin-service').style.display = mode==='admin-service' ? 'block':'none';
   $('view-orgchart').style.display      = mode==='orgchart'      ? 'block':'none';
   $('view-roster').style.display        = mode==='roster'        ? 'block':'none';
+  { const _vx=$('view-exam'); if(_vx) _vx.style.display = mode==='exam' ? 'block':'none'; const _va=$('view-examadmin'); if(_va) _va.style.display = mode==='examadmin' ? 'block':'none'; }
   $('mode-eng').classList.toggle('active',           mode==='eng');
   $('mode-sup').classList.toggle('active',           mode==='sup');
   $('mode-settings').classList.toggle('active',      mode==='settings');
@@ -6471,6 +6544,8 @@ function switchMode(mode){
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
   if(mode==='admin-service'){ renderAdminServiceView(); }
   if(mode==='orgchart'){ loadAndRenderOrgChart(); }
+  if(mode==='exam'){ try{ examEnter(); }catch(e){ console.error(e); } }
+  if(mode==='examadmin'){ try{ examAdminEnter(); }catch(e){ console.error(e); } }
   if(mode==='roster'){ if(!isApproved() && !isManager()){ switchMode('eng'); return; } loadAndRenderRoster(); } // กันเผื่อเรียก switchMode('roster') ตรงๆ ข้าม requestModeSwitch
   try{ navxRender(); }catch(e){}
 }
@@ -6516,6 +6591,8 @@ const NAVX = [
     { t:'🎓 Certificate', subs:[
       { t:'ของฉัน',          m:'eng', tab:'cert', k:'f_cert', cap:'es' },
       { t:'ผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
+    { t:'📝 ข้อสอบ', subs:[
+      { t:'ข้อสอบของฉัน', m:'exam', k:'f_exam', cap:'es' } ] },
     { t:'👥 ทีมงาน', subs:[
       { t:'ผังองค์กร', m:'orgchart', k:'f_org', cap:'es' },
       { t:'รายชื่อ',    m:'roster', k:'f_roster', cap:'es' } ] }
@@ -6524,7 +6601,8 @@ const NAVX = [
     { t:'🩺 จัดการ Error',          m:'sup', tab:'trbl',   k:'mg_err',    cap:'s' },
     { t:'📁 จัดการเอกสาร',         m:'sup', tab:'docs',   k:'mg_docs',   cap:'s' },
     { t:'🔧 สรุปเคลมอะไหล่/ปัญหา', m:'sup', tab:'claims', k:'mg_claims', cap:'s', badge:'claims-tab-badge' },
-    { t:'📦 ตรวจรับอะไหล่',        m:'admin-service', k:'recv_main', cap:'sa' }
+    { t:'📦 ตรวจรับอะไหล่',        m:'admin-service', k:'recv_main', cap:'sa' },
+    { t:'📝 จัดการข้อสอบ',         m:'examadmin', k:'mg_exam', cap:'s' }
   ]},
   { id:'dash', label:'📊 Dashboard', lvl:'editor', items:[
     { t:'ภาพรวม',        m:'mgr', mtab:'summary', k:'d_sum',     cap:'s' },
@@ -11823,6 +11901,868 @@ $('backup-json-btn').addEventListener('click', ()=>handleBackupJson('backup-stat
 $('backup-excel-btn').addEventListener('click', ()=>handleBackupExcel('backup-status'));
 $('backup-drive-now-btn').addEventListener('click', ()=>handleBackupToDriveNow('backup-status'));
 
+/* ===================== v9.37 ระบบสอบภายใน ===================== */
+/* ===================== v9.37 — ระบบสอบภายใน (ข้อสอบ / รอบสอบ / ใบ Cer) =====================
+   ข้อมูลข้อสอบ ผลสอบ เฉลย และไฟล์ Cer เก็บใน Google Sheet + Google Drive ผ่าน Apps Script (Code.gs) — ไม่เขียน Firestore
+   ยกเว้นเอกสาร "certificates" ใบละ 1 เอกสารเมื่อมีผู้สอบผ่าน เพื่อให้ขึ้นในแท็บ Certificate เดิมของ F1
+   หน้า Engineer = โหมด 'exam' (#view-exam) · หน้า Sup/Manager = โหมด 'examadmin' (#view-examadmin) */
+const EXAM_API_URL = ""; // ← วาง URL Web App ของ Apps Script (ลงท้าย /exec) หลัง deploy — ดู "คู่มือติดตั้ง.txt"
+const EX_LS_PREFIX = 'f1exam:';
+let _exOffset = 0;      // เวลาเซิร์ฟเวอร์ − เวลาเครื่อง (ใช้จับเวลาโดยไม่ขึ้นกับนาฬิกาเครื่องผู้สอบ)
+let _exToken = '';      // โทเค็นล่าสุด (ใช้ตอนส่ง beacon ก่อนปิดหน้า)
+function exNow(){ return Date.now() + _exOffset; }
+function exH(s){ return escapeHtml(s); }
+function exLines(s){ return exH(s).replace(/\n/g,'<br>'); }
+function exPad(n){ return String(n).padStart(2,'0'); }
+function exFmtDT(ms){
+  if(!ms) return '-';
+  try{ return new Date(ms).toLocaleString('th-TH',{ timeZone:'Asia/Bangkok', day:'numeric', month:'short', year:'2-digit', hour:'2-digit', minute:'2-digit' }); }catch(e){ return String(ms); }
+}
+function exToInput(ms){ const d = new Date(ms); return d.getFullYear()+'-'+exPad(d.getMonth()+1)+'-'+exPad(d.getDate())+'T'+exPad(d.getHours())+':'+exPad(d.getMinutes()); }
+function exFromInput(v){ const t = v ? new Date(v).getTime() : 0; return isFinite(t) ? t : 0; }
+function exImg(url, sz){ const id = driveFileIdFromUrl(url); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=${sz||'w1000'}` : safeHttpUrl(url); }
+function exChip(text, cls){ return `<span class="ex-chip ${cls||''}">${exH(text)}</span>`; }
+
+async function examApi(action, payload){
+  if(!EXAM_API_URL) throw new Error('ยังไม่ได้ตั้งค่า EXAM_API_URL ใน index.html (ดูคู่มือติดตั้ง)');
+  await initFirebase();
+  const u = auth && auth.currentUser;
+  if(!u) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+  const idToken = await u.getIdToken();
+  _exToken = idToken;
+  const t0 = Date.now();
+  let res;
+  try{ res = await fetch(EXAM_API_URL, { method:'POST', body: JSON.stringify(Object.assign({ action, idToken }, payload||{})) }); }
+  catch(e){ const er = new Error('เชื่อมต่อระบบสอบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต'); er.network = true; throw er; }
+  let j;
+  try{ j = await res.json(); }
+  catch(e){ const er = new Error('ระบบสอบตอบกลับไม่ถูกต้อง (ตรวจว่า deploy Apps Script เป็น Anyone แล้ว)'); er.network = true; throw er; }
+  if(j && j.serverNow) _exOffset = j.serverNow - (t0 + Date.now())/2;
+  if(!j || !j.ok) throw new Error((j && j.error) || 'ระบบสอบขัดข้อง');
+  return j.data;
+}
+
+/* ---------- เขียนเอกสาร certificates (รูปแบบเดียวกับ fsUploadCertificate + field ของระบบสอบ) ---------- */
+async function examWriteCertDoc(c, asSelf){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const owner = asSelf ? myUserEmail : String(c.email).toLowerCase();
+  const cid = certDocId(owner, 'internal', c.category, c.model) + '__exam_' + c.certNo;
+  const payload = {
+    ownerEmail: owner, ownerName: c.ownerFolderName || c.name, role: 'engineer', certType: 'internal', category: c.category, model: c.model,
+    fileUrl: c.pdfUrl, fileName: c.fileName, uploadedAt: c.issuedAt, score: null, status: 'reviewed', reviewedBy: 'ระบบสอบ', reviewedAt: c.issuedAt,
+    reviewNote: 'ออกโดยระบบสอบ ' + c.certNo,
+    source: 'exam', examCertNo: c.certNo, examSetId: c.setId, examLevel: c.level, examVersion: c.version, examScore: c.score
+  };
+  await sdk.setDoc(sdk.doc(db,'certificates', cid), payload);
+}
+let _exCertSyncing = false;
+async function examSyncMyCerts(certs){ // ใบของตัวเองที่ยังไม่ถูกเขียนเข้าแท็บ Certificate → เขียนให้ (ทางสำรองถ้า Sup เขียนแทนไม่ได้)
+  if(_exCertSyncing) return; _exCertSyncing = true;
+  try{
+    for(const c of (certs||[])){
+      if(c.fsWritten || String(c.email).toLowerCase() !== myUserEmail) continue;
+      try{ await examWriteCertDoc(c, true); await examApi('markCertWritten', { certNo:c.certNo }); c.fsWritten = true; }
+      catch(e){ console.warn('เขียนใบ Cer เข้าแท็บ Certificate ไม่สำเร็จ:', e.message); break; }
+    }
+  } finally { _exCertSyncing = false; }
+}
+
+/* =====================================================================
+   ฝั่ง Engineer — ทำข้อสอบ
+   ===================================================================== */
+const EX = { data:null, cur:null, tick:0, token:0 };
+
+async function examEnter(){
+  if(EX.cur && EX.cur.active){ examRenderAttempt(); return; }
+  await examLoadHome(true);
+}
+async function examLoadHome(autoResume){
+  const root = $('ex-root');
+  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดข้อสอบของคุณ...</div>';
+  try{
+    const d = await examApi('myExams');
+    EX.data = d;
+    if(autoResume){
+      const r = d.items.find(i=>i.inProgressAttemptId);
+      if(r){ await examResume(r.inProgressAttemptId); return; }
+    }
+    examRenderHome();
+    examSyncMyCerts(d.certs);
+  }catch(e){
+    root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="reload">ลองใหม่</button></div>`;
+  }
+}
+function examStatusChip(i){
+  if(i.inProgressAttemptId) return exChip('กำลังสอบอยู่','warn');
+  if(i.passed) return exChip('ผ่านแล้ว','ok');
+  if(i.needsRetake) return exChip('ต้องสอบใหม่','warn');
+  if(i.locked) return exChip('ล็อก','');
+  if(!i.published) return exChip('ยังไม่เผยแพร่','');
+  if(i.isOpen) return exChip('เปิดสอบ','acc');
+  return exChip(exNow() < i.openAt ? 'ยังไม่เปิด' : 'ปิดแล้ว','');
+}
+function examRenderHome(){
+  const d = EX.data, root = $('ex-root');
+  let html = '';
+  if(!d.items.length) html += '<div class="ex-note">ยังไม่มีรอบสอบที่คุณมีสิทธิ์เข้าสอบ</div>';
+  const groups = {};
+  d.items.forEach(i=>{ const k = i.category+' › '+i.model; (groups[k] = groups[k] || []).push(i); });
+  Object.keys(groups).forEach(k=>{
+    html += `<div class="panel-block"><h2>${exH(k)}</h2>`;
+    groups[k].sort((a,b)=>a.level-b.level || b.openAt-a.openAt).forEach(i=>{
+      const last = i.attempts[0];
+      let action = '';
+      if(i.inProgressAttemptId) action = `<button class="btn btn-primary btn-sm" data-ex="resume" data-id="${exH(i.inProgressAttemptId)}">▶ ทำต่อ</button>`;
+      else if(i.passed) action = '';
+      else if(i.locked) action = '<span class="ex-hint">ต้องสอบผ่าน Level ก่อนหน้าก่อน</span>';
+      else if(!i.published) action = '<span class="ex-hint">Sup ยังไม่ได้เผยแพร่ข้อสอบชุดนี้</span>';
+      else if(!i.isOpen) action = `<span class="ex-hint">${exNow() < i.openAt ? 'ยังไม่ถึงเวลาเปิดรอบ' : 'รอบสอบนี้ปิดแล้ว'}</span>`;
+      else action = `<button class="btn btn-primary btn-sm" data-ex="start" data-id="${exH(i.roundId)}">${i.attempts.length ? '🔁 สอบใหม่' : '▶ เริ่มสอบ'}</button>`;
+      html += `<div class="ex-card">
+        <div class="ex-card-h"><div><b>Level ${i.level}</b> · ${exH(i.title)}</div>${examStatusChip(i)}</div>
+        <div class="ex-meta">รอบ: ${exH(i.name)} · เปิด ${exFmtDT(i.openAt)} ถึง ${exFmtDT(i.closeAt)}<br>
+          ${i.durationMin>0 ? 'เวลาสอบ <b>'+i.durationMin+' นาที</b>' : 'ไม่จำกัดเวลา'} · เกณฑ์ผ่าน <b>${i.passPercent}%</b></div>
+        ${last ? `<div class="ex-meta">ครั้งล่าสุด: <b>${last.scorePct}%</b> ${last.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad')} · สอบมาแล้ว ${i.attempts.length} ครั้ง</div>` : ''}
+        ${i.needsRetake ? '<div class="ex-meta ex-warn">ข้อสอบชุดนี้มีการแก้ไขสาระสำคัญ ผลที่ผ่านก่อนหน้าต้องสอบใหม่</div>' : ''}
+        <div class="ex-act">${action}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  if(d.certs && d.certs.length){
+    html += '<div class="panel-block"><h2>🎓 ใบ Cer ที่ได้รับ</h2>' + d.certs.map(c=>`<div class="ex-card"><div class="ex-card-h"><div><b>${exH(c.course||'')}</b> · Level ${c.level}</div>${exChip(c.certNo,'acc')}</div>
+      <div class="ex-meta">ออกเมื่อ ${exFmtDT(c.issuedAt)} · คะแนน ${c.score}%</div>
+      <div class="ex-act">${safeHttpUrl(c.pdfUrl) ? `<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${exH(safeHttpUrl(c.pdfUrl))}">📄 เปิด PDF</a>` : ''}</div></div>`).join('') + '</div>';
+  }
+  html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงเฉพาะคะแนนและผ่าน/ไม่ผ่าน · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
+  root.innerHTML = html;
+}
+
+async function examStart(roundId){
+  const it = EX.data && EX.data.items.find(i=>i.roundId===roundId);
+  if(!it) return;
+  const msg = `เริ่มสอบ "${it.title}" (Level ${it.level})?\n` +
+    (it.durationMin>0 ? `เวลาสอบ ${it.durationMin} นาที เริ่มนับทันที และไม่หยุดเวลา แม้จะรีเฟรชหรือปิดแอป\n` : 'ไม่จำกัดเวลา\n') +
+    `เกณฑ์ผ่าน ${it.passPercent}%`;
+  if(!confirm(msg)) return;
+  showLoadingOverlay('กำลังเริ่มการสอบ...');
+  try{
+    const r = await examApi('start', { roundId });
+    hideLoadingOverlay();
+    examOpenAttempt(r.payload, it);
+  }catch(e){ hideLoadingOverlay(); alert('เริ่มสอบไม่ได้: '+e.message); }
+}
+async function examResume(attemptId){
+  showLoadingOverlay('กำลังเปิดข้อสอบที่ค้างอยู่...');
+  try{
+    const r = await examApi('getAttempt', { attemptId });
+    hideLoadingOverlay();
+    if(r.finished){ examRenderResult(r.result); return; }
+    const it = EX.data && EX.data.items.find(i=>i.roundId===r.payload.roundId);
+    examOpenAttempt(r.payload, it);
+  }catch(e){ hideLoadingOverlay(); $('ex-root').innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="reload">ลองใหม่</button></div>`; }
+}
+function examLocalLoad(id){ try{ return JSON.parse(localStorage.getItem(EX_LS_PREFIX+id)||'null'); }catch(e){ return null; } }
+function examLocalSave(){
+  const c = EX.cur; if(!c) return;
+  try{ localStorage.setItem(EX_LS_PREFIX+c.p.attemptId, JSON.stringify({ ts:Date.now(), idx:c.idx, answers:c.answers })); }catch(e){}
+}
+function examLocalClear(id){ try{ localStorage.removeItem(EX_LS_PREFIX+id); }catch(e){} }
+
+function examOpenAttempt(p, item){
+  const local = examLocalLoad(p.attemptId);
+  let answers = Object.assign({}, p.answers || {});
+  let dirty = false;
+  if(local && local.answers && local.ts > (p.lastSyncAt || 0)){ answers = Object.assign(answers, local.answers); dirty = true; }
+  EX.cur = {
+    active:true, p, answers, idx: Math.min((local && local.idx) || 0, Math.max(0, p.questions.length-1)), dirty, syncing:false, submitting:false,
+    lastSyncAt: p.lastSyncAt || Date.now(), syncEvery: 300000 + Math.floor(Math.random()*60000), // ซิงก์ทุก ~5 นาที (สุ่มเล็กน้อยกันชนกัน)
+    title: item ? item.title : 'ข้อสอบ', level: item ? item.level : '', offline:false
+  };
+  if(EX.tick) clearInterval(EX.tick);
+  EX.tick = setInterval(examTick, 1000);
+  examRenderAttempt();
+}
+function exAnswered(q, a){
+  if(a === undefined || a === null) return false;
+  if(q.type === 'multi') return Array.isArray(a) && a.length > 0;
+  if(q.type === 'match') return a && typeof a === 'object' && q.left.every(l=>a[l.id]);
+  if(q.type === 'order') return Array.isArray(a) && a.length > 0;
+  if(q.type === 'short') return String(a).trim() !== '';
+  return String(a) !== '';
+}
+function examWatermark(){
+  const t = (myClaimantName() + ' · ' + (myUserEmail||'')).replace(/[<>&"']/g,'');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="20" y="120" font-size="15" fill="#888" fill-opacity="0.16" transform="rotate(-22 180 100)" font-family="sans-serif">${t}</text></svg>`;
+  return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+}
+function examRenderAttempt(){
+  const c = EX.cur, root = $('ex-root');
+  root.innerHTML = `<div class="ex-protect" id="ex-attempt">
+    <div class="ex-wm" style="background-image:${examWatermark()}"></div>
+    <div class="ex-bar">
+      <div><b>${exH(c.title)}</b>${c.level ? ' · Level '+exH(c.level) : ''}<div class="ex-hint" id="ex-count"></div></div>
+      <div class="ex-timer" id="ex-timer">--:--</div>
+    </div>
+    <div class="ex-save" id="ex-save"></div>
+    <div class="panel-block" id="ex-q"></div>
+    <div class="ex-nav">
+      <button class="btn btn-ghost" data-ex="prev">◀ ก่อนหน้า</button>
+      <button class="btn btn-ghost" data-ex="next">ถัดไป ▶</button>
+      <button class="btn btn-primary" data-ex="submit">ส่งข้อสอบ</button>
+    </div>
+    <div class="ex-dots" id="ex-dots"></div>
+  </div>`;
+  examRenderQuestion();
+  examTick();
+}
+function examRenderQuestion(){
+  const c = EX.cur; if(!c) return;
+  const q = c.p.questions[c.idx], n = c.p.questions.length, a = c.answers[q.qid];
+  let body = '';
+  if(q.type === 'mcq' || q.type === 'tf'){
+    body = q.choices.map(ch=>`<label class="ex-opt"><input type="radio" name="exq" data-ex="pick" value="${exH(ch.id)}" ${String(a)===String(ch.id)?'checked':''}>
+      <span>${exH(ch.text)}${ch.img ? `<img class="ex-cimg" src="${exH(exImg(ch.img,'w700'))}" alt="" draggable="false">` : ''}</span></label>`).join('');
+  } else if(q.type === 'multi'){
+    const set = Array.isArray(a) ? a : [];
+    body = '<div class="ex-hint">เลือกได้มากกว่า 1 ข้อ</div>' + q.choices.map(ch=>`<label class="ex-opt"><input type="checkbox" data-ex="multi" value="${exH(ch.id)}" ${set.indexOf(ch.id)>=0?'checked':''}>
+      <span>${exH(ch.text)}${ch.img ? `<img class="ex-cimg" src="${exH(exImg(ch.img,'w700'))}" alt="" draggable="false">` : ''}</span></label>`).join('');
+  } else if(q.type === 'match'){
+    const m = (a && typeof a === 'object') ? a : {};
+    body = '<div class="ex-hint">จับคู่ให้ถูกต้อง</div>' + q.left.map(l=>`<div class="ex-match"><div class="ex-match-l">${exH(l.text)}</div>
+      <select data-ex="match" data-left="${exH(l.id)}"><option value="">— เลือก —</option>${q.right.map(r=>`<option value="${exH(r.id)}" ${m[l.id]===r.id?'selected':''}>${exH(r.text)}</option>`).join('')}</select></div>`).join('');
+  } else if(q.type === 'order'){
+    const ids = Array.isArray(a) ? a : q.choices.map(x=>x.id);
+    const byId = {}; q.choices.forEach(x=>{ byId[x.id] = x; });
+    body = `<div class="ex-hint">เรียงลำดับให้ถูกต้องด้วยปุ่ม ▲ ▼ ${Array.isArray(a) ? '' : '(ยังไม่ได้เรียง)'}</div><ol class="ex-order">` + ids.map((id,i)=>`<li><span>${exH((byId[id]||{}).text)}</span>
+      <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="mv" data-dir="-1" data-i="${i}" ${i===0?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="mv" data-dir="1" data-i="${i}" ${i===ids.length-1?'disabled':''}>▼</button></span></li>`).join('') + '</ol>';
+  } else if(q.type === 'short'){
+    body = `<input type="text" class="ex-short" data-ex="short" value="${exH(a||'')}" placeholder="พิมพ์คำตอบ" autocomplete="off" autocapitalize="off">`;
+  }
+  $('ex-q').innerHTML = `<div class="ex-qno">ข้อ ${c.idx+1} / ${n}</div>
+    <div class="ex-qtext">${exLines(q.text)}</div>
+    ${q.imageUrl ? `<img class="ex-qimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false">` : ''}
+    <div class="ex-ans">${body}</div>`;
+  examUpdateChrome();
+}
+function examUpdateChrome(){
+  const c = EX.cur; if(!c) return;
+  const qs = c.p.questions;
+  const done = qs.filter(q=>exAnswered(q, c.answers[q.qid])).length;
+  const cnt = $('ex-count'); if(cnt) cnt.textContent = `ตอบแล้ว ${done}/${qs.length} ข้อ`;
+  const dots = $('ex-dots');
+  if(dots) dots.innerHTML = qs.map((q,i)=>`<button class="ex-dot ${exAnswered(q,c.answers[q.qid])?'done':''} ${i===c.idx?'cur':''}" data-ex="go" data-i="${i}">${i+1}</button>`).join('');
+  const sv = $('ex-save');
+  if(sv){
+    if(c.submitting) sv.textContent = '⏳ กำลังส่งข้อสอบ...';
+    else if(c.offline) sv.textContent = '⚠ ออฟไลน์ — คำตอบบันทึกไว้ในเครื่องแล้ว จะซิงก์เมื่อมีอินเทอร์เน็ต';
+    else sv.textContent = c.dirty ? 'บันทึกในเครื่องแล้ว · ซิงก์ขึ้นระบบอัตโนมัติ' : '✓ ซิงก์ล่าสุดแล้ว';
+    sv.className = 'ex-save' + (c.offline ? ' ex-warn' : '');
+  }
+}
+function examSetAnswer(qid, val){
+  const c = EX.cur; if(!c || c.submitting) return;
+  c.answers[qid] = val; c.dirty = true;
+  examLocalSave();
+  examUpdateChrome();
+}
+function examTick(){
+  const c = EX.cur;
+  if(!c || !c.active){ if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; } return; }
+  const el = $('ex-timer');
+  if(c.p.deadlineAt > 0){
+    const rem = Math.max(0, c.p.deadlineAt - exNow());
+    if(el){
+      const s = Math.ceil(rem/1000), h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+      el.textContent = (h>0 ? h+':'+exPad(m) : exPad(m)) + ':' + exPad(s%60);
+      el.className = 'ex-timer' + (rem <= 60000 ? ' ex-crit' : rem <= 300000 ? ' ex-low' : '');
+    }
+    if(rem <= 0 && !c.submitting){ examSubmit(true); return; }
+  } else if(el){ el.textContent = 'ไม่จำกัดเวลา'; }
+  if(c.dirty && !c.syncing && !c.submitting && Date.now() - c.lastSyncAt >= c.syncEvery) examSync();
+}
+async function examSync(){
+  const c = EX.cur; if(!c || !c.active || c.syncing || c.submitting) return;
+  c.syncing = true;
+  const snap = JSON.stringify(c.answers);
+  try{
+    const r = await examApi('sync', { attemptId:c.p.attemptId, answers:c.answers });
+    c.lastSyncAt = Date.now(); c.offline = false;
+    if(JSON.stringify(c.answers) === snap) c.dirty = false;
+    if(r.status !== 'inprogress' && r.result){ examFinish(r.result); return; }
+  }catch(e){
+    if(e.network) c.offline = true;
+  }finally{ c.syncing = false; examUpdateChrome(); }
+}
+function examBeaconSync(){
+  const c = EX.cur;
+  if(!c || !c.active || !c.dirty || c.submitting || !_exToken || !EXAM_API_URL || !navigator.sendBeacon) return;
+  try{ navigator.sendBeacon(EXAM_API_URL, JSON.stringify({ action:'sync', idToken:_exToken, attemptId:c.p.attemptId, answers:c.answers })); }catch(e){}
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden'){ examLocalSave(); if(EX.cur && EX.cur.dirty){ examSync(); examBeaconSync(); } } });
+window.addEventListener('pagehide', ()=>{ examLocalSave(); examBeaconSync(); });
+window.addEventListener('online', ()=>{ if(EX.cur && EX.cur.active){ EX.cur.offline = false; if(EX.cur.dirty) examSync(); examUpdateChrome(); } });
+
+async function examSubmit(auto){
+  const c = EX.cur; if(!c || !c.active || c.submitting) return;
+  if(!auto){
+    const un = c.p.questions.filter(q=>!exAnswered(q, c.answers[q.qid])).length;
+    if(!confirm(un>0 ? `ยังไม่ได้ตอบ ${un} ข้อ ต้องการส่งข้อสอบเลยหรือไม่?\nส่งแล้วแก้ไขไม่ได้` : 'ส่งข้อสอบ?\nส่งแล้วแก้ไขไม่ได้')) return;
+  }
+  c.submitting = true; examUpdateChrome();
+  try{
+    const r = await examApi('submit', { attemptId:c.p.attemptId, answers:c.answers });
+    examFinish(r);
+  }catch(e){
+    c.submitting = false;
+    if(e.network){
+      c.offline = true; examUpdateChrome();
+      if(auto){ c.submitting = true; setTimeout(()=>{ c.submitting = false; examSubmit(true); }, 10000); showToast('หมดเวลาแล้ว กำลังรอส่งข้อสอบเมื่อมีอินเทอร์เน็ต'); }
+      else alert('ส่งข้อสอบไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่ (คำตอบยังบันทึกอยู่ในเครื่อง)');
+    } else {
+      examUpdateChrome();
+      alert('ส่งข้อสอบไม่สำเร็จ: '+e.message);
+    }
+  }
+}
+function examFinish(result){
+  const c = EX.cur;
+  if(c){ c.active = false; examLocalClear(c.p.attemptId); }
+  if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
+  examRenderResult(result, c ? c.p.roundId : '');
+}
+function examRenderResult(r, roundId){
+  const root = $('ex-root');
+  const rid = roundId || (EX.data && (EX.data.items.find(i=>i.attempts.some(a=>a.attemptId===r.attemptId))||{}).roundId) || '';
+  root.innerHTML = `<div class="panel-block ex-result ${r.passed?'ex-ok':'ex-bad'}">
+    <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
+    <div class="ex-score">${r.scorePct}%</div>
+    <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
+    <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด${r.passed ? ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้' : ''}</div>
+    <div class="ex-act" style="margin-top:12px;">
+      <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
+      ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
+    </div></div>`;
+}
+
+/* =====================================================================
+   ฝั่ง Sup / Manager — จัดการข้อสอบ รอบสอบ สรุปผล
+   ===================================================================== */
+const EXA = { role:'', view:'sets', sets:[], set:null, qs:[], vers:[], qEdit:null, rounds:[], round:null, profiles:null, elig:null, search:'', summary:null, synced:false, busy:false };
+const EX_TYPES = { mcq:'ปรนัย (เลือก 1 ข้อ)', tf:'ถูก / ผิด', multi:'เลือกหลายคำตอบ', match:'จับคู่', order:'เรียงลำดับ', short:'พิมพ์คำตอบสั้น' };
+
+async function examAdminEnter(){
+  const root = $('exa-root');
+  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  try{
+    let init = await examApi('adminInit');
+    if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('adminInit'); }
+    EXA.role = init.role;
+    if(init.role === 'user'){
+      root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการข้อสอบในระบบสอบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
+      return;
+    }
+    if(init.role === 'manager' && !EXA.synced){ exaSyncAdmins().catch(()=>{}); }
+    await exaGo(EXA.view === 'sets' || EXA.view === 'rounds' ? EXA.view : 'sets');
+  }catch(e){
+    root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="areload">ลองใหม่</button></div>`;
+  }
+}
+async function exaSyncAdmins(){
+  const map = {};
+  (adminEmails||[]).forEach(e=>{ map[e.toLowerCase()] = { email:e.toLowerCase(), role:'sup', name:nicknameFor(e) }; });
+  (managerEmails||[]).concat(ceoEmails||[], [SUPER_ADMIN_EMAIL]).forEach(e=>{ map[e.toLowerCase()] = { email:e.toLowerCase(), role:'manager', name:nicknameFor(e) }; });
+  await examApi('syncAdmins', { list: Object.keys(map).map(k=>map[k]) });
+  EXA.synced = true;
+}
+function exaTabs(){
+  const v = EXA.view;
+  const on = (x)=> (v===x || (x==='sets' && v==='set') || (x==='rounds' && (v==='round' || v==='summary'))) ? 'active' : '';
+  return `<div class="subtab-bar"><button class="${on('sets')}" data-ex="atab" data-v="sets">📝 ชุดข้อสอบ</button><button class="${on('rounds')}" data-ex="atab" data-v="rounds">📅 รอบสอบ / สรุปผล</button>
+    ${EXA.role==='manager' ? '<button data-ex="syncadm">🔄 ซิงก์รายชื่อสิทธิ์</button>' : ''}</div>`;
+}
+async function exaGo(view, arg){
+  const root = $('exa-root');
+  EXA.view = view;
+  root.innerHTML = exaTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  try{
+    if(view === 'sets'){ EXA.sets = await examApi('adminListSets'); exaRenderSets(); }
+    else if(view === 'set'){ await exaLoadSet(arg); exaRenderSet(); }
+    else if(view === 'rounds'){ EXA.rounds = await examApi('adminListRounds'); exaRenderRounds(); }
+    else if(view === 'round'){ await exaPrepareRound(arg); exaRenderRoundEditor(); }
+    else if(view === 'summary'){ EXA.summary = await examApi('adminRoundSummary', { roundId:arg }); exaRenderSummary(); }
+  }catch(e){
+    root.innerHTML = exaTabs() + `<div class="ex-note ex-bad">⚠ ${exH(e.message)}</div>`;
+  }
+}
+
+/* ---------- ชุดข้อสอบ: รายการ ---------- */
+function exaRenderSets(){
+  const root = $('exa-root');
+  let html = exaTabs() + `<div class="ex-row"><button class="btn btn-primary" data-ex="newset">+ สร้างชุดข้อสอบ</button></div>`;
+  if(!EXA.sets.length) html += '<div class="ex-note">ยังไม่มีชุดข้อสอบ กด "+ สร้างชุดข้อสอบ" เพื่อเริ่ม (แยกชุดตาม Level 1-3 ของแต่ละรุ่น)</div>';
+  EXA.sets.forEach(s=>{
+    html += `<div class="ex-card"><div class="ex-card-h"><div><b>${exH(s.category)} › ${exH(s.model)}</b> · Level ${s.level}</div>
+        <div>${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')} ${s.status==='hidden' ? exChip('ซ่อน','') : ''}</div></div>
+      <div class="ex-meta">${exH(s.title)} · ${s.qCount} ข้อ · เกณฑ์ผ่าน ${s.passPercent}% · ${s.durationMin>0 ? s.durationMin+' นาที' : 'ไม่จำกัดเวลา'}${EXA.role==='manager' ? ' · เจ้าของ: '+exH(s.ownerName||s.ownerEmail) : ''}</div>
+      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="openset" data-id="${exH(s.setId)}">✏️ แก้ไข</button></div></div>`;
+  });
+  root.innerHTML = html;
+}
+
+/* ---------- ชุดข้อสอบ: ตัวแก้ไข ---------- */
+function exaMyEnName(){
+  const p = myUserProfile; if(!p) return '';
+  return [p.firstNameEn, p.lastNameEn].filter(Boolean).join(' ');
+}
+function exaAllowedCats(){
+  const cats = Object.keys((DATA && DATA.categories) || {}).sort();
+  if(isSuperAdmin()) return cats;
+  const mine = cats.filter(c=>((DATA.categories[c]||[]).some(m=>ownerOf(c,m)===currentSupIdentity)));
+  return mine.length ? mine : cats;
+}
+function exaAllowedModels(cat){
+  const ms = ((DATA && DATA.categories && DATA.categories[cat]) || []).slice();
+  if(isSuperAdmin()) return ms;
+  const mine = ms.filter(m=>ownerOf(cat,m)===currentSupIdentity);
+  return mine.length ? mine : ms;
+}
+async function exaLoadSet(setId){
+  if(!setId){
+    const cats = exaAllowedCats();
+    EXA.set = { setId:'', category:cats[0]||'', model:(exaAllowedModels(cats[0]||'')[0])||'', level:1, title:'', passPercent:100, durationMin:30, graceMin:5, certCourse:'', supName:exaMyEnName(), supTitle:'Supervisor', status:'active', latestVersion:0, latestMajorVersion:0 };
+    EXA.qs = []; EXA.vers = []; EXA.qEdit = null; return;
+  }
+  const d = await examApi('adminGetSet', { setId });
+  EXA.set = d.set; EXA.qs = d.questions; EXA.vers = d.versions; EXA.qEdit = null;
+}
+function exaCatSelect(sel){
+  const cats = exaAllowedCats(); if(sel && cats.indexOf(sel)<0) cats.push(sel);
+  return `<select id="exa-s-cat" data-ex="scat">${cats.map(c=>`<option ${c===sel?'selected':''}>${exH(c)}</option>`).join('')}</select>`;
+}
+function exaModelSelect(cat, sel){
+  const ms = exaAllowedModels(cat); if(sel && ms.indexOf(sel)<0) ms.push(sel);
+  return `<select id="exa-s-model">${ms.map(m=>`<option ${m===sel?'selected':''}>${exH(m)}</option>`).join('')}</select>`;
+}
+function exaRenderSet(){
+  const s = EXA.set, root = $('exa-root');
+  const isNew = !s.setId;
+  let html = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการ</button><b>${isNew ? 'สร้างชุดข้อสอบใหม่' : exH(s.title)}</b>
+      ${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}</div>
+    <div class="panel-block"><h2>ตั้งค่าชุดข้อสอบ</h2><div class="ex-form">
+      <label>ชื่อชุดข้อสอบ<input id="exa-s-title" type="text" value="${exH(s.title)}" placeholder="เช่น Maglumi 800 L1: Coordinates"></label>
+      <label>ประเภทเครื่อง (Category)${exaCatSelect(s.category)}</label>
+      <label>รุ่น<span id="exa-s-model-wrap">${exaModelSelect(s.category, s.model)}</span></label>
+      <label>Level<select id="exa-s-level">${[1,2,3].map(l=>`<option value="${l}" ${l===s.level?'selected':''}>Level ${l}</option>`).join('')}</select></label>
+      <label>เกณฑ์ผ่าน (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${s.passPercent}"></label>
+      <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-s-dur" type="number" min="0" max="600" value="${s.durationMin}"></label>
+      <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-s-grace" type="number" min="0" max="60" value="${s.graceMin}"></label>
+      <label>ชื่อหลักสูตรบนใบ Cer<input id="exa-s-course" type="text" value="${exH(s.certCourse)}" placeholder="ถ้าว่างใช้ชื่อชุดข้อสอบ"></label>
+      <label>ชื่อ Supervisor บนใบ Cer (อังกฤษ)<input id="exa-s-sup" type="text" value="${exH(s.supName)}"></label>
+      <label>ตำแหน่งบนใบ Cer<input id="exa-s-suptitle" type="text" value="${exH(s.supTitle)}"></label>
+      <label>สถานะ<select id="exa-s-status"><option value="active" ${s.status!=='hidden'?'selected':''}>ใช้งาน</option><option value="hidden" ${s.status==='hidden'?'selected':''}>ซ่อน (ผู้สอบมองไม่เห็น)</option></select></label>
+    </div><div class="ex-row"><button class="btn btn-primary" data-ex="saveset">💾 บันทึกการตั้งค่า</button></div></div>`;
+  if(!isNew){
+    html += `<div class="ex-grid2"><div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length})</h2><button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></div>
+      <ol class="ex-qlist">${EXA.qs.map((q,i)=>`<li class="${EXA.qEdit && EXA.qEdit.qid===q.qid ? 'cur':''}"><button class="ex-qitem" data-ex="editq" data-id="${exH(q.qid)}"><span class="ex-qn">${i+1}</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.imageUrl?' · มีรูป':''}</small></span></button>
+        <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="qmv" data-dir="-1" data-i="${i}" ${i===0?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="qmv" data-dir="1" data-i="${i}" ${i===EXA.qs.length-1?'disabled':''}>▼</button></span></li>`).join('')}</ol>
+      ${EXA.qs.length ? '<div class="ex-hint">ผู้สอบจะเห็นลำดับข้อสุ่มทุกครั้ง ลำดับนี้ใช้เฉพาะตอนแก้ไข</div>' : '<div class="ex-hint">ยังไม่มีข้อสอบ กด "+ เพิ่มข้อ"</div>'}</div>
+      <div class="panel-block" id="exa-qeditor">${exaQEditorHtml()}</div></div>
+    <div class="panel-block"><h2>เผยแพร่เป็นเวอร์ชันใหม่ ${EXA.set.latestVersion ? '(v'+(EXA.set.latestVersion+1)+')' : '(v1)'}</h2>
+      <div class="ex-hint">เวอร์ชันที่เผยแพร่แล้วแก้ไขไม่ได้ ผลสอบและ Cer ผูกกับเวอร์ชันที่สอบจริง การแก้ไขข้อสอบต่อจากนี้เป็น "ร่าง" จนกว่าจะเผยแพร่</div>
+      ${EXA.set.latestVersion ? `<label class="ex-opt"><input type="radio" name="exa-kind" value="minor" checked><span><b>แก้เล็กน้อย</b> เช่น พิมพ์ผิด ผู้ที่ผ่านแล้วยังใช้ผลเดิม</span></label>
+        <label class="ex-opt"><input type="radio" name="exa-kind" value="major"><span><b>แก้สาระสำคัญ</b> ผู้ที่ผ่านเวอร์ชันก่อนจะมีสถานะ "ต้องสอบใหม่"</span></label>` : ''}
+      <div class="ex-row"><button class="btn btn-primary" data-ex="publish" ${EXA.qs.length?'':'disabled'}>🚀 เผยแพร่</button></div>
+      ${EXA.vers.length ? '<div class="ex-hint" style="margin-top:8px;">ประวัติ: '+EXA.vers.sort((a,b)=>b.version-a.version).map(v=>`v${v.version} (${v.kind==='major'?'สาระสำคัญ':'เล็กน้อย'}, ${v.qCount} ข้อ, ${exFmtDT(v.publishedAt)})`).join(' · ')+'</div>' : ''}</div>`;
+  }
+  root.innerHTML = html;
+}
+function exaReadSettings(){
+  const g = id => $(id).value;
+  return {
+    setId: EXA.set.setId || undefined, title: g('exa-s-title').trim(), category: g('exa-s-cat'), model: g('exa-s-model'), level: Number(g('exa-s-level')),
+    passPercent: Number(g('exa-s-pass')), durationMin: Number(g('exa-s-dur')), graceMin: Number(g('exa-s-grace')), certCourse: g('exa-s-course').trim(),
+    supName: g('exa-s-sup').trim(), supTitle: g('exa-s-suptitle').trim(), status: g('exa-s-status'), ownerName: myClaimantName()
+  };
+}
+async function exaSaveSet(){
+  showLoadingOverlay('กำลังบันทึก...');
+  try{
+    const r = await examApi('adminSaveSet', { set: exaReadSettings() });
+    hideLoadingOverlay(); showToast('✓ บันทึกการตั้งค่าแล้ว');
+    await exaGo('set', r.setId);
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+}
+async function exaPublish(){
+  const kindEl = document.querySelector('input[name="exa-kind"]:checked');
+  const kind = kindEl ? kindEl.value : 'major';
+  const nextV = EXA.set.latestVersion + 1;
+  if(!confirm(`เผยแพร่เป็นเวอร์ชัน v${nextV}${EXA.set.latestVersion ? ' ('+(kind==='major'?'แก้สาระสำคัญ — ผู้ที่ผ่านเวอร์ชันก่อนต้องสอบใหม่':'แก้เล็กน้อย')+')' : ''}?\nเผยแพร่แล้วแก้ไขเวอร์ชันนี้ไม่ได้`)) return;
+  showLoadingOverlay('กำลังเผยแพร่...');
+  try{
+    const r = await examApi('adminPublish', { setId:EXA.set.setId, kind });
+    hideLoadingOverlay(); showToast('✓ เผยแพร่ v'+r.version+' แล้ว');
+    await exaGo('set', EXA.set.setId);
+  }catch(e){ hideLoadingOverlay(); alert('เผยแพร่ไม่สำเร็จ: '+e.message); }
+}
+
+/* ---------- ตัวแก้ไขข้อสอบรายข้อ ---------- */
+function exaNewDraft(type){
+  const d = { qid:'', type:type||'mcq', text:'', imageUrl:'', lockPos:false, choices:[], correct:[], tfAnswer:'T', pairs:[{l:'',r:''},{l:'',r:''}], extras:[], items:[{text:''},{text:''},{text:''}], accepted:'' };
+  if(d.type==='mcq' || d.type==='multi') d.choices = [{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''}];
+  return d;
+}
+function exaDraftFromQuestion(q){
+  const d = exaNewDraft(q.type);
+  d.qid = q.qid; d.text = q.text; d.imageUrl = q.imageUrl || ''; d.lockPos = !!q.lockPos;
+  if(q.type==='mcq' || q.type==='multi'){ d.choices = q.choices.map(c=>({id:c.id,text:c.text,img:c.img||''})); d.correct = q.type==='mcq' ? [q.answer] : (q.answer||[]).slice(); }
+  else if(q.type==='tf'){ d.tfAnswer = q.answer; }
+  else if(q.type==='order'){ d.items = q.choices.map(c=>({text:c.text})); }
+  else if(q.type==='match'){
+    const rById = {}; q.choices.right.forEach(r=>{ rById[r.id] = r; });
+    d.pairs = q.choices.left.map(l=>({ l:l.text, r:(rById[q.answer[l.id]]||{}).text || '' }));
+    const used = {}; q.choices.left.forEach(l=>{ used[q.answer[l.id]] = 1; });
+    d.extras = q.choices.right.filter(r=>!used[r.id]).map(r=>r.text);
+  }
+  else if(q.type==='short'){ d.accepted = (q.answer||[]).join('\n'); }
+  return d;
+}
+function exaQEditorHtml(){
+  const d = EXA.qEdit;
+  if(!d) return '<div class="ex-hint">เลือกข้อทางซ้ายเพื่อแก้ไข หรือกด "+ เพิ่มข้อ"</div>';
+  let body = '';
+  const chRow = (c,i,multi)=>`<div class="ex-chrow"><input type="${multi?'checkbox':'radio'}" name="exa-correct" data-ex="chk" data-i="${i}" ${d.correct.indexOf(c.id||('#'+i))>=0?'checked':''} title="ข้อที่ถูก">
+      <input type="text" class="exa-ch-text" data-i="${i}" value="${exH(c.text)}" placeholder="ช้อยส์ ${i+1}">
+      <button class="btn btn-ghost btn-sm" data-ex="chimg" data-i="${i}">${c.img?'🖼 เปลี่ยนรูป':'🖼 รูป'}</button>${c.img?`<button class="btn btn-ghost btn-sm" data-ex="chimgdel" data-i="${i}">✕</button>`:''}
+      <button class="btn btn-ghost btn-sm" data-ex="chdel" data-i="${i}">ลบ</button></div>`;
+  if(d.type==='mcq' || d.type==='multi'){
+    body = '<div class="ex-hint">ติ๊กหน้าช้อยส์ที่ถูก '+(d.type==='multi'?'(ติ๊กได้หลายข้อ)':'(เลือก 1 ข้อ)')+'</div>' + d.choices.map((c,i)=>chRow(c,i,d.type==='multi')).join('') +
+      `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="chadd" ${d.choices.length>=8?'disabled':''}>+ เพิ่มช้อยส์</button></div>
+       <label class="ex-opt"><input type="checkbox" id="exa-lock" ${d.lockPos?'checked':''}><span>ล็อกตำแหน่งช้อยส์ (ไม่สลับ เช่นข้อที่มี "ทั้งหมดข้างต้น")</span></label>`;
+  } else if(d.type==='tf'){
+    body = `<label class="ex-opt"><input type="radio" name="exa-tf" value="T" ${d.tfAnswer==='T'?'checked':''}><span>คำตอบที่ถูกคือ ถูก</span></label>
+            <label class="ex-opt"><input type="radio" name="exa-tf" value="F" ${d.tfAnswer==='F'?'checked':''}><span>คำตอบที่ถูกคือ ผิด</span></label>`;
+  } else if(d.type==='order'){
+    body = '<div class="ex-hint">กรอกตามลำดับที่ถูกต้อง (ระบบจะสลับให้ผู้สอบเอง)</div>' + d.items.map((it,i)=>`<div class="ex-chrow"><span class="ex-qn">${i+1}</span><input type="text" class="exa-it-text" data-i="${i}" value="${exH(it.text)}" placeholder="ขั้นที่ ${i+1}">
+      <button class="btn btn-ghost btn-sm" data-ex="itmv" data-dir="-1" data-i="${i}" ${i===0?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="itmv" data-dir="1" data-i="${i}" ${i===d.items.length-1?'disabled':''}>▼</button>
+      <button class="btn btn-ghost btn-sm" data-ex="itdel" data-i="${i}">ลบ</button></div>`).join('') + '<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="itadd">+ เพิ่มขั้น</button></div>';
+  } else if(d.type==='match'){
+    body = '<div class="ex-hint">กรอกคู่ที่ถูกต้อง (ซ้าย → ขวา) ผู้สอบจะเห็นฝั่งซ้ายเป็นโจทย์ และเลือกฝั่งขวาจากรายการ</div>' + d.pairs.map((p,i)=>`<div class="ex-chrow"><input type="text" class="exa-pl" data-i="${i}" value="${exH(p.l)}" placeholder="ซ้าย ${i+1}"><span>→</span>
+      <input type="text" class="exa-pr" data-i="${i}" value="${exH(p.r)}" placeholder="ขวา (คู่ที่ถูก) ${i+1}"><button class="btn btn-ghost btn-sm" data-ex="pdel" data-i="${i}">ลบ</button></div>`).join('') +
+      '<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="padd">+ เพิ่มคู่</button></div><div class="ex-hint">ตัวหลอกฝั่งขวา (ไม่บังคับ)</div>' +
+      d.extras.map((x,i)=>`<div class="ex-chrow"><input type="text" class="exa-px" data-i="${i}" value="${exH(x)}" placeholder="ตัวหลอก ${i+1}"><button class="btn btn-ghost btn-sm" data-ex="xdel" data-i="${i}">ลบ</button></div>`).join('') +
+      '<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="xadd">+ เพิ่มตัวหลอก</button></div>';
+  } else if(d.type==='short'){
+    body = `<div class="ex-hint">คำตอบที่ยอมรับ บรรทัดละ 1 แบบ (ไม่สนตัวพิมพ์เล็ก-ใหญ่และช่องว่าง)</div><textarea id="exa-accepted" rows="4">${exH(d.accepted)}</textarea>`;
+  }
+  return `<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">${d.qid?'แก้ไขข้อ':'ข้อใหม่'}</h2>${d.qid?'<button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="delq">ลบข้อนี้</button>':''}</div>
+    <div class="ex-form"><label>รูปแบบข้อสอบ<select id="exa-q-type" data-ex="qtype">${Object.keys(EX_TYPES).map(t=>`<option value="${t}" ${t===d.type?'selected':''}>${EX_TYPES[t]}</option>`).join('')}</select></label></div>
+    <label class="ex-block">โจทย์<textarea id="exa-q-text" rows="3">${exH(d.text)}</textarea></label>
+    <div class="ex-row">${d.imageUrl ? `<img class="ex-qimg ex-thumb" src="${exH(exImg(d.imageUrl,'w400'))}" alt=""><button class="btn btn-ghost btn-sm" data-ex="qimg">🖼 เปลี่ยนรูปประกอบ</button><button class="btn btn-ghost btn-sm" data-ex="qimgdel">✕ เอารูปออก</button>` : '<button class="btn btn-ghost btn-sm" data-ex="qimg">🖼 แนบรูปประกอบโจทย์</button>'}</div>
+    <input type="file" id="exa-file" accept="image/*" style="display:none">
+    <div class="ex-ans">${body}</div>
+    <div class="ex-row"><button class="btn btn-primary" data-ex="saveq">💾 บันทึกข้อนี้</button></div>`;
+}
+function exaReadQForm(){ // คัดลอกค่าในฟอร์มกลับเข้า EXA.qEdit ก่อนทำอะไรที่ต้อง render ใหม่
+  const d = EXA.qEdit; if(!d || !$('exa-q-text')) return;
+  d.text = $('exa-q-text').value;
+  if(d.type==='mcq' || d.type==='multi'){
+    document.querySelectorAll('.exa-ch-text').forEach(el=>{ d.choices[Number(el.dataset.i)].text = el.value; });
+    const l = $('exa-lock'); if(l) d.lockPos = l.checked;
+    const checks = Array.from(document.querySelectorAll('input[name="exa-correct"]'));
+    d.correct = checks.filter(el=>el.checked).map(el=>{ const c = d.choices[Number(el.dataset.i)]; return c.id || ('#'+el.dataset.i); });
+  } else if(d.type==='tf'){
+    const r = document.querySelector('input[name="exa-tf"]:checked'); d.tfAnswer = r ? r.value : d.tfAnswer;
+  } else if(d.type==='order'){
+    document.querySelectorAll('.exa-it-text').forEach(el=>{ d.items[Number(el.dataset.i)].text = el.value; });
+  } else if(d.type==='match'){
+    document.querySelectorAll('.exa-pl').forEach(el=>{ d.pairs[Number(el.dataset.i)].l = el.value; });
+    document.querySelectorAll('.exa-pr').forEach(el=>{ d.pairs[Number(el.dataset.i)].r = el.value; });
+    document.querySelectorAll('.exa-px').forEach(el=>{ d.extras[Number(el.dataset.i)] = el.value; });
+  } else if(d.type==='short'){
+    const a = $('exa-accepted'); if(a) d.accepted = a.value;
+  }
+}
+function exaRefreshEditor(){ const el = $('exa-qeditor'); if(el) el.innerHTML = exaQEditorHtml(); }
+function exaBuildQuestion(){ // draft → รูปแบบที่ส่งให้ Apps Script
+  const d = EXA.qEdit;
+  const out = { qid:d.qid || undefined, type:d.type, text:d.text.trim(), imageUrl:d.imageUrl || '', lockPos:!!d.lockPos };
+  if(d.type==='mcq' || d.type==='multi'){
+    const ids = {}; d.choices.forEach((c,i)=>{ ids[i] = c.id || ('c'+(i+1)+'_'+Math.random().toString(36).slice(2,5)); });
+    out.choices = d.choices.map((c,i)=>({ id:ids[i], text:c.text.trim(), img:c.img||'' })).filter(c=>c.text || c.img);
+    const sel = d.correct.map(k=>{ const i = d.choices.findIndex((c,ix)=>(c.id||('#'+ix))===k); return i>=0 ? ids[i] : null; }).filter(Boolean);
+    out.answer = d.type==='mcq' ? (sel[0] || '') : sel;
+  } else if(d.type==='tf'){ out.answer = d.tfAnswer; }
+  else if(d.type==='order'){ out.choices = d.items.map((it,i)=>({ id:'o'+(i+1), text:it.text.trim() })).filter(x=>x.text); }
+  else if(d.type==='match'){
+    const pairs = d.pairs.filter(p=>p.l.trim() && p.r.trim());
+    const left = pairs.map((p,i)=>({ id:'L'+(i+1), text:p.l.trim() }));
+    const right = pairs.map((p,i)=>({ id:'R'+(i+1), text:p.r.trim() }));
+    d.extras.filter(x=>x.trim()).forEach((x,i)=>right.push({ id:'X'+(i+1), text:x.trim() }));
+    out.choices = { left, right };
+    out.answer = {}; left.forEach((l,i)=>{ out.answer[l.id] = 'R'+(i+1); });
+  } else if(d.type==='short'){ out.answer = d.accepted.split('\n').map(x=>x.trim()).filter(Boolean); }
+  return out;
+}
+async function exaSaveQ(){
+  exaReadQForm();
+  showLoadingOverlay('กำลังบันทึกข้อสอบ...');
+  try{
+    await examApi('adminSaveQuestion', { setId:EXA.set.setId, question:exaBuildQuestion() });
+    hideLoadingOverlay(); showToast('✓ บันทึกข้อสอบแล้ว (ร่าง — ต้องกดเผยแพร่ผู้สอบจึงจะเห็น)');
+    await exaGo('set', EXA.set.setId);
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+}
+async function exaUploadImage(file){
+  if(!file) return '';
+  showLoadingOverlay('กำลังอัปโหลดรูป...');
+  try{
+    const comp = await compressImage(file);
+    const exams = await driveFindOrCreateFolder('Exams', DRIVE_ROOT_FOLDER_ID);
+    const sub = await driveFindOrCreateFolder(sanitizeFolderName(EXA.set.title || 'ข้อสอบ'), exams);
+    return await driveUploadLargeFile(comp.blob || file, 'q_'+Date.now()+'.jpg', sub);
+  } finally { hideLoadingOverlay(); }
+}
+function exaPickImage(cb){
+  const f = $('exa-file'); if(!f) return;
+  f.value = '';
+  f.onchange = async ()=>{
+    const file = f.files && f.files[0]; if(!file) return;
+    try{ const url = await exaUploadImage(file); cb(url); }
+    catch(e){ alert('อัปโหลดรูปไม่สำเร็จ: '+e.message); }
+  };
+  f.click();
+}
+
+/* ---------- รอบสอบ ---------- */
+function exaRoundState(r){
+  if(r.state === 'closed') return exChip('ปิดแล้ว','');
+  const t = exNow();
+  if(t < r.openAt) return exChip('ยังไม่เปิด','warn');
+  if(r.closeAt && t > r.closeAt) return exChip('หมดช่วงเวลา','');
+  return exChip('เปิดอยู่','ok');
+}
+function exaRenderRounds(){
+  const root = $('exa-root');
+  let html = exaTabs() + '<div class="ex-row"><button class="btn btn-primary" data-ex="newround">+ สร้างรอบสอบ</button></div>';
+  if(!EXA.rounds.length) html += '<div class="ex-note">ยังไม่มีรอบสอบ สร้างชุดข้อสอบและเผยแพร่ก่อน แล้วกด "+ สร้างรอบสอบ"</div>';
+  EXA.rounds.forEach(r=>{
+    html += `<div class="ex-card"><div class="ex-card-h"><div><b>${exH(r.name)}</b> · ${exH(r.category)} › ${exH(r.model)} L${r.level}</div>${exaRoundState(r)}</div>
+      <div class="ex-meta">${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · ผู้มีสิทธิ์ ${r.eligibleCount} · สอบแล้ว ${r.attemptedCount} · ผ่าน ${r.passedCount}</div>
+      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">📊 สรุปผล</button> <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button></div></div>`;
+  });
+  root.innerHTML = html;
+}
+async function exaLoadProfiles(){
+  if(EXA.profiles) return;
+  const list = await fetchAllUserProfiles();
+  EXA.profiles = list.filter(p=>!(ceoEmails||[]).includes(p.email)).map(p=>({
+    email: p.email.toLowerCase(), name: profileLabelOf(p) || p.nicknameTh || [p.firstNameTh,p.lastNameTh].filter(Boolean).join(' ') || p.email,
+    nameEn: [p.firstNameEn, p.lastNameEn].filter(Boolean).join(' '), area: p.area || ''
+  })).sort((a,b)=>a.name.localeCompare(b.name,'th'));
+}
+async function exaPrepareRound(roundId){
+  await exaLoadProfiles();
+  EXA.sets = await examApi('adminListSets');
+  if(roundId){
+    const rs = await examApi('adminListRounds');
+    const brief = rs.find(r=>r.roundId===roundId);
+    const sum = await examApi('adminRoundSummary', { roundId });
+    EXA.round = Object.assign({}, brief, { eligible: sum.round.eligible });
+    EXA.elig = new Set(sum.round.eligible.map(x=>x.email));
+  } else {
+    const s = EXA.sets.find(x=>x.latestVersion>0) || EXA.sets[0];
+    const now = Date.now();
+    EXA.round = { roundId:'', setId:s?s.setId:'', name:'', openAt:now, closeAt:now+7*86400000, passPercent:s?s.passPercent:100, durationMin:s?s.durationMin:30, graceMin:s?s.graceMin:5, trainingDate:'', eligible:[] };
+    EXA.elig = new Set();
+  }
+  EXA.search = '';
+}
+function exaEligListHtml(){
+  const q = EXA.search.trim().toLowerCase();
+  const rows = EXA.profiles.filter(p=>!q || (p.name+' '+p.email+' '+p.nameEn+' '+p.area).toLowerCase().indexOf(q)>=0);
+  return rows.map(p=>`<label class="ex-opt ex-el"><input type="checkbox" data-ex="elig" value="${exH(p.email)}" ${EXA.elig.has(p.email)?'checked':''}><span>${exH(p.name)}<small>${exH(p.email)}${p.nameEn?'':' · ⚠ ยังไม่มีชื่ออังกฤษในโปรไฟล์ (ใบ Cer จะใช้ชื่อไทย)'}</small></span></label>`).join('') || '<div class="ex-hint">ไม่พบรายชื่อ</div>';
+}
+function exaRenderRoundEditor(){
+  const r = EXA.round, root = $('exa-root');
+  const sets = EXA.sets.filter(s=>s.status!=='hidden' || s.setId===r.setId);
+  root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="rounds">← กลับรายการ</button><b>${r.roundId ? 'แก้ไขรอบสอบ' : 'สร้างรอบสอบใหม่'}</b></div>
+    <div class="panel-block"><div class="ex-form">
+      <label>ชื่อรอบสอบ<input id="exa-r-name" type="text" value="${exH(r.name)}" placeholder="เช่น Maglumi 800 L1 รอบ ต.ค. 2569"></label>
+      <label>ชุดข้อสอบ<select id="exa-r-set" data-ex="rset" ${r.roundId?'disabled':''}>${sets.map(s=>`<option value="${exH(s.setId)}" ${s.setId===r.setId?'selected':''}>${exH(s.category)} › ${exH(s.model)} L${s.level} — ${exH(s.title)}${s.latestVersion?'':' (ยังไม่เผยแพร่)'}</option>`).join('')}</select></label>
+      <label>เปิดรอบ<input id="exa-r-open" type="datetime-local" value="${exToInput(r.openAt)}"></label>
+      <label>ปิดรอบ<input id="exa-r-close" type="datetime-local" value="${exToInput(r.closeAt)}"></label>
+      <label>เกณฑ์ผ่าน (%)<input id="exa-r-pass" type="number" min="1" max="100" value="${r.passPercent}"></label>
+      <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-r-dur" type="number" min="0" max="600" value="${r.durationMin}"></label>
+      <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-r-grace" type="number" min="0" max="60" value="${r.graceMin}"></label>
+      <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
+    </div>
+    <div class="ex-hint">ผู้เข้าสอบที่เริ่มสอบก่อนปิดรอบ จะสอบต่อได้จนหมดเวลาของตัวเอง</div></div>
+    <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">ผู้มีสิทธิ์สอบ (<span id="exa-el-count">${EXA.elig.size}</span> คน)</h2>
+      <div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="elall">เลือกทั้งหมดที่แสดง</button><button class="btn btn-ghost btn-sm" data-ex="elnone">ล้างทั้งหมด</button></div></div>
+      <input id="exa-el-search" type="text" placeholder="ค้นหาชื่อ / อีเมล / เขต" value="${exH(EXA.search)}" data-ex="elsearch">
+      <div class="ex-ellist" id="exa-el-list">${exaEligListHtml()}</div></div>
+    <div class="ex-row"><button class="btn btn-primary" data-ex="saveround">💾 บันทึกรอบสอบ</button></div>`;
+}
+async function exaSaveRound(){
+  const r = EXA.round, g = id => $(id).value;
+  const picked = EXA.profiles.filter(p=>EXA.elig.has(p.email)).map(p=>({ email:p.email, name:p.name, nameEn:p.nameEn }));
+  const round = { roundId:r.roundId || undefined, setId:g('exa-r-set'), name:g('exa-r-name'), openAt:exFromInput(g('exa-r-open')), closeAt:exFromInput(g('exa-r-close')),
+    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), graceMin:Number(g('exa-r-grace')), trainingDate:g('exa-r-train'), eligible:picked };
+  showLoadingOverlay('กำลังบันทึกรอบสอบ...');
+  try{
+    const res = await examApi('adminSaveRound', { round });
+    hideLoadingOverlay(); showToast('✓ บันทึกรอบสอบแล้ว');
+    await exaGo('summary', res.roundId);
+  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+}
+
+/* ---------- สรุปผลรอบสอบ + ออก Cer ---------- */
+const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''] };
+function exaRenderSummary(){
+  const d = EXA.summary, r = d.round, root = $('exa-root');
+  const f = EXA.sumFilter || '';
+  const rows = d.rows.filter(x=>!f || x.status===f);
+  root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="rounds">← กลับรายการ</button><b>${exH(r.name)}</b> ${exaRoundState(r)}</div>
+    <div class="ex-meta">${exH(r.category)} › ${exH(r.model)} · Level ${r.level} · ${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · เกณฑ์ผ่าน ${r.passPercent}% · ${r.durationMin>0 ? r.durationMin+' นาที' : 'ไม่จำกัดเวลา'}</div>
+    <div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
+      <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button><button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
+      <button class="btn btn-primary btn-sm" data-ex="issue" data-id="${exH(r.roundId)}" ${d.counts.passed?'':'disabled'}>🎓 ออกใบ Cer ผู้ที่ผ่าน</button></div>
+    <div class="ex-stats">
+      <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่าน</span></div>
+      <div class="ex-stat"><b style="color:var(--red)">${d.counts.failed}</b><span>ยังไม่ผ่าน</span></div><div class="ex-stat"><b>${d.counts.inprogress}</b><span>กำลังสอบ</span></div>
+      <div class="ex-stat"><b style="color:var(--amber)">${d.counts.none}</b><span>ยังไม่สอบ</span></div></div>
+    <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">สรุปผู้ตอบ</h2>
+      <select id="exa-sum-filter" data-ex="sumfilter"><option value="">ทุกสถานะ</option>${Object.keys(EX_STATUS).map(k=>`<option value="${k}" ${f===k?'selected':''}>${EX_STATUS[k][0]}</option>`).join('')}</select></div>
+      <div style="overflow-x:auto"><table class="ex-table"><thead><tr><th>ชื่อ</th><th>ครั้งที่สอบ</th><th>คะแนนล่าสุด</th><th>ดีที่สุด</th><th>สถานะ</th><th>ระดับ</th><th>Cer</th></tr></thead><tbody>
+      ${rows.map(x=>`<tr><td>${exH(x.name)}<small>${exH(x.email)}</small></td><td>${x.attemptCount}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
+        <td>${exChip(EX_STATUS[x.status][0], EX_STATUS[x.status][1])}</td>
+        <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
+        <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="7" class="ex-hint">ไม่มีรายการ</td></tr>'}
+      </tbody></table></div></div>`;
+}
+async function exaIssueCerts(roundId){
+  if(!confirm('ออกใบ Cer เป็น PDF ให้ผู้ที่ผ่านของรอบนี้ (ที่ยังไม่มีใบ)?\nระบบจะเก็บไฟล์ใน Drive และเพิ่มเข้าแท็บ Certificate ของแต่ละคน')) return;
+  showLoadingOverlay('กำลังออกใบ Cer...');
+  let made = 0, failed = [], unsynced = [];
+  try{
+    for(let guard=0; guard<20; guard++){
+      const r = await examApi('adminIssueCerts', { roundId, limit:15 });
+      made += r.madeCount; failed = failed.concat(r.failed || []); unsynced = r.unsynced || [];
+      showLoadingOverlay(`กำลังออกใบ Cer... ออกแล้ว ${made} ใบ${r.remaining ? ' (เหลืออีก '+r.remaining+')' : ''}`);
+      if(!r.remaining || r.madeCount === 0) break;
+    }
+    let wrote = 0;
+    for(const c of unsynced){
+      try{ await examWriteCertDoc(c, false); await examApi('markCertWritten', { certNo:c.certNo }); wrote++; }
+      catch(e){ console.warn('เขียนใบ Cer เข้าแท็บ Certificate ไม่สำเร็จ:', c.certNo, e.message); }
+    }
+    hideLoadingOverlay();
+    let msg = `ออกใบ Cer ใหม่ ${made} ใบ`;
+    if(unsynced.length) msg += `\nเพิ่มเข้าแท็บ Certificate แล้ว ${wrote}/${unsynced.length} ใบ` + (wrote < unsynced.length ? '\n(ที่เหลือจะถูกเพิ่มอัตโนมัติเมื่อเจ้าของใบเปิดหน้า "ข้อสอบของฉัน")' : '');
+    if(failed.length) msg += `\nออกไม่สำเร็จ ${failed.length} คน: ` + failed.map(f=>f.email+' ('+f.error+')').join(', ');
+    alert(msg);
+    await exaGo('summary', roundId);
+  }catch(e){ hideLoadingOverlay(); alert('ออกใบ Cer ไม่สำเร็จ: '+e.message); }
+}
+
+/* =====================================================================
+   ตัวจัดการ event (ใช้ event delegation — ไม่มี element ที่ต้องผูกทีหลัง)
+   ===================================================================== */
+function exOnEvent(e){
+  const t = e.target.closest ? e.target.closest('[data-ex]') : null;
+  if(!t) return;
+  const act = t.getAttribute('data-ex'), ev = e.type, id = t.getAttribute('data-id'), i = Number(t.getAttribute('data-i'));
+  const c = EX.cur;
+  /* ----- ผู้สอบ ----- */
+  if(ev === 'click'){
+    if(act==='reload'){ examLoadHome(true); return; }
+    if(act==='start'){ examStart(id); return; }
+    if(act==='resume'){ examResume(id); return; }
+    if(act==='home'){ EX.cur = null; examLoadHome(false); return; }
+    if(act==='retry'){ (async()=>{ EX.cur = null; await examLoadHome(false); examStart(id); })(); return; }
+    if(act==='prev' && c){ if(c.idx>0){ c.idx--; examLocalSave(); examRenderQuestion(); } return; }
+    if(act==='next' && c){ if(c.idx<c.p.questions.length-1){ c.idx++; examLocalSave(); examRenderQuestion(); } return; }
+    if(act==='go' && c){ c.idx = i; examLocalSave(); examRenderQuestion(); return; }
+    if(act==='submit'){ examSubmit(false); return; }
+    if(act==='mv' && c){
+      const q = c.p.questions[c.idx]; const cur = Array.isArray(c.answers[q.qid]) ? c.answers[q.qid].slice() : q.choices.map(x=>x.id);
+      const j = i + Number(t.getAttribute('data-dir'));
+      if(j<0 || j>=cur.length) return;
+      const tmp = cur[i]; cur[i] = cur[j]; cur[j] = tmp;
+      examSetAnswer(q.qid, cur); examRenderQuestion(); return;
+    }
+  }
+  if(ev === 'change' && c){
+    const q = c.p.questions[c.idx];
+    if(act==='pick'){ examSetAnswer(q.qid, t.value); return; }
+    if(act==='multi'){ const vals = Array.from(document.querySelectorAll('#ex-q input[data-ex="multi"]:checked')).map(x=>x.value); examSetAnswer(q.qid, vals); return; }
+    if(act==='match'){ const m = Object.assign({}, (c.answers[q.qid] && typeof c.answers[q.qid]==='object') ? c.answers[q.qid] : {}); const lid = t.getAttribute('data-left'); if(t.value) m[lid] = t.value; else delete m[lid]; examSetAnswer(q.qid, m); return; }
+  }
+  if(ev === 'input' && c && act==='short'){ examSetAnswer(c.p.questions[c.idx].qid, t.value); return; }
+  /* ----- Sup / Manager ----- */
+  if(ev === 'click'){
+    switch(act){
+      case 'areload': examAdminEnter(); return;
+      case 'atab': exaGo(t.getAttribute('data-v')); return;
+      case 'syncadm': (async()=>{ showLoadingOverlay('กำลังซิงก์รายชื่อสิทธิ์...'); try{ await exaSyncAdmins(); hideLoadingOverlay(); showToast('✓ ซิงก์รายชื่อ Sup/Manager แล้ว'); }catch(er){ hideLoadingOverlay(); alert(er.message); } })(); return;
+      case 'newset': exaGo('set', ''); return;
+      case 'openset': exaGo('set', id); return;
+      case 'saveset': exaSaveSet(); return;
+      case 'publish': exaPublish(); return;
+      case 'newq': EXA.qEdit = exaNewDraft('mcq'); exaRenderSet(); return;
+      case 'editq': { const q = EXA.qs.find(x=>x.qid===id); if(q){ EXA.qEdit = exaDraftFromQuestion(q); exaRenderSet(); } return; }
+      case 'qmv': { const ids = EXA.qs.map(x=>x.qid); const j = i + Number(t.getAttribute('data-dir')); if(j<0||j>=ids.length) return; const tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+        examApi('adminReorder', { setId:EXA.set.setId, qids:ids }).then(()=>exaGo('set', EXA.set.setId)).catch(er=>alert(er.message)); return; }
+      case 'delq': if(EXA.qEdit && EXA.qEdit.qid && confirm('ลบข้อนี้ออกจากร่าง? (เวอร์ชันที่เผยแพร่แล้วไม่ได้รับผลกระทบ)')){
+        examApi('adminDeleteQuestion', { setId:EXA.set.setId, qid:EXA.qEdit.qid }).then(()=>exaGo('set', EXA.set.setId)).catch(er=>alert(er.message)); } return;
+      case 'saveq': exaSaveQ(); return;
+      case 'chadd': exaReadQForm(); EXA.qEdit.choices.push({id:'',text:'',img:''}); exaRefreshEditor(); return;
+      case 'chdel': { exaReadQForm(); const d = EXA.qEdit; if(d.choices.length<=2){ showToast('ต้องมีช้อยส์อย่างน้อย 2 ข้อ'); return; } const key = d.choices[i].id || ('#'+i); d.choices.splice(i,1); d.correct = d.correct.filter(k=>k!==key).map(k=>k); exaRefreshEditor(); return; }
+      case 'chimg': exaReadQForm(); exaPickImage(url=>{ EXA.qEdit.choices[i].img = url; exaRefreshEditor(); }); return;
+      case 'chimgdel': exaReadQForm(); EXA.qEdit.choices[i].img = ''; exaRefreshEditor(); return;
+      case 'qimg': exaReadQForm(); exaPickImage(url=>{ EXA.qEdit.imageUrl = url; exaRefreshEditor(); }); return;
+      case 'qimgdel': exaReadQForm(); EXA.qEdit.imageUrl = ''; exaRefreshEditor(); return;
+      case 'itadd': exaReadQForm(); EXA.qEdit.items.push({text:''}); exaRefreshEditor(); return;
+      case 'itdel': { exaReadQForm(); const d = EXA.qEdit; if(d.items.length<=2){ showToast('ต้องมีอย่างน้อย 2 ขั้น'); return; } d.items.splice(i,1); exaRefreshEditor(); return; }
+      case 'itmv': { exaReadQForm(); const d = EXA.qEdit; const j = i + Number(t.getAttribute('data-dir')); if(j<0||j>=d.items.length) return; const tmp = d.items[i]; d.items[i] = d.items[j]; d.items[j] = tmp; exaRefreshEditor(); return; }
+      case 'padd': exaReadQForm(); EXA.qEdit.pairs.push({l:'',r:''}); exaRefreshEditor(); return;
+      case 'pdel': { exaReadQForm(); const d = EXA.qEdit; if(d.pairs.length<=2){ showToast('ต้องมีอย่างน้อย 2 คู่'); return; } d.pairs.splice(i,1); exaRefreshEditor(); return; }
+      case 'xadd': exaReadQForm(); EXA.qEdit.extras.push(''); exaRefreshEditor(); return;
+      case 'xdel': exaReadQForm(); EXA.qEdit.extras.splice(i,1); exaRefreshEditor(); return;
+      case 'newround': exaGo('round', ''); return;
+      case 'editround': exaGo('round', id); return;
+      case 'saveround': exaSaveRound(); return;
+      case 'summary': exaGo('summary', id); return;
+      case 'elall': document.querySelectorAll('#exa-el-list input[data-ex="elig"]').forEach(x=>{ EXA.elig.add(x.value); x.checked = true; }); $('exa-el-count').textContent = EXA.elig.size; return;
+      case 'elnone': EXA.elig.clear(); document.querySelectorAll('#exa-el-list input[data-ex="elig"]').forEach(x=>{ x.checked = false; }); $('exa-el-count').textContent = 0; return;
+      case 'opennow': case 'closeround': {
+        const op = act==='opennow' ? 'openNow' : 'close';
+        if(op==='close' && !confirm('ปิดรอบนี้ทันที? ผู้ที่กำลังสอบอยู่ยังสอบต่อได้จนหมดเวลาของตัวเอง')) return;
+        examApi('adminRoundAction', { roundId:id, op }).then(()=>{ showToast(op==='close'?'✓ ปิดรอบแล้ว':'✓ เปิดรอบแล้ว'); exaGo('summary', id); }).catch(er=>alert(er.message)); return;
+      }
+      case 'issue': exaIssueCerts(id); return;
+    }
+  }
+  if(ev === 'change'){
+    if(act==='qtype'){ exaReadQForm(); const old = EXA.qEdit; const nd = exaNewDraft(t.value); nd.qid = old.qid; nd.text = old.text; nd.imageUrl = old.imageUrl; EXA.qEdit = nd; exaRefreshEditor(); return; }
+    if(act==='scat'){ const w = $('exa-s-model-wrap'); if(w) w.innerHTML = exaModelSelect(t.value, ''); return; }
+    if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; $('exa-r-grace').value = s.graceMin; } return; }
+    if(act==='elig'){ if(t.checked) EXA.elig.add(t.value); else EXA.elig.delete(t.value); $('exa-el-count').textContent = EXA.elig.size; return; }
+    if(act==='sumfilter'){ EXA.sumFilter = t.value; exaRenderSummary(); return; }
+  }
+  if(ev === 'input' && act==='elsearch'){ EXA.search = t.value; const l = $('exa-el-list'); if(l) l.innerHTML = exaEligListHtml(); return; }
+}
+(function exInit(){
+  ['ex-root','exa-root'].forEach(id=>{
+    const el = $(id); if(!el) return;
+    ['click','change','input'].forEach(ev=>el.addEventListener(ev, exOnEvent));
+  });
+  const prot = e=>{ if(e.target && e.target.closest && e.target.closest('.ex-protect')){ if(e.target.matches && e.target.matches('input[type="text"]')) return; e.preventDefault(); } };
+  ['contextmenu','copy','cut','dragstart','selectstart'].forEach(ev=>document.addEventListener(ev, prot));
+})();
+
+
 /* ===================== THEME TOGGLE (default: light) ===================== */
 $('theme-toggle-btn').addEventListener('click', ()=>{
   const isDark = document.body.classList.toggle('dark-theme');
@@ -13322,6 +14262,7 @@ $('eng-resp-save-btn').addEventListener('click', async ()=>{
 // ---- UI: Engineer — แท็บ Certificate ----
 function certStatusBadge(cert){
   if(!cert) return `<span style="color:var(--text-faint);font-size:12px;">— ยังไม่อัปโหลด —</span>`;
+  if(cert.source==='exam') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ผ่านการสอบ ${escapeHtml(String(cert.examScore==null?'':cert.examScore))}%</span>`;
   if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${escapeHtml(String(cert.score))}/5</span>`;
   return `<span style="color:var(--amber);font-size:12px;">⏳ รอ Manager ตรวจ</span>`;
 }
