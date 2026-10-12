@@ -30,5 +30,6 @@ jobs:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           GOOGLE_OAUTH_REFRESH_TOKEN: ${{ secrets.GOOGLE_OAUTH_REFRESH_TOKEN }}
+          EXAM_SHEET_ID: ${{ secrets.EXAM_SHEET_ID }}   # ID ของ Google Sheet "F1 Exam DB" (ไม่บังคับ แต่ควรตั้ง)
           TRIGGER_EVENT: ${{ github.event_name }}
         run: node backup-script.js
