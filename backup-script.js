@@ -2,8 +2,9 @@
  * ===================================================================
  * TRBL Daily Backup Script (รันโดย GitHub Actions อัตโนมัติทุกวัน)
  * ===================================================================
- * ดึงข้อมูลทั้งหมดจาก Firestore -> สร้างไฟล์ JSON + Excel -> อัปโหลดเข้า
- * โฟลเดอร์ "Service Center/Backups" ใน Google Drive
+ * ดึงข้อมูลทั้งหมดจาก Firestore (ทุกคอลเลกชันที่มีอยู่จริง รวมที่เพิ่มในอนาคตอัตโนมัติ)
+ * -> สร้างไฟล์ JSON + Excel -> อัปโหลดเข้าโฟลเดอร์ "Service Center/Backups" ใน Google Drive
+ * และทำสำเนา Google Sheet "F1 Exam DB" (ระบบสอบ/ตารางเทรน) เก็บไว้ในโฟลเดอร์วันที่เดียวกัน
  *
  * ไม่ต้องรันไฟล์นี้เองครับ — GitHub Actions จะรันให้อัตโนมัติทุกวัน
  * ตามที่ตั้งเวลาไว้ใน .github/workflows/daily-backup.yml
@@ -35,6 +36,86 @@ const drive = google.drive({ version: 'v3', auth: oauth2Client });
 function docTypeLabel(key){
   const map = { service_manual:'Service Manual', spare_part:'Spare Part', install_checklist:'Install Checklist', pm_checklist:'PM Checklist', video:'Video' };
   return map[key] || key;
+}
+
+// ----- คอลเลกชันที่โค้ดเดิมจัดการเองอยู่แล้ว (errors ใช้ระบบประหยัดโควต้าเดิม) — ที่เหลือทุกคอลเลกชันถูกดึงอัตโนมัติ -----
+const HANDLED_COLLECTIONS = new Set(['errors', 'documents', 'proposals', 'pendingErrors']);
+const MAX_DOCS_PER_COLLECTION = 50000; // กันคอลเลกชันที่โตผิดปกติกินโควต้า Firestore ทั้งวัน
+const warnings = [];                    // เรื่องที่ไม่ทำให้ Backup ล้ม แต่ต้องรายงาน (แสดงใน backup-status.json และสรุป GitHub Actions)
+
+// แปลงชนิดข้อมูลพิเศษของ Firestore ให้เก็บใน JSON แล้วกู้กลับได้ (Timestamp / GeoPoint / อ้างอิงเอกสาร / Bytes)
+function toPlain(v){
+  if (v === null || v === undefined) return v;
+  if (Array.isArray(v)) return v.map(toPlain);
+  if (typeof v === 'object') {
+    const ctor = v.constructor && v.constructor.name;
+    if (ctor === 'Timestamp') return { __type: 'timestamp', iso: v.toDate().toISOString() };
+    if (ctor === 'GeoPoint') return { __type: 'geopoint', latitude: v.latitude, longitude: v.longitude };
+    if (ctor === 'DocumentReference') return { __type: 'ref', path: v.path };
+    if (Buffer.isBuffer(v)) return { __type: 'bytes', base64: v.toString('base64') };
+    const out = {};
+    for (const k of Object.keys(v)) out[k] = toPlain(v[k]);
+    return out;
+  }
+  return v;
+}
+
+// ดึงทุกคอลเลกชันระดับบนสุดที่ไม่ได้ถูกจัดการด้านบน (certificates, claims, claimNotices, userProfiles, returnParts, meta, ...)
+async function dumpOtherCollections(){
+  const cols = await db.listCollections();
+  const result = {};
+  for (const col of cols) {
+    const id = col.id;
+    if (HANDLED_COLLECTIONS.has(id)) continue;
+    try {
+      const snap = await col.limit(MAX_DOCS_PER_COLLECTION + 1).get();
+      let docs = snap.docs;
+      if (docs.length > MAX_DOCS_PER_COLLECTION) {
+        docs = docs.slice(0, MAX_DOCS_PER_COLLECTION);
+        warnings.push(`คอลเลกชัน "${id}" มีเอกสารเกิน ${MAX_DOCS_PER_COLLECTION} รายการ สำรองไว้เฉพาะส่วนแรก — ต้องปรับสคริปต์`);
+      }
+      result[id] = docs.map(d => ({ id: d.id, ...toPlain(d.data()) }));
+      console.log(`  • ${id}: ${result[id].length} เอกสาร`);
+    } catch (e) {
+      warnings.push(`ดึงคอลเลกชัน "${id}" ไม่สำเร็จ: ${e.message}`);
+      console.error(`ดึงคอลเลกชัน "${id}" ไม่สำเร็จ:`, e.message);
+    }
+  }
+  return result;
+}
+
+// ชื่อชีต Excel: ห้ามเกิน 31 ตัวอักษร ห้ามมี \ / ? * [ ] : และห้ามซ้ำ
+function sheetName(name, used){
+  let n = String(name).replace(/[\\\/?*\[\]:]/g, '_').slice(0, 31) || 'sheet';
+  let i = 2; const base = n;
+  while (used.has(n.toLowerCase())) { n = base.slice(0, 28) + '_' + i++; }
+  used.add(n.toLowerCase());
+  return n;
+}
+// ค่าในเซลล์ Excel: object/array เก็บเป็น JSON และตัดไม่ให้เกินขีดจำกัด 32,767 ตัวอักษรของ Excel
+function cell(v){
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'object') v = v.__type === 'timestamp' ? v.iso : JSON.stringify(v);
+  if (typeof v === 'string' && v.length > 32000) return v.slice(0, 32000) + '…(ตัด — ดูฉบับเต็มใน JSON)';
+  return v;
+}
+function rowsOf(docs){
+  return docs.map(d => { const r = {}; Object.keys(d).forEach(k => { r[k] = cell(d[k]); }); return r; });
+}
+
+// ทำสำเนา Google Sheet "F1 Exam DB" เก็บไว้ข้างไฟล์ Backup (ใช้ drive.files.copy ไม่ต้องใช้ Sheets API)
+async function copyExamSheet(dateFolderId, dateStamp){
+  const sheetId = process.env.EXAM_SHEET_ID;
+  if (!sheetId) { warnings.push('ยังไม่ได้ตั้ง secret EXAM_SHEET_ID — ไม่ได้สำเนา Google Sheet "F1 Exam DB" (ระบบสอบ/ตารางเทรน)'); return null; }
+  try {
+    const res = await drive.files.copy({ fileId: sheetId, resource: { name: `F1 Exam DB - backup ${dateStamp}`, parents: [dateFolderId] }, fields: 'id,name' });
+    console.log(`✓ สำเนา Google Sheet "F1 Exam DB" แล้ว (${res.data.name})`);
+    return res.data.id;
+  } catch (e) {
+    warnings.push(`สำเนา Google Sheet "F1 Exam DB" ไม่สำเร็จ: ${e.message}`);
+    console.error('สำเนา Google Sheet ไม่สำเร็จ:', e.message);
+    return null;
+  }
 }
 
 async function main(schedule){
@@ -90,15 +171,23 @@ async function main(schedule){
   const pendingErrors = []; pendSnap.forEach(d => pendingErrors.push({ id: d.id, ...d.data() }));
   const supProductsData = supDoc.exists ? supDoc.data() : { names: [] };
 
+  console.log('ดึงคอลเลกชันอื่นทั้งหมดใน Firestore...');
+  const otherCollections = await dumpOtherCollections();
+
   const backup = {
     exportedAt: new Date().toISOString(),
     errors, documents, proposals, pendingErrors,
     categories: categoriesData.categories || {},
     owners: categoriesData.owners || {},
     supProducts: supProductsData.names || [],
+    // ทุกคอลเลกชันที่เหลือ (certificates, claims, claimNotices, userProfiles, returnParts, meta, ...) — กู้กลับเป็นคอลเลกชันเดิมได้ด้วย id
+    collections: otherCollections,
+    manifest: Object.assign({
+      errors: errors.length, documents: documents.length, proposals: proposals.length, pendingErrors: pendingErrors.length
+    }, Object.fromEntries(Object.entries(otherCollections).map(([k, v]) => [k, v.length]))),
   };
 
-  console.log(`ดึงข้อมูลเสร็จ: ${errors.length} Error, ${documents.length} เอกสาร, ${proposals.length} ข้อเสนอ, ${pendingErrors.length} รายการรออนุมัติ`);
+  console.log(`ดึงข้อมูลเสร็จ: ${errors.length} Error, ${documents.length} เอกสาร, ${proposals.length} ข้อเสนอ, ${pendingErrors.length} รายการรออนุมัติ + คอลเลกชันอื่น ${Object.keys(otherCollections).length} รายการ`);
 
   const dateStamp = new Date().toISOString().slice(0, 10);
 
@@ -140,6 +229,12 @@ async function main(schedule){
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), 'Categories');
 
+  // ชีตเพิ่มสำหรับทุกคอลเลกชันที่เหลือ (ไว้เปิดดูด้วยตา — ฉบับกู้ข้อมูลจริงคือไฟล์ JSON)
+  const usedNames = new Set(wb.SheetNames.map(n => n.toLowerCase()));
+  Object.entries(otherCollections).forEach(([name, docs]) => {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs.length ? rowsOf(docs) : [{ หมายเหตุ: 'ไม่มีเอกสาร' }]), sheetName(name, usedNames));
+  });
+
   const excelFilename = `trbl-backup-${dateStamp}.xlsx`;
   XLSX.writeFile(wb, excelFilename);
 
@@ -173,7 +268,10 @@ async function main(schedule){
     media: { mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: fs.createReadStream(excelFilename) },
   });
 
+  await copyExamSheet(dateFolderId, dateStamp);
+
   console.log(`✓ อัปโหลด Backup วันที่ ${dateStamp} เข้า Service Center/Backups/${dateStamp} เสร็จสมบูรณ์`);
+  writeSummary(backup.manifest, dateStamp);
 
   const retentionDays = schedule.retentionDays ?? 7;
   if (retentionDays > 0) {
@@ -181,6 +279,18 @@ async function main(schedule){
   } else {
     console.log('ตั้งค่าไว้ให้เก็บ Backup ตลอดไป — ข้ามการลบไฟล์เก่า');
   }
+}
+
+// ----- สรุปผลบนหน้า GitHub Actions (ดูได้ว่าสำรองครบกี่คอลเลกชัน กี่เอกสาร) -----
+function writeSummary(manifest, dateStamp){
+  try{
+    const lines = [`## Backup ${dateStamp}`, '', '| คอลเลกชัน | จำนวนเอกสาร |', '|---|---|'];
+    Object.entries(manifest).forEach(([k, v]) => lines.push(`| ${k} | ${v} |`));
+    if (warnings.length) { lines.push('', '### ⚠ คำเตือน'); warnings.forEach(w => lines.push(`- ${w}`)); }
+    const text = lines.join('\n');
+    console.log('\n' + text);
+    if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, text + '\n');
+  }catch(e){ console.warn('เขียนสรุปไม่สำเร็จ:', e.message); }
 }
 
 // ----- ลบไฟล์ Backup เก่าที่เก็บไว้เกิน N วัน กันไฟล์สะสมเยอะเกินไป -----
@@ -229,6 +339,7 @@ async function writeStatusFile(success, errorMessage){
       timestamp: Date.now(),
       dateStamp: new Date().toISOString().slice(0, 10),
       error: errorMessage || null,
+      warnings,
     }, null, 2);
 
     const statusSearch = await drive.files.list({
