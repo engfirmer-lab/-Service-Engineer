@@ -4,7 +4,7 @@
   F1 Service — Firmer Service Center Web App
   ===================================================================
   เวอร์ชันปัจจุบัน : 9.42
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 02:42 น. เวลาไทย
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 09:29 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -2335,7 +2335,7 @@ let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
 const APP_VERSION = "9.42";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 02:42 น. เวลาไทย";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 09:29 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12743,8 +12743,25 @@ async function exaSaveQ(){
     await exaGo('set', EXA.set.setId);
   }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
 }
+/* ---------- ขอสิทธิ์ Google Drive ด้วยปุ่มที่ผู้ใช้กดเอง (เบราว์เซอร์บล็อกป๊อปอัปถ้าไม่ได้มาจากการกด เช่น หลังเลือกไฟล์) ---------- */
+function exDriveReady(){ try{ return !!((driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000) || (!driveAccessToken && driveTokenRestore())); }catch(e){ return false; } }
+function exEnsureDrive(){
+  if(exDriveReady()) return Promise.resolve(true);
+  return new Promise(resolve=>{
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483100;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML = '<div style="background:var(--panel,#fff);color:var(--text,#222);border-radius:14px;padding:18px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.35);font-size:15px;line-height:1.5;"><b>เชื่อมต่อ Google Drive</b><div class="ex-hint" style="margin:6px 0 12px;">ต้องอนุญาตให้แอปเข้า Google Drive ก่อนอัปโหลดไฟล์ (ทำครั้งเดียวต่อรอบการใช้งาน) กดปุ่มด้านล่าง แล้วเลือกอนุญาตในหน้าต่างของ Google</div><div class="ex-hint" id="exdrv-err" style="color:var(--red);display:none;margin-bottom:8px;"></div><div style="display:flex;gap:8px;"><button class="btn btn-primary" id="exdrv-go" style="flex:1;min-height:48px;justify-content:center;">🔗 เชื่อมต่อ Google Drive</button><button class="btn btn-ghost" id="exdrv-no" style="min-height:48px;">ยกเลิก</button></div></div>';
+    document.body.appendChild(ov);
+    const done = v=>{ ov.remove(); resolve(v); };
+    ov.querySelector('#exdrv-no').onclick = ()=>done(false);
+    ov.querySelector('#exdrv-go').onclick = ()=>{ // เรียกใน event ของการกดโดยตรง → ป๊อปอัปไม่ถูกบล็อก
+      ensureDriveAccess().then(()=>done(true)).catch(e=>{ const m = ov.querySelector('#exdrv-err'); m.style.display = 'block'; m.textContent = e.message + ' — ลองกดอีกครั้ง (ถ้าไม่ขึ้นหน้าต่าง ให้เปิดอนุญาตป๊อปอัปของเว็บนี้ที่แถบที่อยู่)'; });
+    };
+  });
+}
 async function exaUploadImage(file){
   if(!file) return '';
+  if(!(await exEnsureDrive())) throw new Error('ยังไม่ได้เชื่อมต่อ Google Drive');
   showLoadingOverlay('กำลังอัปโหลดรูป...');
   try{
     const comp = await compressImage(file);
@@ -13795,6 +13812,7 @@ function traCloseHtml(g){
 }
 async function traUploadPhotos(files){
   const s = TRA.g.session; files = Array.from(files||[]); if(!files.length) return;
+  if(!(await exEnsureDrive())) return;
   let ok = 0;
   try{
     const folder = await trSessionFolder(s);
@@ -13812,6 +13830,7 @@ async function traUploadPhotos(files){
 async function traUploadMfr(regId, file){
   const s = TRA.g.session, r = TRA.g.regs.find(x=>x.regId===regId); if(!file || !r) return;
   if(file.size > 30*1024*1024){ alert('ไฟล์ใหญ่เกิน 30 MB กรุณาลดขนาดก่อน'); return; }
+  if(!(await exEnsureDrive())) return;
   showLoadingOverlay('กำลังอัปโหลดใบ Cer...');
   try{
     const folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
@@ -13864,6 +13883,7 @@ async function traCloseSession(){
   const g = TRA.g, s = g.session;
   const reasons = {}; (g.regs||[]).forEach(r=>{ if(TRA.reasons[r.regId] !== undefined) reasons[r.regId] = TRA.reasons[r.regId]; });
   if(!confirm('ปิดงานเทรน "'+s.title+'" ?\nหลังปิดจะแก้รายชื่อ/เช็คชื่อ/ไฟล์ไม่ได้ (เปิดกลับได้ภายหลัง)')) return;
+  if(s.certType === 'manufacturer' && !(await exEnsureDrive())) return;
   showLoadingOverlay('กำลังปิดงาน...');
   try{
     const noteEl = $('tra-closenote');
@@ -13887,6 +13907,7 @@ async function traCloseSession(){
 async function traMfrSync(){
   const g = TRA.g, s = g.session;
   const files = (g.files||[]).filter(f=>f.kind==='mfrCert').map(f=>{ const r = g.regs.find(x=>x.regId===f.regId) || {}; return Object.assign({}, f, { email:String(r.email||'').toLowerCase(), name:r.name||'' }); });
+  if(!(await exEnsureDrive())) return;
   showLoadingOverlay('กำลังส่งเข้าแท็บ Certificate...');
   try{ const res = await trFinishMfr(s, files); hideLoadingOverlay(); alert('สำเร็จ '+res.ok+'/'+files.length+' ไฟล์'+(res.fail.length?'\nไม่สำเร็จ: '+res.fail.join(', '):'')); await traReload(true); }
   catch(e){ hideLoadingOverlay(); alert(e.message); }
