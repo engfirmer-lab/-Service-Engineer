@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.43
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 11:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.45
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 17:26 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.43</title>
+<title>F1 Service — v9.45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2354,8 +2354,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.43";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 11:25 น. เวลาไทย";
+const APP_VERSION = "9.45";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 17:26 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13337,12 +13337,15 @@ async function trEnter(){
 async function trLoad(){
   const root = $('tr-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
-  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดตารางเทรน...</div>';
+  // แสดงข้อมูลเดิมทันที (ถ้ามีของปีเดียวกัน) แล้วรีเฟรชเบื้องหลัง — ไม่ต้องรอหน้าโหลดทุกครั้ง
+  const warm = !!(TR.data && TR.listFor === TR.year);
+  if(warm) trRender(); else root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดตารางเทรน...</div>';
   try{
-    TR.data = await examApi('trList', { year:TR.year });
-    TR.listFor = TR.year;
-    trRender();
-  }catch(e){ trErr(root, e, 'reload'); }
+    const yr = TR.year, d = await examApi('trList', { year:yr });
+    if(yr !== TR.year) return;
+    TR.data = d; TR.listFor = yr;
+    if(!TR.detail || !warm) trRender();
+  }catch(e){ if(!warm) trErr(root, e, 'reload'); }
 }
 function trVisibleSessions(){
   const d = TR.data; if(!d) return [];
@@ -13558,11 +13561,15 @@ async function trDoCancel(id){
 async function trAdminEnter(){
   const root = $('tra-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
-  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  const roleKnown = TRA.role && TRA.role !== 'user';
+  if(!roleKnown) root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    let init = await examApi('me');
-    if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('me'); }
-    TRA.role = init.role;
+    let init = { role:TRA.role };
+    if(!roleKnown){
+      init = await examApi('me');
+      if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('me'); }
+      TRA.role = init.role;
+    }
     if(init.role === 'user'){
       root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการตารางเทรนในระบบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
       return;
@@ -13581,10 +13588,13 @@ async function traGo(view, arg){
   const root = $('tra-root');
   traStopClock();
   TRA.view = view;
-  root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  // queue/sessions: โชว์ของเดิมทันทีแล้วรีเฟรชเบื้องหลัง (ถ้าเปลี่ยนหน้าไปแล้วจะไม่เขียนทับ)
+  const warmQ = view === 'queue' && TRA.queue, warmS = view === 'sessions' && TRA.data && TRA.dataFor === TRA.year;
+  if(warmQ) traRenderQueue(); else if(warmS) traRenderSessions();
+  else root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    if(view === 'queue'){ TRA.queue = await examApi('trQueue'); traRenderQueue(); }
-    else if(view === 'sessions'){ TRA.data = await examApi('trList', { year:TRA.year }); traRenderSessions(); }
+    if(view === 'queue'){ const q = await examApi('trQueue'); if(TRA.view !== 'queue') return; TRA.queue = q; traRenderQueue(); }
+    else if(view === 'sessions'){ const yr = TRA.year, d = await examApi('trList', { year:yr }); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
     else if(view === 'detail'){
       if(!TRA.queue) examApi('trQueue').then(q=>{ TRA.queue = q; }).catch(()=>{});
       TRA.g = await examApi('trGet', { sessionId:arg });
@@ -14076,8 +14086,9 @@ function traBlankForm(){
   }, days:[] };
 }
 async function traPrepareForm(id){
-  TRA.sets = await examApi('trExamSets');
-  if(!TRA.data) TRA.data = await examApi('trList', { year:TRA.year });
+  const yr = TRA.year, needList = !TRA.data || TRA.dataFor !== yr;
+  const [sets, lst] = await Promise.all([examApi('trExamSets'), needList ? examApi('trList', { year:yr }) : Promise.resolve(null)]);
+  TRA.sets = sets; if(lst){ TRA.data = lst; TRA.dataFor = yr; }
   if(id){
     const g = (TRA.g && TRA.g.session.sessionId === id) ? TRA.g : await examApi('trGet', { sessionId:id });
     const s = g.session;
@@ -14091,8 +14102,22 @@ async function traPrepareForm(id){
 }
 function traFormSetOptions(f){
   const sets = (TRA.sets && TRA.sets.sets) || [];
-  const mine = sets.slice().sort((a,b)=> (b.category===f.category) - (a.category===f.category) || a.category.localeCompare(b.category,'th') || a.model.localeCompare(b.model,'th') || a.level - b.level);
-  return mine;
+  return sets.slice().sort((a,b)=> a.category.localeCompare(b.category,'th') || a.model.localeCompare(b.model,'th') || a.level - b.level || a.title.localeCompare(b.title,'th'));
+}
+/* ตัวเลือกชุดข้อสอบ: กรองตามประเภท/รุ่น (ชุดที่เลือกอยู่แสดงเสมอ) — โชว์แค่ ประเภท › รุ่น — ชื่อข้อสอบ */
+function traSetOptsHtml(F){
+  const f = F.f, all = traFormSetOptions(f);
+  const list = all.filter(x=> x.setId === f.examSetId || ((!F.setCat || x.category === F.setCat) && (!F.setModel || x.model === F.setModel)));
+  return `<option value="">${F.imported?'— ยังไม่ผูก —':(list.length?'— เลือกชุดข้อสอบ —':'— ไม่พบชุดข้อสอบ —')}</option>` +
+    list.map(x=>`<option value="${trH(x.setId)}" ${f.examSetId===x.setId?'selected':''}>${trH(x.category)} › ${trH(x.model)} — ${trH(x.title)}</option>`).join('');
+}
+function traSetFiltersHtml(F){
+  const all = traFormSetOptions(F.f);
+  const cats = [...new Set(all.map(x=>x.category))];
+  const models = [...new Set(all.filter(x=>!F.setCat || x.category === F.setCat).map(x=>x.model))];
+  const op = (arr, cur)=> arr.map(x=>`<option value="${trH(x)}" ${cur===x?'selected':''}>${trH(x)}</option>`).join('');
+  return `<div class="tr-2"><div><label class="tr-lb">กรองตามประเภท</label><select class="tr-in" data-tr="f_setflt" data-k="setCat"><option value="">ทุกประเภท</option>${op(cats, F.setCat)}</select></div>
+    <div><label class="tr-lb">กรองตามรุ่น</label><select class="tr-in" data-tr="f_setflt" data-k="setModel"><option value="">ทุกรุ่น</option>${op(models, F.setModel)}</select></div></div>`;
 }
 function traRenderForm(){
   const root = $('tra-root'), F = TRA.form, f = F.f;
@@ -14120,7 +14145,7 @@ function traRenderForm(){
     <div class="tr-fs"><b>ใบ Certificate</b>
       <div class="subtab-bar tr-seg">${seg('f_cert','none',f.certType,'ไม่มี')}${seg('f_cert','internal',f.certType,'ภายใน (มีสอบ)', noSets && !F.imported && f.certType!=='internal')}${seg('f_cert','manufacturer',f.certType,'ผู้ผลิต')}</div>
       ${noSets ? '<div class="ex-hint">* Cer ภายในเลือกไม่ได้ จนกว่าจะมีชุดข้อสอบที่เผยแพร่แล้ว (สร้างที่เมนู จัดการข้อสอบ)</div>' : ''}
-      ${f.certType==='internal' ? `<label class="tr-lb">ชุดข้อสอบ (ที่เผยแพร่แล้ว) ${F.imported?'':'*'}</label><select class="tr-in" data-tr="f_fld" data-k="examSetId"><option value="">${F.imported?'— ยังไม่ผูก —':'— เลือกชุดข้อสอบ —'}</option>${sets.map(s=>`<option value="${trH(s.setId)}" ${f.examSetId===s.setId?'selected':''}>${trH(s.category)} › ${trH(s.model)} · Level ${s.level} — ${trH(s.title)} (ผ่าน ${s.passPercent}% · ${s.durationMin>0?s.durationMin+' นาที':'ไม่จำกัดเวลา'})</option>`).join('')}</select>
+      ${f.certType==='internal' ? `${traSetFiltersHtml(F)}<label class="tr-lb">ชุดข้อสอบ (ที่เผยแพร่แล้ว) ${F.imported?'':'*'}</label><select class="tr-in" data-tr="f_fld" data-k="examSetId" id="tra-setsel">${traSetOptsHtml(F)}</select>
         <div class="ex-hint">ระบบสร้างรอบสอบให้อัตโนมัติ ผู้ได้รับอนุมัติมีสิทธิ์สอบ · ข้อสอบเปิดเมื่อคุณกด "เริ่มสอบ" · ผ่านแล้วได้ใบ Cer อัตโนมัติ (ชื่อผู้เทรนบนใบ Cer = ด้านล่าง)</div>
         <label class="tr-lb">ชื่อผู้เทรนบนใบ Cer (ภาษาอังกฤษ)</label><input class="tr-in" type="text" data-tr="f_fld" data-k="trainerEn" value="${trH(f.trainerEn)}" placeholder="เว้นว่าง = ใช้ชื่อวิทยากรด้านบน">
         <label class="tr-lb">ตำแหน่งผู้เทรนบนใบ Cer</label><input class="tr-in" type="text" data-tr="f_fld" data-k="trainerTitle" value="${trH(f.trainerTitle)}" placeholder="เช่น Supervisor (เว้นว่าง = Trainer)">` : ''}
@@ -14383,6 +14408,14 @@ function trOnEvent(e){
       const k = t.getAttribute('data-k'); TRA.form.f[k] = t.value;
       if(k === 'category'){ traRenderForm(); }
       if(k === 'startDate' && TRA.form.f.endDate && TRA.form.f.endDate < t.value){ TRA.form.f.endDate = t.value; traRenderForm(); }
+      return;
+    }
+    if(act === 'f_setflt'){
+      const F = TRA.form, k = t.getAttribute('data-k'); F[k] = t.value;
+      if(k === 'setCat') F.setModel = '';
+      const box = $('tra-setsel'); if(!box) return;
+      box.innerHTML = traSetOptsHtml(F);
+      if(k === 'setCat'){ const m = document.querySelector('[data-k="setModel"]'); if(m){ const all = traFormSetOptions(F.f); const ms = [...new Set(all.filter(x=>!F.setCat || x.category === F.setCat).map(x=>x.model))]; m.innerHTML = '<option value="">ทุกรุ่น</option>' + ms.map(x=>`<option value="${trH(x)}">${trH(x)}</option>`).join(''); } }
       return;
     }
     if(act === 'f_dday'){ TRA.form.days[num('data-di')].date = t.value; return; }
