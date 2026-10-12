@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.45
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 17:26 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.47
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 19:46 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.45</title>
+<title>F1 Service — v9.47</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -890,6 +890,20 @@ body.tr-noscroll{overflow:hidden;}
   .tr-grid.adm .tr-bars i.tr-ev{height:auto;padding:1px 4px;border-radius:4px;color:#fff;font-size:11px;font-style:normal;line-height:1.35;}
   .tr-grid.adm .tr-ev span{display:inline;}
 }
+
+/* ตารางเรียนรายวัน */
+.tr-tblwrap{overflow-x:auto;margin:6px 0;}
+.tr-tbl{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4;}
+.tr-tbl th,.tr-tbl td{border:1px solid var(--border);padding:6px 7px;vertical-align:middle;text-align:left;word-break:break-word;}
+.tr-tbl thead th{background:rgba(22,163,74,.14);font-size:12px;text-align:center;}
+.tr-tbl .tr-tbl-day th{background:rgba(22,163,74,.10);font-size:12.5px;}
+.tr-tbl .c-t{width:84px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11.5px;white-space:nowrap;}
+.tr-tbl .c-m{width:30%;text-align:center;font-size:12px;color:var(--text-dim);}
+.tr-tbl tr.brk td{background:#fde047;color:#422006;}
+.tr-ited.brk{background:rgba(253,224,71,.18);border-radius:6px;padding-left:6px;padding-right:6px;}
+.tr-tsel{padding-left:6px;padding-right:2px;}
+.tr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
+.tr-chip{min-height:38px;font-size:12.5px;padding:4px 10px;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2354,8 +2368,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.45";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 17:26 น. เวลาไทย";
+const APP_VERSION = "9.47";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 19:46 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13256,14 +13270,14 @@ function exaHsStart(e, box){
 /* ข้อมูลแผนเทรนปี 2569 จากไฟล์ Training Plan Engineer 2026.xlsx — ใช้เฉพาะตอน Manager กด "นำเข้า" (ไม่รวมเวลาเข้าเรียน/คะแนนสอบ) */
 const TR_SEED = [{"k":"2026-02-CX-6010","model":"CX-6010","title":"CX-6010","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-CL-8000i","model":"CL-8000i","title":"CL-8000i","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-FA-N","model":"FA-N Series","title":"FA-N Series","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-CR-30","model":"CR-30 Basic","title":"CR-30 Basic","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-03-Maglumi-M","model":"Maglumi M Series","title":"Maglumi M Series","start":"2026-03-01","end":"2026-03-01","mode":"month","cert":"manufacturer","issuer":"Snibe HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-03-POCT","model":"POCT","title":"POCT","start":"2026-03-01","end":"2026-03-01","mode":"month","cert":"manufacturer","issuer":"Wondfo HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-05-LabUMat2","model":"LabUMat 2 & UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro","start":"2026-05-01","end":"2026-05-01","mode":"month","cert":"internal","issuer":"","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-05-SC120","model":"Advance SC-120","title":"Advance SC-120","start":"2026-05-01","end":"2026-05-01","mode":"month","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-06-FA-280","model":"FA-280","title":"FA-280","start":"2026-06-01","end":"2026-06-01","mode":"month","cert":"none","issuer":"","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-07-Maglumi-X6","model":"Maglumi X6","title":"Maglumi X6","start":"2026-07-01","end":"2026-07-01","mode":"month","cert":"manufacturer","issuer":"Snibe HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-07-Labbeling","model":"Labbeling P520 & P200","title":"Labbeling P520 & P200","start":"2026-07-01","end":"2026-07-01","mode":"month","cert":"manufacturer","issuer":"Labbot HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-08-M1000","model":"M1000","title":"M1000","start":"2026-08-01","end":"2026-08-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-09-IH500-1","model":"IH-500","title":"IH-500 Basic Technical Training #1","start":"2026-09-07","end":"2026-09-10","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-09-07","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-09-08","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-09-09","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-09-10","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["พิชิตพงษ์-เก้า",""],["นวพตร-ปอนด์",""],["ซาฟีอี-กาซอ",""],["ธิรภัทร-ต๋อ",""],["อุดมโชค-มอส",""],["จิรายุทธ-เจมส์",""],["ธีรพงษ์-บิว",""],["สิทธิศักดิ์-โอเว่น",""]]},{"k":"2026-09-IH500-2","model":"IH-500","title":"IH-500 Basic Technical Training #2","start":"2026-09-14","end":"2026-09-17","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-09-14","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-09-15","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-09-16","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-09-17","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["ประเสริฐ-ไก่",""],["ฮัปลีย์-ฮัป",""],["สุพัฒน์-เบ้",""],["ธงชัย-อ๋อง",""],["ศราวุธ-ท็อป",""],["ปิยะบุตร-เตย",""],["ชนินทร์พัฒน์-ทิว",""],["ธนบัตร-แม็ก",""]]},{"k":"2026-12-IH500-3","model":"IH-500","title":"IH-500 Basic Technical Training #3","start":"2026-12-15","end":"2026-12-18","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-12-15","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-12-16","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-12-17","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-12-18","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["อำนวยศิลป์-วิทย์",""],["ธีรยุทธ-เอก",""],["ฐิติวุฒิ-เจา",""],["วราชันย์-ตั้ม",""],["หนึ่ง",""],["กรวิทย์-ตู่",""],["นนทชัย-นีฟ",""],["ปรัชญา-ต่อ",""]]},{"k":"2026-09-LabUMat","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-09-21","end":"2026-09-25","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"รายชื่อรวมจากตารางเช็คชื่อและใบลงชื่อ (ไม่ตรงกัน 1 คน)","days":[{"d":"2026-09-21","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-09-22","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-09-23","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-09-24","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-09-25","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["กอบชัย-โอ็ต",""],["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["พิชิตพงษ์-เก้า",""],["นพกร-ปุ่น",""],["ปัญญาโชติ-ฟอร์ด",""],["เสรีภาพ-ดนตรี",""],["ธวัชชัย-แม็ก",""],["ธนบัตร-แม็ก",""]]},{"k":"2026-11-LabUMat-1","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-11-02","end":"2026-11-06","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"","days":[{"d":"2026-11-02","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-11-03","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-11-04","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-05","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-06","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["ปฏิพล-บอม",""],["ฮัปลีย์-ฮัป",""],["ธนาธร-นาว",""],["อุดมโชค-มอส",""],["ปิยะบุตร-เตย",""],["ธนากร-เจ",""],["ชัยยรัตน์-เก็ต",""],["อนุพงษ์-ต้นตาล",""]]},{"k":"2026-11-LabUMat-2","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-11-23","end":"2026-11-27","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"","days":[{"d":"2026-11-23","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-11-24","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-11-25","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-26","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-27","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["อำนวยศิลป์-วิทย์",""],["ธีรยุทธ-เอก",""],["ธีรภัทร-ต๋อ",""],["วราชันย์-ตั้ม",""],["สุระศักดิ์-โอ",""],["ธีรพงษ์-บิว",""],["พงศกร-กัน",""],["ปรัชญา-ต่อ",""],["สหภาพ-ฟลุ๊ค",""]]},{"k":"2026-09-Cal6000-7000","model":"Cal6000 / Cal7000 (SC-120 / MC-80)","title":"Cal6000/Cal7000 (SC-120/MC-80) Course Training","start":"2026-09-28","end":"2026-10-02","mode":"exact","cert":"internal","issuer":"Mindray TH","trainer":"Papangkorn (Mindray TH)","loc":"","note":"ตั้งเป็น Cer ภายใน ตามแบบร่าง — ปรับได้ถ้าเป็นใบผู้ผลิต","days":[{"d":"2026-09-28","it":[["09:00","10:00","Overview and Introduction CAL6000 by PPT",""],["10:15","12:00","Overview and Introduction CAL7000 by PPT",""],["13:00","14:00","Different of CAL7000 and CAL6000",""],["14:15","16:00","operation and Work flow CAL6000/CAL7000 by PPT",""]]},{"d":"2026-09-29","it":[["09:00","10:00","Practice installation CAL6000/CAL7000 with MC-80",""],["10:15","12:00","practice operation and Work flow",""],["13:00","14:00","Maintenance / Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-09-30","it":[["09:00","10:00","Overview and Introduction SC-120 by PPT",""],["10:15","12:00","mechanic and fluid system, Work flow by PPT",""],["13:00","14:00","Installation guide by PPT",""],["14:15","16:00","Practice Installation (Hardware)",""]]},{"d":"2026-10-01","it":[["09:00","10:00","Practice Installation (adjustment all position)",""],["10:15","12:00","Perform Maintenance",""],["13:00","14:00","Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-02","it":[["09:00","10:00","Overview and Introduction MC-80 by PPT",""],["10:15","12:00","Work flow, calibration by PPT",""],["13:00","14:00","oral exam",""],["14:15","16:00","oral exam",""]]}],"att":[["อำนวยศิลป์-วิทย์","AMNUAYSIN PARAMEE"],["ธนาวิทย์-โอ","TANAWIT KAEWSILA"],["ปรัชญา-ต่อ","Pratchaya Kanjanapan"],["วราชันย์-ตั้ม","WARACHAN YAIPRAM"],["สหภาพ-ฟลุ๊ค","Sahapap Kanmano"],["ฐิติวุฒิ-เจา","Titiwut kawmanee"],["ปิติพันธ์","PITIPHAN JANTHAKHUN"],["ปิยะบุตร-เตย","Piyabut Pongma"],["ธนาธร-มะนาว","Thanatorn Thammatorn"],["พีรพัฒน์ มากำชัย","Peerapat Makamchai"],["ฐานวัฒน์ เจื้อยแจ้ว","TAHNAWAT JUEYJAEW"],["หนึ่ง เอกปัตชา","NUENG EAKPATCHA"]]},{"k":"2026-10-BC7800","model":"BC-7800 / BC-6200 / BC-760","title":"BC-7800 / BC-6200 / BC-760 Course Training","start":"2026-10-05","end":"2026-10-09","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Papangkorn (Mindray TH)","loc":"","note":"","days":[{"d":"2026-10-05","it":[["09:00","10:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["10:15","12:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["13:00","14:00","Different of BC-7800, BC-6200",""],["14:15","16:00","operation and Work flow BC-7800, BC-6200 by PPT",""]]},{"d":"2026-10-06","it":[["09:00","10:00","Practice installation BC-7800, BC-6200",""],["10:15","12:00","practice operation and Work flow",""],["13:00","14:00","Maintenance / Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-07","it":[["09:00","10:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["10:15","12:00","mechanic and fluid system, Work flow by PPT",""],["13:00","14:00","Installation guide by PPT",""],["14:15","16:00","Practice Installation (Hardware)",""]]},{"d":"2026-10-08","it":[["09:00","10:00","Practice Installation (adjustment all position)",""],["10:15","12:00","Perform Maintenance",""],["13:00","14:00","Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-09","it":[["09:00","10:00","Overview and Introduction BC-780, BC-760 by PPT",""],["10:15","12:00","Work flow, calibration by PPT",""],["13:00","14:00","oral exam",""],["14:15","16:00","oral exam",""]]}],"att":[["กอบชัย-โอ็ต","Kopchai krasinhom"],["ฮับลีย์-ฮัป","HABLEE YACHARAD"],["อนุพงษ์-ต้นตาล","Anupong Thapkrit"],["อุดมโชค-มอส","Udomchok Thachanthuek"],["หนึ่ง","NUENG EAKPATCHA"],["รัฐภูมิ-นัท","RATTAPOOM CHATSAWAT"],["นนทชัย-นีฟ","Nonthachai samadeh"],["ปิยะบุตร-เตย","Piyabut Pongma"],["ธนาธร-มะนาว","Thanatorn Thammatorn"],["ฆธาเทพ-อิ่ม","Khathatep Nanthasu"],["ชนินทร์พัฒน์-แมทธิว","Chaninpat prasartsak"],["ฐานวัฒน์ เจื้อยแจ้ว","TAHNAWAT JUEYJAEW"],["พีรพัฒน์ มากำชัย","Peerapat Makamchai"]]},{"k":"2026-10-MT8000","model":"MT8000","title":"MT8000 TLA Training","start":"2026-10-12","end":"2026-10-16","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Mindray TH","loc":"Firmer Office","note":"ตารางเรียนวันที่ 12, 14, 15, 16 ต.ค. (ไม่มีวันที่ 13)","days":[{"d":"2026-10-12","it":[["09:00","10:00","TLA Product specification and overall introduction","PPT training"],["10:15","12:00","I/O, Centrifuge, Decaping, Analytic Module","PPT training"],["13:00","14:30","I/O, Centrifuge, Decaping, Analytic Module","PPT training"],["14:45","17:00","TLA Installation procedure","หน้าเครื่อง"]]},{"d":"2026-10-14","it":[["09:00","10:00","Hardware Tour","หน้าเครื่อง"],["10:15","12:00","Practice installation","หน้าเครื่อง"],["13:00","17:00","Practice installation","หน้าเครื่อง"]]},{"d":"2026-10-15","it":[["09:00","12:00","Practice installation","หน้าเครื่อง"],["13:00","17:00","Practice installation","หน้าเครื่อง"]]},{"d":"2026-10-16","it":[["09:00","10:00","Maintenance Procedure","PPT training"],["10:15","12:00","Basic troubleshooting, Log file collection","PPT training"],["13:00","14:30","Review and Oral exam","Oral exam"],["14:45","17:00","Review and Oral exam","Oral exam"]]}],"att":[["ธีรยุทธ-เอก",""],["ฐิติวุฒิ-เจา",""],["กฤษฎา-แก๊บ",""],["วราชันย์-ตั้ม",""],["ธนพล-บอย",""],["สิทธิศักดิ์-โอเว่น",""],["นวพรต-ปอน",""],["กรวิทย์-ตู่",""]]},{"k":"2026-10-Maglumi800","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-10-14","end":"2026-10-16","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-10-14","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-10-15","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-10-16","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["ปฏิพล-บอม",""],["ธนาวิทย์-โอ",""],["โยธิน-ยุ",""],["พิชิตพงษ์-เก้า",""],["สหัสนัยน์-เท่",""],["สุระศักดิ์-โอ",""],["ชัยยรัตน์-เก็ต",""],["นนทชัย-นีฟ",""],["พงศกร-แทค",""]]},{"k":"2026-10-CL900","model":"CL-900 / CL-1200i","title":"CL-900 / CL-1200i Training","start":"2026-10-19","end":"2026-10-22","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Mindray TH","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ · แผนเดิมยังไม่ระบุหัวข้ออบรม","days":[{"d":"2026-10-19","it":[["09:00","12:00","",""]]},{"d":"2026-10-20","it":[["09:00","12:00","",""],["13:00","17:00","",""]]},{"d":"2026-10-21","it":[["09:00","17:00","",""]]},{"d":"2026-10-22","it":[["","","(ยังไม่ระบุหัวข้อ)",""]]}],"att":[["ปฏิพล-บอม",""],["ธนาวิทย์-โอ",""],["โยธิน-ยุ",""],["พิชิตพงษ์-เก้า",""],["สหัสนัยน์-เท่",""],["สุระศักดิ์-โอ",""],["ชัยยรัตน์-เก็ต",""],["นนทชัย-นีฟ",""],["พงศกร-แทค",""]]},{"k":"2026-12-Maglumi800-2","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-12-23","end":"2026-12-25","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-12-23","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-12-24","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-12-25","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["นพกร-ปุ่น",""],["ปัญญาโชติ-ฟอร์ด",""],["สหภาพ-ฟลุ๊ค",""],["พงศกร-กัน",""],["ธงชัย-อ๋อง",""]]},{"k":"2026-12-Maglumi800-3","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-12-28","end":"2026-12-30","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-12-28","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-12-29","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-12-30","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["พรพิบูลย์-กัน",""],["ธนาธร-นาว",""],["ธวัชชัย-แม็ก",""],["กฤษฎา-แก๊บ",""]]},{"k":"2026-10-AdvCal6000","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-10-26","end":"2026-10-30","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"แผนเดิมหัวตารางเขียน 26–30 ต.ค. แต่วันที่ในตารางเขียน 12–16 ต.ค. — ใช้ 26–30 ต.ค. กรุณาตรวจ","days":[{"d":"2026-10-26","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-10-27","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-10-28","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-10-29","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-10-30","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["สหภาพ-ฟลุ๊ค",""],["ธีรภัทร-ต๋อ",""],["พรพิบูลย์ สังขทรัพย์ (กัน)",""],["นพกร บุตรทอง ญี่ปุ่น",""],["นายธวัชชัย อุทธา แม็ก",""],["อภิศักดิ์ วังคะฮาด (แจ็ค)",""],["นายสิทธิศักดิ์ อุปชาคำ (เทอโบ)",""],["สุระศักดิ์-โอ",""]]},{"k":"2026-11-AdvCal6000-2","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-09","end":"2026-11-13","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-09","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-11-10","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-11-11","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-12","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-13","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["นวพตร-ปอนด์",""],["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["สหัสนัยน์-เท่",""],["จิรายุทธ-เจมส์",""],["จีรวัฒน์-ดุ๊ก",""],["พงศกร-กัน",""],["พิชิตพงษ์-เก้า",""]]},{"k":"2026-11-AdvCal6000-3","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-16","end":"2026-11-20","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-16","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-11-17","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-11-18","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-19","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-20","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["ประเสริฐ-ไก่",""],["ธนาวิทย์-โอ",""],["ธนาธร-นาว",""],["ศราวุธ-ท็อป",""],["ปัญญาโชติ-ฟอร์ด",""],["รัฐภูมิ-นัท",""],["สิทธิศักดิ์-โอเว่น",""],["ธงชัย-อ๋อง",""]]},{"k":"2026-11-AdvCal6000-4","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-30","end":"2026-12-04","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-30","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-12-01","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-12-02","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-12-03","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-12-04","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["กอบชัย-โอ็ต",""],["ซาฟีอี-ฟี",""],["โยธิน-ยุ",""],["อุดมโชค-มอส",""],["ธนพล-บอย",""],["ปิติพันธ์-โน๊ต",""],["กฤษฎา-แก๊บ",""],["ธนากร-เจ",""]]}];
 
-/* ===================== v9.42 — ตารางเทรน (ปฏิทิน / ลงทะเบียน / เช็คชื่อ / ปิดงาน / ผูกรอบสอบ) =====================
+/* ===================== v9.42 — ตารางเทรน (ปฏิทิน / ลงทะเบียน / เช็คชื่อ / จบ Training / ผูกรอบสอบ) =====================
    ข้อมูลอยู่ใน Google Sheet "F1 Exam DB" (แท็บ Sessions, SessionDays, Registrations, Attendance, SessionFiles, SessionLog) ผ่าน Apps Script เดียวกับระบบสอบ
    ไฟล์ (รูปบรรยากาศ / ใบ Cer ผู้ผลิต) อยู่ใน Google Drive · หน้า Engineer = โหมด 'train' (#view-train) · หน้า Sup/Manager = โหมด 'trainadmin' (#view-trainadmin)
    ออกแบบมือถือก่อน: ปุ่มกดสูง ≥44px, ตัวอักษรช่องกรอก 16px, แถบปุ่มล่างติดจอ, ตารางยุบเป็นการ์ดบนจอแคบ */
 const TR_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const TR_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const TR_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
-const TR_STATUS = { plan:'แผน', open:'เปิดรับลงทะเบียน', closed:'ปิดงานแล้ว', cancelled:'ยกเลิก' };
+const TR_STATUS = { plan:'แผน', open:'เปิดรับลงทะเบียน', closed:'จบ Training แล้ว', cancelled:'ยกเลิก' };
 const TR_CERT = { internal:'Cer ภายใน', manufacturer:'Cer ผู้ผลิต', none:'ไม่มี Cer' };
 const TR = { year:new Date().getFullYear(), month:new Date().getMonth(), view:'cal', cat:'', cert:'', mine:false, data:null, detail:null, loading:false, listFor:0 };
 const TRA = { sview:'cal', month:new Date().getMonth(), presetDate:'', view:'queue', year:new Date().getFullYear(), filter:'all', data:null, queue:null, sets:null, owners:[], role:'', g:null, dtab:'info', form:null, day:'', reasons:{}, busy:false, imp:null };
@@ -13296,7 +13310,7 @@ function trColor(cat){
 }
 function trChip(text, cls){ return `<span class="ex-chip ${cls||''}">${trH(text)}</span>`; }
 function trStatusChip(s){
-  if(s.status === 'closed') return trChip('ปิดงานแล้ว','');
+  if(s.status === 'closed') return trChip('จบ Training แล้ว','');
   if(s.status === 'cancelled') return trChip('ยกเลิก','bad');
   if(s.status === 'plan') return trChip(s.dateMode === 'month' ? 'แผนรายเดือน' : 'แผน','');
   return trChip('เปิดรับลงทะเบียน','acc');
@@ -13477,10 +13491,27 @@ async function trOpen(id){
     window.scrollTo(0,0);
   }catch(e){ TR.detail = null; trErr(root, e, 'reload'); }
 }
+function trIsBreak(it){ return /lunch|break|พักเที่ยง|พักกลางวัน|พัก/i.test(String(it.content||'')) && !String(it.media||'').trim(); }
+function trTimeTxt(it){ return it.timeFrom||it.timeTo ? (it.timeFrom||'')+(it.timeTo?' - '+it.timeTo:'') : ''; }
+/* ตารางเรียนแบบตารางเดียว (วัน / เวลา / หัวข้อ / สื่อ) เหมือนไฟล์ Excel — แถวพักเที่ยงไฮไลต์เหลือง */
 function trDaysHtml(g){
   if(!g.days.length) return '<div class="ex-hint">ยังไม่มีตารางเรียนรายวัน</div>';
-  return g.days.map((d,i)=>`<details class="tr-day" ${i===0?'open':''}><summary><b>วันที่ ${i+1}</b> · ${TR_DOW[trDow(d.date)]} ${trH(trFmtDate(d.date))}</summary>
-    <div class="tr-items">${d.items.map(it=>`<div class="tr-it"><div class="tr-it-t">${it.timeFrom||it.timeTo ? trH((it.timeFrom||'')+(it.timeTo?'–'+it.timeTo:'')) : '—'}</div><div class="tr-it-c">${it.content?trH(it.content):'<span class="ex-hint">(ไม่ระบุหัวข้อ)</span>'}${it.media?`<small>${trH(it.media)}</small>`:''}</div></div>`).join('')}</div></details>`).join('');
+  let h = '<div class="tr-tblwrap"><table class="tr-tbl"><thead><tr><th class="c-t">เวลา</th><th>หัวข้อ</th><th class="c-m">สื่อ</th></tr></thead>';
+  g.days.forEach((d,i)=>{
+    h += `<tbody><tr class="tr-tbl-day"><th colspan="3">DAY ${i+1} · ${TR_DOW[trDow(d.date)]} ${trH(trFmtDate(d.date))}</th></tr>`;
+    const its = d.items;
+    its.forEach((it,k)=>{
+      const t = trTimeTxt(it), prev = k>0 ? trTimeTxt(its[k-1]) : null;
+      let tcell = '';
+      if(!(k>0 && t && t === prev)){ // รวมเซลล์เวลาที่ซ้ำติดกัน
+        let span = 1; while(k+span < its.length && t && trTimeTxt(its[k+span]) === t) span++;
+        tcell = `<td class="c-t" rowspan="${span}">${t ? trH(t) : '—'}</td>`;
+      }
+      h += `<tr class="${trIsBreak(it)?'brk':''}">${tcell}<td>${it.content?trH(it.content):'<span class="ex-hint">(ไม่ระบุหัวข้อ)</span>'}</td><td class="c-m">${trH(it.media||'')}</td></tr>`;
+    });
+    h += '</tbody>';
+  });
+  return h + '</table></div>';
 }
 function trInfoGrid(s){
   const rows = [
@@ -13653,7 +13684,7 @@ function traSessionCards(list){
     <div class="tr-card-t"><b>${trH(s.title)}</b></div>
     <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}${s.ownerName&&TRA.role==='manager'?' · เจ้าของ: '+trH(s.ownerName):''}</div>
     <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
-    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}${overdue?trChip('จบแล้ว ยังไม่ปิดงาน','bad'):''}</div></div>`; }).join('');
+    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}${overdue?trChip('จบแล้ว ยังไม่จบ Training','bad'):''}</div></div>`; }).join('');
 }
 function traRenderSessions(){
   const root = $('tra-root'), d = TRA.data;
@@ -13697,7 +13728,7 @@ function traRenderDetail(){
   const appr = regs.filter(r=>r.status==='approved').length, req = regs.filter(r=>r.status==='requested').length;
   const tabs = [['info','ข้อมูล'],['people','ผู้เข้าเทรน'+(req?` (${req})`:'')],['checkin','เช็คชื่อ']];
   if(s.certType === 'internal') tabs.push(['exam','สอบ']);
-  tabs.push(['close', s.status==='closed' ? 'สรุป/ไฟล์' : 'ปิดงาน']);
+  tabs.push(['close', s.status==='closed' ? 'สรุป/ไฟล์' : 'จบ Training']);
   if(!tabs.some(t=>t[0]===TRA.dtab)) TRA.dtab = 'info';
   let h = `<div class="tr-back"><button class="btn btn-ghost btn-sm" data-tr="aback">← รายการ</button></div>
     <div class="tr-hero" style="--tc:${trColor(s.category)}"><h2>${trH(s.title)}</h2><div class="ex-row" style="margin:6px 0 0">${trStatusChip(s)}${trCertChip(s)}${trChip(trSeatText(s),'')}${req?trChip('รออนุมัติ '+req,'warn'):''}</div>
@@ -13904,7 +13935,7 @@ async function traIssueCerts(){
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 
-/* ----- ปิดงาน / ไฟล์แนบ ----- */
+/* ----- จบ Training / ไฟล์แนบ ----- */
 function trPickModel(s){
   const toks = String(s.model||'').split(/\s*[\/,]\s*/).filter(Boolean);
   try{ const known = (DATA.categories[s.category]||[]).map(String); for(const t of toks){ const hit = known.find(k=>k.toLowerCase()===t.toLowerCase()); if(hit) return hit; } }catch(e){}
@@ -13938,9 +13969,9 @@ function traCloseModel(g){
 function traCloseHtml(g){
   const s = g.session, m = traCloseModel(g), closed = s.status === 'closed';
   let h = '';
-  if(closed) h += `<div class="ex-note" style="border-color:var(--green)">✅ ปิดงานเทรนแล้ว เมื่อ ${trH(exFmtDT(s.closedAt))}${s.closeNote?' — '+trH(s.closeNote):''}</div>`;
+  if(closed) h += `<div class="ex-note" style="border-color:var(--green)">✅ จบ Training แล้ว เมื่อ ${trH(exFmtDT(s.closedAt))}${s.closeNote?' — '+trH(s.closeNote):''}</div>`;
   else if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานนี้ถูกยกเลิก</div>';
-  else h += '<div class="ex-hint">ปิดงานเมื่อเทรนจบ: แนบรูปบรรยากาศ และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
+  else h += '<div class="ex-hint">จบ Training เมื่อเทรนจบ: แนบรูปบรรยากาศ และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
   // รูปบรรยากาศ
   h += `<div class="tr-sec"><b>📷 รูปบรรยากาศ</b> <small>(${m.photos.length} รูป · อย่างน้อย 1 รูป · ไม่จำกัดขนาด)</small><div class="tr-thumbs">${m.photos.map(f=>`<div class="tr-th"><a href="${trH(safeHttpUrl(f.driveUrl))}" target="_blank" rel="noopener"><img loading="lazy" src="${trH(exImg(f.driveUrl,'w300'))}" alt="${trH(f.fileName)}"></a>${closed?'':`<button class="tr-x" data-tr="rmfile" data-id="${trH(f.fileId)}" aria-label="ลบรูป">✕</button>`}</div>`).join('')}</div>
     ${closed?'':`<div class="ex-act"><button class="btn btn-ghost tr-big" data-tr="photo" data-cam="1">📸 ถ่ายรูป</button><button class="btn btn-ghost tr-big" data-tr="photo">🖼 เลือกรูป (หลายรูปได้)</button></div>`}</div>`;
@@ -13965,7 +13996,7 @@ function traCloseHtml(g){
   }
   if(!closed){
     h += `<div class="tr-sec"><label class="tr-lb">บันทึกสรุปการเทรน (ไม่บังคับ)</label><textarea class="tr-in" rows="2" id="tra-closenote" placeholder="สรุปสั้นๆ"></textarea></div>
-      <div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="closeses">✅ ปิดงานเทรน${m.photos.length===0||m.remain?' (ยังไม่ครบ)':''}</button></div>`;
+      <div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="closeses">✅ จบ Training${m.photos.length===0||m.remain?' (ยังไม่ครบ)':''}</button></div>`;
   } else {
     const unsynced = (g.files||[]).filter(f=>f.kind==='mfrCert' && !f.certDocId && (g.regs.find(r=>r.regId===f.regId)||{}).email);
     if(unsynced.length) h += `<div class="ex-note ex-bad">ใบ Cer ผู้ผลิต ${unsynced.length} ไฟล์ ยังไม่ถูกส่งเข้าแท็บ Certificate ของ Engineer <div class="ex-act"><button class="btn btn-primary" data-tr="mfrsync">🔁 ส่งเข้า Certificate ใหม่</button></div></div>`;
@@ -14045,15 +14076,15 @@ async function trFinishMfr(s, files){
 async function traCloseSession(){
   const g = TRA.g, s = g.session;
   const reasons = {}; (g.regs||[]).forEach(r=>{ if(TRA.reasons[r.regId] !== undefined) reasons[r.regId] = TRA.reasons[r.regId]; });
-  if(!confirm('ปิดงานเทรน "'+s.title+'" ?\nหลังปิดจะแก้รายชื่อ/เช็คชื่อ/ไฟล์ไม่ได้ (เปิดกลับได้ภายหลัง)')) return;
+  if(!confirm('จบ Training "'+s.title+'" ?\nหลังปิดจะแก้รายชื่อ/เช็คชื่อ/ไฟล์ไม่ได้ (เปิดกลับได้ภายหลัง)')) return;
   if(s.certType === 'manufacturer' && !(await exEnsureDrive())) return;
-  showLoadingOverlay('กำลังปิดงาน...');
+  showLoadingOverlay('กำลังจบ Training...');
   try{
     const noteEl = $('tra-closenote');
     const r = await examApi('trCloseSession', { sessionId:s.sessionId, reasons, note: noteEl ? noteEl.value : '' });
     if(!r.closed){
       hideLoadingOverlay();
-      alert('ยังปิดงานไม่ได้ เพราะ:\n• ' + r.issues.map(i=>(i.name?i.name+' — ':'')+i.msg).join('\n• '));
+      alert('ยังจบ Training ไม่ได้ เพราะ:\n• ' + r.issues.map(i=>(i.name?i.name+' — ':'')+i.msg).join('\n• '));
       await traReload(true); return;
     }
     let note = '';
@@ -14063,7 +14094,7 @@ async function traCloseSession(){
       note = '\nส่งใบ Cer ผู้ผลิตเข้าแท็บ Certificate แล้ว '+res.ok+'/'+r.mfrFiles.length+' ไฟล์' + (res.fail.length ? '\nไม่สำเร็จ: '+res.fail.join(', ')+'\n(กด "ส่งเข้า Certificate ใหม่" ได้ภายหลัง)' : '');
     }
     TRA.reasons = {};
-    hideLoadingOverlay(); showToast('✓ ปิดงานเทรนเรียบร้อย'+note);
+    hideLoadingOverlay(); showToast('✓ จบ Training เรียบร้อย'+note);
     await traReload(false); window.scrollTo(0,0);
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
@@ -14159,20 +14190,45 @@ function traRenderForm(){
   h += `<div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="f_save">💾 บันทึก</button><button class="btn btn-ghost tr-big" data-tr="f_cancel">ยกเลิก</button></div></div>`;
   root.innerHTML = h;
 }
+function traTimeSel(di, ii, k, cur){
+  const opts = ['<option value="">--:--</option>']; let has = !cur;
+  for(let m = 6*60; m <= 22*60; m += 30){
+    const v = String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+    if(v === cur) has = true;
+    opts.push(`<option value="${v}" ${v===cur?'selected':''}>${v}</option>`);
+  }
+  if(!has) opts.push(`<option value="${trH(cur)}" selected>${trH(cur)}</option>`);
+  return `<select class="tr-in tr-tsel" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="${k}" aria-label="${k==='timeFrom'?'เวลาเริ่ม':'เวลาสิ้นสุด'}">${opts.join('')}</select>`;
+}
 function traScheduleHtml(){
   const F = TRA.form;
-  let h = `<div class="tr-fs"><b>ตารางเรียนรายวัน</b><div class="ex-hint">เลือกวันที่เริ่ม-สิ้นสุดก่อน แล้วกด "สร้างวันตามช่วงวันที่" หรือเพิ่มวันเอง · แต่ละวันเพิ่มหัวข้อได้หลายรายการ</div>`;
+  let h = `<div class="tr-fs"><b>ตารางเรียนรายวัน</b><div class="ex-hint">กดปุ่มลัดเพื่อเพิ่มช่วงเวลา (เช้า / พักเที่ยง / บ่าย) แล้วพิมพ์หัวข้อ — เวลาเลือกจากรายการ ทีละ 30 นาที</div>
+    <div class="ex-act"><button class="btn btn-ghost" data-tr="f_std_all">⚡ ใส่เวลามาตรฐานทุกวัน (09-12 · พัก · 13-17)</button></div>`;
   F.days.forEach((d,di)=>{
-    h += `<div class="tr-dayed"><div class="tr-dayed-h"><b>วันที่ ${di+1}</b><input class="tr-in" type="date" data-tr="f_dday" data-di="${di}" value="${trH(d.date)}"><button class="btn btn-ghost tr-sq" data-tr="f_day_del" data-di="${di}" aria-label="ลบวันนี้">🗑</button></div>`;
+    h += `<div class="tr-dayed"><div class="tr-dayed-h"><b>วันที่ ${di+1}</b><input class="tr-in" type="date" data-tr="f_dday" data-di="${di}" value="${trH(d.date)}"><button class="btn btn-ghost tr-sq" data-tr="f_day_del" data-di="${di}" aria-label="ลบวันนี้">🗑</button></div>
+      <div class="tr-chips"><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="am">＋ 09:00-12:00</button><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="lunch">🍽 พักเที่ยง</button><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="pm">＋ 13:00-17:00</button><button class="btn btn-ghost tr-chip" data-tr="f_it_add" data-di="${di}">＋ เวลาอื่น</button></div>`;
     d.items.forEach((it,ii)=>{
-      h += `<div class="tr-ited"><div class="tr-ited-t"><input class="tr-in" type="time" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="timeFrom" value="${trH(it.timeFrom)}" aria-label="เวลาเริ่ม"><span>–</span><input class="tr-in" type="time" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="timeTo" value="${trH(it.timeTo)}" aria-label="เวลาสิ้นสุด"><button class="btn btn-ghost tr-sq" data-tr="f_it_del" data-di="${di}" data-ii="${ii}" aria-label="ลบหัวข้อ">✕</button></div>
+      h += `<div class="tr-ited${/lunch|พักเที่ยง/i.test(it.content)?' brk':''}"><div class="tr-ited-t">${traTimeSel(di,ii,'timeFrom',it.timeFrom)}<span>–</span>${traTimeSel(di,ii,'timeTo',it.timeTo)}<button class="btn btn-ghost tr-sq" data-tr="f_it_del" data-di="${di}" data-ii="${ii}" aria-label="ลบหัวข้อ">✕</button></div>
         <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="content" value="${trH(it.content)}" placeholder="หัวข้อการอบรม">
-        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="media" value="${trH(it.media)}" placeholder="สื่อ เช่น Power Point / หน้าเครื่อง"></div>`;
+        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="media" value="${trH(it.media)}" placeholder="สื่อ เช่น Power Point / Machine"></div>`;
     });
-    h += `<button class="btn btn-ghost tr-sq2" data-tr="f_it_add" data-di="${di}">＋ เพิ่มหัวข้อในวันนี้</button></div>`;
+    h += `</div>`;
   });
   h += `<div class="ex-act"><button class="btn btn-ghost" data-tr="f_day_add">＋ เพิ่มวัน</button><button class="btn btn-ghost" data-tr="f_day_range">📅 สร้างวันตามช่วงวันที่</button><button class="btn btn-ghost" data-tr="f_copy">⎘ คัดลอกตารางจากงานก่อนหน้า</button></div></div>`;
   return h;
+}
+const TR_PRESET = { am:['09:00','12:00','',''], lunch:['12:00','13:00','Lunch break',''], pm:['13:00','17:00','',''] };
+function traAddPreset(di, v){
+  const p = TR_PRESET[v], items = TRA.form.days[di].items;
+  const it = { timeFrom:p[0], timeTo:p[1], content:p[2], media:p[3] };
+  // แทนแถวว่างแถวเดียวที่ยังไม่ได้กรอก
+  if(items.length === 1 && !items[0].timeFrom && !items[0].timeTo && !String(items[0].content).trim() && !String(items[0].media).trim()) items[0] = it; else items.push(it);
+}
+function traStdAll(){
+  TRA.form.days.forEach((d,di)=>{
+    const blank = d.items.every(i=>!String(i.content).trim() && !String(i.media).trim());
+    if(blank){ d.items = []; ['am','lunch','pm'].forEach(v=>traAddPreset(di,v)); }
+  });
 }
 function traFormSync(){ /* ค่าในช่องกรอกถูกเก็บลง TRA.form ทุกครั้งที่พิมพ์แล้ว — ไม่ต้องอ่านซ้ำ */ }
 function traFormDayRange(){
@@ -14291,7 +14347,7 @@ function traRenderImport(){
   const root = $('tra-root'), I = TRA.imp;
   let h = traTabs() + '<h2 class="tr-h2">เครื่องมือ Manager</h2>';
   h += `<div class="tr-fs"><b>📥 นำเข้าแผนเทรนปี 2569 (จากไฟล์ Excel เดิม)</b>
-    <div class="ex-hint">นำเข้า: ชื่อหลักสูตร วัน-เวลา-หัวข้อ รายชื่อผู้เข้าเทรน (ผูกกับบัญชีเมื่อชื่อตรงกับโปรไฟล์) · ไม่นำเข้าเวลาเข้าเรียน/คะแนนสอบ · งานที่จบก่อนวันนี้ = "ปิดงานแล้ว" · งานที่ยังไม่ถึง = "เปิดรับลงทะเบียน" (รายชื่อเดิมอนุมัติแล้ว) · นำเข้าซ้ำได้ ระบบข้ามรายการที่เคยนำเข้า</div>
+    <div class="ex-hint">นำเข้า: ชื่อหลักสูตร วัน-เวลา-หัวข้อ รายชื่อผู้เข้าเทรน (ผูกกับบัญชีเมื่อชื่อตรงกับโปรไฟล์) · ไม่นำเข้าเวลาเข้าเรียน/คะแนนสอบ · งานที่จบก่อนวันนี้ = "จบ Training แล้ว" · งานที่ยังไม่ถึง = "เปิดรับลงทะเบียน" (รายชื่อเดิมอนุมัติแล้ว) · นำเข้าซ้ำได้ ระบบข้ามรายการที่เคยนำเข้า</div>
     <div class="ex-act"><button class="btn btn-ghost" data-tr="imp_all" data-v="1">เลือกทั้งหมดที่ยังไม่เคยนำเข้า</button><button class="btn btn-ghost" data-tr="imp_all" data-v="0">ไม่เลือกเลย</button></div>`;
   h += I.rows.map(r=>{
     const s = r.seed, matched = r.att.filter(a=>a.p).length;
@@ -14418,6 +14474,7 @@ function trOnEvent(e){
       if(k === 'setCat'){ const m = document.querySelector('[data-k="setModel"]'); if(m){ const all = traFormSetOptions(F.f); const ms = [...new Set(all.filter(x=>!F.setCat || x.category === F.setCat).map(x=>x.model))]; m.innerHTML = '<option value="">ทุกรุ่น</option>' + ms.map(x=>`<option value="${trH(x)}">${trH(x)}</option>`).join(''); } }
       return;
     }
+    if(act === 'f_dit'){ TRA.form.days[num('data-di')].items[num('data-ii')][t.getAttribute('data-k')] = t.value; return; }
     if(act === 'f_dday'){ TRA.form.days[num('data-di')].date = t.value; return; }
     if(act === 'reason'){ TRA.reasons[id] = t.value; examApi('trSetReasons', { sessionId:TRA.g.session.sessionId, reasons:{ [id]:t.value } }).catch(()=>{}); return; }
     if(act === 'fcat'){ TR.cat = t.value; trRender(); return; }
@@ -14497,6 +14554,8 @@ function trOnEvent(e){
     case 'f_mode': TRA.form.f.dateMode = v; if(v === 'month'){ TRA.form.f.status = 'plan'; if(!TRA.form.f.month && TRA.form.f.startDate) TRA.form.f.month = TRA.form.f.startDate.slice(0,7); } traRenderForm(); return;
     case 'f_cert': TRA.form.f.certType = v; if(v !== 'internal') TRA.form.f.examSetId = ''; traRenderForm(); return;
     case 'f_status': TRA.form.f.status = v; traRenderForm(); return;
+    case 'f_preset': traAddPreset(num('data-di'), v); traRenderForm(); return;
+    case 'f_std_all': traStdAll(); traRenderForm(); return;
     case 'f_day_add': traFormAddDay(); return;
     case 'f_day_range': traFormDayRange(); return;
     case 'f_day_del': TRA.form.days.splice(num('data-di'),1); traRenderForm(); return;
