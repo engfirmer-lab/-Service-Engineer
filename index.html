@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.40
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 01:58 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.42
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 02:42 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.40</title>
+<title>F1 Service — v9.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -716,6 +716,161 @@
 .ex-hsnew{border-style:dashed;}
 .ex-essay{width:100%;min-height:160px;box-sizing:border-box;font-size:15px;line-height:1.5;}
 .ex-ansbox{white-space:pre-wrap;word-break:break-word;background:var(--panel-alt);border-radius:8px;padding:8px 10px;margin:4px 0 8px;font-size:13.5px;line-height:1.55;user-select:text;}
+
+/* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
+#tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
+.tr-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.tr-yr{display:flex;align-items:center;gap:8px;font-size:18px;}
+.tr-yr button{min-width:44px;min-height:40px;font-size:20px;}
+.tr-views{margin:0;flex:1;}
+.tr-views button,.tr-seg button,.tr-dtabs button,.tr-days button{min-height:40px;}
+.tr-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0;}
+.tr-filters select{flex:1 1 140px;min-height:44px;font-size:16px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);padding:0 8px;}
+.tr-chk{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;cursor:pointer;}
+.tr-chk input{width:20px;height:20px;}
+.tr-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--text-dim);margin:2px 0 10px;}
+.tr-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;}
+.tr-alert a{color:inherit;text-decoration:underline;font-weight:700;}
+/* ปฏิทิน */
+.tr-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.tr-dow{text-align:center;font-size:11px;color:var(--text-faint);padding:2px 0;}
+.tr-cell{position:relative;min-height:44px;border-radius:6px;background:var(--panel-alt);padding:3px 4px;font-size:12px;overflow:hidden;}
+.tr-cell.empty{background:transparent;}
+.tr-cell.has{background:var(--panel);border:1px solid var(--border);cursor:pointer;}
+.tr-cell.has:active{background:var(--panel-alt);}
+.tr-cell.today span{background:var(--amber);color:#fff;border-radius:999px;padding:0 5px;}
+.tr-cell u{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--green);text-decoration:none;}
+.tr-bars{display:flex;flex-direction:column;gap:2px;margin-top:2px;}
+.tr-bars i{display:block;height:5px;border-radius:3px;}
+.tr-bars i.plan{opacity:.45;}
+.tr-bars em{font-size:10px;font-style:normal;color:var(--text-dim);}
+.tr-grid.big .tr-cell{min-height:56px;font-size:13px;}
+.tr-mstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;-webkit-overflow-scrolling:touch;}
+.tr-mstrip button{flex:0 0 auto;min-width:52px;min-height:40px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);border-radius:999px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;position:relative;}
+.tr-mstrip button.active{background:var(--amber);border-color:var(--amber);color:#1a1206;}
+.tr-mstrip b{color:var(--amber);margin-left:2px;}
+.tr-mhead{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px;font-size:16px;}
+.tr-mhead button{min-width:44px;min-height:40px;font-size:20px;}
+.tr-mlist{margin-top:12px;}
+.tr-m12{display:none;}
+.tr-mcard{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px;}
+.tr-mt{font-weight:700;margin-bottom:6px;}
+.tr-mo{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 4px;cursor:pointer;border-top:1px dashed var(--border);margin-top:4px;}
+.tr-mo i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
+@media (min-width:900px){
+  .tr-m1{display:none;}
+  .tr-m12{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+}
+@media (min-width:1200px){ .tr-m12{grid-template-columns:repeat(4,1fr);} }
+/* การ์ดงาน */
+.tr-mh{font-weight:700;font-size:14px;margin:16px 0 6px;color:var(--text-dim);}
+.tr-card{background:var(--panel);border:1px solid var(--border);border-left:5px solid var(--tc,var(--amber));border-radius:10px;padding:12px 14px;margin:8px 0;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tr-card:active{background:var(--panel-alt);}
+.tr-card-t{font-size:15px;line-height:1.35;}
+.tr-card-m,.tr-card-c{font-size:12.5px;color:var(--text-dim);margin-top:3px;line-height:1.45;}
+.tr-card-f{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+@media (min-width:900px){ #tr-root .tr-mlist,#tr-root>.tr-card{max-width:none;} }
+/* รายละเอียด */
+.tr-back{margin:2px 0 10px;}
+.tr-back button{min-height:40px;}
+.tr-hero{border-left:6px solid var(--tc,var(--amber));background:var(--panel);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.tr-hero h2{margin:0;font-size:18px;line-height:1.35;}
+.tr-info{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:4px 12px;margin:10px 0;}
+.tr-ir{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.45;}
+.tr-ir:last-child{border-bottom:0;}
+.tr-ir>span{flex:0 0 22px;}
+.tr-ir small{display:block;color:var(--text-faint);font-size:11.5px;}
+.tr-sec{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;}
+.tr-sec>summary{cursor:pointer;min-height:32px;}
+.tr-sec>b{display:block;margin-bottom:6px;}
+.tr-day{border-top:1px solid var(--border);padding:6px 0;}
+.tr-day summary{cursor:pointer;min-height:40px;display:flex;align-items:center;}
+.tr-items{padding:2px 0 6px;}
+.tr-it{display:flex;gap:10px;padding:6px 0;font-size:13.5px;line-height:1.45;}
+.tr-it-t{flex:0 0 92px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.tr-it-c{flex:1;word-break:break-word;}
+.tr-att{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:6px 0;font-size:13.5px;}
+.tr-bar{position:sticky;bottom:0;z-index:20;display:flex;gap:8px;padding:10px 0 calc(10px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 78%,transparent);margin-top:12px;}
+.tr-bar .btn{flex:1;justify-content:center;}
+.tr-big{min-height:48px;font-size:15px;justify-content:center;}
+.tr-sq{min-height:44px;min-width:44px;font-size:14px;justify-content:center;}
+.tr-sq2{min-height:44px;font-size:14px;}
+/* แถวรายชื่อ */
+.tr-qs{border:1px solid var(--border);border-left:5px solid var(--tc,var(--amber));border-radius:10px;background:var(--panel);margin:10px 0;padding:6px 12px 10px;}
+.tr-qs-h{display:flex;flex-direction:column;gap:2px;padding:8px 0;cursor:pointer;}
+.tr-qs-h small{color:var(--text-dim);font-size:12.5px;}
+.tr-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
+.tr-row.done{background:color-mix(in srgb,var(--green) 8%,transparent);}
+.tr-row-n{flex:1;min-width:0;display:flex;flex-direction:column;word-break:break-word;}
+.tr-row-n small{color:var(--text-dim);font-size:12px;line-height:1.4;}
+.tr-row-a{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.tr-seat{position:relative;height:22px;border-radius:999px;background:var(--panel-alt);overflow:hidden;margin:8px 0;}
+.tr-seat div{position:absolute;inset:0 auto 0 0;background:color-mix(in srgb,var(--amber) 35%,transparent);}
+.tr-seat span{position:relative;display:block;text-align:center;font-size:12px;line-height:22px;}
+/* เช็คชื่อ */
+.tr-ck-head{display:flex;gap:8px;align-items:stretch;margin-bottom:8px;}
+.tr-clock{flex:2;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;}
+.tr-clock small{color:var(--text-faint);font-size:11px;}
+.tr-clock span{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:1px;}
+.tr-sum{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;display:flex;flex-direction:column;justify-content:center;}
+.tr-sum b{font-size:22px;}
+.tr-sum small{font-size:11px;color:var(--text-dim);}
+.tr-sum.late b{color:var(--amber);}
+.tr-days,.tr-dtabs,.tr-seg{margin-bottom:10px;}
+.tr-ckok{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:13px;}
+.tr-ckok small{color:var(--text-faint);font-size:11px;}
+.tr-ckbtn{min-height:48px;min-width:96px;font-size:15px;justify-content:center;}
+/* ฟอร์ม */
+.tr-lb{display:block;font-size:12.5px;color:var(--text-dim);margin:8px 0 3px;}
+.tr-in{width:100%;box-sizing:border-box;min-height:44px;font-size:16px;font-family:inherit;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);padding:8px 10px;}
+textarea.tr-in{min-height:80px;line-height:1.5;}
+.tr-form{display:flex;flex-direction:column;gap:12px;}
+.tr-fs{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.tr-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.tr-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media (max-width:520px){ .tr-3{grid-template-columns:1fr 1fr;} }
+.tr-dayed{border:1px dashed var(--border);border-radius:8px;padding:8px;margin:8px 0;}
+.tr-dayed-h{display:flex;gap:8px;align-items:center;}
+.tr-dayed-h b{flex:0 0 auto;}
+.tr-ited{border-top:1px solid var(--border);padding:8px 0;}
+.tr-ited-t{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.tr-ited-t .tr-in{flex:1;min-width:0;}
+.tr-imp{border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:8px 0;}
+.tr-imp.done{opacity:.6;}
+/* ปิดงาน / ไฟล์ */
+.tr-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0;}
+.tr-th{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--panel-alt);}
+.tr-th img{width:100%;height:100%;object-fit:cover;display:block;}
+.tr-th .tr-x{position:absolute;top:2px;right:2px;}
+.tr-x{min-width:36px;min-height:36px;border:0;border-radius:999px;background:rgba(0,0,0,.6);color:#fff;font-size:15px;cursor:pointer;}
+.tr-file{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;font-size:13.5px;word-break:break-all;}
+.tr-file .tr-x{background:var(--panel-alt);color:var(--red);}
+.tr-cnt{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;margin:8px 0;font-weight:600;}
+.tr-cnt .ok{color:var(--green);}.tr-cnt .warn{color:var(--amber);}.tr-cnt .bad{color:var(--red);}
+.tr-pr{border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;}
+.tr-pr.need{border-color:var(--red);}
+.tr-pr-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;}
+.tr-log{font-size:12px;color:var(--text-dim);line-height:1.6;}
+.tr-h2{font-size:16px;margin:12px 0 6px;}
+.tr-menu{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.tr-plist{display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow-y:auto;}
+.tr-prow{display:flex;flex-direction:column;align-items:flex-start;min-height:48px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);font-family:inherit;font-size:14px;text-align:left;cursor:pointer;}
+.tr-prow small{color:var(--text-dim);font-size:12px;}
+.tr-prow:disabled{opacity:.5;}
+/* bottom sheet */
+.tr-sheet-wrap{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;}
+.tr-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+.tr-sheet{position:relative;width:100%;max-width:640px;max-height:88vh;background:var(--bg);border-radius:16px 16px 0 0;display:flex;flex-direction:column;box-shadow:0 -6px 24px rgba(0,0,0,.35);}
+.tr-sheet-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);}
+.tr-sheet-b{overflow-y:auto;padding:12px 14px calc(16px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;}
+@media (min-width:700px){ .tr-sheet-wrap{align-items:center;} .tr-sheet{border-radius:16px;} }
+body.tr-noscroll{overflow:hidden;}
+.trc-mfr{background:color-mix(in srgb,var(--amber) 22%,transparent);color:var(--text);}
+.trc-int{background:color-mix(in srgb,var(--amber) 20%,transparent);color:var(--text);}
+@media print{ #view-train,#view-trainadmin,.tr-sheet-wrap{display:none !important;} }
+.tr-days button{line-height:1.25;text-align:center;}
+.tr-days button small{display:block;font-size:11px;font-weight:400;opacity:.85;}
+.tr-fs .tr-seg{margin:8px 0 10px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script id="pdfjs-embedded">
@@ -1962,6 +2117,8 @@ setTimeout(function(){
 
   <div id="view-exam" style="display:none;"><div id="ex-root"></div></div>
   <div id="view-examadmin" style="display:none;"><div id="exa-root"></div></div>
+  <div id="view-train" style="display:none;"><div id="tr-root"></div></div>
+  <div id="view-trainadmin" style="display:none;"><div id="tra-root"></div></div>
 
   <!-- ===== หน้า Admin Service: ตรวจรับอะไหล่ ===== -->
   <div id="view-admin-service" style="display:none;">
@@ -2177,8 +2334,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.40";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 01:58 น. เวลาไทย";
+const APP_VERSION = "9.42";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 02:42 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6434,6 +6591,7 @@ $('roster-refresh-btn').addEventListener('click', loadAndRenderRoster);
 /* ===================== MODE SWITCH + PIN GATE (2 pin scopes) ===================== */
 function requestModeSwitch(mode){
   if(mode==='eng'){ switchMode(mode); return; }
+  if(mode==='train'){ if(!isApproved()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้'); return; } switchMode(mode); return; }
   if(mode==='exam'){ if(!isApproved()){ showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้'); return; } switchMode(mode); return; }
   if(mode==='orgchart'){ switchMode(mode); return; } // ผังองค์กร: ทุกคนที่ isApproved() ดูได้ (ปุ่มถูกซ่อนไว้แล้วถ้าไม่ผ่าน ไม่ต้องเช็ค Editor)
   if(mode==='roster'){
@@ -6538,7 +6696,7 @@ function switchMode(mode){
   $('view-admin-service').style.display = mode==='admin-service' ? 'block':'none';
   $('view-orgchart').style.display      = mode==='orgchart'      ? 'block':'none';
   $('view-roster').style.display        = mode==='roster'        ? 'block':'none';
-  { const _vx=$('view-exam'); if(_vx) _vx.style.display = mode==='exam' ? 'block':'none'; const _va=$('view-examadmin'); if(_va) _va.style.display = mode==='examadmin' ? 'block':'none'; }
+  { const _vx=$('view-exam'); if(_vx) _vx.style.display = mode==='exam' ? 'block':'none'; const _va=$('view-examadmin'); if(_va) _va.style.display = mode==='examadmin' ? 'block':'none'; const _vt=$('view-train'); if(_vt) _vt.style.display = mode==='train' ? 'block':'none'; const _vta=$('view-trainadmin'); if(_vta) _vta.style.display = mode==='trainadmin' ? 'block':'none'; }
   $('mode-eng').classList.toggle('active',           mode==='eng');
   $('mode-sup').classList.toggle('active',           mode==='sup');
   $('mode-settings').classList.toggle('active',      mode==='settings');
@@ -6558,6 +6716,8 @@ function switchMode(mode){
   if(mode==='orgchart'){ loadAndRenderOrgChart(); }
   if(mode==='exam'){ try{ examEnter(); }catch(e){ console.error(e); } }
   if(mode==='examadmin'){ try{ examAdminEnter(); }catch(e){ console.error(e); } }
+  if(mode==='train'){ try{ trEnter(); }catch(e){ console.error(e); } }
+  if(mode==='trainadmin'){ try{ trAdminEnter(); }catch(e){ console.error(e); } }
   if(mode==='roster'){ if(!isApproved() && !isManager()){ switchMode('eng'); return; } loadAndRenderRoster(); } // กันเผื่อเรียก switchMode('roster') ตรงๆ ข้าม requestModeSwitch
   try{ navxRender(); }catch(e){}
 }
@@ -6605,6 +6765,8 @@ const NAVX = [
       { t:'ผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
     { t:'📝 ข้อสอบ', subs:[
       { t:'ข้อสอบของฉัน', m:'exam', k:'f_exam', cap:'es' } ] },
+    { t:'📅 ตารางเทรน', subs:[
+      { t:'ตารางเทรน', m:'train', k:'f_train', cap:'es' } ] },
     { t:'👥 ทีมงาน', subs:[
       { t:'ผังองค์กร', m:'orgchart', k:'f_org', cap:'es' },
       { t:'รายชื่อ',    m:'roster', k:'f_roster', cap:'es' } ] }
@@ -6614,7 +6776,8 @@ const NAVX = [
     { t:'📁 จัดการเอกสาร',         m:'sup', tab:'docs',   k:'mg_docs',   cap:'s' },
     { t:'🔧 สรุปเคลมอะไหล่/ปัญหา', m:'sup', tab:'claims', k:'mg_claims', cap:'s', badge:'claims-tab-badge' },
     { t:'📦 ตรวจรับอะไหล่',        m:'admin-service', k:'recv_main', cap:'sa' },
-    { t:'📝 จัดการข้อสอบ',         m:'examadmin', k:'mg_exam', cap:'s' }
+    { t:'📝 จัดการข้อสอบ',         m:'examadmin', k:'mg_exam', cap:'s' },
+    { t:'📅 จัดการตารางเทรน',      m:'trainadmin', k:'mg_train', cap:'s' }
   ]},
   { id:'dash', label:'📊 Dashboard', lvl:'editor', items:[
     { t:'ภาพรวม',        m:'mgr', mtab:'summary', k:'d_sum',     cap:'s' },
@@ -12000,6 +12163,7 @@ async function examLoadHome(autoResume){
     }
     examRenderHome();
     examSyncMyCerts(d.certs);
+    examIssueLinked(d);
   }catch(e){
     root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="reload">ลองใหม่</button></div>`;
   }
@@ -12029,6 +12193,7 @@ function examRenderHome(){
       else if(last && last.pendingReview) action = '<span class="ex-hint">รอ Sup ตรวจข้อเขียนก่อน จึงจะสอบใหม่ได้</span>';
       else if(i.locked) action = '<span class="ex-hint">ต้องสอบผ่าน Level ก่อนหน้าก่อน</span>';
       else if(!i.published) action = '<span class="ex-hint">Sup ยังไม่ได้เผยแพร่ข้อสอบชุดนี้</span>';
+      else if(i.state === 'pending') action = '<span class="ex-hint">รอ Sup กดเริ่มสอบ</span>';
       else if(!i.isOpen) action = `<span class="ex-hint">${exNow() < i.openAt ? 'ยังไม่ถึงเวลาเปิดรอบ' : 'รอบสอบนี้ปิดแล้ว'}</span>`;
       else action = `<button class="btn btn-primary btn-sm" data-ex="start" data-id="${exH(i.roundId)}">${i.attempts.length ? '🔁 สอบใหม่' : '▶ เริ่มสอบ'}</button>`;
       html += `<div class="ex-card">
@@ -12247,11 +12412,29 @@ async function examSubmit(auto){
     }
   }
 }
+async function examIssueLinked(d){ // รอบที่ผูกกับงานเทรน: ผ่านแล้วแต่ยังไม่มีใบ → ขอให้ระบบออกให้ (เซิร์ฟเวอร์ตรวจสิทธิ์เอง)
+  if(EX._issuing) return; EX._issuing = true;
+  try{
+    const miss = (d.items||[]).filter(i=>i.sessionId && i.passed && !(d.certs||[]).some(c=>c.roundId===i.roundId || (c.setId===i.setId && c.level===i.level)));
+    for(const i of miss.slice(0,3)){
+      const r = await examApi('trIssueMine', { roundId:i.roundId });
+      if(r && r.certs && r.certs.length){ (d.certs = d.certs || []).push(...r.certs); examSyncMyCerts(r.certs); }
+    }
+    if(miss.length && EX.data === d && $('ex-root') && !(EX.cur && EX.cur.active)) examRenderHome();
+  }catch(e){ console.warn('issueLinked', e); }
+  EX._issuing = false;
+}
 function examFinish(result){
   const c = EX.cur;
   if(c){ c.active = false; examLocalClear(c.p.attemptId); }
   if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
-  examRenderResult(result, c ? c.p.roundId : '');
+  const rid = c ? c.p.roundId : '';
+  const it = EX.data && EX.data.items && EX.data.items.find(i=>i.roundId===rid);
+  if(it && it.sessionId && result && result.passed){
+    result.linked = true;
+    examApi('trIssueMine', { roundId:rid }).then(r=>{ if(r && r.certs) examSyncMyCerts(r.certs); }).catch(e=>console.warn('issueMine', e));
+  }
+  examRenderResult(result, rid);
 }
 function examRenderResult(r, roundId){
   const root = $('ex-root');
@@ -12267,7 +12450,7 @@ function examRenderResult(r, roundId){
     <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
     <div class="ex-score">${r.scorePct}%</div>
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
-    <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด${r.passed ? ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้' : ''}</div>
+    <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
     <div class="ex-act" style="margin-top:12px;">
       <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
       ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
@@ -12292,6 +12475,7 @@ async function examAdminEnter(){
       return;
     }
     if(init.role === 'manager' && !EXA.synced){ exaSyncAdmins().catch(()=>{}); }
+    if(EXA.next){ const n = EXA.next; EXA.next = null; await exaGo(n[0], n[1]); return; }
     await exaGo(EXA.view === 'sets' || EXA.view === 'rounds' ? EXA.view : 'sets');
   }catch(e){
     root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="areload">ลองใหม่</button></div>`;
@@ -12338,6 +12522,7 @@ function exaRenderSets(){
       <div class="ex-meta">${exH(s.title)} · ${s.qCount} ข้อ · เกณฑ์ผ่าน ${s.passPercent}% · ${s.durationMin>0 ? s.durationMin+' นาที' : 'ไม่จำกัดเวลา'}${EXA.role==='manager' ? ' · เจ้าของ: '+exH(s.ownerName||s.ownerEmail) : ''}</div>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="openset" data-id="${exH(s.setId)}">✏️ แก้ไข</button></div></div>`;
   });
+  html += exaPurgePanelHtml(); // TEST-PURGE
   root.innerHTML = html;
 }
 
@@ -12579,9 +12764,50 @@ function exaPickImage(cb){
   f.click();
 }
 
+/* ===== TEST-PURGE:BEGIN (ปุ่มล้างข้อมูลทดสอบ — ทดสอบเสร็จให้ลบทั้งก้อนนี้ + บรรทัดที่มีคำว่า TEST-PURGE ทิ้ง) ===== */
+function exaPurgePanelHtml(){
+  if(EXA.role !== 'manager' || !EXA.sets.length) return '';
+  return `<div class="panel-block" style="border-color:var(--red)"><h2>🧹 ล้างข้อมูลทดสอบ <small style="color:var(--red)">(ชั่วคราว — เฉพาะ Manager)</small></h2>
+    <div class="ex-hint">เลือกชุดข้อสอบที่เป็นของทดสอบ ระบบจะลบชุดข้อสอบ ข้อสอบ ทุกเวอร์ชัน รอบสอบ ผลสอบ และใบ Cer ที่เกี่ยวข้อง (ไฟล์ PDF และโฟลเดอร์ใบ Cer ที่ว่างแล้วย้ายลงถังขยะ Drive กู้คืนได้ 30 วัน และลบใบ Cer ออกจากแท็บ Certificate) <b>กู้คืนในแอปไม่ได้</b></div>
+    ${EXA.sets.map(s=>`<label class="ex-opt"><input type="checkbox" class="exa-purge-chk" value="${exH(s.setId)}"><span>${exH(s.category)} › ${exH(s.model)} · Level ${s.level} — ${exH(s.title)}<small>${s.qCount} ข้อ</small></span></label>`).join('')}
+    <div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="purgeall">เลือกทั้งหมด</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="purgego">🧹 ตรวจสอบแล้วล้าง...</button></div></div>`;
+}
+async function exaPurgeGo(){
+  const ids = Array.from(document.querySelectorAll('.exa-purge-chk:checked')).map(x=>x.value);
+  if(!ids.length){ alert('ติ๊กเลือกชุดข้อสอบที่จะล้างก่อน'); return; }
+  showLoadingOverlay('กำลังตรวจสอบสิ่งที่จะถูกลบ...');
+  let pv;
+  try{ pv = await examApi('adminPurgePreview', { setIds:ids }); }catch(e){ hideLoadingOverlay(); alert(e.message); return; }
+  hideLoadingOverlay();
+  const c = pv.counts;
+  const typed = prompt(`จะลบถาวร:\n• ชุดข้อสอบ ${c.sets} ชุด (${c.questions} ข้อ)\n• รอบสอบ ${c.rounds} รอบ\n• ผลสอบ ${c.attempts} ครั้ง\n• ใบ Cer ${c.certs} ใบ\n\nพิมพ์คำว่า ล้างข้อมูล เพื่อยืนยัน`);
+  if(typed === null) return;
+  if(typed.trim() !== 'ล้างข้อมูล'){ alert('คำยืนยันไม่ตรง ไม่ได้ลบอะไร'); return; }
+  showLoadingOverlay('กำลังล้างข้อมูลทดสอบ...');
+  const notes = [];
+  try{
+    const fileIds = pv.certs.map(x=>x.pdfFileId).filter(Boolean);
+    if(fileIds.length){ const t = await examApi('adminTrashCertFiles', { fileIds }); notes.push(`ไฟล์ PDF ย้ายลงถังขยะ ${t.trashed}${t.failed?' (ไม่สำเร็จ '+t.failed+')':''} · โฟลเดอร์ที่ว่างแล้วลบ ${t.foldersTrashed||0} โฟลเดอร์`); }
+    let fsOk = 0, fsFail = 0;
+    await initFirebase(); const sdk = window._firebaseSdk;
+    for(const x of pv.certs){
+      try{ const cid = certDocId(String(x.email).toLowerCase(), 'internal', x.category, x.model) + '__exam_' + x.certNo; await sdk.deleteDoc(sdk.doc(db,'certificates', cid)); fsOk++; }
+      catch(e){ fsFail++; }
+    }
+    if(pv.certs.length) notes.push(`ลบใบ Cer จากแท็บ Certificate ${fsOk}/${pv.certs.length}${fsFail?' (ที่เหลือลบเองในแท็บ Certificate)':''}`);
+    const r = await examApi('adminPurgeTest', { setIds:ids });
+    hideLoadingOverlay();
+    EXA.gradeCount = 0;
+    alert('ล้างข้อมูลทดสอบเรียบร้อย\n' + Object.keys(r.counts).map(k=>k+': '+r.counts[k]).join(' · ') + (notes.length ? '\n'+notes.join('\n') : ''));
+    await exaGo('sets');
+  }catch(e){ hideLoadingOverlay(); alert('ล้างไม่สำเร็จ: '+e.message); }
+}
+/* ===== TEST-PURGE:END ===== */
+
 /* ---------- รอบสอบ ---------- */
 function exaRoundState(r){
   if(r.state === 'closed') return exChip('ปิดแล้ว','');
+  if(r.state === 'pending') return exChip('รอกดเริ่มสอบ','warn');
   const t = exNow();
   if(t < r.openAt) return exChip('ยังไม่เปิด','warn');
   if(r.closeAt && t > r.closeAt) return exChip('หมดช่วงเวลา','');
@@ -12594,7 +12820,7 @@ function exaRenderRounds(){
   EXA.rounds.forEach(r=>{
     html += `<div class="ex-card"><div class="ex-card-h"><div><b>${exH(r.name)}</b> · ${exH(r.category)} › ${exH(r.model)} L${r.level}</div>${exaRoundState(r)}</div>
       <div class="ex-meta">${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · ผู้มีสิทธิ์ ${r.eligibleCount} · สอบแล้ว ${r.attemptedCount} · ผ่าน ${r.passedCount}</div>
-      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">📊 สรุปผล</button> <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button></div></div>`;
+      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">📊 สรุปผล</button> ${r.sessionId ? '<span class="ex-hint">🔗 ผูกกับงานเทรน (จัดการที่ ตารางเทรน)</span>' : `<button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button>`}</div></div>`;
   });
   root.innerHTML = html;
 }
@@ -12680,8 +12906,8 @@ function exaRenderSummary(){
   const rows = d.rows.filter(x=>!f || x.status===f);
   root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="rounds">← กลับรายการ</button><b>${exH(r.name)}</b> ${exaRoundState(r)}</div>
     <div class="ex-meta">${exH(r.category)} › ${exH(r.model)} · Level ${r.level} · ${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · เกณฑ์ผ่าน ${r.passPercent}% · ${r.durationMin>0 ? r.durationMin+' นาที' : 'ไม่จำกัดเวลา'}</div>
-    <div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
-      <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button><button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
+    <div class="ex-row">${r.sessionId ? '<span class="ex-hint">🔗 รอบนี้ผูกกับงานเทรน — เริ่ม/ปิดสอบที่หน้า ตารางเทรน</span>' : `<button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
+      <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button>`}<button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
       <button class="btn btn-primary btn-sm" data-ex="issue" data-id="${exH(r.roundId)}" ${d.counts.passed?'':'disabled'}>🎓 ออกใบ Cer ผู้ที่ผ่าน</button></div>
     <div class="ex-stats">
       <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่าน</span></div>
@@ -12831,6 +13057,8 @@ function exOnEvent(e){
       case 'pdel': { exaReadQForm(); const d = EXA.qEdit; if(d.pairs.length<=2){ showToast('ต้องมีอย่างน้อย 2 คู่'); return; } d.pairs.splice(i,1); exaRefreshEditor(); return; }
       case 'xadd': exaReadQForm(); EXA.qEdit.extras.push(''); exaRefreshEditor(); return;
       case 'xdel': exaReadQForm(); EXA.qEdit.extras.splice(i,1); exaRefreshEditor(); return;
+      case 'purgeall': document.querySelectorAll('.exa-purge-chk').forEach(x=>{ x.checked = true; }); return; // TEST-PURGE
+      case 'purgego': exaPurgeGo(); return; // TEST-PURGE
       case 'rgdel': exaReadQForm(); EXA.qEdit.regions.splice(i,1); exaRefreshEditor(); return;
       case 'gradelist': exaGo('grading', id || ''); return;
       case 'opengrade': exaGo('grade', id); return;
@@ -12885,6 +13113,1212 @@ function exaHsStart(e, box){
   const prot = e=>{ if(e.target && e.target.closest && e.target.closest('.ex-protect')){ if(e.target.matches && e.target.matches('input[type="text"],textarea')) return; e.preventDefault(); } };
   ['contextmenu','copy','cut','dragstart','selectstart'].forEach(ev=>document.addEventListener(ev, prot));
 })();
+
+/* ข้อมูลแผนเทรนปี 2569 จากไฟล์ Training Plan Engineer 2026.xlsx — ใช้เฉพาะตอน Manager กด "นำเข้า" (ไม่รวมเวลาเข้าเรียน/คะแนนสอบ) */
+const TR_SEED = [{"k":"2026-02-CX-6010","model":"CX-6010","title":"CX-6010","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-CL-8000i","model":"CL-8000i","title":"CL-8000i","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-FA-N","model":"FA-N Series","title":"FA-N Series","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-02-CR-30","model":"CR-30 Basic","title":"CR-30 Basic","start":"2026-02-01","end":"2026-02-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-03-Maglumi-M","model":"Maglumi M Series","title":"Maglumi M Series","start":"2026-03-01","end":"2026-03-01","mode":"month","cert":"manufacturer","issuer":"Snibe HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-03-POCT","model":"POCT","title":"POCT","start":"2026-03-01","end":"2026-03-01","mode":"month","cert":"manufacturer","issuer":"Wondfo HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-05-LabUMat2","model":"LabUMat 2 & UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro","start":"2026-05-01","end":"2026-05-01","mode":"month","cert":"internal","issuer":"","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-05-SC120","model":"Advance SC-120","title":"Advance SC-120","start":"2026-05-01","end":"2026-05-01","mode":"month","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-06-FA-280","model":"FA-280","title":"FA-280","start":"2026-06-01","end":"2026-06-01","mode":"month","cert":"none","issuer":"","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-07-Maglumi-X6","model":"Maglumi X6","title":"Maglumi X6","start":"2026-07-01","end":"2026-07-01","mode":"month","cert":"manufacturer","issuer":"Snibe HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"closed"},{"k":"2026-07-Labbeling","model":"Labbeling P520 & P200","title":"Labbeling P520 & P200","start":"2026-07-01","end":"2026-07-01","mode":"month","cert":"manufacturer","issuer":"Labbot HQ","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-08-M1000","model":"M1000","title":"M1000","start":"2026-08-01","end":"2026-08-01","mode":"month","cert":"manufacturer","issuer":"Mindray TH","trainer":"","loc":"","note":"","days":[],"att":[],"st":"plan"},{"k":"2026-09-IH500-1","model":"IH-500","title":"IH-500 Basic Technical Training #1","start":"2026-09-07","end":"2026-09-10","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-09-07","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-09-08","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-09-09","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-09-10","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["พิชิตพงษ์-เก้า",""],["นวพตร-ปอนด์",""],["ซาฟีอี-กาซอ",""],["ธิรภัทร-ต๋อ",""],["อุดมโชค-มอส",""],["จิรายุทธ-เจมส์",""],["ธีรพงษ์-บิว",""],["สิทธิศักดิ์-โอเว่น",""]]},{"k":"2026-09-IH500-2","model":"IH-500","title":"IH-500 Basic Technical Training #2","start":"2026-09-14","end":"2026-09-17","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-09-14","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-09-15","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-09-16","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-09-17","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["ประเสริฐ-ไก่",""],["ฮัปลีย์-ฮัป",""],["สุพัฒน์-เบ้",""],["ธงชัย-อ๋อง",""],["ศราวุธ-ท็อป",""],["ปิยะบุตร-เตย",""],["ชนินทร์พัฒน์-ทิว",""],["ธนบัตร-แม็ก",""]]},{"k":"2026-12-IH500-3","model":"IH-500","title":"IH-500 Basic Technical Training #3","start":"2026-12-15","end":"2026-12-18","mode":"exact","cert":"internal","issuer":"","trainer":"ประพัฒน์พงค์ (โก๋)","loc":"","note":"","days":[{"d":"2026-12-15","it":[["09:00","12:00","Important documents","Power Point"],["09:00","12:00","Overview","Power Point"],["13:00","17:00","Installation","Power Point / Machine"],["13:00","17:00","Start Up","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP-Backup & Restore with v3.1 or v3.2 Windows 10 V1.1","Machine"],["13:00","17:00","Bulletin learning : IH-500 IP LIQ Ionizer Deactivation v1.0","Machine"]]},{"d":"2026-12-16","it":[["09:00","12:00","Continue (Installation, Bulletin learning)","Machine"],["13:00","17:00","Learning : IH-500 Gauge kit","Machine"],["13:00","17:00","Service Software : Vision Station","Power Point / Machine"],["13:00","17:00","Service Software : Pipettor & Hydraulics","Power Point / Machine"]]},{"d":"2026-12-17","it":[["09:00","12:00","Service Software : Transport Arm","Power Point / Machine"],["09:00","12:00","Service Software : Tools","Machine"],["09:00","12:00","Learning : IH-Com (Client & Comunicator)","Machine"],["13:00","17:00","Preventive maintenance 2, 6, 12 Month","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Transport Arm Cover Axis 3 Cleaning","Machine"],["13:00","17:00","Bulletin learning : IH-500 NI Gripper V1.2 Cleaning","Machine"]]},{"d":"2026-12-18","it":[["09:00","12:00","Learning : Troubleshooting","Machine"],["13:00","15:00","Learning : Troubleshooting","Machine"],["15:00","16:00","Theoretical test (To pass 80% for Certificate by Center office)",""],["16:00","17:00","Cleaning up the classroom",""]]}],"att":[["อำนวยศิลป์-วิทย์",""],["ธีรยุทธ-เอก",""],["ฐิติวุฒิ-เจา",""],["วราชันย์-ตั้ม",""],["หนึ่ง",""],["กรวิทย์-ตู่",""],["นนทชัย-นีฟ",""],["ปรัชญา-ต่อ",""]]},{"k":"2026-09-LabUMat","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-09-21","end":"2026-09-25","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"รายชื่อรวมจากตารางเช็คชื่อและใบลงชื่อ (ไม่ตรงกัน 1 คน)","days":[{"d":"2026-09-21","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-09-22","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-09-23","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-09-24","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-09-25","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["กอบชัย-โอ็ต",""],["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["พิชิตพงษ์-เก้า",""],["นพกร-ปุ่น",""],["ปัญญาโชติ-ฟอร์ด",""],["เสรีภาพ-ดนตรี",""],["ธวัชชัย-แม็ก",""],["ธนบัตร-แม็ก",""]]},{"k":"2026-11-LabUMat-1","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-11-02","end":"2026-11-06","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"","days":[{"d":"2026-11-02","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-11-03","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-11-04","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-05","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-06","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["ปฏิพล-บอม",""],["ฮัปลีย์-ฮัป",""],["ธนาธร-นาว",""],["อุดมโชค-มอส",""],["ปิยะบุตร-เตย",""],["ธนากร-เจ",""],["ชัยยรัตน์-เก็ต",""],["อนุพงษ์-ต้นตาล",""]]},{"k":"2026-11-LabUMat-2","model":"LabUMat 2 / UriSed 3 Pro","title":"LabUMat 2 & UriSed 3 Pro Technical Training","start":"2026-11-23","end":"2026-11-27","mode":"exact","cert":"internal","issuer":"","trainer":"เชาวฤทธิ์ (ตั้ม)","loc":"","note":"","days":[{"d":"2026-11-23","it":[["09:00","12:00","LabUMat 2 — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","LabUMat 2 — Troubleshooting",""],["13:00","17:00","LabUMat 2 — Routine operation, presentation of the user software",""],["13:00","17:00","LabUMat 2 — Arrangements, service software",""]]},{"d":"2026-11-24","it":[["09:00","12:00","UriSed 2 / UriSed 3 Pro — Working principle and installation of the instrument","Power Point / PDF"],["09:00","12:00","UriSed 2 / UriSed 3 Pro — Troubleshooting",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Routine operation, presentation of the user software",""],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Arrangements, service software",""]]},{"d":"2026-11-25","it":[["09:00","17:00","LabUMat 2 — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-26","it":[["09:00","12:00","LabUMat 2 — Servicing of the modules: adjustments, maintenance, service sw possibilities","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["13:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]},{"d":"2026-11-27","it":[["09:00","17:00","UriSed 2 / UriSed 3 Pro — Structure of the instrument","หน้าเครื่อง"],["09:00","17:00","UriSed 2 / UriSed 3 Pro — Servicing of the modules: adjustments, maintenance, service sw possibilities",""]]}],"att":[["อำนวยศิลป์-วิทย์",""],["ธีรยุทธ-เอก",""],["ธีรภัทร-ต๋อ",""],["วราชันย์-ตั้ม",""],["สุระศักดิ์-โอ",""],["ธีรพงษ์-บิว",""],["พงศกร-กัน",""],["ปรัชญา-ต่อ",""],["สหภาพ-ฟลุ๊ค",""]]},{"k":"2026-09-Cal6000-7000","model":"Cal6000 / Cal7000 (SC-120 / MC-80)","title":"Cal6000/Cal7000 (SC-120/MC-80) Course Training","start":"2026-09-28","end":"2026-10-02","mode":"exact","cert":"internal","issuer":"Mindray TH","trainer":"Papangkorn (Mindray TH)","loc":"","note":"ตั้งเป็น Cer ภายใน ตามแบบร่าง — ปรับได้ถ้าเป็นใบผู้ผลิต","days":[{"d":"2026-09-28","it":[["09:00","10:00","Overview and Introduction CAL6000 by PPT",""],["10:15","12:00","Overview and Introduction CAL7000 by PPT",""],["13:00","14:00","Different of CAL7000 and CAL6000",""],["14:15","16:00","operation and Work flow CAL6000/CAL7000 by PPT",""]]},{"d":"2026-09-29","it":[["09:00","10:00","Practice installation CAL6000/CAL7000 with MC-80",""],["10:15","12:00","practice operation and Work flow",""],["13:00","14:00","Maintenance / Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-09-30","it":[["09:00","10:00","Overview and Introduction SC-120 by PPT",""],["10:15","12:00","mechanic and fluid system, Work flow by PPT",""],["13:00","14:00","Installation guide by PPT",""],["14:15","16:00","Practice Installation (Hardware)",""]]},{"d":"2026-10-01","it":[["09:00","10:00","Practice Installation (adjustment all position)",""],["10:15","12:00","Perform Maintenance",""],["13:00","14:00","Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-02","it":[["09:00","10:00","Overview and Introduction MC-80 by PPT",""],["10:15","12:00","Work flow, calibration by PPT",""],["13:00","14:00","oral exam",""],["14:15","16:00","oral exam",""]]}],"att":[["อำนวยศิลป์-วิทย์","AMNUAYSIN PARAMEE"],["ธนาวิทย์-โอ","TANAWIT KAEWSILA"],["ปรัชญา-ต่อ","Pratchaya Kanjanapan"],["วราชันย์-ตั้ม","WARACHAN YAIPRAM"],["สหภาพ-ฟลุ๊ค","Sahapap Kanmano"],["ฐิติวุฒิ-เจา","Titiwut kawmanee"],["ปิติพันธ์","PITIPHAN JANTHAKHUN"],["ปิยะบุตร-เตย","Piyabut Pongma"],["ธนาธร-มะนาว","Thanatorn Thammatorn"],["พีรพัฒน์ มากำชัย","Peerapat Makamchai"],["ฐานวัฒน์ เจื้อยแจ้ว","TAHNAWAT JUEYJAEW"],["หนึ่ง เอกปัตชา","NUENG EAKPATCHA"]]},{"k":"2026-10-BC7800","model":"BC-7800 / BC-6200 / BC-760","title":"BC-7800 / BC-6200 / BC-760 Course Training","start":"2026-10-05","end":"2026-10-09","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Papangkorn (Mindray TH)","loc":"","note":"","days":[{"d":"2026-10-05","it":[["09:00","10:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["10:15","12:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["13:00","14:00","Different of BC-7800, BC-6200",""],["14:15","16:00","operation and Work flow BC-7800, BC-6200 by PPT",""]]},{"d":"2026-10-06","it":[["09:00","10:00","Practice installation BC-7800, BC-6200",""],["10:15","12:00","practice operation and Work flow",""],["13:00","14:00","Maintenance / Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-07","it":[["09:00","10:00","Overview and Introduction BC-7800, BC-6200 by PPT",""],["10:15","12:00","mechanic and fluid system, Work flow by PPT",""],["13:00","14:00","Installation guide by PPT",""],["14:15","16:00","Practice Installation (Hardware)",""]]},{"d":"2026-10-08","it":[["09:00","10:00","Practice Installation (adjustment all position)",""],["10:15","12:00","Perform Maintenance",""],["13:00","14:00","Trouble shooting",""],["14:15","16:00","Q & A",""]]},{"d":"2026-10-09","it":[["09:00","10:00","Overview and Introduction BC-780, BC-760 by PPT",""],["10:15","12:00","Work flow, calibration by PPT",""],["13:00","14:00","oral exam",""],["14:15","16:00","oral exam",""]]}],"att":[["กอบชัย-โอ็ต","Kopchai krasinhom"],["ฮับลีย์-ฮัป","HABLEE YACHARAD"],["อนุพงษ์-ต้นตาล","Anupong Thapkrit"],["อุดมโชค-มอส","Udomchok Thachanthuek"],["หนึ่ง","NUENG EAKPATCHA"],["รัฐภูมิ-นัท","RATTAPOOM CHATSAWAT"],["นนทชัย-นีฟ","Nonthachai samadeh"],["ปิยะบุตร-เตย","Piyabut Pongma"],["ธนาธร-มะนาว","Thanatorn Thammatorn"],["ฆธาเทพ-อิ่ม","Khathatep Nanthasu"],["ชนินทร์พัฒน์-แมทธิว","Chaninpat prasartsak"],["ฐานวัฒน์ เจื้อยแจ้ว","TAHNAWAT JUEYJAEW"],["พีรพัฒน์ มากำชัย","Peerapat Makamchai"]]},{"k":"2026-10-MT8000","model":"MT8000","title":"MT8000 TLA Training","start":"2026-10-12","end":"2026-10-16","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Mindray TH","loc":"Firmer Office","note":"ตารางเรียนวันที่ 12, 14, 15, 16 ต.ค. (ไม่มีวันที่ 13)","days":[{"d":"2026-10-12","it":[["09:00","10:00","TLA Product specification and overall introduction","PPT training"],["10:15","12:00","I/O, Centrifuge, Decaping, Analytic Module","PPT training"],["13:00","14:30","I/O, Centrifuge, Decaping, Analytic Module","PPT training"],["14:45","17:00","TLA Installation procedure","หน้าเครื่อง"]]},{"d":"2026-10-14","it":[["09:00","10:00","Hardware Tour","หน้าเครื่อง"],["10:15","12:00","Practice installation","หน้าเครื่อง"],["13:00","17:00","Practice installation","หน้าเครื่อง"]]},{"d":"2026-10-15","it":[["09:00","12:00","Practice installation","หน้าเครื่อง"],["13:00","17:00","Practice installation","หน้าเครื่อง"]]},{"d":"2026-10-16","it":[["09:00","10:00","Maintenance Procedure","PPT training"],["10:15","12:00","Basic troubleshooting, Log file collection","PPT training"],["13:00","14:30","Review and Oral exam","Oral exam"],["14:45","17:00","Review and Oral exam","Oral exam"]]}],"att":[["ธีรยุทธ-เอก",""],["ฐิติวุฒิ-เจา",""],["กฤษฎา-แก๊บ",""],["วราชันย์-ตั้ม",""],["ธนพล-บอย",""],["สิทธิศักดิ์-โอเว่น",""],["นวพรต-ปอน",""],["กรวิทย์-ตู่",""]]},{"k":"2026-10-Maglumi800","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-10-14","end":"2026-10-16","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-10-14","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-10-15","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-10-16","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["ปฏิพล-บอม",""],["ธนาวิทย์-โอ",""],["โยธิน-ยุ",""],["พิชิตพงษ์-เก้า",""],["สหัสนัยน์-เท่",""],["สุระศักดิ์-โอ",""],["ชัยยรัตน์-เก็ต",""],["นนทชัย-นีฟ",""],["พงศกร-แทค",""]]},{"k":"2026-10-CL900","model":"CL-900 / CL-1200i","title":"CL-900 / CL-1200i Training","start":"2026-10-19","end":"2026-10-22","mode":"exact","cert":"manufacturer","issuer":"Mindray TH","trainer":"Mindray TH","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ · แผนเดิมยังไม่ระบุหัวข้ออบรม","days":[{"d":"2026-10-19","it":[["09:00","12:00","",""]]},{"d":"2026-10-20","it":[["09:00","12:00","",""],["13:00","17:00","",""]]},{"d":"2026-10-21","it":[["09:00","17:00","",""]]},{"d":"2026-10-22","it":[["","","(ยังไม่ระบุหัวข้อ)",""]]}],"att":[["ปฏิพล-บอม",""],["ธนาวิทย์-โอ",""],["โยธิน-ยุ",""],["พิชิตพงษ์-เก้า",""],["สหัสนัยน์-เท่",""],["สุระศักดิ์-โอ",""],["ชัยยรัตน์-เก็ต",""],["นนทชัย-นีฟ",""],["พงศกร-แทค",""]]},{"k":"2026-12-Maglumi800-2","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-12-23","end":"2026-12-25","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-12-23","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-12-24","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-12-25","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["นพกร-ปุ่น",""],["ปัญญาโชติ-ฟอร์ด",""],["สหภาพ-ฟลุ๊ค",""],["พงศกร-กัน",""],["ธงชัย-อ๋อง",""]]},{"k":"2026-12-Maglumi800-3","model":"Maglumi 800","title":"Maglumi 800 Training","start":"2026-12-28","end":"2026-12-30","mode":"exact","cert":"internal","issuer":"","trainer":"วิษณุ (แจ๊ค)","loc":"Firmer Office","note":"ไม่เกิน 6 คนต่อ 1 รอบ","days":[{"d":"2026-12-28","it":[["09:00","12:00","Installation & Performance Check","PDF (Service Software, Coordinates)"],["13:00","17:00","ปฏิบัติหน้าเครื่อง (Installation & Performance Check)","หน้าเครื่อง"]]},{"d":"2026-12-29","it":[["09:00","12:00","การ Upgrade Software (แก้ปัญหา HIV Cal Failed)","หน้าเครื่อง"],["13:00","17:00","Trouble Shooting (BGW ไม่ผ่าน, LC ไม่ผ่าน, อื่นๆ)","หน้าเครื่อง"]]},{"d":"2026-12-30","it":[["09:00","17:00","สอบปฏิบัติตาม Performance Checklist (รายบุคคล)","หน้าเครื่อง"]]}],"att":[["พรพิบูลย์-กัน",""],["ธนาธร-นาว",""],["ธวัชชัย-แม็ก",""],["กฤษฎา-แก๊บ",""]]},{"k":"2026-10-AdvCal6000","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-10-26","end":"2026-10-30","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"แผนเดิมหัวตารางเขียน 26–30 ต.ค. แต่วันที่ในตารางเขียน 12–16 ต.ค. — ใช้ 26–30 ต.ค. กรุณาตรวจ","days":[{"d":"2026-10-26","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-10-27","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-10-28","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-10-29","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-10-30","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["สหภาพ-ฟลุ๊ค",""],["ธีรภัทร-ต๋อ",""],["พรพิบูลย์ สังขทรัพย์ (กัน)",""],["นพกร บุตรทอง ญี่ปุ่น",""],["นายธวัชชัย อุทธา แม็ก",""],["อภิศักดิ์ วังคะฮาด (แจ็ค)",""],["นายสิทธิศักดิ์ อุปชาคำ (เทอโบ)",""],["สุระศักดิ์-โอ",""]]},{"k":"2026-11-AdvCal6000-2","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-09","end":"2026-11-13","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-09","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-11-10","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-11-11","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-12","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-13","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["นวพตร-ปอนด์",""],["วรพัฒน์-เกล้า",""],["ฆธาเทพ-อิ่ม",""],["สหัสนัยน์-เท่",""],["จิรายุทธ-เจมส์",""],["จีรวัฒน์-ดุ๊ก",""],["พงศกร-กัน",""],["พิชิตพงษ์-เก้า",""]]},{"k":"2026-11-AdvCal6000-3","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-16","end":"2026-11-20","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-16","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-11-17","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-11-18","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-19","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-11-20","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["ประเสริฐ-ไก่",""],["ธนาวิทย์-โอ",""],["ธนาธร-นาว",""],["ศราวุธ-ท็อป",""],["ปัญญาโชติ-ฟอร์ด",""],["รัฐภูมิ-นัท",""],["สิทธิศักดิ์-โอเว่น",""],["ธงชัย-อ๋อง",""]]},{"k":"2026-11-AdvCal6000-4","model":"Advance Cal6000","title":"Advance Cal6000 Training","start":"2026-11-30","end":"2026-12-04","mode":"exact","cert":"internal","issuer":"","trainer":"ฐานวัฒน์ (ฐา)","loc":"","note":"","days":[{"d":"2026-11-30","it":[["09:00","12:00","หลักการเครื่อง, การอ่าน diagram",""],["13:00","17:00","",""]]},{"d":"2026-12-01","it":[["09:00","12:00","การวิเคราะห์ปัญหาและสาเหตุ จาก Job service",""],["13:00","17:00","",""]]},{"d":"2026-12-02","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-12-03","it":[["09:00","12:00","การ PM ตาม check list",""],["13:00","17:00","",""]]},{"d":"2026-12-04","it":[["09:00","12:00","ทำแบบทดสอบ",""],["13:00","17:00","",""]]}],"att":[["กอบชัย-โอ็ต",""],["ซาฟีอี-ฟี",""],["โยธิน-ยุ",""],["อุดมโชค-มอส",""],["ธนพล-บอย",""],["ปิติพันธ์-โน๊ต",""],["กฤษฎา-แก๊บ",""],["ธนากร-เจ",""]]}];
+
+/* ===================== v9.42 — ตารางเทรน (ปฏิทิน / ลงทะเบียน / เช็คชื่อ / ปิดงาน / ผูกรอบสอบ) =====================
+   ข้อมูลอยู่ใน Google Sheet "F1 Exam DB" (แท็บ Sessions, SessionDays, Registrations, Attendance, SessionFiles, SessionLog) ผ่าน Apps Script เดียวกับระบบสอบ
+   ไฟล์ (รูปบรรยากาศ / ใบ Cer ผู้ผลิต) อยู่ใน Google Drive · หน้า Engineer = โหมด 'train' (#view-train) · หน้า Sup/Manager = โหมด 'trainadmin' (#view-trainadmin)
+   ออกแบบมือถือก่อน: ปุ่มกดสูง ≥44px, ตัวอักษรช่องกรอก 16px, แถบปุ่มล่างติดจอ, ตารางยุบเป็นการ์ดบนจอแคบ */
+const TR_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TR_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TR_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+const TR_STATUS = { plan:'แผน', open:'เปิดรับลงทะเบียน', closed:'ปิดงานแล้ว', cancelled:'ยกเลิก' };
+const TR_CERT = { internal:'Cer ภายใน', manufacturer:'Cer ผู้ผลิต', none:'ไม่มี Cer' };
+const TR = { year:new Date().getFullYear(), month:new Date().getMonth(), view:'cal', cat:'', cert:'', mine:false, data:null, detail:null, loading:false, listFor:0 };
+const TRA = { view:'queue', year:new Date().getFullYear(), filter:'all', data:null, queue:null, sets:null, owners:[], role:'', g:null, dtab:'info', form:null, day:'', reasons:{}, busy:false, imp:null };
+let _trClock = 0;
+
+function trH(s){ return escapeHtml(s); }
+function trPad(n){ return String(n).padStart(2,'0'); }
+function trToday(){ try{ return new Date(exNow()).toLocaleDateString('en-CA',{ timeZone:'Asia/Bangkok' }); }catch(e){ const d = new Date(exNow()); return d.getFullYear()+'-'+trPad(d.getMonth()+1)+'-'+trPad(d.getDate()); } }
+function trParse(s){ const p = String(s).split('-').map(Number); return new Date(Date.UTC(p[0], p[1]-1, p[2])); }
+function trAddDays(s, n){ const d = trParse(s); d.setUTCDate(d.getUTCDate()+n); return d.getUTCFullYear()+'-'+trPad(d.getUTCMonth()+1)+'-'+trPad(d.getUTCDate()); }
+function trDaysBetween(a, b){ return Math.round((trParse(b)-trParse(a))/86400000); }
+function trDow(s){ return trParse(s).getUTCDay(); }
+function trFmtDate(s, withYear){ if(!s) return '-'; const p = s.split('-').map(Number); return p[2]+' '+TR_MONTHS[p[1]-1]+(withYear===false?'':' '+(p[0]+543)); }
+function trFmtRange(a, b, mode){
+  if(!a) return '-';
+  const A = a.split('-').map(Number), B = (b||a).split('-').map(Number);
+  if(mode === 'month') return TR_MONTHS_FULL[A[1]-1]+' '+(A[0]+543)+' (ยังไม่กำหนดวัน)';
+  if(a === b || !b) return A[2]+' '+TR_MONTHS[A[1]-1]+' '+(A[0]+543);
+  if(A[0]===B[0] && A[1]===B[1]) return A[2]+'–'+B[2]+' '+TR_MONTHS[A[1]-1]+' '+(A[0]+543);
+  if(A[0]===B[0]) return A[2]+' '+TR_MONTHS[A[1]-1]+' – '+B[2]+' '+TR_MONTHS[B[1]-1]+' '+(A[0]+543);
+  return A[2]+' '+TR_MONTHS[A[1]-1]+' '+(A[0]+543)+' – '+B[2]+' '+TR_MONTHS[B[1]-1]+' '+(B[0]+543);
+}
+function trFmtTime(ms){ if(!ms) return '-'; try{ return new Date(ms).toLocaleTimeString('en-GB',{ timeZone:'Asia/Bangkok', hour:'2-digit', minute:'2-digit', hour12:false }); }catch(e){ return String(ms); } }
+function trFmtClock(ms){ try{ return new Date(ms).toLocaleTimeString('en-GB',{ timeZone:'Asia/Bangkok', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }); }catch(e){ return ''; } }
+function trColor(cat){
+  let h = 0; const s = String(cat||'?');
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  const hues = [12, 36, 88, 150, 178, 205, 232, 262, 292, 330];
+  return 'hsl('+hues[h % hues.length]+' 62% 46%)';
+}
+function trChip(text, cls){ return `<span class="ex-chip ${cls||''}">${trH(text)}</span>`; }
+function trStatusChip(s){
+  if(s.status === 'closed') return trChip('ปิดงานแล้ว','');
+  if(s.status === 'cancelled') return trChip('ยกเลิก','bad');
+  if(s.status === 'plan') return trChip(s.dateMode === 'month' ? 'แผนรายเดือน' : 'แผน','');
+  return trChip('เปิดรับลงทะเบียน','acc');
+}
+function trCertChip(s){
+  if(s.certType === 'manufacturer') return trChip('Cer ผู้ผลิต','trc-mfr');
+  if(s.certType === 'internal') return trChip('Cer ภายใน','trc-int');
+  return '';
+}
+function trMyChip(m){
+  if(!m) return '';
+  const map = { requested:['รอ Sup อนุมัติ','warn'], approved:['อนุมัติแล้ว','ok'], rejected:['ไม่อนุมัติ','bad'], needsReconfirm:['ต้องยืนยันใหม่','bad'], cancelled:['',''] };
+  const x = map[m.status]; return x && x[0] ? trChip(x[0], x[1]) : '';
+}
+function trSeatText(s){ return s.seats > 0 ? `${s.approved}/${s.seats} ที่นั่ง` : `${s.approved} คน`; }
+function trGuard(){ return typeof EXAM_API_URL !== 'undefined' && !!EXAM_API_URL; }
+function trErr(root, e, retryAct){ root.innerHTML = `<div class="ex-note ex-bad">⚠ ${trH(e.message)} ${retryAct ? `<button class="btn btn-ghost btn-sm" data-tr="${retryAct}">ลองใหม่</button>` : ''}</div>`; }
+
+/* ---------- แผ่นล่าง (bottom sheet) ---------- */
+function trSheet(html, opts){
+  trSheetClose();
+  const el = document.createElement('div'); el.id = 'tr-sheet'; el.className = 'tr-sheet-wrap';
+  el.innerHTML = `<div class="tr-backdrop" data-tr="sheetclose"></div><div class="tr-sheet" role="dialog"><div class="tr-sheet-h"><b>${trH((opts&&opts.title)||'')}</b><button class="btn btn-ghost btn-sm" data-tr="sheetclose" aria-label="ปิด">✕</button></div><div class="tr-sheet-b">${html}</div></div>`;
+  ['click','change','input'].forEach(ev=>el.addEventListener(ev, trOnEvent));
+  document.body.appendChild(el);
+  document.body.classList.add('tr-noscroll');
+}
+function trSheetClose(){ const el = $('tr-sheet'); if(el) el.remove(); document.body.classList.remove('tr-noscroll'); }
+
+/* =====================================================================
+   ฝั่งผู้ใช้ทั่วไป (Engineer / ทุกคน) — โหมด 'train'
+   ===================================================================== */
+async function trEnter(){
+  if(TR.openId){ const id = TR.openId; TR.openId = ''; if(!TR.data) await trLoad(); await trOpen(id); return; }
+  if(TR.detail){ trRenderDetail(); return; }
+  await trLoad();
+}
+async function trLoad(){
+  const root = $('tr-root');
+  if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
+  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดตารางเทรน...</div>';
+  try{
+    TR.data = await examApi('trList', { year:TR.year });
+    TR.listFor = TR.year;
+    trRender();
+  }catch(e){ trErr(root, e, 'reload'); }
+}
+function trVisibleSessions(){
+  const d = TR.data; if(!d) return [];
+  return d.sessions.filter(s=>{
+    if(s.status === 'cancelled' && !(s.my && s.my.status !== 'cancelled')) return false;
+    if(TR.cat && s.category !== TR.cat) return false;
+    if(TR.cert && s.certType !== TR.cert) return false;
+    if(TR.mine && !(s.my && s.my.status !== 'cancelled')) return false;
+    return true;
+  }).sort((a,b)=> a.startDate < b.startDate ? -1 : a.startDate > b.startDate ? 1 : a.title.localeCompare(b.title,'th'));
+}
+function trRender(){
+  const root = $('tr-root'), d = TR.data; if(!d) return;
+  const needs = d.sessions.filter(s=>s.my && s.my.status === 'needsReconfirm');
+  let html = '';
+  html += `<div class="tr-top">
+    <div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="yr" data-d="-1" aria-label="ปีก่อน">‹</button><b>${TR.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="yr" data-d="1" aria-label="ปีถัดไป">›</button></div>
+    <div class="subtab-bar tr-views"><button class="${TR.view==='cal'?'active':''}" data-tr="view" data-v="cal">📅 ปฏิทิน</button><button class="${TR.view==='list'?'active':''}" data-tr="view" data-v="list">📋 รายการ</button><button class="${TR.view==='mine'?'active':''}" data-tr="view" data-v="mine">🙋 ของฉัน</button></div>
+  </div>`;
+  if(needs.length) html += `<div class="ex-note ex-bad tr-alert">⚠ วันเทรนเปลี่ยน ต้องขอเข้าเทรนใหม่ ${needs.length} งาน: ${needs.map(s=>`<a href="#" data-tr="open" data-id="${trH(s.sessionId)}">${trH(s.title)}</a>`).join(' · ')}</div>`;
+  if(TR.view !== 'mine'){
+    const cats = Array.from(new Set(d.sessions.map(s=>s.category))).sort((a,b)=>a.localeCompare(b,'th'));
+    html += `<div class="tr-filters"><select data-tr="fcat" aria-label="Product"><option value="">ทุก Product</option>${cats.map(c=>`<option value="${trH(c)}" ${TR.cat===c?'selected':''}>${trH(c)}</option>`).join('')}</select>
+      <select data-tr="fcert" aria-label="ชนิด Cer"><option value="">ทุกชนิด Cer</option><option value="internal" ${TR.cert==='internal'?'selected':''}>Cer ภายใน</option><option value="manufacturer" ${TR.cert==='manufacturer'?'selected':''}>Cer ผู้ผลิต</option></select>
+      <label class="tr-chk"><input type="checkbox" data-tr="fmine" ${TR.mine?'checked':''}> เฉพาะของฉัน</label></div>`;
+    html += `<div class="tr-legend">${cats.map(c=>`<span><i style="background:${trColor(c)}"></i>${trH(c)}</span>`).join('')}</div>`;
+  }
+  if(TR.view === 'cal') html += trCalendarHtml();
+  else if(TR.view === 'list') html += trListHtml(trVisibleSessions(), false);
+  else html += trMineHtml();
+  root.innerHTML = html;
+}
+/* ----- ปฏิทิน ----- */
+function trDayMap(list){
+  const m = {};
+  list.forEach(s=>{
+    if(s.dateMode === 'month') return;
+    let n = 0;
+    for(let d = s.startDate; d <= s.endDate && n < 62; d = trAddDays(d, 1), n++) (m[d] = m[d] || []).push(s);
+  });
+  return m;
+}
+function trMonthGrid(year, mon, dayMap, big){
+  const first = year+'-'+trPad(mon+1)+'-01';
+  const dow0 = trDow(first), dim = new Date(Date.UTC(year, mon+1, 0)).getUTCDate();
+  const today = trToday();
+  let h = `<div class="tr-grid ${big?'big':''}">` + TR_DOW.map(x=>`<div class="tr-dow">${x}</div>`).join('');
+  for(let i=0;i<dow0;i++) h += '<div class="tr-cell empty"></div>';
+  for(let d=1; d<=dim; d++){
+    const ds = year+'-'+trPad(mon+1)+'-'+trPad(d), ev = dayMap[ds] || [];
+    const bars = ev.slice(0,3).map(s=>`<i style="background:${trColor(s.category)}" class="${s.status==='plan'?'plan':''}"></i>`).join('') + (ev.length>3 ? `<em>+${ev.length-3}</em>` : '');
+    const mineDot = ev.some(s=>s.my && s.my.status === 'approved') ? '<u></u>' : '';
+    h += `<div class="tr-cell ${ev.length?'has':''} ${ds===today?'today':''}" ${ev.length?`data-tr="day" data-d="${ds}" role="button" tabindex="0"`:''}><span>${d}</span>${mineDot}<div class="tr-bars">${bars}</div></div>`;
+  }
+  return h + '</div>';
+}
+function trCalendarHtml(){
+  const list = trVisibleSessions(), dm = trDayMap(list);
+  const monthOnly = list.filter(s=>s.dateMode === 'month');
+  let h = '';
+  // มือถือ: ทีละเดือน
+  h += `<div class="tr-m1"><div class="tr-mstrip">${TR_MONTHS.map((m,i)=>{
+    const has = list.some(s=>trInMonth(s, TR.year, i));
+    return `<button class="${TR.month===i?'active':''}" data-tr="mon" data-m="${i}">${m}${has?'<b>•</b>':''}</button>`; }).join('')}</div>
+    <div class="tr-mhead"><button class="btn btn-ghost btn-sm" data-tr="monstep" data-d="-1">‹</button><b>${TR_MONTHS_FULL[TR.month]} ${TR.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="monstep" data-d="1">›</button></div>
+    ${trMonthGrid(TR.year, TR.month, dm, true)}
+    <div class="tr-mlist">${trMonthSessionsHtml(list, TR.month)}</div></div>`;
+  // จอกว้าง: 12 เดือน
+  h += '<div class="tr-m12">' + TR_MONTHS_FULL.map((mn,i)=>{
+    const mo = monthOnly.filter(s=>Number(s.startDate.slice(5,7))-1===i);
+    return `<div class="tr-mcard"><div class="tr-mt">${mn}${mo.length?` <small>(แผนรายเดือน ${mo.length})</small>`:''}</div>${trMonthGrid(TR.year, i, dm, false)}${mo.map(s=>`<div class="tr-mo" data-tr="open" data-id="${trH(s.sessionId)}" role="button"><i style="background:${trColor(s.category)}"></i>${trH(s.model||s.title)}${s.status==='closed'?' ✓':''}</div>`).join('')}</div>`;
+  }).join('') + '</div>';
+  return h;
+}
+function trInMonth(s, y, m){
+  if(s.dateMode === 'month') return s.startDate.slice(0,7) === y+'-'+trPad(m+1);
+  return s.startDate <= y+'-'+trPad(m+1)+'-31' && s.endDate >= y+'-'+trPad(m+1)+'-01';
+}
+function trMonthSessionsHtml(list, mon){
+  const here = list.filter(s=>trInMonth(s, TR.year, mon));
+  if(!here.length) return '<div class="ex-hint" style="text-align:center;padding:10px;">ไม่มีงานเทรนในเดือนนี้</div>';
+  return trCards(here);
+}
+function trCards(arr){
+  return arr.map(s=>`<div class="tr-card" data-tr="open" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
+    <div class="tr-card-t"><b>${trH(s.title)}</b></div>
+    <div class="tr-card-m">${trH(trFmtRange(s.startDate, s.endDate, s.dateMode))}${s.location?' · 📍 '+trH(s.location):''}${s.trainer?' · 👤 '+trH(s.trainer):''}</div>
+    <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
+    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${trMyChip(s.my)}</div></div>`).join('');
+}
+function trListHtml(list){
+  if(!list.length) return '<div class="ex-note">ไม่พบงานเทรนตามตัวกรอง</div>';
+  let h = '', cur = '';
+  list.forEach(s=>{
+    const k = s.startDate.slice(0,7);
+    if(k !== cur){ cur = k; const m = Number(k.slice(5,7))-1; h += `<div class="tr-mh">${TR_MONTHS_FULL[m]} ${Number(k.slice(0,4))+543}</div>`; }
+    h += trCards([s]);
+  });
+  return h;
+}
+function trMineHtml(){
+  const d = TR.data; const mine = d.sessions.filter(s=>s.my && s.my.status !== 'cancelled');
+  if(!mine.length) return '<div class="ex-note">ยังไม่มีงานเทรนที่คุณลงทะเบียนไว้ในปีนี้ — เปิดแท็บ "ปฏิทิน" หรือ "รายการ" แล้วเลือกงานเพื่อกด "ขอเข้าเทรน"</div>';
+  const grp = (title, arr)=> arr.length ? `<div class="tr-mh">${title} (${arr.length})</div>${trCards(arr)}` : '';
+  const by = st=>mine.filter(s=>s.my.status===st);
+  const today = trToday();
+  const appr = by('approved');
+  return grp('⚠ ต้องขอเข้าเทรนใหม่', by('needsReconfirm')) + grp('⏳ รอ Sup อนุมัติ', by('requested')) +
+    grp('✅ อนุมัติแล้ว — กำลังจะถึง', appr.filter(s=>s.endDate >= today && s.status!=='closed')) +
+    grp('📚 เข้าเทรนแล้ว', appr.filter(s=>s.endDate < today || s.status==='closed')) + grp('ไม่อนุมัติ', by('rejected'));
+}
+function trOpenDay(ds){
+  const list = trVisibleSessions().filter(s=>s.dateMode!=='month' && s.startDate <= ds && s.endDate >= ds);
+  if(!list.length) return;
+  if(list.length === 1){ trOpen(list[0].sessionId); return; }
+  trSheet(trCards(list), { title: trFmtDate(ds) + ' — ' + list.length + ' งาน' });
+}
+/* ----- รายละเอียดงาน (ผู้ใช้) ----- */
+async function trOpen(id){
+  trSheetClose();
+  const root = $('tr-root');
+  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  try{
+    TR.detail = await examApi('trGet', { sessionId:id });
+    trRenderDetail();
+    window.scrollTo(0,0);
+  }catch(e){ TR.detail = null; trErr(root, e, 'reload'); }
+}
+function trDaysHtml(g){
+  if(!g.days.length) return '<div class="ex-hint">ยังไม่มีตารางเรียนรายวัน</div>';
+  return g.days.map((d,i)=>`<details class="tr-day" ${i===0?'open':''}><summary><b>วันที่ ${i+1}</b> · ${TR_DOW[trDow(d.date)]} ${trH(trFmtDate(d.date))}</summary>
+    <div class="tr-items">${d.items.map(it=>`<div class="tr-it"><div class="tr-it-t">${it.timeFrom||it.timeTo ? trH((it.timeFrom||'')+(it.timeTo?'–'+it.timeTo:'')) : '—'}</div><div class="tr-it-c">${it.content?trH(it.content):'<span class="ex-hint">(ไม่ระบุหัวข้อ)</span>'}${it.media?`<small>${trH(it.media)}</small>`:''}</div></div>`).join('')}</div></details>`).join('');
+}
+function trInfoGrid(s){
+  const rows = [
+    ['📅','วันที่', trFmtRange(s.startDate, s.endDate, s.dateMode) + (s.dateMode!=='month' && s.startDate!==s.endDate ? ` (${trDaysBetween(s.startDate,s.endDate)+1} วัน)` : '')],
+    ['🏷','Product', s.category + (s.model ? ' › '+s.model : '')],
+    s.location ? ['📍','สถานที่', s.location] : null,
+    s.trainer ? ['👤','วิทยากร', s.trainer] : null,
+    s.dateMode!=='month' ? ['🪑','ที่นั่ง', s.seats>0 ? `${s.approved}/${s.seats} (ว่าง ${Math.max(0,s.seats-s.approved)})` : `${s.approved} คนอนุมัติแล้ว (ไม่จำกัดที่นั่ง)`] : null,
+    ['🎓','ใบ Cer', s.certType==='internal' ? 'ภายใน — ต้องสอบผ่านจึงได้รับใบ Cer' : s.certType==='manufacturer' ? 'ผู้ผลิต'+(s.certIssuer?' ('+s.certIssuer+')':'') : 'ไม่มี'],
+    s.note ? ['📝','หมายเหตุ', s.note] : null
+  ].filter(Boolean);
+  return `<div class="tr-info">${rows.map(r=>`<div class="tr-ir"><span>${r[0]}</span><div><small>${r[1]}</small>${trH(r[2])}</div></div>`).join('')}</div>`;
+}
+function trMyBlock(g){
+  const s = g.session, m = g.my;
+  let h = '';
+  if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานเทรนนี้ถูกยกเลิก</div>';
+  if(m && m.status === 'needsReconfirm') h += `<div class="ex-note ex-bad"><b>วันเทรนเปลี่ยนแล้ว</b> — คำขอเดิมของคุณถูกยกเลิกสิทธิ์ชั่วคราว ถ้ายังสะดวกเข้าเทรนวันที่ใหม่ กดปุ่ม "ขอเข้าเทรนใหม่" ด้านล่าง</div>`;
+  else if(m && m.status === 'requested') h += '<div class="ex-note">⏳ ส่งคำขอแล้ว — รอ Sup อนุมัติ (ยังไม่มีสิทธิ์เข้าเทรนจนกว่าจะได้รับอนุมัติ)</div>';
+  else if(m && m.status === 'approved') h += '<div class="ex-note" style="border-color:var(--green)">✅ คุณได้รับอนุมัติให้เข้าเทรนแล้ว</div>';
+  else if(m && m.status === 'rejected') h += `<div class="ex-note ex-bad">Sup ไม่อนุมัติคำขอนี้${m.note?': '+trH(m.note):''}</div>`;
+  if(m && m.status === 'approved'){
+    const att = g.myAttendance || [];
+    if(att.length) h += `<div class="tr-sec"><b>การเช็คชื่อของคุณ</b>${att.map(a=>`<div class="tr-att"><span>${trH(trFmtDate(a.dayDate))}</span><span>✓ ${trFmtTime(a.checkInAt)} น.</span>${a.diffMin>0?trChip('สาย '+a.diffMin+' นาที','warn'):trChip('ตรงเวลา','ok')}</div>`).join('')}</div>`;
+    if(g.exam){
+      const e = g.exam;
+      if(e.isOpen) h += `<div class="tr-sec"><b>📝 ข้อสอบ</b><div class="ex-hint">Sup เปิดสอบแล้ว</div><div class="ex-act"><button class="btn btn-primary tr-big" data-tr="goexam">▶ ไปทำข้อสอบ</button></div></div>`;
+      else if(e.state === 'pending') h += `<div class="tr-sec"><b>📝 ข้อสอบ</b><div class="ex-hint">รอ Sup กดเปิดสอบ (เปิดเมื่อถึงช่วงสอบของหลักสูตร)</div></div>`;
+      else h += `<div class="tr-sec"><b>📝 ข้อสอบ</b><div class="ex-hint">รอบสอบปิดแล้ว</div><div class="ex-act"><button class="btn btn-ghost" data-tr="goexam">ดูผลสอบ / ใบ Cer ของฉัน</button></div></div>`;
+    }
+  }
+  return h;
+}
+function trActionBar(g){
+  const s = g.session, m = g.my;
+  let btns = '';
+  if(g.canManage) btns += `<button class="btn btn-ghost tr-big" data-tr="manage" data-id="${trH(s.sessionId)}">🛠 จัดการงานนี้</button>`;
+  if(s.status === 'open' && s.dateMode === 'exact' && trToday() <= s.endDate){
+    if(!m || m.status === 'cancelled' || m.status === 'rejected' || m.status === 'needsReconfirm')
+      btns = `<button class="btn btn-primary tr-big" data-tr="request" data-id="${trH(s.sessionId)}">${m && m.status==='needsReconfirm' ? '🔁 ขอเข้าเทรนใหม่' : '🙋 ขอเข้าเทรน'}</button>` + btns;
+    else if(m.status === 'requested') btns = `<button class="btn btn-ghost tr-big" data-tr="cancelreq" data-id="${trH(s.sessionId)}">ยกเลิกคำขอ</button>` + btns;
+    else if(m.status === 'approved') btns = `<button class="btn btn-ghost tr-big" data-tr="cancelreq" data-id="${trH(s.sessionId)}">ขอยกเลิกการเข้าเทรน</button>` + btns;
+  }
+  return btns ? `<div class="tr-bar">${btns}</div>` : '';
+}
+function trRenderDetail(){
+  const root = $('tr-root'), g = TR.detail; if(!g) return;
+  const s = g.session;
+  root.innerHTML = `<div class="tr-back"><button class="btn btn-ghost btn-sm" data-tr="back">← กลับ</button></div>
+    <div class="tr-hero" style="--tc:${trColor(s.category)}"><h2>${trH(s.title)}</h2><div class="ex-row" style="margin:6px 0 0">${trStatusChip(s)}${trCertChip(s)}${trMyChip(g.my)}</div></div>
+    ${trMyBlock(g)}${trInfoGrid(s)}
+    <div class="tr-sec"><b>ตารางเรียน</b>${trDaysHtml(g)}</div>${trActionBar(g)}`;
+}
+async function trDoRequest(id){
+  if(!confirm('ส่งคำขอเข้าเทรนงานนี้? (ต้องรอ Sup อนุมัติ)')) return;
+  showLoadingOverlay('กำลังส่งคำขอ...');
+  try{
+    await examApi('trRequest', { sessionId:id, name:myClaimantName(), nameEn:exaMyEnName() });
+    hideLoadingOverlay(); showToast('✓ ส่งคำขอแล้ว รอ Sup อนุมัติ');
+    TR.detail = await examApi('trGet', { sessionId:id }); trRenderDetail(); TR.data = null;
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+async function trDoCancel(id){
+  const appr = TR.detail && TR.detail.my && TR.detail.my.status === 'approved';
+  if(!confirm(appr ? 'ยกเลิกการเข้าเทรน? (คุณจะถูกลบออกจากรายชื่อและรายชื่อผู้มีสิทธิ์สอบ)' : 'ยกเลิกคำขอนี้?')) return;
+  showLoadingOverlay('กำลังยกเลิก...');
+  try{
+    await examApi('trCancelRequest', { sessionId:id });
+    hideLoadingOverlay(); showToast('✓ ยกเลิกแล้ว');
+    TR.detail = await examApi('trGet', { sessionId:id }); trRenderDetail(); TR.data = null;
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+
+
+/* =====================================================================
+   ฝั่ง Sup / Manager — โหมด 'trainadmin'
+   ===================================================================== */
+async function trAdminEnter(){
+  const root = $('tra-root');
+  if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
+  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  try{
+    let init = await examApi('me');
+    if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('me'); }
+    TRA.role = init.role;
+    if(init.role === 'user'){
+      root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการตารางเทรนในระบบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
+      return;
+    }
+    if(init.role === 'manager' && !EXA.synced){ exaSyncAdmins().catch(()=>{}); }
+    if(TRA.openId){ const id = TRA.openId; TRA.openId = ''; await traGo('detail', id); return; }
+    await traGo(TRA.view === 'detail' && TRA.g ? 'detail' : (TRA.view === 'form' ? 'queue' : TRA.view), TRA.view === 'detail' && TRA.g ? TRA.g.session.sessionId : undefined);
+  }catch(e){ trErr(root, e, 'areload'); }
+}
+function traTabs(){
+  const v = TRA.view, n = TRA.queue ? TRA.queue.items.length : 0;
+  const on = x=> (v===x || (x==='sessions' && v==='detail')) ? 'active' : '';
+  return `<div class="subtab-bar"><button class="${on('queue')}" data-tr="atab" data-v="queue">⏳ รออนุมัติ${n?` (${n})`:''}</button><button class="${on('sessions')}" data-tr="atab" data-v="sessions">🗂 งานเทรน</button><button class="${on('form')}" data-tr="atab" data-v="form">➕ สร้างงาน</button>${TRA.role==='manager'?`<button class="${on('import')}" data-tr="atab" data-v="import">🧰 เครื่องมือ Manager</button>`:''}</div>`;
+}
+async function traGo(view, arg){
+  const root = $('tra-root');
+  traStopClock();
+  TRA.view = view;
+  root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
+  try{
+    if(view === 'queue'){ TRA.queue = await examApi('trQueue'); traRenderQueue(); }
+    else if(view === 'sessions'){ TRA.data = await examApi('trList', { year:TRA.year }); traRenderSessions(); }
+    else if(view === 'detail'){
+      if(!TRA.queue) examApi('trQueue').then(q=>{ TRA.queue = q; }).catch(()=>{});
+      TRA.g = await examApi('trGet', { sessionId:arg });
+      if(!TRA.g.canManage){ TR.detail = TRA.g; switchMode('train'); trRenderDetail(); return; }
+      TRA.view = 'detail'; traRenderDetail();
+    }
+    else if(view === 'form'){ await traPrepareForm(arg); traRenderForm(); }
+    else if(view === 'import'){ await traPrepareImport(); traRenderImport(); }
+  }catch(e){ root.innerHTML = traTabs() + `<div class="ex-note ex-bad">⚠ ${trH(e.message)}</div>`; }
+}
+async function traReload(keepScroll){
+  const y = window.scrollY;
+  TRA.g = await examApi('trGet', { sessionId:TRA.g.session.sessionId });
+  traRenderDetail();
+  if(keepScroll) window.scrollTo(0, y);
+}
+
+/* ----- คิวรออนุมัติ ----- */
+function traRenderQueue(){
+  const q = TRA.queue, root = $('tra-root');
+  let h = traTabs();
+  if(!q.items.length){ root.innerHTML = h + '<div class="ex-note">✅ ไม่มีคำขอรออนุมัติ</div>'; return; }
+  const bySes = {}; q.items.forEach(r=>{ (bySes[r.sessionId] = bySes[r.sessionId] || []).push(r); });
+  q.sessions.sort((a,b)=>a.startDate<b.startDate?-1:1).forEach(s=>{
+    const rows = bySes[s.sessionId] || [];
+    const pend = rows.filter(r=>r.status==='requested'), re = rows.filter(r=>r.status==='needsReconfirm');
+    h += `<div class="tr-qs" style="--tc:${trColor(s.category)}"><div class="tr-qs-h" data-tr="manage" data-id="${trH(s.sessionId)}" role="button"><b>${trH(s.title)}</b><small>${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))} · ${trSeatText(s)}${s.seats>0&&s.approved>=s.seats?' <span style="color:var(--red)">เต็ม</span>':''}</small></div>`;
+    pend.forEach(r=>{
+      h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓ อนุมัติ</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`;
+    });
+    if(pend.length > 1) h += `<div class="ex-act"><button class="btn btn-ghost" data-tr="aprall" data-sid="${trH(s.sessionId)}">✓ อนุมัติทั้งหมดของงานนี้ (${pend.length})</button></div>`;
+    re.forEach(r=>{ h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>วันเทรนเปลี่ยน — รอให้เจ้าตัวกดขอใหม่</small></div><div class="tr-row-a">${trChip('รอยืนยันใหม่','bad')}</div></div>`; });
+    h += '</div>';
+  });
+  root.innerHTML = h;
+}
+async function traApprove(sid, ids, op, force){
+  showLoadingOverlay('กำลังบันทึก...');
+  try{
+    await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
+    hideLoadingOverlay();
+    if(TRA.view === 'detail') await traReload(true);
+    else { TRA.queue = await examApi('trQueue'); traRenderQueue(); }
+  }catch(e){
+    hideLoadingOverlay();
+    if(op === 'approve' && !force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message + '\nอนุมัติเกินที่นั่งต่อไป?')) return traApprove(sid, ids, op, true);
+    alert(e.message);
+  }
+}
+
+/* ----- รายการงาน ----- */
+function traRenderSessions(){
+  const root = $('tra-root'), d = TRA.data;
+  const list = d.sessions.filter(s=>s.canManage && (TRA.filter==='all' || s.status===TRA.filter)).sort((a,b)=>a.startDate<b.startDate?-1:1);
+  const fb = (k,t)=>`<button class="${TRA.filter===k?'active':''}" data-tr="afilter" data-v="${k}">${t}</button>`;
+  let h = traTabs() + `<div class="tr-top"><div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="-1">‹</button><b>${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="1">›</button></div>
+    <div class="subtab-bar tr-views">${fb('all','ทั้งหมด')}${fb('plan','แผน')}${fb('open','เปิดรับ')}${fb('closed','ปิดแล้ว')}${fb('cancelled','ยกเลิก')}</div></div>`;
+  if(!list.length) h += '<div class="ex-note">ไม่มีงานเทรนในเงื่อนไขนี้ — กด "➕ สร้างงาน" เพื่อเพิ่ม</div>';
+  h += list.map(s=>`<div class="tr-card" data-tr="manage" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
+    <div class="tr-card-t"><b>${trH(s.title)}</b></div>
+    <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}${s.ownerName&&TRA.role==='manager'?' · เจ้าของ: '+trH(s.ownerName):''}</div>
+    <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
+    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}</div></div>`).join('');
+  root.innerHTML = h;
+}
+
+/* ----- หน้าจัดการงาน ----- */
+function traRenderDetail(){
+  traStopClock();
+  const root = $('tra-root'), g = TRA.g, s = g.session;
+  const regs = g.regs || [];
+  const appr = regs.filter(r=>r.status==='approved').length, req = regs.filter(r=>r.status==='requested').length;
+  const tabs = [['info','ข้อมูล'],['people','ผู้เข้าเทรน'+(req?` (${req})`:'')],['checkin','เช็คชื่อ']];
+  if(s.certType === 'internal') tabs.push(['exam','สอบ']);
+  tabs.push(['close', s.status==='closed' ? 'สรุป/ไฟล์' : 'ปิดงาน']);
+  if(!tabs.some(t=>t[0]===TRA.dtab)) TRA.dtab = 'info';
+  let h = `<div class="tr-back"><button class="btn btn-ghost btn-sm" data-tr="aback">← รายการ</button></div>
+    <div class="tr-hero" style="--tc:${trColor(s.category)}"><h2>${trH(s.title)}</h2><div class="ex-row" style="margin:6px 0 0">${trStatusChip(s)}${trCertChip(s)}${trChip(trSeatText(s),'')}${req?trChip('รออนุมัติ '+req,'warn'):''}</div>
+    <div class="ex-hint">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}</div></div>
+    <div class="subtab-bar tr-dtabs">${tabs.map(t=>`<button class="${TRA.dtab===t[0]?'active':''}" data-tr="dtab" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>`;
+  if(TRA.dtab === 'info') h += traInfoHtml(g);
+  else if(TRA.dtab === 'people') h += traPeopleHtml(g);
+  else if(TRA.dtab === 'checkin') h += traCheckinHtml(g);
+  else if(TRA.dtab === 'exam') h += traExamHtml(g);
+  else h += traCloseHtml(g);
+  root.innerHTML = h;
+  if(TRA.dtab === 'checkin') traStartClock();
+}
+function traInfoHtml(g){
+  const s = g.session;
+  let h = trInfoGrid(s) + `<div class="tr-sec"><b>ตารางเรียน</b>${trDaysHtml(g)}</div><div class="ex-act">`;
+  h += `<button class="btn btn-primary tr-big" data-tr="aedit" data-id="${trH(s.sessionId)}">✏ แก้ไขงานนี้</button>`;
+  if(s.status === 'closed' || s.status === 'cancelled') h += `<button class="btn btn-ghost tr-big" data-tr="reopen">↩ ${s.status==='closed'?'เปิดงานกลับ':'ยกเลิกการยกเลิก'}</button>`;
+  if(s.status !== 'closed' && s.status !== 'cancelled') h += `<button class="btn btn-ghost tr-big" data-tr="cancelses">🚫 ยกเลิกงาน</button>`;
+  if(s.status !== 'closed') h += `<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="delses">🗑 ลบงาน</button>`;
+  h += `<button class="btn btn-ghost tr-big" data-tr="asuser" data-id="${trH(s.sessionId)}">👁 ดูแบบผู้เข้าเทรน</button></div>`;
+  if(s.dateVersion > 1) h += `<div class="ex-hint">วันเทรนเคยถูกเปลี่ยน (เวอร์ชันวันที่ ${s.dateVersion}) — ผู้ลงทะเบียนเดิมต้องขอใหม่</div>`;
+  h += `<details class="tr-sec"><summary><b>ประวัติการดำเนินการ</b> (${(g.log||[]).length})</summary>${(g.log||[]).map(l=>`<div class="tr-log"><span>${trH(exFmtDT(l.at))}</span> <b>${trH(l.action)}</b> ${trH(l.detail)} <small>— ${trH(l.by)}</small></div>`).join('') || '<div class="ex-hint">-</div>'}</details>`;
+  return h;
+}
+
+/* ----- ผู้เข้าเทรน ----- */
+function traAttendedDays(g, regId){ return (g.attendance||[]).filter(a=>a.regId===regId && a.status==='ok').length; }
+function traPeopleHtml(g){
+  const s = g.session, regs = g.regs || [];
+  const by = st=>regs.filter(r=>r.status===st).sort((a,b)=>a.requestedAt-b.requestedAt);
+  const closed = s.status === 'closed';
+  let h = '';
+  if(s.seats > 0) h += `<div class="tr-seat"><div style="width:${Math.min(100, s.approved/s.seats*100)}%"></div><span>${s.approved}/${s.seats} ที่นั่ง</span></div>`;
+  if(!closed && s.status !== 'cancelled') h += `<div class="ex-act"><button class="btn btn-primary tr-big" data-tr="addp">➕ เพิ่มผู้เข้าเทรน</button></div>`;
+  const req = by('requested');
+  if(req.length) h += `<div class="tr-mh">⏳ รออนุมัติ (${req.length})</div>` + req.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${trH(r.nameEn)} · ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`).join('') +
+    (req.length>1 ? `<div class="ex-act"><button class="btn btn-ghost" data-tr="aprall" data-sid="${trH(s.sessionId)}">✓ อนุมัติทั้งหมด (${req.length})</button></div>` : '');
+  const ap = by('approved');
+  h += `<div class="tr-mh">✅ อนุมัติแล้ว (${ap.length})</div>` + (ap.length ? ap.map(r=>{
+    const n = traAttendedDays(g, r.regId);
+    return `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${trH(r.nameEn)}${r.email?'':' · <span style="color:var(--amber)">ไม่มีบัญชีในแอป (สอบออนไลน์/รับ Cer อัตโนมัติไม่ได้)</span>'}${n?` · เข้าเทรนแล้ว ${n} วัน`:''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="pmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}</div></div>`;
+  }).join('') : '<div class="ex-hint">ยังไม่มี</div>');
+  const re = by('needsReconfirm');
+  if(re.length) h += `<div class="tr-mh">🔁 รอยืนยันใหม่ เพราะวันเทรนเปลี่ยน (${re.length})</div>` + re.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">ตัดออก</button>`}</div></div>`).join('');
+  const rj = by('rejected').concat(by('cancelled'));
+  if(rj.length) h += `<details class="tr-sec"><summary>ไม่อนุมัติ / ยกเลิก (${rj.length})</summary>${rj.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${r.status==='rejected'?'ไม่อนุมัติ':'ยกเลิก'}${r.note?': '+trH(r.note):''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="undo">↩</button>`}</div></div>`).join('')}</details>`;
+  return h;
+}
+function traPersonMenu(regId){
+  const r = TRA.g.regs.find(x=>x.regId===regId); if(!r) return;
+  trSheet(`<div class="ex-hint">${trH(r.name)}</div><div class="tr-menu"><button class="btn btn-ghost tr-big" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="undo">↩ ย้อนกลับเป็น "รออนุมัติ"</button><button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="remove">🗑 ลบออกจากรายชื่อ</button></div>`, { title:'จัดการรายชื่อ' });
+}
+async function traAddPersonSheet(){
+  showLoadingOverlay('กำลังโหลดรายชื่อ...');
+  try{ await exaLoadProfiles(); }catch(e){ hideLoadingOverlay(); alert('โหลดรายชื่อไม่สำเร็จ: '+e.message); return; }
+  hideLoadingOverlay();
+  trSheet(`<input type="search" id="tra-psearch" data-tr="psearch" placeholder="ค้นหาชื่อ / ชื่อเล่น / อีเมล" class="tr-in"><div id="tra-plist" class="tr-plist">${traPlistHtml('')}</div>
+    <div class="tr-sec"><b>ไม่มีบัญชีในแอป?</b><div class="ex-hint">พิมพ์ชื่อเพื่อเพิ่มเป็นผู้เข้าเทรน (จะเช็คชื่อได้ แต่สอบออนไลน์/รับ Cer อัตโนมัติไม่ได้)</div><input type="text" id="tra-guest" class="tr-in" placeholder="ชื่อ - ชื่อเล่น"><div class="ex-act"><button class="btn btn-ghost" data-tr="addguest">เพิ่ม</button></div></div>`, { title:'เพิ่มผู้เข้าเทรน' });
+}
+function traPlistHtml(q){
+  const have = {}; (TRA.g.regs||[]).forEach(r=>{ if(r.email && (r.status==='approved'||r.status==='requested')) have[r.email] = r.status; });
+  q = String(q||'').trim().toLowerCase();
+  const arr = (EXA.profiles||[]).filter(p=>!q || (p.name+' '+p.nameEn+' '+p.email+' '+p.firstTh+' '+p.nickTh).toLowerCase().indexOf(q) >= 0).slice(0, 60);
+  if(!arr.length) return '<div class="ex-hint" style="padding:8px">ไม่พบ</div>';
+  return arr.map(p=>`<button class="tr-prow" ${have[p.email]?'disabled':''} data-tr="addperson" data-email="${trH(p.email)}"><b>${trH(p.name)}</b><small>${trH(p.nameEn)}${have[p.email]?' · '+(have[p.email]==='approved'?'อนุมัติแล้ว':'รออนุมัติ'):''}</small></button>`).join('');
+}
+async function traAddPerson(email, name, nameEn, force){
+  showLoadingOverlay('กำลังเพิ่ม...');
+  try{
+    await examApi('trAddAttendee', { sessionId:TRA.g.session.sessionId, email, name, nameEn, force:!!force });
+    hideLoadingOverlay(); trSheetClose(); showToast('✓ เพิ่มแล้ว'); await traReload(true);
+  }catch(e){
+    hideLoadingOverlay();
+    if(!force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message+'\nเพิ่มเกินที่นั่งต่อไป?')) return traAddPerson(email, name, nameEn, true);
+    alert(e.message);
+  }
+}
+
+/* ----- เช็คชื่อ ----- */
+function traStopClock(){ if(_trClock){ clearInterval(_trClock); _trClock = 0; } }
+function traStartClock(){
+  traStopClock();
+  const tick = ()=>{ const el = $('tra-clock'); if(!el){ traStopClock(); return; } el.textContent = trFmtClock(exNow()); };
+  tick(); _trClock = setInterval(tick, 1000);
+}
+function traDayList(g){
+  const s = g.session;
+  if(g.days.length) return g.days.map(d=>d.date);
+  const out = []; for(let d = s.startDate, n = 0; d <= s.endDate && n < 62; d = trAddDays(d,1), n++) out.push(d);
+  return out;
+}
+function traRefTime(g, date){
+  const d = g.days.find(x=>x.date===date);
+  const ts = d ? d.items.map(i=>i.timeFrom).filter(Boolean).sort() : [];
+  return ts[0] || '09:00';
+}
+function traAttOf(g, regId, date){ return (g.attendance||[]).find(a=>a.regId===regId && a.dayDate===date && a.status==='ok'); }
+function traCheckinHtml(g){
+  const s = g.session;
+  if(s.dateMode === 'month') return '<div class="ex-note">งานนี้ยังไม่กำหนดวันที่แน่นอน — แก้ไขงานให้ระบุวันที่ก่อนจึงเช็คชื่อได้</div>';
+  if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานนี้ถูกยกเลิก</div>';
+  const days = traDayList(g), today = trToday();
+  if(!TRA.day || days.indexOf(TRA.day) < 0) TRA.day = days.indexOf(today) >= 0 ? today : days[0];
+  const isToday = TRA.day === today, closed = s.status === 'closed';
+  const people = (g.regs||[]).filter(r=>r.status==='approved');
+  const done = people.filter(r=>traAttOf(g, r.regId, TRA.day));
+  const late = done.filter(r=>traAttOf(g, r.regId, TRA.day).diffMin > 0).length;
+  let h = `<div class="tr-ck-head"><div class="tr-clock"><small>เวลาเซิร์ฟเวอร์ (ไทย)</small><span id="tra-clock">--:--:--</span></div>
+    <div class="tr-sum"><b>${done.length}</b>/${people.length}<small>เช็คแล้ว</small></div><div class="tr-sum ${late?'late':''}"><b>${late}</b><small>สาย</small></div></div>
+    <div class="subtab-bar tr-days">${days.map((d,i)=>`<button class="${TRA.day===d?'active':''}" data-tr="ckday" data-v="${d}">วัน ${i+1}<small>${trH(trFmtDate(d,false))}${d===today?' • วันนี้':''}</small></button>`).join('')}</div>
+    <div class="ex-hint">เวลาเริ่มของวันนี้: <b>${traRefTime(g, TRA.day)} น.</b> — เช็คหลังเวลานี้ระบบนับเป็น "สาย"${isToday?'':' · <span style="color:var(--amber)">ไม่ใช่วันนี้: ใช้ปุ่ม "ลงเวลาเอง"</span>'}${closed?' · <span style="color:var(--amber)">งานปิดแล้ว แก้ไม่ได้</span>':''}</div>`;
+  if(!people.length) h += '<div class="ex-note">ยังไม่มีผู้ได้รับอนุมัติ — ไปแท็บ "ผู้เข้าเทรน" เพื่ออนุมัติหรือเพิ่มชื่อ</div>';
+  h += people.map(r=>{
+    const a = traAttOf(g, r.regId, TRA.day);
+    let right;
+    if(a) right = `<div class="tr-ckok"><b>✓ ${trFmtTime(a.checkInAt)}</b>${a.diffMin>0?trChip('สาย '+a.diffMin+' นาที','warn'):trChip(a.diffMin<0?'ก่อนเวลา '+(-a.diffMin)+' นาที':'ตรงเวลา','ok')}${a.history && a.history.length>1?'<small>แก้ไขแล้ว</small>':''}</div>${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="ckmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}`;
+    else if(closed) right = '<span class="ex-hint">ไม่ได้เช็คชื่อ</span>';
+    else right = isToday ? `<button class="btn btn-primary tr-ckbtn" data-tr="ckin" data-id="${trH(r.regId)}">✓ เช็คชื่อ</button>` : `<button class="btn btn-ghost tr-ckbtn" data-tr="ckmenu" data-id="${trH(r.regId)}">ลงเวลาเอง</button>`;
+    return `<div class="tr-row ${a?'done':''}"><div class="tr-row-n"><b>${trH(r.name)}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div><div class="tr-row-a">${right}</div></div>`;
+  }).join('');
+  h += `<div class="ex-act" style="margin-top:14px"><button class="btn btn-ghost" data-tr="ckxls">⬇ ดาวน์โหลด Excel เช็คชื่อ</button></div>`;
+  return h;
+}
+async function traCheck(op, regId, extra){
+  showLoadingOverlay(op==='in' ? 'กำลังเช็คชื่อ...' : 'กำลังบันทึก...');
+  try{
+    const r = await examApi('trCheckIn', Object.assign({ sessionId:TRA.g.session.sessionId, regId, dayDate:TRA.day, op }, extra||{}));
+    TRA.g.attendance = r.attendance;
+    hideLoadingOverlay(); trSheetClose(); traRenderDetail();
+    if(op === 'in') showToast('✓ เช็คชื่อแล้ว');
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+function traCkMenu(regId){
+  const g = TRA.g, r = g.regs.find(x=>x.regId===regId); if(!r) return;
+  const a = traAttOf(g, regId, TRA.day);
+  const hist = (a && a.history || []).map(x=>`<div class="tr-log"><span>${trH(exFmtDT(x.at))}</span> ${({in:'เช็คชื่อ',undo:'ยกเลิก',edit:'แก้เวลา',manual:'ลงเวลาเอง'})[x.op]||x.op} ${x.to?'→ '+trFmtTime(x.to):''} <small>— ${trH(x.by)}${x.note?' · '+trH(x.note):''}</small></div>`).join('');
+  const dflt = a ? trFmtTime(a.checkInAt) : (TRA.day === trToday() ? trFmtTime(exNow()) : traRefTime(g, TRA.day));
+  trSheet(`<div class="ex-hint">${trH(r.name)} · ${trH(trFmtDate(TRA.day))}</div>
+    <label class="tr-lb">${a?'แก้เวลาเช็คชื่อ':'ลงเวลาเอง'} (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${dflt}">
+    <label class="tr-lb">หมายเหตุ (ไม่บังคับ)</label><input type="text" id="tra-ck-note" class="tr-in" placeholder="เช่น ลืมเช็คชื่อ / มาถึงตรงเวลา">
+    <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="ckedit" data-id="${trH(regId)}">💾 บันทึกเวลา</button>${a?`<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="ckundo" data-id="${trH(regId)}">ยกเลิกการเช็คชื่อ</button>`:''}</div>
+    ${hist?`<div class="tr-sec"><b>ประวัติ</b>${hist}</div>`:''}`, { title: a?'แก้ไขการเช็คชื่อ':'ลงเวลาเอง' });
+}
+function traCheckinXls(){
+  const g = TRA.g, s = g.session, days = traDayList(g);
+  const people = (g.regs||[]).filter(r=>r.status==='approved');
+  const rows = people.map((r,i)=>{
+    const o = { 'ลำดับ':i+1, 'ชื่อ':r.name, 'ชื่ออังกฤษ':r.nameEn, 'อีเมล':r.email };
+    days.forEach((d,k)=>{ const a = traAttOf(g, r.regId, d); o['วัน '+(k+1)+' ('+d+')'] = a ? trFmtTime(a.checkInAt)+(a.diffMin>0?' (สาย '+a.diffMin+' นาที)':'') : '-'; });
+    o['เข้าเทรนกี่วัน'] = days.filter(d=>traAttOf(g, r.regId, d)).length;
+    return o;
+  });
+  const hist = [];
+  (g.attendance||[]).forEach(a=>{ (a.history||[]).forEach(x=>hist.push({ 'ชื่อ':a.name, 'วันที่':a.dayDate, 'เวลาที่ทำรายการ':exFmtDT(x.at), 'รายการ':({in:'เช็คชื่อ',undo:'ยกเลิก',edit:'แก้เวลา',manual:'ลงเวลาเอง'})[x.op]||x.op, 'เวลาเช็คอิน':x.to?trFmtTime(x.to):'', 'โดย':x.by, 'หมายเหตุ':x.note||'' })); });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length?rows:[{}]), 'เช็คชื่อ');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hist.length?hist:[{}]), 'ประวัติแก้ไข');
+  XLSX.writeFile(wb, 'checkin-'+String(s.title).replace(/[^A-Za-z0-9ก-๙]+/g,'_')+'-'+s.startDate+'.xlsx');
+}
+
+/* ----- สอบ (เฉพาะ Cer ภายใน) ----- */
+function traExamHtml(g){
+  const s = g.session, e = g.exam;
+  if(!s.examSetId && !e) return '<div class="ex-note">งานนี้ยังไม่ผูกชุดข้อสอบ — กด "แก้ไข" ในแท็บข้อมูล แล้วเลือกชุดข้อสอบที่เผยแพร่แล้ว</div>';
+  if(!e || e.error) return `<div class="ex-note ex-bad">โหลดข้อมูลรอบสอบไม่สำเร็จ${e&&e.error?': '+trH(e.error):''}</div>`;
+  const st = e.state === 'pending' ? trChip('ยังไม่เปิดสอบ','') : e.state === 'closed' ? trChip('ปิดสอบแล้ว','bad') : e.isOpen ? trChip('เปิดสอบอยู่','ok') : trChip('ไม่ได้เปิด','');
+  let h = `<div class="tr-sec"><div class="ex-row"><b>${trH(e.setTitle)}</b> · Level ${e.level} ${st}</div>
+    <div class="ex-meta">ข้อสอบเวอร์ชันที่ใช้: ${e.pinnedVersion ? '<b>'+e.pinnedVersion+'</b> (ล็อกไว้ตอนกดเริ่มสอบ)' : 'จะล็อกเป็นเวอร์ชันล่าสุด (v'+e.latestVersion+') ตอนกดเริ่มสอบ'} · ผ่านที่ <b>${e.passPercent}%</b> · ${e.durationMin>0?e.durationMin+' นาที':'ไม่จำกัดเวลา'}<br>มีสิทธิ์สอบ <b>${e.rows.length}</b> คน (= ผู้ที่อนุมัติแล้วและมีบัญชี) · ผ่านแล้ว <b>${e.counts.passed}</b> · รอตรวจข้อเขียน ${e.counts.grading||0}</div>
+    <div class="ex-act">${e.state==='auto' && e.isOpen ? '<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="exclose">■ ปิดสอบ</button>' : `<button class="btn btn-primary tr-big" data-tr="exstart">▶ ${e.state==='closed'?'เปิดสอบอีกครั้ง':'เริ่มสอบ'}</button>`}</div>
+    <div class="ex-hint">ข้อสอบจะเปิดเฉพาะเมื่อ Sup กด "เริ่มสอบ" · ผู้สอบไม่ผ่านสอบใหม่ได้เรื่อยๆ จนกว่า Sup กด "ปิดสอบ" · ผู้สอบผ่านจะได้ใบ Cer อัตโนมัติ</div></div>`;
+  h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่าน %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลา (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div><div><label class="tr-lb">ผ่อนผัน (นาที)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-grace" value="${e.graceMin}" min="0" max="60"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
+  const stText = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','warn'], grading:['รอตรวจข้อเขียน','warn'], none:['ยังไม่สอบ',''] };
+  h += `<div class="tr-sec"><b>ผลสอบ</b>${e.rows.length ? e.rows.map(r=>{ const t = stText[r.status] || ['-','']; return `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>สอบ ${r.attemptCount||0} ครั้ง${r.lastScore!=null?' · ล่าสุด '+r.lastScore+'%':''}${r.certNo?' · '+trH(r.certNo):''}</small></div><div class="tr-row-a">${trChip(t[0],t[1])}${r.certUrl?`<a class="btn btn-ghost tr-sq" target="_blank" rel="noopener" href="${trH(safeHttpUrl(r.certUrl))}">📄</a>`:''}</div></div>`; }).join('') : '<div class="ex-hint">ยังไม่มีผู้มีสิทธิ์สอบ</div>'}</div>
+    <div class="ex-act"><button class="btn btn-ghost" data-tr="exissue">🎓 ออกใบ Cer ที่ค้าง / ซิงก์เข้าแท็บ Certificate</button>${e.counts.grading?`<button class="btn btn-ghost" data-tr="exgrade">✍️ ไปตรวจข้อเขียน (${e.counts.grading})</button>`:''}</div>
+    <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่มนี้ไว้กดเมื่อมีใบค้าง</div>`;
+  return h;
+}
+async function traExamAct(op, extra){
+  showLoadingOverlay('กำลังดำเนินการ...');
+  try{ await examApi('trExamAction', Object.assign({ sessionId:TRA.g.session.sessionId, op }, extra||{})); hideLoadingOverlay(); await traReload(true); showToast('✓ เรียบร้อย'); }
+  catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+async function traIssueCerts(){
+  showLoadingOverlay('กำลังออกใบ Cer...');
+  let made = 0, failed = [], unsynced = [];
+  try{
+    for(let guard = 0; guard < 10; guard++){
+      const r = await examApi('trIssueRound', { sessionId:TRA.g.session.sessionId, limit:6 });
+      made += r.made; failed = r.failed || []; unsynced = r.unsynced || [];
+      showLoadingOverlay('กำลังออกใบ Cer... ออกแล้ว '+made+' ใบ');
+      if(!r.made) break;
+    }
+    let wrote = 0;
+    for(const c of unsynced){
+      try{ await examWriteCertDoc(c, false); await examApi('markCertWritten', { certNo:c.certNo }); wrote++; }
+      catch(e){ console.warn('เขียนใบ Cer เข้าแท็บ Certificate ไม่สำเร็จ:', c.certNo, e.message); }
+    }
+    hideLoadingOverlay();
+    let msg = 'ออกใบ Cer ใหม่ '+made+' ใบ';
+    if(unsynced.length) msg += '\nเพิ่มเข้าแท็บ Certificate แล้ว '+wrote+'/'+unsynced.length+' ใบ'+(wrote<unsynced.length ? '\n(ที่เหลือจะถูกเพิ่มอัตโนมัติเมื่อเจ้าของใบเปิดหน้า "ข้อสอบของฉัน")' : '');
+    if(failed.length) msg += '\nออกไม่สำเร็จ '+failed.length+' ใบ: '+failed.map(f=>f.certNo+' ('+f.error+')').join(', ')+'\nลองกดอีกครั้งในอีกสักครู่';
+    alert(msg); await traReload(true);
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+
+/* ----- ปิดงาน / ไฟล์แนบ ----- */
+function trPickModel(s){
+  const toks = String(s.model||'').split(/\s*[\/,]\s*/).filter(Boolean);
+  try{ const known = (DATA.categories[s.category]||[]).map(String); for(const t of toks){ const hit = known.find(k=>k.toLowerCase()===t.toLowerCase()); if(hit) return hit; } }catch(e){}
+  return s.model || toks[0] || s.title;
+}
+function traReasonOf(r){ return TRA.reasons[r.regId] !== undefined ? TRA.reasons[r.regId] : (r.closeReason || ''); }
+function traCloseModel(g){
+  const s = g.session, regs = (g.regs||[]).filter(r=>r.status==='approved');
+  const files = g.files || [];
+  const photos = files.filter(f=>f.kind==='photo');
+  const exRows = {}; ((g.exam && g.exam.rows) || []).forEach(x=>{ exRows[String(x.email).toLowerCase()] = x; });
+  const rows = regs.map(r=>{
+    const attended = traAttendedDays(g, r.regId) > 0;
+    const reason = traReasonOf(r).trim();
+    let kind = 'ok', msg = '', ok = true;
+    if(!attended){ kind = 'absent'; ok = false; msg = 'ได้รับอนุมัติแต่ไม่ได้เช็คชื่อ'; }
+    else if(s.certType === 'internal' && g.exam){
+      const x = exRows[String(r.email).toLowerCase()];
+      ok = !!(x && x.status==='passed' && x.certNo);
+      kind = 'exam'; msg = !r.email ? 'ไม่มีบัญชีในแอป จึงสอบ/รับ Cer อัตโนมัติไม่ได้' : (x && x.status==='passed' ? (x.certNo ? '' : 'ผ่านแล้ว รอใบ Cer ออก') : (x ? ({failed:'ยังไม่ผ่าน',none:'ยังไม่ได้สอบ',retake:'ต้องสอบใหม่',inprogress:'กำลังสอบอยู่',grading:'รอตรวจข้อเขียน'})[x.status]||'ยังไม่ผ่าน' : 'ยังไม่ได้สอบ'));
+    } else if(s.certType === 'manufacturer'){
+      const fl = files.filter(f=>f.kind==='mfrCert' && f.regId===r.regId);
+      ok = fl.length > 0; kind = 'mfr'; msg = ok ? '' : 'ยังไม่แนบใบ Cer ผู้ผลิต';
+    }
+    const covered = ok || !!reason;
+    return { r, attended, kind, msg, ok, reason, covered };
+  });
+  const need = rows.filter(x=>!x.ok);
+  return { rows, photos, files, attached: rows.filter(x=>x.ok && x.kind!=='absent').length, reasoned: need.filter(x=>x.reason).length, remain: need.filter(x=>!x.reason).length, total: rows.length };
+}
+function traCloseHtml(g){
+  const s = g.session, m = traCloseModel(g), closed = s.status === 'closed';
+  let h = '';
+  if(closed) h += `<div class="ex-note" style="border-color:var(--green)">✅ ปิดงานเทรนแล้ว เมื่อ ${trH(exFmtDT(s.closedAt))}${s.closeNote?' — '+trH(s.closeNote):''}</div>`;
+  else if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานนี้ถูกยกเลิก</div>';
+  else h += '<div class="ex-hint">ปิดงานเมื่อเทรนจบ: แนบรูปบรรยากาศ และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
+  // รูปบรรยากาศ
+  h += `<div class="tr-sec"><b>📷 รูปบรรยากาศ</b> <small>(${m.photos.length} รูป · อย่างน้อย 1 รูป · ไม่จำกัดขนาด)</small><div class="tr-thumbs">${m.photos.map(f=>`<div class="tr-th"><a href="${trH(safeHttpUrl(f.driveUrl))}" target="_blank" rel="noopener"><img loading="lazy" src="${trH(exImg(f.driveUrl,'w300'))}" alt="${trH(f.fileName)}"></a>${closed?'':`<button class="tr-x" data-tr="rmfile" data-id="${trH(f.fileId)}" aria-label="ลบรูป">✕</button>`}</div>`).join('')}</div>
+    ${closed?'':`<div class="ex-act"><button class="btn btn-ghost tr-big" data-tr="photo" data-cam="1">📸 ถ่ายรูป</button><button class="btn btn-ghost tr-big" data-tr="photo">🖼 เลือกรูป (หลายรูปได้)</button></div>`}</div>`;
+  // รายคน
+  if(m.rows.length){
+    const label = s.certType === 'manufacturer' ? 'ใบ Cer ผู้ผลิต' : s.certType === 'internal' ? 'ผลสอบ / ใบ Cer ภายใน' : 'การเข้าเทรน';
+    h += `<div class="tr-sec"><b>👥 ${label}</b>
+      <div class="tr-cnt"><span class="ok">แนบ/ผ่านแล้ว ${m.attached}</span><span class="warn">ระบุเหตุผลแล้ว ${m.reasoned}</span><span class="${m.remain?'bad':'ok'}">เหลือ ${m.remain}</span><span>/ ${m.total} คน</span></div>`;
+    h += m.rows.map(x=>{
+      const r = x.r, mf = (g.files||[]).filter(f=>f.kind==='mfrCert' && f.regId===r.regId);
+      let st = x.ok ? trChip(x.kind==='mfr'?'แนบแล้ว':x.kind==='exam'?'ผ่าน+ได้ Cer':'เข้าเทรน','ok') : (x.reason ? trChip('มีเหตุผล','warn') : trChip('ต้องดำเนินการ','bad'));
+      let h2 = `<div class="tr-pr ${x.ok||x.reason?'':'need'}"><div class="tr-pr-h"><b>${trH(r.name)}</b>${st}</div>`;
+      if(x.msg && !x.ok) h2 += `<div class="ex-hint">${trH(x.msg)}</div>`;
+      if(x.kind === 'mfr' && x.attended){
+        h2 += mf.map(f=>`<div class="tr-file"><a href="${trH(safeHttpUrl(f.driveUrl))}" target="_blank" rel="noopener">📎 ${trH(f.fileName)}</a>${f.certDocId?trChip('ส่งเข้า Certificate แล้ว','ok'):(closed?trChip('ยังไม่เข้า Certificate','warn'):'')}${closed?'':`<button class="tr-x" data-tr="rmfile" data-id="${trH(f.fileId)}" aria-label="ลบไฟล์">✕</button>`}</div>`).join('');
+        if(!closed) h2 += `<button class="btn btn-ghost tr-sq2" data-tr="attach" data-id="${trH(r.regId)}">📎 ${mf.length?'แนบเพิ่ม':'แนบไฟล์ใบ Cer'}</button>`;
+      }
+      if(!x.ok && !closed) h2 += `<label class="tr-lb">เหตุผลที่ไม่มี${x.kind==='absent'?'การเข้าเทรน':x.kind==='exam'?' Cer จากการสอบ':'ใบ Cer ผู้ผลิต'}</label><textarea class="tr-in" rows="2" data-tr="reason" data-id="${trH(r.regId)}" placeholder="เช่น ลาป่วย / ผู้ผลิตยังไม่ส่งใบมา / ไม่ผ่านสอบ ส่งต่อรอบหน้า">${trH(traReasonOf(r))}</textarea>`;
+      else if(!x.ok && x.reason) h2 += `<div class="ex-meta">เหตุผล: ${trH(x.reason)}</div>`;
+      return h2 + '</div>';
+    }).join('') + '</div>';
+  }
+  if(!closed){
+    h += `<div class="tr-sec"><label class="tr-lb">บันทึกสรุปการเทรน (ไม่บังคับ)</label><textarea class="tr-in" rows="2" id="tra-closenote" placeholder="สรุปสั้นๆ"></textarea></div>
+      <div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="closeses">✅ ปิดงานเทรน${m.photos.length===0||m.remain?' (ยังไม่ครบ)':''}</button></div>`;
+  } else {
+    const unsynced = (g.files||[]).filter(f=>f.kind==='mfrCert' && !f.certDocId && (g.regs.find(r=>r.regId===f.regId)||{}).email);
+    if(unsynced.length) h += `<div class="ex-note ex-bad">ใบ Cer ผู้ผลิต ${unsynced.length} ไฟล์ ยังไม่ถูกส่งเข้าแท็บ Certificate ของ Engineer <div class="ex-act"><button class="btn btn-primary" data-tr="mfrsync">🔁 ส่งเข้า Certificate ใหม่</button></div></div>`;
+    h += '<div class="ex-act"><button class="btn btn-ghost tr-big" data-tr="reopen">↩ เปิดงานกลับเพื่อแก้ไข</button></div>';
+  }
+  return h;
+}
+async function traUploadPhotos(files){
+  const s = TRA.g.session; files = Array.from(files||[]); if(!files.length) return;
+  let ok = 0;
+  try{
+    const folder = await trSessionFolder(s);
+    for(let i = 0; i < files.length; i++){
+      showLoadingOverlay(`กำลังอัปโหลดรูป ${i+1}/${files.length}...`);
+      const f = files[i];
+      const url = await driveUploadLargeFile(f, 'photo_'+Date.now()+'_'+i+'_'+String(f.name||'photo.jpg').replace(/[^A-Za-z0-9._-]+/g,'_'), folder);
+      await examApi('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
+      ok++;
+    }
+    hideLoadingOverlay(); showToast('✓ อัปโหลด '+ok+' รูปแล้ว');
+  }catch(e){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ'+(ok?' (สำเร็จแล้ว '+ok+' รูป)':'')+': '+e.message); }
+  await traReload(true);
+}
+async function traUploadMfr(regId, file){
+  const s = TRA.g.session, r = TRA.g.regs.find(x=>x.regId===regId); if(!file || !r) return;
+  if(file.size > 30*1024*1024){ alert('ไฟล์ใหญ่เกิน 30 MB กรุณาลดขนาดก่อน'); return; }
+  showLoadingOverlay('กำลังอัปโหลดใบ Cer...');
+  try{
+    const folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
+    const nm = sanitizeFolderName(r.name)+'_'+String(file.name||'cert.pdf').replace(/[^A-Za-z0-9ก-๙._-]+/g,'_');
+    const url = await driveUploadLargeFile(file, nm, folder);
+    await examApi('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:file.name||nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
+    hideLoadingOverlay(); showToast('✓ แนบไฟล์แล้ว');
+  }catch(e){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+e.message); }
+  await traReload(true);
+}
+async function trSessionFolder(s, sub){
+  const root = await driveFindOrCreateFolder('Training', DRIVE_ROOT_FOLDER_ID);
+  const p = await driveFindOrCreateFolder(sanitizeFolderName(s.category||'อื่นๆ'), root);
+  const f = await driveFindOrCreateFolder(sanitizeFolderName(s.startDate+' '+s.title), p);
+  return sub ? await driveFindOrCreateFolder(sub, f) : f;
+}
+async function trDriveMove(fileId, newParent){
+  const token = await ensureDriveAccess(); const h = { Authorization:'Bearer '+token };
+  const r0 = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`, { headers:h });
+  if(!r0.ok) throw new Error('อ่านตำแหน่งไฟล์ไม่สำเร็จ ('+r0.status+')');
+  const cur = (await r0.json()).parents || [];
+  if(cur.indexOf(newParent) >= 0) return;
+  const q = 'addParents='+encodeURIComponent(newParent)+(cur.length?'&removeParents='+encodeURIComponent(cur.join(',')):'')+'&fields=id';
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?${q}`, { method:'PATCH', headers:Object.assign({ 'Content-Type':'application/json' }, h), body:'{}' });
+  if(!r.ok) throw new Error('ย้ายไฟล์ไม่สำเร็จ ('+r.status+')');
+}
+// ย้ายใบ Cer ผู้ผลิตของแต่ละคนไปโฟลเดอร์ Certificate ของเขา + สร้างรายการในแท็บ Certificate (ทำซ้ำได้ ข้ามไฟล์ที่ทำแล้ว)
+async function trFinishMfr(s, files){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const model = trPickModel(s); let ok = 0; const fail = [];
+  for(const f of files){
+    if(f.certDocId){ ok++; continue; }
+    if(!f.email){ fail.push((f.name||'?')+' (ไม่มีบัญชีในแอป)'); continue; }
+    try{
+      const folderId = await ensureCertificateFolderPath('manufacturer', f.name, s.category, model);
+      await trDriveMove(f.driveFileId, folderId);
+      const cid = certDocId(f.email, 'manufacturer', s.category, model) + '__' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+      await sdk.setDoc(sdk.doc(db,'certificates', cid), {
+        ownerEmail:f.email, ownerName:f.name, role:'engineer', certType:'manufacturer', category:s.category, model,
+        fileUrl:f.driveUrl, fileName:f.fileName, uploadedAt:Date.now(), score:null, status:'pending', reviewedBy:'', reviewedAt:null, reviewNote:'',
+        source:'training', trainingSessionId:s.sessionId
+      });
+      await examApi('trMarkFile', { fileId:f.fileId, certDocId:cid });
+      ok++;
+    }catch(e){ fail.push((f.name||'?')+' ('+e.message+')'); }
+  }
+  return { ok, fail };
+}
+async function traCloseSession(){
+  const g = TRA.g, s = g.session;
+  const reasons = {}; (g.regs||[]).forEach(r=>{ if(TRA.reasons[r.regId] !== undefined) reasons[r.regId] = TRA.reasons[r.regId]; });
+  if(!confirm('ปิดงานเทรน "'+s.title+'" ?\nหลังปิดจะแก้รายชื่อ/เช็คชื่อ/ไฟล์ไม่ได้ (เปิดกลับได้ภายหลัง)')) return;
+  showLoadingOverlay('กำลังปิดงาน...');
+  try{
+    const noteEl = $('tra-closenote');
+    const r = await examApi('trCloseSession', { sessionId:s.sessionId, reasons, note: noteEl ? noteEl.value : '' });
+    if(!r.closed){
+      hideLoadingOverlay();
+      alert('ยังปิดงานไม่ได้ เพราะ:\n• ' + r.issues.map(i=>(i.name?i.name+' — ':'')+i.msg).join('\n• '));
+      await traReload(true); return;
+    }
+    let note = '';
+    if(r.mfrFiles && r.mfrFiles.length){
+      showLoadingOverlay('กำลังส่งใบ Cer เข้าแท็บ Certificate ของแต่ละคน...');
+      const res = await trFinishMfr(s, r.mfrFiles);
+      note = '\nส่งใบ Cer ผู้ผลิตเข้าแท็บ Certificate แล้ว '+res.ok+'/'+r.mfrFiles.length+' ไฟล์' + (res.fail.length ? '\nไม่สำเร็จ: '+res.fail.join(', ')+'\n(กด "ส่งเข้า Certificate ใหม่" ได้ภายหลัง)' : '');
+    }
+    TRA.reasons = {};
+    hideLoadingOverlay(); showToast('✓ ปิดงานเทรนเรียบร้อย'+note);
+    await traReload(false); window.scrollTo(0,0);
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+async function traMfrSync(){
+  const g = TRA.g, s = g.session;
+  const files = (g.files||[]).filter(f=>f.kind==='mfrCert').map(f=>{ const r = g.regs.find(x=>x.regId===f.regId) || {}; return Object.assign({}, f, { email:String(r.email||'').toLowerCase(), name:r.name||'' }); });
+  showLoadingOverlay('กำลังส่งเข้าแท็บ Certificate...');
+  try{ const res = await trFinishMfr(s, files); hideLoadingOverlay(); alert('สำเร็จ '+res.ok+'/'+files.length+' ไฟล์'+(res.fail.length?'\nไม่สำเร็จ: '+res.fail.join(', '):'')); await traReload(true); }
+  catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+
+
+/* ----- ฟอร์มสร้าง/แก้ไขงาน ----- */
+function traBlankForm(){
+  const me = (TRA.sets && TRA.sets.owners || []).find(o=>o.email===String(myUserEmail).toLowerCase());
+  return { id:'', imported:false, status0:'', f:{
+    category:'', model:'', title:'', dateMode:'exact', startDate:'', endDate:'', month:'', location:'', trainer:myClaimantName(), trainerEn:exaMyEnName(), trainerTitle:'',
+    seats:0, certType:'none', certIssuer:'', examSetId:'', status:'plan', ownerEmail:me ? me.email : String(myUserEmail).toLowerCase(), note:''
+  }, days:[] };
+}
+async function traPrepareForm(id){
+  TRA.sets = await examApi('trExamSets');
+  if(!TRA.data) TRA.data = await examApi('trList', { year:TRA.year });
+  if(id){
+    const g = (TRA.g && TRA.g.session.sessionId === id) ? TRA.g : await examApi('trGet', { sessionId:id });
+    const s = g.session;
+    TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
+      category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:s.startDate.slice(0,7), location:s.location,
+      trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
+      status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
+      days:JSON.parse(JSON.stringify(g.days)), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
+  } else if(!TRA.form || TRA.form.id) TRA.form = traBlankForm();
+}
+function traFormSetOptions(f){
+  const sets = (TRA.sets && TRA.sets.sets) || [];
+  const mine = sets.slice().sort((a,b)=> (b.category===f.category) - (a.category===f.category) || a.category.localeCompare(b.category,'th') || a.model.localeCompare(b.model,'th') || a.level - b.level);
+  return mine;
+}
+function traRenderForm(){
+  const root = $('tra-root'), F = TRA.form, f = F.f;
+  const cats = Object.keys((typeof DATA !== 'undefined' && DATA && DATA.categories) || {}).sort((a,b)=>a.localeCompare(b,'th'));
+  const models = (DATA && DATA.categories && DATA.categories[f.category]) || [];
+  const sets = traFormSetOptions(f);
+  const noSets = sets.length === 0;
+  const seg = (name, v, cur, label, dis)=>`<button type="button" class="${cur===v?'active':''}" ${dis?'disabled':''} data-tr="${name}" data-v="${v}">${label}</button>`;
+  const closed = F.status0 === 'closed';
+  let h = traTabs() + `<div class="tr-back"><button class="btn btn-ghost btn-sm" data-tr="f_cancel">← ${F.id?'กลับ':'ยกเลิก'}</button></div><h2 class="tr-h2">${F.id?'แก้ไขงานเทรน':'สร้างงานเทรนใหม่'}</h2>
+  <div class="tr-form">
+    <div class="tr-fs"><b>หลักสูตร</b>
+      <label class="tr-lb">Product (ประเภทเครื่อง) *</label><select class="tr-in" data-tr="f_fld" data-k="category"><option value="">— เลือก —</option>${cats.map(c=>`<option ${f.category===c?'selected':''}>${trH(c)}</option>`).join('')}${f.category && cats.indexOf(f.category)<0?`<option selected>${trH(f.category)}</option>`:''}</select>
+      <label class="tr-lb">รุ่น (พิมพ์ได้หลายรุ่น เช่น BC-7800 / BC-6200)</label><input class="tr-in" type="text" list="tr-models" data-tr="f_fld" data-k="model" value="${trH(f.model)}" placeholder="รุ่นเครื่อง"><datalist id="tr-models">${models.map(m=>`<option value="${trH(m)}">`).join('')}</datalist>
+      <label class="tr-lb">ชื่อหลักสูตร *</label><input class="tr-in" type="text" data-tr="f_fld" data-k="title" value="${trH(f.title)}" placeholder="เช่น Maglumi 800 Basic Training"></div>
+    <div class="tr-fs"><b>วันที่</b>
+      <div class="subtab-bar tr-seg">${seg('f_mode','exact',f.dateMode,'กำหนดวันที่แน่นอน')}${seg('f_mode','month',f.dateMode,'ระบุเป็นเดือน (ยังไม่แน่นอน)', F.status0==='closed')}</div>
+      ${f.dateMode==='month' ? `<label class="tr-lb">เดือน</label><input class="tr-in" type="month" data-tr="f_fld" data-k="month" value="${trH(f.month)}">` :
+      `<div class="tr-2"><div><label class="tr-lb">วันที่เริ่ม *</label><input class="tr-in" type="date" data-tr="f_fld" data-k="startDate" value="${trH(f.startDate)}"></div><div><label class="tr-lb">วันที่สิ้นสุด *</label><input class="tr-in" type="date" data-tr="f_fld" data-k="endDate" value="${trH(f.endDate)}" min="${trH(f.startDate)}"></div></div>
+      ${F.id && F.status0!=='closed' ? '<div class="ex-hint">ถ้าเปลี่ยนวันที่ ผู้ลงทะเบียนที่รออนุมัติ/อนุมัติแล้วจะต้องกดขอเข้าเทรนใหม่ (ระบบจะถามยืนยันก่อนบันทึก) · แก้เฉพาะเนื้อหา/เวลา ไม่ต้องขอใหม่</div>' : ''}`}</div>
+    <div class="tr-fs"><b>รายละเอียด</b>
+      <label class="tr-lb">สถานที่</label><input class="tr-in" type="text" data-tr="f_fld" data-k="location" value="${trH(f.location)}" placeholder="เช่น Firmer Office">
+      <label class="tr-lb">วิทยากร / ผู้เทรน</label><input class="tr-in" type="text" data-tr="f_fld" data-k="trainer" value="${trH(f.trainer)}" placeholder="ชื่อผู้เทรน">
+      <label class="tr-lb">จำนวนที่นั่ง (0 = ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" min="0" max="500" data-tr="f_fld" data-k="seats" value="${trH(f.seats)}"></div>
+    <div class="tr-fs"><b>ใบ Certificate</b>
+      <div class="subtab-bar tr-seg">${seg('f_cert','none',f.certType,'ไม่มี')}${seg('f_cert','internal',f.certType,'ภายใน (มีสอบ)', noSets && !F.imported && f.certType!=='internal')}${seg('f_cert','manufacturer',f.certType,'ผู้ผลิต')}</div>
+      ${noSets ? '<div class="ex-hint">* Cer ภายในเลือกไม่ได้ จนกว่าจะมีชุดข้อสอบที่เผยแพร่แล้ว (สร้างที่เมนู จัดการข้อสอบ)</div>' : ''}
+      ${f.certType==='internal' ? `<label class="tr-lb">ชุดข้อสอบ (ที่เผยแพร่แล้ว) ${F.imported?'':'*'}</label><select class="tr-in" data-tr="f_fld" data-k="examSetId"><option value="">${F.imported?'— ยังไม่ผูก —':'— เลือกชุดข้อสอบ —'}</option>${sets.map(s=>`<option value="${trH(s.setId)}" ${f.examSetId===s.setId?'selected':''}>${trH(s.category)} › ${trH(s.model)} · Level ${s.level} — ${trH(s.title)} (ผ่าน ${s.passPercent}% · ${s.durationMin>0?s.durationMin+' นาที':'ไม่จำกัดเวลา'})</option>`).join('')}</select>
+        <div class="ex-hint">ระบบสร้างรอบสอบให้อัตโนมัติ ผู้ได้รับอนุมัติมีสิทธิ์สอบ · ข้อสอบเปิดเมื่อคุณกด "เริ่มสอบ" · ผ่านแล้วได้ใบ Cer อัตโนมัติ (ชื่อผู้เทรนบนใบ Cer = ด้านล่าง)</div>
+        <label class="tr-lb">ชื่อผู้เทรนบนใบ Cer (ภาษาอังกฤษ)</label><input class="tr-in" type="text" data-tr="f_fld" data-k="trainerEn" value="${trH(f.trainerEn)}" placeholder="เว้นว่าง = ใช้ชื่อวิทยากรด้านบน">
+        <label class="tr-lb">ตำแหน่งผู้เทรนบนใบ Cer</label><input class="tr-in" type="text" data-tr="f_fld" data-k="trainerTitle" value="${trH(f.trainerTitle)}" placeholder="เช่น Supervisor (เว้นว่าง = Trainer)">` : ''}
+      ${f.certType==='manufacturer' ? `<label class="tr-lb">ผู้ออกใบ Cer (ผู้ผลิต)</label><input class="tr-in" type="text" data-tr="f_fld" data-k="certIssuer" value="${trH(f.certIssuer)}" placeholder="เช่น Mindray TH">` : ''}</div>
+    <div class="tr-fs"><b>สถานะ</b>
+      ${closed ? '<div class="ex-note">งานนี้ปิดแล้ว — ใช้ปุ่ม "เปิดงานกลับ" ในหน้าจัดการก่อนถ้าต้องการเปลี่ยนสถานะ</div>' :
+      `<div class="subtab-bar tr-seg">${seg('f_status','plan',f.status,'แผน (ยังไม่เปิดรับ)')}${seg('f_status','open',f.status,'เปิดรับลงทะเบียน', f.dateMode==='month')}</div>`}
+      ${TRA.role==='manager' && (TRA.sets.owners||[]).length ? `<label class="tr-lb">เจ้าของงาน (Sup ที่อนุมัติ/เช็คชื่อ)</label><select class="tr-in" data-tr="f_fld" data-k="ownerEmail">${TRA.sets.owners.map(o=>`<option value="${trH(o.email)}" ${f.ownerEmail===o.email?'selected':''}>${trH(o.name)} (${o.role==='manager'?'Manager':'Sup'})</option>`).join('')}</select>` : ''}
+      <label class="tr-lb">หมายเหตุ</label><textarea class="tr-in" rows="2" data-tr="f_fld" data-k="note" placeholder="เช่น ไม่เกิน 6 คนต่อรอบ">${trH(f.note)}</textarea></div>`;
+  if(f.dateMode === 'exact') h += traScheduleHtml();
+  h += `<div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="f_save">💾 บันทึก</button><button class="btn btn-ghost tr-big" data-tr="f_cancel">ยกเลิก</button></div></div>`;
+  root.innerHTML = h;
+}
+function traScheduleHtml(){
+  const F = TRA.form;
+  let h = `<div class="tr-fs"><b>ตารางเรียนรายวัน</b><div class="ex-hint">เลือกวันที่เริ่ม-สิ้นสุดก่อน แล้วกด "สร้างวันตามช่วงวันที่" หรือเพิ่มวันเอง · แต่ละวันเพิ่มหัวข้อได้หลายรายการ</div>`;
+  F.days.forEach((d,di)=>{
+    h += `<div class="tr-dayed"><div class="tr-dayed-h"><b>วันที่ ${di+1}</b><input class="tr-in" type="date" data-tr="f_dday" data-di="${di}" value="${trH(d.date)}"><button class="btn btn-ghost tr-sq" data-tr="f_day_del" data-di="${di}" aria-label="ลบวันนี้">🗑</button></div>`;
+    d.items.forEach((it,ii)=>{
+      h += `<div class="tr-ited"><div class="tr-ited-t"><input class="tr-in" type="time" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="timeFrom" value="${trH(it.timeFrom)}" aria-label="เวลาเริ่ม"><span>–</span><input class="tr-in" type="time" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="timeTo" value="${trH(it.timeTo)}" aria-label="เวลาสิ้นสุด"><button class="btn btn-ghost tr-sq" data-tr="f_it_del" data-di="${di}" data-ii="${ii}" aria-label="ลบหัวข้อ">✕</button></div>
+        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="content" value="${trH(it.content)}" placeholder="หัวข้อการอบรม">
+        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="media" value="${trH(it.media)}" placeholder="สื่อ เช่น Power Point / หน้าเครื่อง"></div>`;
+    });
+    h += `<button class="btn btn-ghost tr-sq2" data-tr="f_it_add" data-di="${di}">＋ เพิ่มหัวข้อในวันนี้</button></div>`;
+  });
+  h += `<div class="ex-act"><button class="btn btn-ghost" data-tr="f_day_add">＋ เพิ่มวัน</button><button class="btn btn-ghost" data-tr="f_day_range">📅 สร้างวันตามช่วงวันที่</button><button class="btn btn-ghost" data-tr="f_copy">⎘ คัดลอกตารางจากงานก่อนหน้า</button></div></div>`;
+  return h;
+}
+function traFormSync(){ /* ค่าในช่องกรอกถูกเก็บลง TRA.form ทุกครั้งที่พิมพ์แล้ว — ไม่ต้องอ่านซ้ำ */ }
+function traFormDayRange(){
+  const F = TRA.form, f = F.f;
+  if(!f.startDate || !f.endDate || f.endDate < f.startDate){ alert('เลือกวันที่เริ่มและวันที่สิ้นสุดให้ถูกต้องก่อน'); return; }
+  if(trDaysBetween(f.startDate, f.endDate) > 60){ alert('ช่วงยาวเกิน 60 วัน'); return; }
+  const have = {}; F.days.forEach(d=>{ have[d.date] = 1; });
+  for(let d = f.startDate; d <= f.endDate; d = trAddDays(d,1)) if(!have[d]) F.days.push({ date:d, items:[{ timeFrom:'', timeTo:'', content:'', media:'' }] });
+  F.days.sort((a,b)=>a.date<b.date?-1:1);
+  traRenderForm();
+}
+function traFormAddDay(){
+  const F = TRA.form, f = F.f;
+  const last = F.days.length ? F.days[F.days.length-1].date : (f.startDate ? trAddDays(f.startDate,-1) : '');
+  if(!last){ alert('เลือกวันที่เริ่มก่อน'); return; }
+  const nd = trAddDays(last, 1);
+  if(f.endDate && nd > f.endDate) f.endDate = nd;
+  F.days.push({ date:nd, items:[{ timeFrom:'', timeTo:'', content:'', media:'' }] });
+  traRenderForm();
+}
+async function traFormCopy(){
+  const F = TRA.form; if(!F.days.length && !(F.f.startDate && F.f.endDate)){ alert('เลือกวันที่เริ่ม-สิ้นสุดก่อน แล้วจึงคัดลอกตารางมาใส่'); return; }
+  const list = ((TRA.data && TRA.data.sessions) || []).filter(s=>s.dateMode==='exact' && s.sessionId !== F.id).sort((a,b)=> (b.category===F.f.category) - (a.category===F.f.category) || (a.startDate<b.startDate?1:-1));
+  if(!list.length){ alert('ยังไม่มีงานอื่นให้คัดลอก'); return; }
+  trSheet(`<div class="ex-hint">เลือกงานที่ต้องการคัดลอกหัวข้อ-เวลามา (วันที่ใหม่ใช้ของงานนี้ เรียงตามวันที่ 1, 2, 3…)</div><div class="tr-plist">${list.slice(0,60).map(s=>`<button class="tr-prow" data-tr="f_copypick" data-id="${trH(s.sessionId)}"><b>${trH(s.title)}</b><small>${trH(trFmtRange(s.startDate,s.endDate))} · ${trH(s.category)}</small></button>`).join('')}</div>`, { title:'คัดลอกตารางจากงานก่อนหน้า' });
+}
+async function traFormCopyPick(id){
+  showLoadingOverlay('กำลังคัดลอก...');
+  try{
+    const g = await examApi('trGet', { sessionId:id });
+    const F = TRA.form, f = F.f;
+    let dates = F.days.map(d=>d.date);
+    if(!dates.length && f.startDate && f.endDate){ for(let d = f.startDate; d <= f.endDate; d = trAddDays(d,1)) dates.push(d); }
+    const out = [];
+    g.days.forEach((d,i)=>{ if(i < dates.length) out.push({ date:dates[i], items:d.items.map(x=>Object.assign({}, x)) }); });
+    if(!out.length){ hideLoadingOverlay(); alert('งานที่เลือกยังไม่มีตารางรายวัน'); return; }
+    if(g.days.length > dates.length) alert('งานต้นฉบับมี '+g.days.length+' วัน แต่งานนี้มี '+dates.length+' วัน — คัดลอกมาเฉพาะ '+dates.length+' วันแรก');
+    F.days = out; hideLoadingOverlay(); trSheetClose(); traRenderForm();
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+async function traFormSave(confirmed){
+  const F = TRA.form, f = F.f;
+  if(!f.category){ alert('กรุณาเลือก Product'); return; }
+  if(!String(f.title).trim()){ alert('กรุณากรอกชื่อหลักสูตร'); return; }
+  if(f.dateMode === 'exact' && (!f.startDate || !f.endDate)){ alert('กรุณาเลือกวันที่เริ่มและวันที่สิ้นสุด'); return; }
+  if(f.dateMode === 'month' && !f.month){ alert('กรุณาเลือกเดือน'); return; }
+  if(f.certType === 'internal' && !f.examSetId && !F.imported){ alert('Cer ภายในต้องเลือกชุดข้อสอบที่เผยแพร่แล้ว'); return; }
+  const days = f.dateMode === 'exact' ? F.days.map(d=>({ date:d.date, items:d.items.filter(i=>i.timeFrom||i.timeTo||String(i.content).trim()||String(i.media).trim()) })).filter(d=>d.items.length) : [];
+  const session = Object.assign({}, f, { sessionId:F.id || undefined, seats:Number(f.seats)||0 });
+  showLoadingOverlay('กำลังบันทึก...');
+  try{
+    const r = await examApi('trSaveSession', { session, days, confirmDateChange:!!confirmed });
+    hideLoadingOverlay();
+    if(r.needConfirm){
+      if(confirm('การเปลี่ยนวันที่ทำให้ผู้ลงทะเบียน '+r.affected+' คน (รออนุมัติ/อนุมัติแล้ว) ต้องกดขอเข้าเทรนใหม่ และถูกถอดจากรายชื่อผู้มีสิทธิ์สอบชั่วคราว\n\nยืนยันเปลี่ยนวันที่?')) return traFormSave(true);
+      return;
+    }
+    let msg = '✓ บันทึกแล้ว';
+    if(r.reconfirmed) msg += ' · ผู้ลงทะเบียน '+r.reconfirmed+' คนต้องขอใหม่';
+    showToast(msg);
+    if(r.calendar && r.calendar !== 'ok' && r.calendar !== 'skipped') alert('บันทึกงานแล้ว แต่ซิงก์ Google Calendar ไม่สำเร็จ: '+r.calendar);
+    TRA.form = null; TRA.g = null; TRA.data = null; TRA.queue = null; TR.data = null;
+    await traGo('detail', r.sessionId);
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+
+/* ----- เครื่องมือ Manager: นำเข้าแผนเดิม / ซิงก์ปฏิทิน / ล้างข้อมูลทดสอบ ----- */
+function trNormModel(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9ก-๙]/g,''); }
+function trGuessCat(model){
+  const cats = (DATA && DATA.categories) || {};
+  const toks = String(model).split(/\s*[\/,&()]\s*/).map(trNormModel).filter(x=>x.length>=3);
+  for(const cat of Object.keys(cats)){
+    for(const m of (cats[cat]||[])){
+      const nm = trNormModel(m); if(nm.length < 3) continue;
+      for(const t of toks) if(nm.indexOf(t) >= 0 || t.indexOf(nm) >= 0) return cat;
+    }
+  }
+  return '';
+}
+function trMatchName(raw){
+  const profs = EXA.profiles || [];
+  const clean = String(raw).replace(/^\s*\d+\s*[.)]?\s*/,'').replace(/^(นางสาว|นาง|นาย)\s*/,'').trim();
+  const toks = clean.split(/[\s\-–()]+/).filter(Boolean);
+  if(!toks.length) return null;
+  let c = profs.filter(p=>p.firstTh && p.nickTh && toks.indexOf(p.firstTh) >= 0 && toks.indexOf(p.nickTh) >= 0);
+  if(c.length === 1) return c[0];
+  c = profs.filter(p=>p.nickTh && p.firstTh && toks.indexOf(p.nickTh) >= 0 && toks.some(t=>t.length >= 3 && (p.firstTh.indexOf(t) === 0 || t.indexOf(p.firstTh) === 0)));
+  if(c.length === 1) return c[0];
+  c = profs.filter(p=>p.firstTh && toks.indexOf(p.firstTh) >= 0);
+  if(c.length === 1) return c[0];
+  return null;
+}
+async function traPrepareImport(){
+  await exaLoadProfiles();
+  TRA.sets = await examApi('trExamSets');
+  const all = await examApi('trList', { year:0 });
+  const have = {}; all.sessions.forEach(s=>{ if(s.importKey) have[s.importKey] = 1; });
+  const today = trToday();
+  const owners = TRA.sets.owners || [];
+  const meEmail = String(myUserEmail).toLowerCase();
+  if(!TRA.imp) TRA.imp = {};
+  TRA.imp.have = have; TRA.imp.today = today;
+  TRA.imp.rows = TR_SEED.map((s,i)=>{
+    const cat = trGuessCat(s.model);
+    let owner = meEmail;
+    try{
+      const ident = cat ? (ownerOf(cat, s.model) || '') : '';
+      const hit = ident && owners.find(o=>{ const nm = String(o.name||'').split(/[\s\-–]+/)[0]; return nm && ident.indexOf(nm) >= 0; });
+      if(hit) owner = hit.email;
+    }catch(e){}
+    const att = s.att.map(a=>{ const p = trMatchName(a[0]); return { raw:a[0], en:a[1], p }; });
+    return { i, seed:s, done:!!have[s.k], include:!have[s.k], category:cat, model:s.model, cert:s.cert, owner, att };
+  });
+}
+function traRenderImport(){
+  const root = $('tra-root'), I = TRA.imp;
+  let h = traTabs() + '<h2 class="tr-h2">เครื่องมือ Manager</h2>';
+  h += `<div class="tr-fs"><b>📥 นำเข้าแผนเทรนปี 2569 (จากไฟล์ Excel เดิม)</b>
+    <div class="ex-hint">นำเข้า: ชื่อหลักสูตร วัน-เวลา-หัวข้อ รายชื่อผู้เข้าเทรน (ผูกกับบัญชีเมื่อชื่อตรงกับโปรไฟล์) · ไม่นำเข้าเวลาเข้าเรียน/คะแนนสอบ · งานที่จบก่อนวันนี้ = "ปิดงานแล้ว" · งานที่ยังไม่ถึง = "เปิดรับลงทะเบียน" (รายชื่อเดิมอนุมัติแล้ว) · นำเข้าซ้ำได้ ระบบข้ามรายการที่เคยนำเข้า</div>
+    <div class="ex-act"><button class="btn btn-ghost" data-tr="imp_all" data-v="1">เลือกทั้งหมดที่ยังไม่เคยนำเข้า</button><button class="btn btn-ghost" data-tr="imp_all" data-v="0">ไม่เลือกเลย</button></div>`;
+  h += I.rows.map(r=>{
+    const s = r.seed, matched = r.att.filter(a=>a.p).length;
+    const range = s.mode === 'month' ? TR_MONTHS_FULL[Number(s.start.slice(5,7))-1]+' (รายเดือน)' : trFmtRange(s.start, s.end);
+    return `<div class="tr-imp ${r.done?'done':''}"><label class="tr-chk"><input type="checkbox" data-tr="imp_fld" data-i="${r.i}" data-k="include" ${r.include?'checked':''} ${r.done?'disabled':''}> <b>${trH(s.title)}</b> ${r.done?trChip('นำเข้าแล้ว','ok'):''}</label>
+      <div class="ex-hint">${trH(range)} · ${trH(s.trainer||'-')} · ผู้เข้าเทรน ${r.att.length} คน${r.att.length?` (จับคู่บัญชีได้ ${matched})`:''}</div>
+      <div class="tr-3"><div><label class="tr-lb">Product</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="category"><option value="">— เลือก —</option>${Object.keys(DATA.categories||{}).map(c=>`<option ${r.category===c?'selected':''}>${trH(c)}</option>`).join('')}</select></div>
+        <div><label class="tr-lb">Cer</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="cert"><option value="internal" ${r.cert==='internal'?'selected':''}>ภายใน</option><option value="manufacturer" ${r.cert==='manufacturer'?'selected':''}>ผู้ผลิต</option><option value="none" ${r.cert==='none'?'selected':''}>ไม่มี</option></select></div>
+        <div><label class="tr-lb">เจ้าของงาน</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="owner">${(TRA.sets.owners||[]).map(o=>`<option value="${trH(o.email)}" ${r.owner===o.email?'selected':''}>${trH(o.name)}</option>`).join('')}</select></div></div>
+      ${s.note?`<div class="ex-hint" style="color:var(--amber)">⚠ ${trH(s.note)}</div>`:''}
+      ${r.att.length && matched < r.att.length ? `<details><summary class="ex-hint">ชื่อที่ยังจับคู่บัญชีไม่ได้ ${r.att.length-matched} คน (จะนำเข้าเป็น "ไม่มีบัญชี")</summary><div class="ex-hint">${r.att.filter(a=>!a.p).map(a=>trH(a.raw)).join(' · ')}</div></details>`:''}</div>`;
+  }).join('');
+  h += `<div class="ex-act"><button class="btn btn-primary tr-big" data-tr="imp_run">📥 นำเข้าที่เลือก (${I.rows.filter(r=>r.include&&!r.done).length} รายการ)</button></div></div>`;
+  h += `<div class="tr-fs"><b>🗓 Google Calendar "F1 Training"</b><div class="ex-hint">ซิงก์ทางเดียวจากแอป → ปฏิทิน (งานที่กำหนดวันแน่นอนเท่านั้น) · ต้องรัน setupCalendar ใน Apps Script หนึ่งครั้งก่อน (ดูคู่มือติดตั้ง) · งานใหม่/ที่แก้ไขจะซิงก์เองอัตโนมัติ</div>
+    <div class="ex-act"><button class="btn btn-ghost" data-tr="calsync" data-all="0">ซิงก์งานที่ยังไม่อยู่ในปฏิทิน</button><button class="btn btn-ghost" data-tr="calsync" data-all="1">ซิงก์ใหม่ทั้งหมด</button></div></div>`;
+  /* ===== TEST-PURGE:BEGIN (ชั่วคราว — ทดสอบเสร็จให้ลบทั้งก้อนนี้ + ฟังก์ชัน traPurgeGo + trPurge/trPurgePreview ใน Code.gs) ===== */
+  h += `<div class="tr-fs" style="border-color:var(--red)"><b>🧹 ล้างข้อมูลทดสอบตารางเทรน <small style="color:var(--red)">(ชั่วคราว)</small></b>
+    <div class="ex-hint">ลบงานเทรน ตารางเรียน รายชื่อ เช็คชื่อ ไฟล์แนบ (ย้ายลงถังขยะ Drive) รอบสอบที่ผูกกับงาน ผลสอบ และใบ Cer ที่ออกจากรอบนั้น <b>กู้คืนในแอปไม่ได้</b> (ไม่แตะชุดข้อสอบ)</div>
+    <select class="tr-in" id="tra-purge-scope"><option value="test">เฉพาะงานที่สร้างในแอป (ไม่รวมที่นำเข้า)</option><option value="all">ทั้งหมด รวมที่นำเข้า (ก่อนนำเข้าใหม่)</option></select>
+    <div class="ex-act"><button class="btn btn-ghost" style="color:var(--red)" data-tr="purge_go">🧹 ตรวจสอบแล้วล้าง...</button></div></div>`;
+  /* ===== TEST-PURGE:END ===== */
+  root.innerHTML = h;
+}
+async function traImportRun(){
+  const I = TRA.imp, sel = I.rows.filter(r=>r.include && !r.done);
+  if(!sel.length){ alert('ยังไม่ได้เลือกรายการ'); return; }
+  const miss = sel.filter(r=>!r.category);
+  if(miss.length){ alert('กรุณาเลือก Product ให้ครบ: '+miss.map(r=>r.seed.title).join(', ')); return; }
+  if(!confirm('นำเข้า '+sel.length+' รายการ?')) return;
+  const items = sel.map(r=>{
+    const s = r.seed;
+    const attendees = r.att.map(a=>{
+      if(a.p) return { name:a.p.name, nameEn:a.p.nameEn || a.en || '', email:a.p.email };
+      return { name:String(a.raw).replace(/^\s*\d+\s*[.)]?\s*/,'').trim(), nameEn:a.en || '', email:'' };
+    });
+    const status = s.st || (s.end < I.today ? 'closed' : 'open');
+    return { importKey:s.k, category:r.category, model:r.model, title:s.title, startDate:s.start, endDate:s.end, dateMode:s.mode, certType:r.cert, certIssuer:s.issuer, trainer:s.trainer,
+      location:s.loc, note:s.note, status, ownerEmail:r.owner, days:s.days.map(d=>({ date:d.d, items:d.it.map(x=>({ timeFrom:x[0], timeTo:x[1], content:x[2], media:x[3] })) })), attendees };
+  });
+  showLoadingOverlay('กำลังนำเข้า...');
+  try{
+    let c = 0, sk = 0, rg = 0;
+    for(let i = 0; i < items.length; i += 8){
+      showLoadingOverlay(`กำลังนำเข้า... ${Math.min(i+8, items.length)}/${items.length}`);
+      const r = await examApi('trImport', { items:items.slice(i, i+8) });
+      c += r.created; sk += r.skipped; rg += r.registrations;
+    }
+    hideLoadingOverlay();
+    alert('นำเข้าเรียบร้อย\nสร้างงาน '+c+' งาน · ผู้เข้าเทรน '+rg+' รายการ'+(sk?' · ข้าม '+sk+' (เคยนำเข้าแล้ว)':'')+'\n\nต่อไป: กด "ซิงก์งานที่ยังไม่อยู่ในปฏิทิน" เพื่อส่งเข้า Google Calendar');
+    TR.data = null; TRA.data = null; TRA.queue = null;
+    await traGo('import');
+  }catch(e){ hideLoadingOverlay(); alert('นำเข้าไม่สำเร็จ: '+e.message+'\n(รายการที่นำเข้าไปแล้วจะไม่ซ้ำเมื่อกดใหม่)'); }
+}
+async function traCalSync(all){
+  showLoadingOverlay('กำลังซิงก์ปฏิทิน...');
+  try{
+    let done = 0, failed = 0, off = 0;
+    for(let g = 0; g < 20; g++){
+      const r = await examApi('trSyncCalendar', { all:!!all, offset:off });
+      done += r.synced; failed += r.failed; off = r.nextOffset;
+      showLoadingOverlay('กำลังซิงก์ปฏิทิน... '+done);
+      if(!r.remaining) break;
+      if(!all) off = 0; // โหมด "ที่ยังไม่อยู่ในปฏิทิน" รายการที่เสร็จแล้วหลุดจากตัวกรองเอง
+    }
+    hideLoadingOverlay(); alert('ซิงก์ปฏิทินแล้ว '+done+' งาน'+(failed?' · ไม่สำเร็จ '+failed+' (ดูประวัติของงานนั้น)':''));
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+/* ===== TEST-PURGE:BEGIN (ชั่วคราว) ===== */
+async function traPurgeGo(){
+  const scope = ($('tra-purge-scope') || {}).value || 'test';
+  showLoadingOverlay('กำลังตรวจสอบสิ่งที่จะถูกลบ...');
+  let pv; try{ pv = await examApi('trPurgePreview', { scope }); }catch(e){ hideLoadingOverlay(); alert(e.message); return; }
+  hideLoadingOverlay();
+  const typed = prompt(`จะลบถาวร:\n• งานเทรน ${pv.sessions} งาน (ผู้ลงทะเบียน ${pv.registrations} รายการ)\n• ไฟล์แนบ ${pv.files} ไฟล์\n• รอบสอบที่ผูก ${pv.rounds} รอบ · ใบ Cer ${pv.certs} ใบ\n\nพิมพ์คำว่า ล้างข้อมูล เพื่อยืนยัน`);
+  if(typed === null) return;
+  if(typed.trim() !== 'ล้างข้อมูล'){ alert('คำยืนยันไม่ตรง ไม่ได้ลบอะไร'); return; }
+  showLoadingOverlay('กำลังล้างข้อมูล...');
+  const notes = [];
+  try{
+    const r = await examApi('trPurge', { scope });
+    let n = 0, bad = 0;
+    for(const id of r.driveFileIds){ try{ await driveDeleteFile(id); n++; }catch(e){ bad++; } }
+    notes.push('ไฟล์ใน Drive ที่ลบ '+n+(bad?' (ไม่สำเร็จ '+bad+')':''));
+    await initFirebase(); const sdk = window._firebaseSdk; let fs = 0, ff = 0;
+    for(const id of r.firestoreDocs){ try{ await sdk.deleteDoc(sdk.doc(db,'certificates', id)); fs++; }catch(e){ ff++; } }
+    for(const x of r.examCerts){ try{ await sdk.deleteDoc(sdk.doc(db,'certificates', certDocId(String(x.email).toLowerCase(),'internal',x.category,x.model)+'__exam_'+x.certNo)); fs++; }catch(e){ ff++; } }
+    notes.push('รายการในแท็บ Certificate ที่ลบ '+fs+(ff?' (ไม่สำเร็จ '+ff+')':''));
+    hideLoadingOverlay();
+    alert('ล้างเรียบร้อย\n'+Object.keys(r.counts).map(k=>k+': '+r.counts[k]).join(' · ')+'\n'+notes.join('\n'));
+    TR.data = null; TRA.data = null; TRA.queue = null; TRA.g = null;
+    await traGo('import');
+  }catch(e){ hideLoadingOverlay(); alert('ล้างไม่สำเร็จ: '+e.message); }
+}
+/* ===== TEST-PURGE:END ===== */
+
+/* =====================================================================
+   ตัวจับเหตุการณ์
+   ===================================================================== */
+function trOnEvent(e){
+  const t = e.target.closest ? e.target.closest('[data-tr]') : null;
+  if(!t) return;
+  const act = t.getAttribute('data-tr'), ev = e.type, id = t.getAttribute('data-id'), v = t.getAttribute('data-v');
+  const num = k=>Number(t.getAttribute(k));
+  /* ----- ป้อนข้อมูล (ไม่ re-render เพื่อไม่ให้คีย์บอร์ดมือถือหุบ) ----- */
+  if(ev === 'input'){
+    if(act === 'f_fld'){ const k = t.getAttribute('data-k'); TRA.form.f[k] = t.value; return; }
+    if(act === 'f_dit'){ TRA.form.days[num('data-di')].items[num('data-ii')][t.getAttribute('data-k')] = t.value; return; }
+    if(act === 'psearch'){ const l = $('tra-plist'); if(l) l.innerHTML = traPlistHtml(t.value); return; }
+    if(act === 'reason'){ TRA.reasons[id] = t.value; return; }
+    return;
+  }
+  if(ev === 'change'){
+    if(act === 'f_fld'){
+      const k = t.getAttribute('data-k'); TRA.form.f[k] = t.value;
+      if(k === 'category'){ traRenderForm(); }
+      if(k === 'startDate' && TRA.form.f.endDate && TRA.form.f.endDate < t.value){ TRA.form.f.endDate = t.value; traRenderForm(); }
+      return;
+    }
+    if(act === 'f_dday'){ TRA.form.days[num('data-di')].date = t.value; return; }
+    if(act === 'reason'){ TRA.reasons[id] = t.value; examApi('trSetReasons', { sessionId:TRA.g.session.sessionId, reasons:{ [id]:t.value } }).catch(()=>{}); return; }
+    if(act === 'fcat'){ TR.cat = t.value; trRender(); return; }
+    if(act === 'fcert'){ TR.cert = t.value; trRender(); return; }
+    if(act === 'fmine'){ TR.mine = t.checked; trRender(); return; }
+    if(act === 'imp_fld'){ const r = TRA.imp.rows[num('data-i')], k = t.getAttribute('data-k'); r[k] = k === 'include' ? t.checked : t.value; if(k === 'include') traRenderImport(); return; }
+    return;
+  }
+  if(ev !== 'click') return;
+  if(t.tagName === 'A' && act === 'open') e.preventDefault();
+  switch(act){
+    /* ----- ผู้ใช้ ----- */
+    case 'reload': TR.detail = null; trLoad(); return;
+    case 'yr': TR.year += num('data-d'); TR.detail = null; trLoad(); return;
+    case 'view': TR.view = v; trRender(); return;
+    case 'day': trOpenDay(t.getAttribute('data-d')); return;
+    case 'open': trOpen(id); return;
+    case 'mon': TR.month = num('data-m'); trRender(); return;
+    case 'monstep': { let m = TR.month + num('data-d'); if(m < 0){ m = 11; TR.year--; TR.detail = null; TR.month = m; trLoad(); return; } if(m > 11){ m = 0; TR.year++; TR.month = m; trLoad(); return; } TR.month = m; trRender(); return; }
+    case 'back': TR.detail = null; if(TR.data) trRender(); else trLoad(); return;
+    case 'request': trDoRequest(id); return;
+    case 'cancelreq': trDoCancel(id); return;
+    case 'goexam': requestModeSwitch('exam'); return;
+    case 'sheetclose': trSheetClose(); return;
+    case 'manage': trSheetClose(); TRA.openId = id; if(currentMode === 'trainadmin') traGo('detail', id); else requestModeSwitch('trainadmin'); return;
+    /* ----- Sup / Manager ----- */
+    case 'areload': trAdminEnter(); return;
+    case 'atab': if(v === 'form'){ TRA.form = null; traGo('form', ''); } else traGo(v); return;
+    case 'afilter': TRA.filter = v; traRenderSessions(); return;
+    case 'ayr': TRA.year += num('data-d'); traGo('sessions'); return;
+    case 'aback': traGo('sessions'); return;
+    case 'apr': trSheetClose(); { const op = t.getAttribute('data-op'); const sid = t.getAttribute('data-sid');
+      if(op === 'reject' && !confirm('ไม่อนุมัติ/ตัดรายชื่อนี้ออก?')) return;
+      if(op === 'remove' && !confirm('ลบออกจากรายชื่อผู้เข้าเทรน? (จะถูกถอดจากรายชื่อผู้มีสิทธิ์สอบด้วย)')) return;
+      traApprove(sid, [id], op); } return;
+    case 'aprall': { const sid = t.getAttribute('data-sid'); const ids = ((TRA.view === 'detail' && TRA.g) ? TRA.g.regs.filter(r=>r.status==='requested') : TRA.queue.items.filter(r=>r.sessionId===sid && r.status==='requested')).map(r=>r.regId);
+      if(ids.length && confirm('อนุมัติ '+ids.length+' คน?')) traApprove(sid, ids, 'approve'); } return;
+    case 'dtab': TRA.dtab = v; traRenderDetail(); window.scrollTo(0,0); return;
+    case 'aedit': TRA.form = null; traGo('form', id); return;
+    case 'asuser': TR.openId = id; requestModeSwitch('train'); return;
+    case 'reopen': if(confirm('เปิดงานกลับ? (แก้รายชื่อ/เช็คชื่อ/ไฟล์ได้อีก)')){ showLoadingOverlay('กำลังเปิดงานกลับ...'); examApi('trReopen', { sessionId:TRA.g.session.sessionId }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; return traReload(false); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
+    case 'cancelses': { const n = prompt('ยกเลิกงานเทรนนี้?\n(จะลบออกจากปฏิทิน ผู้ลงทะเบียนยังอยู่ในประวัติ) — พิมพ์เหตุผลสั้นๆ แล้วกดตกลง'); if(n === null) return;
+      showLoadingOverlay('กำลังยกเลิก...'); examApi('trCancelSession', { sessionId:TRA.g.session.sessionId, note:n }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; return traReload(false); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
+    case 'delses': if(confirm('ลบงานนี้ถาวร? (รวมรายชื่อและตารางเรียน) — ลบได้เฉพาะงานที่ยังไม่มีการเช็คชื่อ/ไฟล์แนบ')){ showLoadingOverlay('กำลังลบ...'); examApi('trDeleteSession', { sessionId:TRA.g.session.sessionId }).then(()=>{ hideLoadingOverlay(); TRA.g = null; TRA.data = null; TRA.queue = null; TR.data = null; showToast('✓ ลบแล้ว'); return traGo('sessions'); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
+    case 'addp': traAddPersonSheet(); return;
+    case 'pmenu': traPersonMenu(id); return;
+    case 'addperson': { const p = (EXA.profiles||[]).find(x=>x.email===t.getAttribute('data-email')); if(p) traAddPerson(p.email, p.name, p.nameEn); } return;
+    case 'addguest': { const n = ($('tra-guest')||{}).value || ''; if(!n.trim()){ alert('พิมพ์ชื่อก่อน'); return; } traAddPerson('', n.trim(), ''); } return;
+    case 'ckday': TRA.day = v; traRenderDetail(); return;
+    case 'ckin': traCheck('in', id); return;
+    case 'ckmenu': traCkMenu(id); return;
+    case 'ckedit': traCheck('edit', id, { time:($('tra-ck-time')||{}).value, note:($('tra-ck-note')||{}).value }); return;
+    case 'ckundo': if(confirm('ยกเลิกการเช็คชื่อของวันนี้?')) traCheck('undo', id); return;
+    case 'ckxls': traCheckinXls(); return;
+    case 'exstart': if(confirm('เริ่มสอบตอนนี้?\nระบบจะล็อกข้อสอบเวอร์ชันล่าสุดที่เผยแพร่ และเปิดให้ผู้ได้รับอนุมัติเข้าสอบได้ทันที')) traExamAct('start'); return;
+    case 'exclose': if(confirm('ปิดสอบ? ผู้ที่ยังไม่ผ่านจะสอบเพิ่มไม่ได้ (เปิดสอบอีกครั้งได้)')) traExamAct('close'); return;
+    case 'exsave': traExamAct('settings', { passPercent:Number($('tra-ex-pass').value), durationMin:Number($('tra-ex-dur').value), graceMin:Number($('tra-ex-grace').value) }); return;
+    case 'exissue': traIssueCerts(); return;
+    case 'exgrade': EXA.next = ['grading', TRA.g.exam.roundId]; requestModeSwitch('examadmin'); return;
+    case 'photo': { const el = $(t.getAttribute('data-cam') ? 'tr-file-cam' : 'tr-file-photo'); el.value = ''; el.click(); } return;
+    case 'attach': TRA.attachFor = id; { const el = $('tr-file-mfr'); el.value = ''; el.click(); } return;
+    case 'rmfile': if(confirm('ลบไฟล์นี้? (ไฟล์ใน Google Drive จะถูกลบด้วย)')){
+      showLoadingOverlay('กำลังลบไฟล์...');
+      examApi('trRemoveFile', { fileId:id }).then(async r=>{
+        try{ if(r.driveFileId) await driveDeleteFile(r.driveFileId); }catch(er){ console.warn('ลบไฟล์ Drive ไม่สำเร็จ', er); }
+        try{ if(r.certDocId){ await initFirebase(); const sdk = window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'certificates', r.certDocId)); } }catch(er){ console.warn('ลบรายการ Certificate ไม่สำเร็จ', er); }
+        hideLoadingOverlay(); return traReload(true);
+      }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
+    case 'closeses': traCloseSession(); return;
+    case 'mfrsync': traMfrSync(); return;
+    /* ----- ฟอร์ม ----- */
+    case 'f_mode': TRA.form.f.dateMode = v; if(v === 'month'){ TRA.form.f.status = 'plan'; if(!TRA.form.f.month && TRA.form.f.startDate) TRA.form.f.month = TRA.form.f.startDate.slice(0,7); } traRenderForm(); return;
+    case 'f_cert': TRA.form.f.certType = v; if(v !== 'internal') TRA.form.f.examSetId = ''; traRenderForm(); return;
+    case 'f_status': TRA.form.f.status = v; traRenderForm(); return;
+    case 'f_day_add': traFormAddDay(); return;
+    case 'f_day_range': traFormDayRange(); return;
+    case 'f_day_del': TRA.form.days.splice(num('data-di'),1); traRenderForm(); return;
+    case 'f_it_add': TRA.form.days[num('data-di')].items.push({ timeFrom:'', timeTo:'', content:'', media:'' }); traRenderForm(); return;
+    case 'f_it_del': { const d = TRA.form.days[num('data-di')]; d.items.splice(num('data-ii'),1); traRenderForm(); } return;
+    case 'f_copy': traFormCopy(); return;
+    case 'f_copypick': traFormCopyPick(id); return;
+    case 'f_save': traFormSave(false); return;
+    case 'f_cancel': if(TRA.form && TRA.form.id){ const sid = TRA.form.id; TRA.form = null; traGo('detail', sid); } else { TRA.form = null; traGo('sessions'); } return;
+    /* ----- เครื่องมือ Manager ----- */
+    case 'imp_all': TRA.imp.rows.forEach(r=>{ if(!r.done) r.include = v === '1'; }); traRenderImport(); return;
+    case 'imp_run': traImportRun(); return;
+    case 'calsync': traCalSync(t.getAttribute('data-all') === '1'); return;
+    case 'purge_go': traPurgeGo(); return;
+  }
+}
+(function trInit(){
+  ['tr-root','tra-root'].forEach(rid=>{
+    const el = $(rid); if(!el) return;
+    ['click','change','input'].forEach(ev=>el.addEventListener(ev, trOnEvent));
+    el.addEventListener('keydown', e=>{ if((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][data-tr]')){ e.preventDefault(); trOnEvent({ target:e.target, type:'click', preventDefault(){} }); } });
+  });
+  const mk = (id, attrs, cb)=>{
+    if($(id)) return;
+    const f = document.createElement('input'); f.type = 'file'; f.id = id; f.style.display = 'none';
+    Object.keys(attrs).forEach(k=>f.setAttribute(k, attrs[k]));
+    f.addEventListener('change', ()=>{ if(f.files && f.files.length) cb(f.files); });
+    document.body.appendChild(f);
+  };
+  mk('tr-file-photo', { accept:'image/*', multiple:'multiple' }, fs=>traUploadPhotos(fs));
+  mk('tr-file-cam', { accept:'image/*', capture:'environment' }, fs=>traUploadPhotos(fs));
+  mk('tr-file-mfr', { accept:'image/*,application/pdf,.pdf,.doc,.docx' }, fs=>traUploadMfr(TRA.attachFor, fs[0]));
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden) return; if(currentMode === 'trainadmin' && TRA.view === 'detail' && TRA.dtab === 'checkin') traStartClock(); });
+})();
+
 
 
 /* ===================== THEME TOGGLE (default: light) ===================== */
