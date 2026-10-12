@@ -4,7 +4,7 @@
   F1 Service — Firmer Service Center Web App
   ===================================================================
   เวอร์ชันปัจจุบัน : 9.42
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 09:29 น. เวลาไทย
+  อัปเดตล่าสุด   : 12 ตุลาคม 2569 10:08 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -738,7 +738,7 @@
 .tr-cell.empty{background:transparent;}
 .tr-cell.has{background:var(--panel);border:1px solid var(--border);cursor:pointer;}
 .tr-cell.has:active{background:var(--panel-alt);}
-.tr-cell.today span{background:var(--amber);color:#fff;border-radius:999px;padding:0 5px;}
+.tr-cell.today>span{background:var(--amber);color:#fff;border-radius:999px;padding:0 5px;}
 .tr-cell u{position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--green);text-decoration:none;}
 .tr-bars{display:flex;flex-direction:column;gap:2px;margin-top:2px;}
 .tr-bars i{display:block;height:5px;border-radius:3px;}
@@ -871,6 +871,17 @@ body.tr-noscroll{overflow:hidden;}
 .tr-days button{line-height:1.25;text-align:center;}
 .tr-days button small{display:block;font-size:11px;font-weight:400;opacity:.85;}
 .tr-fs .tr-seg{margin:8px 0 10px;}
+/* ปฏิทินฝั่งจัดการ: กดได้ทุกวัน, มือถือเห็นแถบสี จอกว้างเห็นชื่องานในช่อง */
+.tr-cell.adm{cursor:pointer;}
+.tr-cell.adm:not(.empty):active{background:var(--panel-alt);}
+.tr-ev{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.tr-ev span{display:none;}
+.tr-ev.done{opacity:.55;}
+@media (min-width:700px){
+  .tr-grid.adm .tr-cell{min-height:92px;}
+  .tr-grid.adm .tr-bars i.tr-ev{height:auto;padding:1px 4px;border-radius:4px;color:#fff;font-size:11px;font-style:normal;line-height:1.35;}
+  .tr-grid.adm .tr-ev span{display:inline;}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script id="pdfjs-embedded">
@@ -2335,7 +2346,7 @@ let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
 const APP_VERSION = "9.42";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 09:29 น. เวลาไทย";
+const APP_UPDATED_AT = "12 ตุลาคม 2569 10:08 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13144,7 +13155,7 @@ const TR_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const TR_STATUS = { plan:'แผน', open:'เปิดรับลงทะเบียน', closed:'ปิดงานแล้ว', cancelled:'ยกเลิก' };
 const TR_CERT = { internal:'Cer ภายใน', manufacturer:'Cer ผู้ผลิต', none:'ไม่มี Cer' };
 const TR = { year:new Date().getFullYear(), month:new Date().getMonth(), view:'cal', cat:'', cert:'', mine:false, data:null, detail:null, loading:false, listFor:0 };
-const TRA = { view:'queue', year:new Date().getFullYear(), filter:'all', data:null, queue:null, sets:null, owners:[], role:'', g:null, dtab:'info', form:null, day:'', reasons:{}, busy:false, imp:null };
+const TRA = { sview:'cal', month:new Date().getMonth(), presetDate:'', view:'queue', year:new Date().getFullYear(), filter:'all', data:null, queue:null, sets:null, owners:[], role:'', g:null, dtab:'info', form:null, day:'', reasons:{}, busy:false, imp:null };
 let _trClock = 0;
 
 function trH(s){ return escapeHtml(s); }
@@ -13263,17 +13274,20 @@ function trDayMap(list){
   });
   return m;
 }
-function trMonthGrid(year, mon, dayMap, big){
+function trMonthGrid(year, mon, dayMap, big, admin){
   const first = year+'-'+trPad(mon+1)+'-01';
   const dow0 = trDow(first), dim = new Date(Date.UTC(year, mon+1, 0)).getUTCDate();
   const today = trToday();
-  let h = `<div class="tr-grid ${big?'big':''}">` + TR_DOW.map(x=>`<div class="tr-dow">${x}</div>`).join('');
+  let h = `<div class="tr-grid ${big?'big':''} ${admin?'adm':''}">` + TR_DOW.map(x=>`<div class="tr-dow">${x}</div>`).join('');
   for(let i=0;i<dow0;i++) h += '<div class="tr-cell empty"></div>';
   for(let d=1; d<=dim; d++){
     const ds = year+'-'+trPad(mon+1)+'-'+trPad(d), ev = dayMap[ds] || [];
-    const bars = ev.slice(0,3).map(s=>`<i style="background:${trColor(s.category)}" class="${s.status==='plan'?'plan':''}"></i>`).join('') + (ev.length>3 ? `<em>+${ev.length-3}</em>` : '');
+    const bars = admin
+      ? ev.slice(0,3).map(s=>`<i style="background:${trColor(s.category)}" class="tr-ev ${s.status==='plan'?'plan':''} ${s.status==='closed'?'done':''}"><span>${s.requested?'⏳':''}${trH(s.title)}</span></i>`).join('') + (ev.length>3 ? `<em>+${ev.length-3}</em>` : '')
+      : ev.slice(0,3).map(s=>`<i style="background:${trColor(s.category)}" class="${s.status==='plan'?'plan':''}"></i>`).join('') + (ev.length>3 ? `<em>+${ev.length-3}</em>` : '');
     const mineDot = ev.some(s=>s.my && s.my.status === 'approved') ? '<u></u>' : '';
-    h += `<div class="tr-cell ${ev.length?'has':''} ${ds===today?'today':''}" ${ev.length?`data-tr="day" data-d="${ds}" role="button" tabindex="0"`:''}><span>${d}</span>${mineDot}<div class="tr-bars">${bars}</div></div>`;
+    const act = admin ? `data-tr="adday" data-d="${ds}" role="button" tabindex="0"` : (ev.length ? `data-tr="day" data-d="${ds}" role="button" tabindex="0"` : '');
+    h += `<div class="tr-cell ${ev.length?'has':''} ${ds===today?'today':''} ${admin?'adm':''}" ${act}><span>${d}</span>${mineDot}<div class="tr-bars">${bars}</div></div>`;
   }
   return h + '</div>';
 }
@@ -13511,19 +13525,47 @@ async function traApprove(sid, ids, op, force){
 }
 
 /* ----- รายการงาน ----- */
+function traSessionCards(list){
+  const today = trToday();
+  return list.map(s=>{ const overdue = s.status==='open' && s.dateMode!=='month' && s.endDate < today;
+    return `<div class="tr-card" data-tr="manage" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
+    <div class="tr-card-t"><b>${trH(s.title)}</b></div>
+    <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}${s.ownerName&&TRA.role==='manager'?' · เจ้าของ: '+trH(s.ownerName):''}</div>
+    <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
+    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}${overdue?trChip('จบแล้ว ยังไม่ปิดงาน','bad'):''}</div></div>`; }).join('');
+}
 function traRenderSessions(){
   const root = $('tra-root'), d = TRA.data;
   const list = d.sessions.filter(s=>s.canManage && (TRA.filter==='all' || s.status===TRA.filter)).sort((a,b)=>a.startDate<b.startDate?-1:1);
   const fb = (k,t)=>`<button class="${TRA.filter===k?'active':''}" data-tr="afilter" data-v="${k}">${t}</button>`;
-  let h = traTabs() + `<div class="tr-top"><div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="-1">‹</button><b>${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="1">›</button></div>
-    <div class="subtab-bar tr-views">${fb('all','ทั้งหมด')}${fb('plan','แผน')}${fb('open','เปิดรับ')}${fb('closed','ปิดแล้ว')}${fb('cancelled','ยกเลิก')}</div></div>`;
-  if(!list.length) h += '<div class="ex-note">ไม่มีงานเทรนในเงื่อนไขนี้ — กด "➕ สร้างงาน" เพื่อเพิ่ม</div>';
-  h += list.map(s=>`<div class="tr-card" data-tr="manage" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
-    <div class="tr-card-t"><b>${trH(s.title)}</b></div>
-    <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}${s.ownerName&&TRA.role==='manager'?' · เจ้าของ: '+trH(s.ownerName):''}</div>
-    <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
-    <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}</div></div>`).join('');
+  const vb = (k,t)=>`<button class="${TRA.sview===k?'active':''}" data-tr="asview" data-v="${k}">${t}</button>`;
+  let h = traTabs() + `<div class="tr-top"><div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="-1" aria-label="ปีก่อน">‹</button><b>${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="1" aria-label="ปีถัดไป">›</button></div>
+    <div class="subtab-bar tr-views tr-seg">${vb('cal','📅 ปฏิทิน')}${vb('list','📋 รายการ')}</div></div>
+    <div class="subtab-bar tr-views">${fb('all','ทั้งหมด')}${fb('plan','แผน')}${fb('open','เปิดรับ')}${fb('closed','ปิดแล้ว')}${fb('cancelled','ยกเลิก')}</div>`;
+  if(TRA.sview === 'cal') h += traAdminCalHtml(list);
+  else {
+    if(!list.length) h += '<div class="ex-note">ไม่มีงานเทรนในเงื่อนไขนี้ — กด "➕ สร้างงาน" เพื่อเพิ่ม</div>';
+    h += traSessionCards(list);
+  }
   root.innerHTML = h;
+}
+function traAdminCalHtml(list){
+  const cats = Array.from(new Set(list.map(s=>s.category))).sort((a,b)=>a.localeCompare(b,'th'));
+  const dm = trDayMap(list), mon = TRA.month;
+  const here = list.filter(s=>trInMonth(s, TRA.year, mon));
+  const needAct = list.filter(s=>s.requested>0).length;
+  let h = `<div class="tr-legend">${cats.map(c=>`<span><i style="background:${trColor(c)}"></i>${trH(c)}</span>`).join('')}<span>⏳ มีคำขอรออนุมัติ</span><span>แถบจาง = แผน</span></div>`;
+  h += `<div class="tr-mstrip">${TR_MONTHS.map((m,i)=>{ const has = list.some(s=>trInMonth(s, TRA.year, i)); return `<button class="${mon===i?'active':''}" data-tr="amon" data-m="${i}">${m}${has?'<b>•</b>':''}</button>`; }).join('')}</div>
+    <div class="tr-mhead"><button class="btn btn-ghost btn-sm" data-tr="amstep" data-d="-1" aria-label="เดือนก่อน">‹</button><b>${TR_MONTHS_FULL[mon]} ${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="amstep" data-d="1" aria-label="เดือนถัดไป">›</button></div>
+    <div class="ex-hint" style="margin:0 0 6px;">กดวันที่เพื่อดูงานของวันนั้น หรือสร้างงานใหม่ในวันนั้น${needAct?` · มี ${needAct} งานที่รออนุมัติ`:''}</div>`;
+  h += trMonthGrid(TRA.year, mon, dm, true, true);
+  h += `<div class="tr-mlist"><div class="tr-mh">งานในเดือนนี้ (${here.length})</div>${here.length ? traSessionCards(here) : '<div class="ex-hint" style="text-align:center;padding:10px;">ไม่มีงานเทรนในเดือนนี้</div>'}</div>`;
+  return h;
+}
+function traOpenAdminDay(ds){
+  const list = (TRA.data ? TRA.data.sessions : []).filter(s=>s.canManage && s.dateMode!=='month' && s.startDate <= ds && s.endDate >= ds && (TRA.filter==='all' || s.status===TRA.filter));
+  trSheet(`${list.length ? traSessionCards(list) : '<div class="ex-hint">ไม่มีงานเทรนในวันนี้</div>'}
+    <div class="tr-menu" style="margin-top:12px;"><button class="btn btn-primary tr-big" data-tr="adcreate" data-d="${trH(ds)}">➕ สร้างงานเทรนเริ่มวันที่ ${trH(trFmtDate(ds))}</button></div>`, { title: TR_DOW[trDow(ds)]+' '+trFmtDate(ds)+' — '+list.length+' งาน' });
 }
 
 /* ----- หน้าจัดการงาน ----- */
@@ -13934,6 +13976,7 @@ async function traPrepareForm(id){
       status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
       days:JSON.parse(JSON.stringify(g.days)), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
   } else if(!TRA.form || TRA.form.id) TRA.form = traBlankForm();
+  if(!id && TRA.presetDate){ TRA.form.f.startDate = TRA.form.f.endDate = TRA.presetDate; TRA.form.f.month = TRA.presetDate.slice(0,7); TRA.presetDate = ''; }
 }
 function traFormSetOptions(f){
   const sets = (TRA.sets && TRA.sets.sets) || [];
@@ -14260,6 +14303,11 @@ function trOnEvent(e){
     case 'areload': trAdminEnter(); return;
     case 'atab': if(v === 'form'){ TRA.form = null; traGo('form', ''); } else traGo(v); return;
     case 'afilter': TRA.filter = v; traRenderSessions(); return;
+    case 'asview': TRA.sview = v; traRenderSessions(); return;
+    case 'amon': TRA.month = num('data-m'); traRenderSessions(); return;
+    case 'amstep': { let m = TRA.month + num('data-d'); if(m < 0){ TRA.month = 11; TRA.year--; TRA.data = null; traGo('sessions'); return; } if(m > 11){ TRA.month = 0; TRA.year++; TRA.data = null; traGo('sessions'); return; } TRA.month = m; traRenderSessions(); return; }
+    case 'adday': traOpenAdminDay(t.getAttribute('data-d')); return;
+    case 'adcreate': trSheetClose(); TRA.form = null; TRA.presetDate = t.getAttribute('data-d'); traGo('form', ''); return;
     case 'ayr': TRA.year += num('data-d'); traGo('sessions'); return;
     case 'aback': traGo('sessions'); return;
     case 'apr': trSheetClose(); { const op = t.getAttribute('data-op'); const sid = t.getAttribute('data-sid');
