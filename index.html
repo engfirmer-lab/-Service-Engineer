@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.80
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:43 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.83
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 21:22 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.80</title>
+<title>F1 Service — v9.83</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -850,6 +850,11 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-ordok li{padding:8px 4px;font-weight:600;}
 .ex-big.btn{min-height:48px;}
 .ex-clr{display:block;margin:10px 0 0;background:none;border:1px dashed var(--border);border-radius:10px;padding:10px 12px;color:var(--text-dim);font:inherit;font-size:13px;width:100%;cursor:pointer;}
+/* v9.82 match = dropdown (compact) */
+.ex-mrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,46%);gap:10px;align-items:center;padding:8px 10px;margin:6px 0;}
+.ex-mrow .ex-match-l{font-weight:600;font-size:14px;line-height:1.35;flex:none;}
+.ex-msel{width:100%;min-height:46px;font-size:15px;padding:6px 8px;border:2px solid var(--border);border-radius:10px;background:var(--panel);color:var(--text);}
+.ex-mrow.done .ex-msel{border-color:var(--green);font-weight:600;}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2497,8 +2502,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.80";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 20:43 น. เวลาไทย";
+const APP_VERSION = "9.83";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 21:22 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7629,6 +7634,7 @@ function statusBadgeHtml(status){
   if(status==='approved' || status==='accepted') return `<span class="status-badge" style="background:rgba(71,184,129,.15);color:var(--green);">✓ อนุมัติแล้ว</span>`;
   return `<span class="status-badge" style="background:rgba(229,83,75,.15);color:var(--red);">✕ ถูกปฏิเสธ</span>`;
 }
+let _notifAccessRefreshing = false;
 async function renderNotifList(){
   const list = $('notif-list');
   const myErrs = (DATA.pendingErrors||[]).filter(p=>mySubmitterNames().includes(p.submitterName)).sort((a,b)=>b.createdAt-a.createdAt);
@@ -7661,7 +7667,17 @@ async function renderNotifList(){
   // (v8.00) forceRefresh=true เมื่อผู้ใช้กดกระดิ่งโดยตรง — ได้ข้อมูลสดใหม่ แล้วแคชไว้ให้ badge ใช้ต่อ (ไม่ต้อง fetch ซ้ำ)
   if(isSuperAdmin()){
     try{
-      const pendingReqs = await getCachedPendingAccessRequests(true);
+      const pendingReqs = _cachedPendingAccessReqs; // แสดงจากแคชทันที ไม่รอ Firestore (เดิมรอจนเสร็จก่อนค่อยวาดทั้งกระดิ่ง = ช้า)
+      if(!_notifAccessRefreshing){
+        _notifAccessRefreshing = true;
+        const before = pendingReqs.length;
+        getCachedPendingAccessRequests(true).then(fresh=>{
+          _notifAccessRefreshing = false;
+          const m = $('notif-modal');
+          if(fresh.length !== before && m && m.classList.contains('show')) renderNotifList();
+          else updateNotifBadge();
+        }).catch(()=>{ _notifAccessRefreshing = false; });
+      }
       if(pendingReqs.length>0){
         html += `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🔐 คำขอสิทธิ์เข้าถึงรอการอนุมัติ (${pendingReqs.length})</h4>`;
         pendingReqs.forEach(r=>{
@@ -12559,8 +12575,8 @@ function examRenderQuestion(){
       <span>${exH(ch.text)}${ch.img ? `<img class="ex-cimg" src="${exH(exImg(ch.img,'w700'))}" alt="" draggable="false">` : ''}</span></label>`).join('');
   } else if(q.type === 'match'){
     const m = (a && typeof a === 'object') ? a : {};
-    body = '<div class="ex-hint">แตะเลือกคำตอบของแต่ละข้อ · แตะซ้ำเพื่อยกเลิก</div>' + q.left.map(l=>`<div class="ex-mrow ${m[l.id]?'done':''}"><div class="ex-match-l">${exH(l.text)}</div>
-      <div class="ex-chips">${q.right.map(r=>`<button type="button" class="ex-chip ${m[l.id]===r.id?'on':''}" data-ex="mpick" data-left="${exH(l.id)}" data-right="${exH(r.id)}" aria-pressed="${m[l.id]===r.id}">${exH(r.text)}</button>`).join('')}</div></div>`).join('');
+    body = '<div class="ex-hint">เลือกคำตอบจากรายการของแต่ละข้อ · เลือก "— ยังไม่เลือก —" เพื่อยกเลิก</div>' + q.left.map(l=>`<div class="ex-mrow ${m[l.id]?'done':''}"><div class="ex-match-l">${exH(l.text)}</div>
+      <select class="ex-msel" data-ex="match" data-left="${exH(l.id)}" aria-label="${exH(l.text)}"><option value="">— ยังไม่เลือก —</option>${q.right.map(r=>`<option value="${exH(r.id)}" ${m[l.id]===r.id?'selected':''}>${exH(r.text)}</option>`).join('')}</select></div>`).join('');
   } else if(q.type === 'order'){
     const byId = {}; q.choices.forEach(x=>{ byId[x.id] = x; });
     const N = q.choices.length;
@@ -13154,7 +13170,6 @@ function exaRenderSet(){
       <label>Level<select id="exa-s-level">${[1,2,3].map(l=>`<option value="${l}" ${l===s.level?'selected':''}>Level ${l}</option>`).join('')}</select></label>
       <label>เกณฑ์ผ่าน (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${s.passPercent}"></label>
       <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-s-dur" type="number" min="0" max="600" value="${s.durationMin}"></label>
-      <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-s-grace" type="number" min="0" max="60" value="${s.graceMin}"></label>
       <label>ชื่อหลักสูตรบนใบ Cer<input id="exa-s-course" type="text" value="${exH(s.certCourse)}" placeholder="ถ้าว่างใช้ชื่อชุดข้อสอบ"></label>
       <label>อายุใบ Cer (เดือน, 0 = ไม่หมดอายุ)<input id="exa-s-valid" type="number" min="0" max="120" value="${Number(s.validMonths)||0}"></label>
       <label>สถานะ<select id="exa-s-status"><option value="active" ${s.status!=='hidden'?'selected':''}>ใช้งาน</option><option value="hidden" ${s.status==='hidden'?'selected':''}>ซ่อน (ผู้สอบมองไม่เห็น)</option></select></label>
@@ -13192,7 +13207,7 @@ function exaReadSettings(){
   const g = id => $(id).value;
   return {
     setId: EXA.set.setId || undefined, title: g('exa-s-title').trim(), category: g('exa-s-cat'), model: g('exa-s-model'), level: Number(g('exa-s-level')),
-    passPercent: Number(g('exa-s-pass')), durationMin: Number(g('exa-s-dur')), graceMin: Number(g('exa-s-grace')), certCourse: g('exa-s-course').trim(), validMonths: Math.max(0, Math.min(120, Math.round(Number(g('exa-s-valid'))||0))),
+    passPercent: Number(g('exa-s-pass')), durationMin: Number(g('exa-s-dur')), graceMin: (EXA.set.graceMin ?? 5), certCourse: g('exa-s-course').trim(), validMonths: Math.max(0, Math.min(120, Math.round(Number(g('exa-s-valid'))||0))),
     supName: EXA.set.supName || '', supTitle: EXA.set.supTitle || 'Supervisor', status: g('exa-s-status'), ownerName: myClaimantName()
   };
 }
@@ -13861,7 +13876,6 @@ function exaRenderRoundEditor(){
       <label>ปิดรอบ<input id="exa-r-close" type="datetime-local" value="${exToInput(r.closeAt)}"></label>
       <label>เกณฑ์ผ่าน (%)<input id="exa-r-pass" type="number" min="1" max="100" value="${r.passPercent}"></label>
       <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-r-dur" type="number" min="0" max="600" value="${r.durationMin}"></label>
-      <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-r-grace" type="number" min="0" max="60" value="${r.graceMin}"></label>
       <label>ชื่อ Supervisor บนใบ Cer (อังกฤษ, ใส่ได้คนเดียว)<input id="exa-r-sup" type="text" maxlength="80" value="${exH(r.supName)}" placeholder="ค่าเริ่มต้น = เจ้าของ Product"></label>
       ${exaTitlePickerHtml(r.supTitle)}
       <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
@@ -13877,7 +13891,7 @@ async function exaSaveRound(){
   const r = EXA.round, g = id => $(id).value;
   const picked = EXA.profiles.filter(p=>EXA.elig.has(p.email)).map(p=>({ email:p.email, name:p.name, nameEn:p.nameEn }));
   const round = { roundId:r.roundId || undefined, setId:g('exa-r-set'), name:g('exa-r-name'), openAt:exFromInput(g('exa-r-open')), closeAt:exFromInput(g('exa-r-close')),
-    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), graceMin:Number(g('exa-r-grace')), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:exaTitleValue(), eligible:picked };
+    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), graceMin:(EXA.round.graceMin ?? 5), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:exaTitleValue(), eligible:picked };
   showLoadingOverlay('กำลังบันทึกรอบสอบ...');
   try{
     const res = await examApi('adminSaveRound', { round });
@@ -14072,7 +14086,6 @@ function exaRenderCopySet(){
       <label>Level<select id="exa-s-level">${[1,2,3].map(l=>`<option value="${l}" ${l===f.level?'selected':''}>Level ${l}</option>`).join('')}</select></label>
       <label>เกณฑ์ผ่าน (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${f.pass}"></label>
       <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-s-dur" type="number" min="0" max="600" value="${f.dur}"></label>
-      <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-s-grace" type="number" min="0" max="60" value="${f.grace}"></label>
       <label>ชื่อหลักสูตรบนใบ Cer (ต้องต่างจากต้นทาง)<input id="exa-s-course" type="text" value="" placeholder="ถ้าว่างใช้ชื่อชุดข้อสอบใหม่"></label>
       <label>อายุใบ Cer (เดือน, 0 = ไม่หมดอายุ)<input id="exa-s-valid" type="number" min="0" max="120" value="${Number(f.valid)||0}"></label>
       </div>
@@ -14083,7 +14096,7 @@ async function exaCopySetGo(){
   const c = EXA.copySet; if(!c) return;
   const g = id => $(id).value;
   const set = { title:g('exa-s-title').trim(), category:g('exa-s-cat'), model:g('exa-s-model'), level:Number(g('exa-s-level')),
-    passPercent:Number(g('exa-s-pass')), durationMin:Number(g('exa-s-dur')), graceMin:Number(g('exa-s-grace')), certCourse:g('exa-s-course').trim(), validMonths:Math.max(0, Math.min(120, Math.round(Number(g('exa-s-valid'))||0))),
+    passPercent:Number(g('exa-s-pass')), durationMin:Number(g('exa-s-dur')), graceMin:(c.form.grace ?? 5), certCourse:g('exa-s-course').trim(), validMonths:Math.max(0, Math.min(120, Math.round(Number(g('exa-s-valid'))||0))),
     supName:c.form.supName, supTitle:c.form.supTitle, status:'active', ownerName:myClaimantName() };
   c.form.category = set.category; c.form.model = set.model; c.form.level = set.level;
   if(!set.title){ alert('กรุณาตั้งชื่อชุดข้อสอบใหม่'); return; }
@@ -14250,6 +14263,13 @@ function exOnEvent(e){
   if(ev === 'change' && c){
     const q = c.p.questions[c.idx];
     if(act==='pick'){ examSetAnswer(q.qid, t.value); return; }
+    if(act==='match'){
+      const m = Object.assign({}, (c.answers[q.qid] && typeof c.answers[q.qid]==='object') ? c.answers[q.qid] : {});
+      const lid = t.getAttribute('data-left'); if(t.value) m[lid] = t.value; else delete m[lid];
+      if(Object.keys(m).length) examSetAnswer(q.qid, m); else exDropAnswer(q);
+      const row = t.closest('.ex-mrow'); if(row) row.classList.toggle('done', !!t.value);
+      return;
+    }
     if(act==='multi'){ const vals = Array.from(document.querySelectorAll('#ex-q input[data-ex="multi"]:checked')).map(x=>x.value); if(vals.length) examSetAnswer(q.qid, vals); else { exDropAnswer(q); examRenderQuestion(); } return; }
   }
   if(ev === 'input' && c && act==='essay'){ examSetAnswer(c.p.questions[c.idx].qid, t.value); return; }
@@ -14359,7 +14379,7 @@ function exOnEvent(e){
     if(act==='chsel'){ const inp = $(t.getAttribute('data-inp')); if(inp){ inp.style.display = t.value==='__new' ? '' : 'none'; if(t.value==='__new') inp.focus(); } return; }
     if(act==='copysel'){ const u = EXA.copyUI; if(u){ if(t.checked) u.sel.add(t.value); else u.sel.delete(t.value); const nEl = $('exa-copy-n'); if(nEl) nEl.textContent = u.sel.size; const go = document.querySelector('[data-ex="copygo"]'); if(go) go.textContent = '➕ เพิ่ม '+u.sel.size+' ข้อที่เลือกเข้าชุดนี้'; } return; }
     if(act==='scat'){ const w = $('exa-s-model-wrap'); if(w) w.innerHTML = exaModelSelect(t.value, ''); return; }
-    if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ if(!EXA.round.roundId) $('exa-r-sup').value = exaDefaultSigner(s.setId); $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; $('exa-r-grace').value = s.graceMin; } return; }
+    if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ if(!EXA.round.roundId) $('exa-r-sup').value = exaDefaultSigner(s.setId); $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; EXA.round.graceMin = s.graceMin; } return; }
     if(act==='elig'){ if(t.checked) EXA.elig.add(t.value); else EXA.elig.delete(t.value); $('exa-el-count').textContent = EXA.elig.size; return; }
     if(act==='sumfilter'){ EXA.sumFilter = t.value; exaRenderSummary(); return; }
   }
@@ -15871,9 +15891,17 @@ async function trPendRefresh(){
   try{
     if(typeof auth === 'undefined' || !auth || !auth.currentUser) return;
     if(!TRA.role || TRA.role === 'user'){
-      const init = await examApi('me');
+      let init = await examApi('me');
+      if(init.role === 'user' && typeof isSuperAdmin === 'function' && isSuperAdmin()){
+        try{ await exaSyncAdmins(); init = await examApi('me'); }catch(_){}
+      }
+      if(init.role === 'user'){
+        // ยังไม่ใช่ Sup/Manager (หรือข้อมูลผู้ใช้ยังโหลดไม่เสร็จ) — ไม่ล็อกถาวรทันที ลองใหม่ได้ 3 ครั้ง
+        TRPEND.userCount = (TRPEND.userCount||0) + 1;
+        if(TRPEND.userCount >= 3) TRPEND.noRole = true;
+        TRPEND.total = 0; TRPEND.list = []; return;
+      }
       TRA.role = init.role;
-      if(init.role === 'user'){ TRPEND.noRole = true; TRPEND.total = 0; TRPEND.list = []; return; }
     }
     const q = await trQueueFast();
     TRA.queue = q; TRA.queueAt = Date.now();
@@ -15888,7 +15916,7 @@ function trPendOpenQueue(){
 (function trPendStart(){
   if(TRPEND.started) return; TRPEND.started = true;
   if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return;
-  [3000, 9000, 20000, 40000].forEach(ms=>setTimeout(()=>{ if(!TRPEND.ok) trPendRefresh(); }, ms));
+  [2500, 6000, 12000, 25000, 45000, 75000].forEach(ms=>setTimeout(()=>{ if(!TRPEND.ok) trPendRefresh(); }, ms));
   setInterval(()=>{ if(!document.hidden) trPendRefresh(); }, 90000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trPendRefresh(); });
 })();
