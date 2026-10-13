@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.78
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.79
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:22 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.78</title>
+<title>F1 Service — v9.79</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1031,9 +1031,6 @@ body.tr-noscroll{overflow:hidden;}
 .tr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
 .tr-chip{min-height:38px;font-size:12.5px;padding:4px 10px;}
 
-#tr-pend-banner{position:sticky;top:0;z-index:18;}
-.tr-pend-in{background:var(--amber-soft,#fff3d6);color:var(--text);border-bottom:2px solid var(--amber,#d9922b);padding:8px 14px;font-size:13px;line-height:1.5;}
-.tr-pend-in a{color:inherit;font-weight:700;text-decoration:underline;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2499,8 +2496,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.78";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 20:05 น. เวลาไทย";
+const APP_VERSION = "9.79";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 20:22 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7608,7 +7605,8 @@ async function updateNotifBadge(){
   // (v8.00) ใช้แคชแทนการ getDocs ใหม่ทุกครั้ง
   const accessReqCount = (await getCachedPendingAccessRequests()).length;
   const showBackupAlert = isEditor() && _cachedBackupFailureAlert && !_cachedBackupFailureAlert.success && _cachedBackupFailureAlert.timestamp > _cachedBackupAlertDismissedAt;
-  const total = unreadResolved + pendingReview + accessReqCount + pendingClaims + unreadClaimNotices + (showBackupAlert?1:0);
+  const trainPend = (typeof TRPEND !== 'undefined' && TRPEND.total) ? TRPEND.total : 0;
+  const total = unreadResolved + pendingReview + accessReqCount + pendingClaims + unreadClaimNotices + trainPend + (showBackupAlert?1:0);
   const badge = $('notif-badge');
   if(total>0){ badge.style.display='block'; badge.textContent = total; }
   else{ badge.style.display='none'; }
@@ -7753,6 +7751,11 @@ async function renderNotifList(){
       </div>`;
     }).join('');
   }
+  if(typeof TRPEND !== 'undefined' && TRPEND.total > 0){
+    html = `<h4 style="font-size:12px;margin:0 0 8px;color:var(--amber);">🏫 คำขอเข้าเทรนรออนุมัติ (${TRPEND.total})</h4>` +
+      TRPEND.list.map(x=>`<div class="admin-row" data-notif-train="1" style="cursor:pointer;"><div class="admin-row-main" style="width:100%;justify-content:space-between;"><span style="font-size:12.5px;font-weight:600;">${escapeHtml(x.title)}</span><span style="color:var(--amber);font-weight:600;font-size:11.5px;">${x.n} คน · อนุมัติ →</span></div></div>`).join('') +
+      `<div style="border-top:1px solid var(--border);margin:12px 0;"></div>` + html;
+  }
   if(!html){ html = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีการแจ้งเตือน</p>`; }
   list.innerHTML = html;
 
@@ -7821,6 +7824,10 @@ async function renderNotifList(){
       }
     });
   });
+  list.querySelectorAll('[data-notif-train]').forEach(row=>{
+    row.addEventListener('click', ()=>{ $('notif-modal').classList.remove('show'); trPendOpenQueue(); });
+  });
+  if(typeof trPendRefresh === 'function') trPendRefresh();
   // ผูก event click เคลม pending ในกระดิ่ง Sup Product
   list.querySelectorAll('[data-notif-claim-open]').forEach(row=>{
     row.addEventListener('click', ()=>{
@@ -14807,7 +14814,8 @@ async function trDoCancel(id){
 async function trAdminEnter(){
   const root = $('tra-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
-  await exLoadProfileNames();
+  // ไม่รอโหลดชื่อโปรไฟล์ทั้งหมด (ช้า) — แสดงหน้าก่อนแล้วค่อยวาดซ้ำเมื่อชื่อมา
+  exLoadProfileNames().then(()=>{ if(TRA.view === 'queue' && TRA.queue) traRenderQueue(); }).catch(()=>{});
   const roleKnown = TRA.role && TRA.role !== 'user';
   if(!roleKnown) root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
@@ -14886,7 +14894,7 @@ async function traApprove(sid, ids, op, force){
   showLoadingOverlay('กำลังบันทึก...');
   try{
     await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
-    trPendRefresh();
+    setTimeout(trPendRefresh, 1500);
     hideLoadingOverlay();
     if(TRA.view === 'detail') await traReload(true);
     else { TRA.queue = await trQueueFast(); traRenderQueue(); }
@@ -15845,52 +15853,39 @@ async function trCalSubscribe(){
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 
-/* ===== แจ้งเตือนคำขออนุมัติเข้าเทรน (แบนเนอร์ด้านบน — ค้างจนกว่าจะอนุมัติ/ไม่อนุมัติ) ===== */
-var TRPEND = { busy:false, started:false, noRole:false };
-function trPendEl(){
-  let el = document.getElementById('tr-pend-banner');
-  if(el) return el;
-  const hd = document.querySelector('header'); if(!hd) return null;
-  el = document.createElement('div'); el.id = 'tr-pend-banner'; el.style.display = 'none';
-  hd.insertAdjacentElement('afterend', el);
-  el.addEventListener('click', e=>{
-    const a = e.target.closest ? e.target.closest('[data-pend]') : null; if(!a) return;
-    e.preventDefault();
-    const id = a.getAttribute('data-pend');
-    TRA.openId = id;
-    if(currentMode === 'trainadmin') traGo('detail', id); else requestModeSwitch('trainadmin');
-  });
-  return el;
-}
+/* ===== แจ้งเตือนคำขออนุมัติเข้าเทรน → แสดงในกระดิ่ง (ไม่มีแบนเนอร์) ===== */
+var TRPEND = { busy:false, started:false, noRole:false, total:0, list:[] };
 async function trPendRefresh(){
   if(TRPEND.busy || TRPEND.noRole || !trGuard()) return;
-  const el = trPendEl(); if(!el) return;
   TRPEND.busy = true;
   try{
     if(typeof auth === 'undefined' || !auth || !auth.currentUser) return;
     if(!TRA.role || TRA.role === 'user'){
       const init = await examApi('me');
       TRA.role = init.role;
-      if(init.role === 'user'){ TRPEND.noRole = true; el.style.display = 'none'; return; }
+      if(init.role === 'user'){ TRPEND.noRole = true; TRPEND.total = 0; TRPEND.list = []; return; }
     }
     const q = await trQueueFast();
     TRA.queue = q;
     const by = {};
     q.items.filter(r=>r.status === 'requested').forEach(r=>{ by[r.sessionId] = (by[r.sessionId]||0) + 1; });
     const sess = {}; (q.sessions||[]).forEach(s=>{ sess[s.sessionId] = s; });
-    const ids = Object.keys(by).filter(id=>sess[id]);
-    if(!ids.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
-    const total = ids.reduce((n,id)=>n+by[id],0);
-    el.innerHTML = '<div class="tr-pend-in"><b>⏳ มีคำขอเข้าเทรนรออนุมัติ '+total+' คน</b> · '+
-      ids.map(id=>'<a href="#" data-pend="'+trH(id)+'">'+trH(sess[id].title)+' ('+by[id]+')</a>').join(' · ')+'</div>';
-    el.style.display = '';
-  }catch(e){ /* เงียบ — ไม่รบกวนผู้ใช้ */ }
-  finally{ TRPEND.busy = false; }
+    TRPEND.list = Object.keys(by).filter(id=>sess[id]).map(id=>({ sessionId:id, title:sess[id].title, n:by[id] }));
+    TRPEND.total = TRPEND.list.reduce((n,x)=>n+x.n, 0);
+  }catch(e){ /* เงียบ */ }
+  finally{
+    TRPEND.busy = false;
+    try{ if(typeof updateNotifBadge === 'function') updateNotifBadge(); }catch(_){}
+  }
+}
+function trPendOpenQueue(){
+  TRA.view = 'queue';
+  if(currentMode === 'trainadmin') traGo('queue'); else requestModeSwitch('trainadmin');
 }
 (function trPendStart(){
   if(TRPEND.started) return; TRPEND.started = true;
-  if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return; // เทสต์: ไม่ตั้งตัวจับเวลา
-  setTimeout(trPendRefresh, 4000);
+  if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return;
+  setTimeout(trPendRefresh, 3000);
   setInterval(()=>{ if(!document.hidden) trPendRefresh(); }, 90000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trPendRefresh(); });
 })();
