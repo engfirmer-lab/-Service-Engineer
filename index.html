@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.79
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:22 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.80
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:43 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.79</title>
+<title>F1 Service — v9.80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -931,7 +931,8 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .tr-sq2{min-height:44px;font-size:14px;}
 /* แถวรายชื่อ */
 .tr-qs{border:1px solid var(--border);border-left:5px solid var(--tc,var(--amber));border-radius:10px;background:var(--panel);margin:10px 0;padding:6px 12px 10px;}
-.tr-qs-h{display:flex;flex-direction:column;gap:2px;padding:8px 0;cursor:pointer;}
+.tr-qs-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;}
+.tr-qs-h>div{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .tr-qs-h small{color:var(--text-dim);font-size:12.5px;}
 .tr-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);}
 .tr-row.done{background:color-mix(in srgb,var(--green) 8%,transparent);}
@@ -2496,8 +2497,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.79";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 20:22 น. เวลาไทย";
+const APP_VERSION = "9.80";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 20:43 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14844,11 +14845,11 @@ async function traGo(view, arg){
   traStopClock();
   TRA.view = view;
   // queue/sessions: โชว์ของเดิมทันทีแล้วรีเฟรชเบื้องหลัง (ถ้าเปลี่ยนหน้าไปแล้วจะไม่เขียนทับ)
-  const warmQ = view === 'queue' && TRA.queue, warmS = view === 'sessions' && TRA.data && TRA.dataFor === TRA.year;
+  const warmQ = view === 'queue' && TRA.queue && TRA.queue.items.length > 0, warmS = view === 'sessions' && TRA.data && TRA.dataFor === TRA.year;
   if(warmQ) traRenderQueue(); else if(warmS) traRenderSessions();
   else root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; traRenderQueue(); }
+    if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; trPendApply(q); traRenderQueue(); }
     else if(view === 'sessions'){ const yr = TRA.year, d = await trListFast(yr); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
     else if(view === 'detail'){
       if(!TRA.queue) trQueueFast().then(q=>{ TRA.queue = q; }).catch(()=>{});
@@ -14880,7 +14881,7 @@ function traRenderQueue(){
   q.sessions.sort((a,b)=>a.startDate<b.startDate?-1:1).forEach(s=>{
     const rows = bySes[s.sessionId] || [];
     const pend = rows.filter(r=>r.status==='requested'), re = rows.filter(r=>r.status==='needsReconfirm');
-    h += `<div class="tr-qs" style="--tc:${trColor(s.category)}"><div class="tr-qs-h" data-tr="manage" data-id="${trH(s.sessionId)}" role="button"><b>${trH(s.title)}</b><small>${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))} · ${trSeatText(s)}${s.seats>0&&s.approved>=s.seats?' <span style="color:var(--red)">เต็ม</span>':''}</small></div>`;
+    h += `<div class="tr-qs" style="--tc:${trColor(s.category)}"><div class="tr-qs-h"><div><b>${trH(s.title)}</b><small>${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))} · ${trSeatText(s)}${s.seats>0&&s.approved>=s.seats?' <span style="color:var(--red)">เต็ม</span>':''}</small></div><button type="button" class="btn btn-ghost btn-sm" data-tr="manage" data-id="${trH(s.sessionId)}">เปิดงาน ›</button></div>`;
     pend.forEach(r=>{
       h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓ อนุมัติ</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`;
     });
@@ -14897,7 +14898,7 @@ async function traApprove(sid, ids, op, force){
     setTimeout(trPendRefresh, 1500);
     hideLoadingOverlay();
     if(TRA.view === 'detail') await traReload(true);
-    else { TRA.queue = await trQueueFast(); traRenderQueue(); }
+    else { TRA.queue = await trQueueFast(); trPendApply(TRA.queue); traRenderQueue(); }
   }catch(e){
     hideLoadingOverlay();
     if(op === 'approve' && !force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message + '\nอนุมัติเกินที่นั่งต่อไป?')) return traApprove(sid, ids, op, true);
@@ -15855,6 +15856,15 @@ async function trCalSubscribe(){
 
 /* ===== แจ้งเตือนคำขออนุมัติเข้าเทรน → แสดงในกระดิ่ง (ไม่มีแบนเนอร์) ===== */
 var TRPEND = { busy:false, started:false, noRole:false, total:0, list:[] };
+function trPendApply(q){
+  const by = {};
+  (q.items||[]).filter(r=>r.status === 'requested').forEach(r=>{ by[r.sessionId] = (by[r.sessionId]||0) + 1; });
+  const sess = {}; (q.sessions||[]).forEach(s=>{ sess[s.sessionId] = s; });
+  TRPEND.list = Object.keys(by).filter(id=>sess[id]).map(id=>({ sessionId:id, title:sess[id].title, n:by[id] }));
+  TRPEND.total = TRPEND.list.reduce((n,x)=>n+x.n, 0);
+  TRPEND.ok = true;
+  try{ if(typeof updateNotifBadge === 'function') updateNotifBadge(); }catch(_){}
+}
 async function trPendRefresh(){
   if(TRPEND.busy || TRPEND.noRole || !trGuard()) return;
   TRPEND.busy = true;
@@ -15866,17 +15876,10 @@ async function trPendRefresh(){
       if(init.role === 'user'){ TRPEND.noRole = true; TRPEND.total = 0; TRPEND.list = []; return; }
     }
     const q = await trQueueFast();
-    TRA.queue = q;
-    const by = {};
-    q.items.filter(r=>r.status === 'requested').forEach(r=>{ by[r.sessionId] = (by[r.sessionId]||0) + 1; });
-    const sess = {}; (q.sessions||[]).forEach(s=>{ sess[s.sessionId] = s; });
-    TRPEND.list = Object.keys(by).filter(id=>sess[id]).map(id=>({ sessionId:id, title:sess[id].title, n:by[id] }));
-    TRPEND.total = TRPEND.list.reduce((n,x)=>n+x.n, 0);
-  }catch(e){ /* เงียบ */ }
-  finally{
-    TRPEND.busy = false;
-    try{ if(typeof updateNotifBadge === 'function') updateNotifBadge(); }catch(_){}
-  }
+    TRA.queue = q; TRA.queueAt = Date.now();
+    trPendApply(q);
+  }catch(e){ /* เงียบ — จะลองใหม่ */ }
+  finally{ TRPEND.busy = false; }
 }
 function trPendOpenQueue(){
   TRA.view = 'queue';
@@ -15885,7 +15888,7 @@ function trPendOpenQueue(){
 (function trPendStart(){
   if(TRPEND.started) return; TRPEND.started = true;
   if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return;
-  setTimeout(trPendRefresh, 3000);
+  [3000, 9000, 20000, 40000].forEach(ms=>setTimeout(()=>{ if(!TRPEND.ok) trPendRefresh(); }, ms));
   setInterval(()=>{ if(!document.hidden) trPendRefresh(); }, 90000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trPendRefresh(); });
 })();
