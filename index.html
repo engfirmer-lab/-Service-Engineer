@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.76
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 19:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.78
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 20:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.76</title>
+<title>F1 Service — v9.78</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -832,6 +832,24 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
   #ex-attempt .ex-opt{padding:8px 10px;margin:4px 0;font-size:14px;}
   #ex-attempt .panel-block{padding:12px;}
 }
+/* v9.77 mobile-first answering */
+#ex-attempt .ex-opt{min-height:52px;align-items:center;padding:12px 14px;margin:8px 0;font-size:15px;border-width:2px;border-radius:12px;}
+#ex-attempt .ex-opt input{width:24px;height:24px;margin:0;flex:none;accent-color:var(--amber);}
+#ex-attempt .ex-opt:has(input:checked){border-color:var(--amber);background:rgba(217,146,43,.14);font-weight:600;}
+.ex-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.ex-chip{min-width:48px;min-height:46px;padding:8px 14px;border:2px solid var(--border);border-radius:12px;background:var(--panel);color:var(--text);font:inherit;font-size:15px;cursor:pointer;touch-action:manipulation;}
+.ex-chip.on{border-color:var(--amber);background:var(--amber);color:#fff;font-weight:700;}
+.ex-chip.taken{opacity:.45;}
+.ex-mrow,.ex-ordrow{border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin:8px 0;background:var(--panel);}
+.ex-mrow.done,.ex-ordrow.set{border-color:var(--green);}
+.ex-ordtxt{font-weight:600;font-size:15px;}
+.ex-pos{min-width:44px;padding:8px 0;text-align:center;}
+.ex-ordact{display:flex;gap:8px;margin-top:10px;}
+.ex-ordact .ex-big{flex:1;min-height:50px;font-size:16px;}
+.ex-ordok{padding-left:22px;margin:6px 0 10px;}
+.ex-ordok li{padding:8px 4px;font-weight:600;}
+.ex-big.btn{min-height:48px;}
+.ex-clr{display:block;margin:10px 0 0;background:none;border:1px dashed var(--border);border-radius:10px;padding:10px 12px;color:var(--text-dim);font:inherit;font-size:13px;width:100%;cursor:pointer;}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -1012,6 +1030,10 @@ body.tr-noscroll{overflow:hidden;}
 .tr-tsel{padding-left:6px;padding-right:2px;}
 .tr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
 .tr-chip{min-height:38px;font-size:12.5px;padding:4px 10px;}
+
+#tr-pend-banner{position:sticky;top:0;z-index:18;}
+.tr-pend-in{background:var(--amber-soft,#fff3d6);color:var(--text);border-bottom:2px solid var(--amber,#d9922b);padding:8px 14px;font-size:13px;line-height:1.5;}
+.tr-pend-in a{color:inherit;font-weight:700;text-decoration:underline;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2477,8 +2499,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.76";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 19:30 น. เวลาไทย";
+const APP_VERSION = "9.78";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 20:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12529,13 +12551,25 @@ function examRenderQuestion(){
       <span>${exH(ch.text)}${ch.img ? `<img class="ex-cimg" src="${exH(exImg(ch.img,'w700'))}" alt="" draggable="false">` : ''}</span></label>`).join('');
   } else if(q.type === 'match'){
     const m = (a && typeof a === 'object') ? a : {};
-    body = '<div class="ex-hint">จับคู่ให้ถูกต้อง</div>' + q.left.map(l=>`<div class="ex-match"><div class="ex-match-l">${exH(l.text)}</div>
-      <select data-ex="match" data-left="${exH(l.id)}"><option value="">— เลือก —</option>${q.right.map(r=>`<option value="${exH(r.id)}" ${m[l.id]===r.id?'selected':''}>${exH(r.text)}</option>`).join('')}</select></div>`).join('');
+    body = '<div class="ex-hint">แตะเลือกคำตอบของแต่ละข้อ · แตะซ้ำเพื่อยกเลิก</div>' + q.left.map(l=>`<div class="ex-mrow ${m[l.id]?'done':''}"><div class="ex-match-l">${exH(l.text)}</div>
+      <div class="ex-chips">${q.right.map(r=>`<button type="button" class="ex-chip ${m[l.id]===r.id?'on':''}" data-ex="mpick" data-left="${exH(l.id)}" data-right="${exH(r.id)}" aria-pressed="${m[l.id]===r.id}">${exH(r.text)}</button>`).join('')}</div></div>`).join('');
   } else if(q.type === 'order'){
-    const ids = Array.isArray(a) ? a : q.choices.map(x=>x.id);
     const byId = {}; q.choices.forEach(x=>{ byId[x.id] = x; });
-    body = `<div class="ex-hint">เรียงลำดับให้ถูกต้องด้วยปุ่ม ▲ ▼ ${Array.isArray(a) ? '' : '(ยังไม่ได้เรียง)'}</div><ol class="ex-order">` + ids.map((id,i)=>`<li><span>${exH((byId[id]||{}).text)}</span>
-      <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="mv" data-dir="-1" data-i="${i}" ${i===0?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="mv" data-dir="1" data-i="${i}" ${i===ids.length-1?'disabled':''}>▼</button></span></li>`).join('') + '</ol>';
+    const N = q.choices.length;
+    if(Array.isArray(a) && a.length){
+      body = `<div class="ex-hint">✓ ยืนยันลำดับแล้ว</div><ol class="ex-ordok">` + a.map(id=>`<li>${exH((byId[id]||{}).text)}</li>`).join('') + `</ol>
+        <button type="button" class="btn btn-ghost ex-big" data-ex="ordreset">✎ แก้ไข / ยกเลิกคำตอบข้อนี้</button>`;
+    } else {
+      c.drafts = c.drafts || {};
+      const dr = c.drafts[q.qid] || (c.drafts[q.qid] = {});
+      const used = {}; Object.keys(dr).forEach(k=>{ used[dr[k]] = k; });
+      const nset = Object.keys(dr).length;
+      body = `<div class="ex-hint">แตะตัวเลขเพื่อบอกว่าแต่ละข้ออยู่ลำดับที่เท่าไร (1 = ก่อนสุด) แล้วกด "ยืนยันลำดับ" จึงจะนับเป็นคำตอบ</div>` +
+        q.choices.map(ch=>`<div class="ex-ordrow ${dr[ch.id]?'set':''}"><div class="ex-ordtxt">${exH(ch.text)}</div>
+          <div class="ex-chips">${Array.from({length:N},(_,k)=>k+1).map(p=>`<button type="button" class="ex-chip ex-pos ${dr[ch.id]===p?'on':''} ${(used[p] && used[p]!==ch.id)?'taken':''}" data-ex="opos" data-id="${exH(ch.id)}" data-p="${p}" aria-pressed="${dr[ch.id]===p}">${p}</button>`).join('')}</div></div>`).join('') +
+        `<div class="ex-ordact"><button type="button" class="btn btn-primary ex-big" data-ex="ordok" ${nset===N?'':'disabled'}>✓ ยืนยันลำดับ${nset===N?'':` (เลือกแล้ว ${nset}/${N})`}</button>
+         ${nset?'<button type="button" class="btn btn-ghost" data-ex="ordclr">ล้าง</button>':''}</div>`;
+    }
   } else if(q.type === 'short'){
     body = `<input type="text" class="ex-short" data-ex="short" value="${exH(a||'')}" placeholder="พิมพ์คำตอบ" autocomplete="off" autocapitalize="off">`;
   }
@@ -12551,7 +12585,8 @@ function examRenderQuestion(){
     <div class="ex-qtext">${exLines(q.text)}</div>
     ${hs ? `<div class="ex-hs" data-ex="hs"><img class="ex-qimg ex-hsimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false" data-ex="hs">${a && isFinite(a.x) ? `<span class="ex-hsdot" style="left:${a.x*100}%;top:${a.y*100}%"></span>` : ''}</div>` : ''}
     ${!hs && q.imageUrl ? `<img class="ex-qimg" src="${exH(exImg(q.imageUrl))}" alt="" draggable="false">` : ''}
-    <div class="ex-ans">${body}</div>`;
+    <div class="ex-ans">${body}</div>
+    ${(q.type==='multi'||q.type==='match'||q.type==='short') && exAnswered(q,a) ? '<button type="button" class="ex-clr" data-ex="clear">✕ ล้างคำตอบข้อนี้ (ยังไม่แน่ใจ)</button>' : ''}`;
   examUpdateChrome();
 }
 function examUpdateChrome(){
@@ -12570,6 +12605,11 @@ function examUpdateChrome(){
     sv.className = 'ex-save' + (c.offline ? ' ex-warn' : '');
   }
 }
+function exDropAnswer(q){
+  const c = EX.cur; if(!c || c.submitting) return;
+  delete c.answers[q.qid]; c.dirty = true; examLocalSave(); examUpdateChrome();
+}
+function exClearAnswer(q){ exDropAnswer(q); examRenderQuestion(); }
 function examSetAnswer(qid, val){
   const c = EX.cur; if(!c || c.submitting) return;
   c.answers[qid] = val; c.dirty = true;
@@ -12683,13 +12723,25 @@ function examRenderResult(r, roundId){
     <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
     <div class="ex-score">${r.scorePct}%</div>
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
+    <div class="ex-meta" id="ex-res-att"></div>
     <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
     <div class="ex-act" style="margin-top:12px;">
       <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
       ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
     </div></div>`;
+  exResultAttemptNote(r, rid);
 }
 
+function exResultAttemptNote(r, rid){
+  examApi('myExams').then(d=>{
+    const el = $('ex-res-att'); if(!el) return;
+    EX.data = d;
+    const it = d.items.find(x=>(rid && x.roundId===rid) || (x.attempts||[]).some(a=>a.attemptId===r.attemptId)); if(!it) return;
+    const me = (it.attempts||[]).find(a=>a.attemptId===r.attemptId);
+    const tot = Math.max(it.attemptTotal||0, (it.attempts||[]).filter(a=>a.no>0).length);
+    el.innerHTML = `สอบครั้งที่ <b>${me ? me.no : tot}</b> · สอบมาแล้วทั้งหมด <b>${tot} ครั้ง</b>`;
+  }).catch(()=>{});
+}
 /* ---------- โหมดทดลองทำข้อสอบ (Sup/Manager) — หน้าตาเหมือนผู้สอบจริง แต่ไม่บันทึกอะไร ---------- */
 function examRenderPracticeResult(r){
   const root = $('exa-root'), L = EX.practiceLast || {};
@@ -14151,19 +14203,46 @@ function exOnEvent(e){
     if(act==='next' && c){ if(c.idx<c.p.questions.length-1){ c.idx++; examLocalSave(); examRenderQuestion(); } return; }
     if(act==='go' && c){ c.idx = i; examLocalSave(); examRenderQuestion(); return; }
     if(act==='submit'){ examSubmit(false); return; }
-    if(act==='mv' && c){
-      const q = c.p.questions[c.idx]; const cur = Array.isArray(c.answers[q.qid]) ? c.answers[q.qid].slice() : q.choices.map(x=>x.id);
-      const j = i + Number(t.getAttribute('data-dir'));
-      if(j<0 || j>=cur.length) return;
-      const tmp = cur[i]; cur[i] = cur[j]; cur[j] = tmp;
-      examSetAnswer(q.qid, cur); examRenderQuestion(); return;
+    if(act==='pick' && c){
+      const q = c.p.questions[c.idx];
+      if(String(c.answers[q.qid]) === String(t.value)){ exClearAnswer(q); }
+      return;
+    }
+    if(act==='clear' && c){ exClearAnswer(c.p.questions[c.idx]); return; }
+    if(act==='mpick' && c){
+      const q = c.p.questions[c.idx];
+      const m = Object.assign({}, (c.answers[q.qid] && typeof c.answers[q.qid]==='object') ? c.answers[q.qid] : {});
+      const lid = t.getAttribute('data-left'), rid = t.getAttribute('data-right');
+      if(m[lid] === rid) delete m[lid]; else m[lid] = rid;
+      if(Object.keys(m).length) examSetAnswer(q.qid, m); else exDropAnswer(q);
+      examRenderQuestion(); return;
+    }
+    if(act==='opos' && c){
+      const q = c.p.questions[c.idx]; c.drafts = c.drafts || {}; const dr = c.drafts[q.qid] || (c.drafts[q.qid] = {});
+      const cid = t.getAttribute('data-id'), p = Number(t.getAttribute('data-p'));
+      if(dr[cid] === p) delete dr[cid];
+      else { Object.keys(dr).forEach(k=>{ if(dr[k] === p) delete dr[k]; }); dr[cid] = p; }
+      examRenderQuestion(); return;
+    }
+    if(act==='ordclr' && c){ const q = c.p.questions[c.idx]; if(c.drafts) c.drafts[q.qid] = {}; examRenderQuestion(); return; }
+    if(act==='ordok' && c){
+      const q = c.p.questions[c.idx]; const dr = (c.drafts && c.drafts[q.qid]) || {};
+      const N = q.choices.length; if(Object.keys(dr).length !== N) return;
+      const arr = new Array(N); let bad = false;
+      Object.keys(dr).forEach(k=>{ const p = dr[k]; if(arr[p-1]) bad = true; arr[p-1] = k; });
+      if(bad || arr.some(x=>!x)) return;
+      examSetAnswer(q.qid, arr); if(c.drafts) delete c.drafts[q.qid]; examRenderQuestion(); return;
+    }
+    if(act==='ordreset' && c){
+      const q = c.p.questions[c.idx]; const cur = c.answers[q.qid];
+      c.drafts = c.drafts || {}; const dr = {}; if(Array.isArray(cur)) cur.forEach((id,k)=>{ dr[id] = k+1; });
+      c.drafts[q.qid] = dr; exDropAnswer(q); examRenderQuestion(); return;
     }
   }
   if(ev === 'change' && c){
     const q = c.p.questions[c.idx];
     if(act==='pick'){ examSetAnswer(q.qid, t.value); return; }
-    if(act==='multi'){ const vals = Array.from(document.querySelectorAll('#ex-q input[data-ex="multi"]:checked')).map(x=>x.value); examSetAnswer(q.qid, vals); return; }
-    if(act==='match'){ const m = Object.assign({}, (c.answers[q.qid] && typeof c.answers[q.qid]==='object') ? c.answers[q.qid] : {}); const lid = t.getAttribute('data-left'); if(t.value) m[lid] = t.value; else delete m[lid]; examSetAnswer(q.qid, m); return; }
+    if(act==='multi'){ const vals = Array.from(document.querySelectorAll('#ex-q input[data-ex="multi"]:checked')).map(x=>x.value); if(vals.length) examSetAnswer(q.qid, vals); else { exDropAnswer(q); examRenderQuestion(); } return; }
   }
   if(ev === 'input' && c && act==='essay'){ examSetAnswer(c.p.questions[c.idx].qid, t.value); return; }
   if(ev === 'click' && c && act==='hs'){
@@ -14807,6 +14886,7 @@ async function traApprove(sid, ids, op, force){
   showLoadingOverlay('กำลังบันทึก...');
   try{
     await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
+    trPendRefresh();
     hideLoadingOverlay();
     if(TRA.view === 'detail') await traReload(true);
     else { TRA.queue = await trQueueFast(); traRenderQueue(); }
@@ -15764,6 +15844,56 @@ async function trCalSubscribe(){
     window.open('https://calendar.google.com/calendar/u/0/r?cid='+encodeURIComponent(r.calId), '_blank');
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
+
+/* ===== แจ้งเตือนคำขออนุมัติเข้าเทรน (แบนเนอร์ด้านบน — ค้างจนกว่าจะอนุมัติ/ไม่อนุมัติ) ===== */
+var TRPEND = { busy:false, started:false, noRole:false };
+function trPendEl(){
+  let el = document.getElementById('tr-pend-banner');
+  if(el) return el;
+  const hd = document.querySelector('header'); if(!hd) return null;
+  el = document.createElement('div'); el.id = 'tr-pend-banner'; el.style.display = 'none';
+  hd.insertAdjacentElement('afterend', el);
+  el.addEventListener('click', e=>{
+    const a = e.target.closest ? e.target.closest('[data-pend]') : null; if(!a) return;
+    e.preventDefault();
+    const id = a.getAttribute('data-pend');
+    TRA.openId = id;
+    if(currentMode === 'trainadmin') traGo('detail', id); else requestModeSwitch('trainadmin');
+  });
+  return el;
+}
+async function trPendRefresh(){
+  if(TRPEND.busy || TRPEND.noRole || !trGuard()) return;
+  const el = trPendEl(); if(!el) return;
+  TRPEND.busy = true;
+  try{
+    if(typeof auth === 'undefined' || !auth || !auth.currentUser) return;
+    if(!TRA.role || TRA.role === 'user'){
+      const init = await examApi('me');
+      TRA.role = init.role;
+      if(init.role === 'user'){ TRPEND.noRole = true; el.style.display = 'none'; return; }
+    }
+    const q = await trQueueFast();
+    TRA.queue = q;
+    const by = {};
+    q.items.filter(r=>r.status === 'requested').forEach(r=>{ by[r.sessionId] = (by[r.sessionId]||0) + 1; });
+    const sess = {}; (q.sessions||[]).forEach(s=>{ sess[s.sessionId] = s; });
+    const ids = Object.keys(by).filter(id=>sess[id]);
+    if(!ids.length){ el.style.display = 'none'; el.innerHTML = ''; return; }
+    const total = ids.reduce((n,id)=>n+by[id],0);
+    el.innerHTML = '<div class="tr-pend-in"><b>⏳ มีคำขอเข้าเทรนรออนุมัติ '+total+' คน</b> · '+
+      ids.map(id=>'<a href="#" data-pend="'+trH(id)+'">'+trH(sess[id].title)+' ('+by[id]+')</a>').join(' · ')+'</div>';
+    el.style.display = '';
+  }catch(e){ /* เงียบ — ไม่รบกวนผู้ใช้ */ }
+  finally{ TRPEND.busy = false; }
+}
+(function trPendStart(){
+  if(TRPEND.started) return; TRPEND.started = true;
+  if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return; // เทสต์: ไม่ตั้งตัวจับเวลา
+  setTimeout(trPendRefresh, 4000);
+  setInterval(()=>{ if(!document.hidden) trPendRefresh(); }, 90000);
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trPendRefresh(); });
+})();
 
 
 
