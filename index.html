@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.52
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 00:21 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.54
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 10:15 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.52</title>
+<title>F1 Service — v9.54</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -729,6 +729,8 @@
 .ex-pend .ex-qitem{border-style:dashed;}
 .ex-pendbar{border-color:var(--amber);}
 .ex-bulkeg{background:var(--panel-alt);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;font-size:12.5px;white-space:pre-wrap;margin:6px 0;}
+
+.ex-attlist{margin:4px 0}.ex-attlist summary{cursor:pointer;font-size:13px;color:var(--accent,#3b82f6);min-height:32px;display:flex;align-items:center}.ex-attlist .ex-table{margin-top:6px}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2374,8 +2376,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.52";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 00:21 น. เวลาไทย";
+const APP_VERSION = "9.54";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 10:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3173,7 +3175,7 @@ async function fsWriteLog(action){
 async function fsGetRecentLogs(n){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'activityLogs'), sdk.orderBy('timestamp','desc'), sdk.limit(n||30))); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
 async function fsGetLogsAfter(ts){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'activityLogs'), sdk.where('timestamp','>',Number(ts)||0))); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
 async function fsGetAllLogs(){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.collection(db,'activityLogs')); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
-// ลบ activityLogs ที่อายุเกิน 90 วัน — ทำงานเงียบๆ หลัง login ไม่กระทบ UX และไม่ throw ถ้าเกิด error (v9.52: ลบทีละไม่เกิน 400 รายการ เพราะ batch เดียวใส่ได้ไม่เกิน 500 · ใช้เส้นตาย 91 วันกันนาฬิกาเครื่องเร็วกว่าเซิร์ฟเวอร์ให้ rules ปฏิเสธทั้ง batch)
+// ลบ activityLogs ที่อายุเกิน 90 วัน — ทำงานเงียบๆ หลัง login ไม่กระทบ UX และไม่ throw ถ้าเกิด error (v9.54: ลบทีละไม่เกิน 400 รายการ เพราะ batch เดียวใส่ได้ไม่เกิน 500 · ใช้เส้นตาย 91 วันกันนาฬิกาเครื่องเร็วกว่าเซิร์ฟเวอร์ให้ rules ปฏิเสธทั้ง batch)
 // ข้อมูลเก่ากว่านี้ยังอยู่ในไฟล์ Backup (แท็บ ActivityLogs) ตามอายุการเก็บ Backup · เรียกได้เฉพาะ isEditor() และ rules อนุญาตลบเฉพาะ log ที่เก่ากว่า 90 วันเท่านั้น
 async function fsCleanupOldLogs(){
   if(!isEditor()) return;
@@ -6215,7 +6217,7 @@ async function saveUserProfile(){
     if(!isEditingOther && !profileModalIsFirstTime && !isManager() && existing){
       ['position','area','provincesCovered','startDate'].forEach(k=>{ if(existing[k]!==undefined) payload[k] = existing[k]; else delete payload[k]; });
     }
-    // v9.52 — ชื่อ/ชื่อเล่นล็อกหลังพ้น 24 ชม.: ผู้ใช้ทั่วไปแก้ผ่าน DOM/console ไม่ได้ (คืนค่าเดิม) · เก็บประวัติเมื่อมีการเปลี่ยนชื่อ
+    // v9.54 — ชื่อ/ชื่อเล่นล็อกหลังพ้น 24 ชม.: ผู้ใช้ทั่วไปแก้ผ่าน DOM/console ไม่ได้ (คืนค่าเดิม) · เก็บประวัติเมื่อมีการเปลี่ยนชื่อ
     if(!isEditingOther && !isManager() && !profileModalIsFirstTime && existing && profileNameGraceLeftMs(existing) <= 0){
       PROFILE_NAME_KEYS.forEach(k=>{ if(existing[k]!==undefined) payload[k] = existing[k]; else delete payload[k]; });
     }
@@ -11922,7 +11924,7 @@ function buildBackupWorkbook(data){
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), 'Categories');
 
-  if(Array.isArray(data.activityLogs)){ // v9.52 — ประวัติการใช้งาน (Firestore เก็บ 90 วัน เก่ากว่านั้นถูกลบ)
+  if(Array.isArray(data.activityLogs)){ // v9.54 — ประวัติการใช้งาน (Firestore เก็บ 90 วัน เก่ากว่านั้นถูกลบ)
     const logRows = data.activityLogs.map(l=>({ การกระทำ:l.action||'', ผู้ใช้:l.name||'', อีเมล:l.email||'', เวลา: l.timestamp ? new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) : '', timestamp:l.timestamp||'' }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(logRows.length?logRows:[{หมายเหตุ:'ไม่มีบันทึก'}]), 'ActivityLogs');
   }
@@ -12263,6 +12265,17 @@ async function examLoadHome(autoResume){
     root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="reload">ลองใหม่</button></div>`;
   }
 }
+/* v9.53 — จำนวนครั้งที่สอบ + ประวัติทุกครั้ง (ผู้สอบเห็นของตัวเอง) */
+function exAttResult(a){ return a.pendingReview ? exChip('รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
+function exAttemptsHtml(i){
+  const done = (i.attempts||[]).filter(a=>a.no > 0);
+  if(!done.length) return '';
+  const last = done[0], total = Math.max(i.attemptTotal || 0, done.length);
+  return `<div class="ex-meta">สอบมาแล้ว <b>${total} ครั้ง</b> · ครั้งล่าสุด (ครั้งที่ ${last.no}): <b>${last.pendingReview ? '—' : last.scorePct+'%'}</b> ${exAttResult(last)}</div>
+    <details class="ex-attlist"><summary>ดูประวัติการสอบทั้งหมด</summary><table class="ex-table"><thead><tr><th>ครั้งที่</th><th>วันที่สอบ</th><th>คะแนน</th><th>ผล</th></tr></thead><tbody>
+    ${done.map(a=>`<tr><td>${a.no}</td><td>${exFmtDT(a.submittedAt || a.startedAt)}</td><td>${a.pendingReview ? '—' : a.scorePct+'%'}</td><td>${exAttResult(a)}</td></tr>`).join('')}
+    </tbody></table>${total > done.length ? `<div class="ex-hint">แสดง ${done.length} ครั้งล่าสุดจากทั้งหมด ${total} ครั้ง</div>` : ''}</details>`;
+}
 function examStatusChip(i){
   if(i.inProgressAttemptId) return exChip('กำลังสอบอยู่','warn');
   if(i.passed) return exChip('ผ่านแล้ว','ok');
@@ -12295,7 +12308,7 @@ function examRenderHome(){
         <div class="ex-card-h"><div><b>Level ${i.level}</b> · ${exH(i.title)}</div>${examStatusChip(i)}</div>
         <div class="ex-meta">รอบ: ${exH(i.name)} · เปิด ${exFmtDT(i.openAt)} ถึง ${exFmtDT(i.closeAt)}<br>
           ${i.durationMin>0 ? 'เวลาสอบ <b>'+i.durationMin+' นาที</b>' : 'ไม่จำกัดเวลา'} · เกณฑ์ผ่าน <b>${i.passPercent}%</b></div>
-        ${last ? `<div class="ex-meta">ครั้งล่าสุด: <b>${last.pendingReview ? '—' : last.scorePct+'%'}</b> ${last.pendingReview ? exChip('รอ Sup ตรวจข้อเขียน','warn') : last.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad')} · สอบมาแล้ว ${i.attempts.length} ครั้ง</div>` : ''}
+        ${exAttemptsHtml(i)}
         ${i.needsRetake ? '<div class="ex-meta ex-warn">ข้อสอบชุดนี้มีการแก้ไขสาระสำคัญ ผลที่ผ่านก่อนหน้าต้องสอบใหม่</div>' : ''}
         <div class="ex-act">${action}</div>
       </div>`;
@@ -13113,6 +13126,10 @@ async function exaSaveRound(){
 }
 
 /* ---------- สรุปผลรอบสอบ + ออก Cer ---------- */
+function exAdminAttempts(x){
+  if(!x.attemptCount) return '0';
+  return `<details class="ex-attlist"><summary><b>${x.attemptCount}</b> ครั้ง</summary>${(x.attempts||[]).map(a=>`<div class="ex-hint">ครั้งที่ ${a.no} · ${exFmtDT(a.submittedAt||a.startedAt)} · ${a.status==='grading' ? 'รอตรวจข้อเขียน' : a.scorePct+'% '+(a.passed?'✓ ผ่าน':'✗ ไม่ผ่าน')}${a.status==='expired' ? ' (หมดเวลา)' : ''} · v${a.version}</div>`).join('')}</details>`;
+}
 const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''], grading:['รอ Sup ตรวจ','warn'] };
 function exaRenderSummary(){
   const d = EXA.summary, r = d.round, root = $('exa-root');
@@ -13131,7 +13148,7 @@ function exaRenderSummary(){
     <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">สรุปผู้ตอบ</h2>
       <select id="exa-sum-filter" data-ex="sumfilter"><option value="">ทุกสถานะ</option>${Object.keys(EX_STATUS).map(k=>`<option value="${k}" ${f===k?'selected':''}>${EX_STATUS[k][0]}</option>`).join('')}</select></div>
       <div style="overflow-x:auto"><table class="ex-table"><thead><tr><th>ชื่อ</th><th>ครั้งที่สอบ</th><th>คะแนนล่าสุด</th><th>ดีที่สุด</th><th>สถานะ</th><th>ระดับ</th><th>Cer</th></tr></thead><tbody>
-      ${rows.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${x.attemptCount}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
+      ${rows.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${exAdminAttempts(x)}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
         <td>${exChip(EX_STATUS[x.status][0], EX_STATUS[x.status][1])}</td>
         <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
         <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="7" class="ex-hint">ไม่มีรายการ</td></tr>'}
