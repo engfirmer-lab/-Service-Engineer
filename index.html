@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.71
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 17:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.72
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 18:03 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.71</title>
+<title>F1 Service — v9.72</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -802,6 +802,14 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-pane.err{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.18);}
 @keyframes exshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 @media (prefers-color-scheme:dark){.ex-qerr{color:#fca5a5;}}
+
+.ex-settabs{margin:8px 0;}
+.ex-split-r .ex-chrow{flex-wrap:nowrap;}
+.ex-split-r .ex-chrow input[type=text]{flex:1;min-width:0;}
+.ex-split-r .ex-chrow .btn{padding:4px 8px;font-size:12px;white-space:nowrap;flex:none;}
+.ex-split-r .ex-chrow input[type=radio],.ex-split-r .ex-chrow input[type=checkbox]{flex:none;}
+.ex-split-l .ex-qlist li > .ex-qchap{grid-column:2 / 4;}
+@media (max-width:899px){ .ex-split-r .ex-chrow{flex-wrap:wrap;} }
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2447,8 +2455,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.71";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 17:45 น. เวลาไทย";
+const APP_VERSION = "9.72";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 18:03 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12970,7 +12978,7 @@ async function exaGo(view, arg){
   }
   try{
     if(view === 'sets'){ const d = await examApi('adminListSets'); if(!fresh()) return; EXA.cache.sets = d; if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.sets = d; exaRenderSets(); } }
-    else if(view === 'set'){ await exaLoadSet(arg); if(!fresh()) return; exaRenderSet(); }
+    else if(view === 'set'){ if(!EXA.set || EXA.set.setId !== arg){ EXA.setTab = 'q'; } EXA.fitScroll = true; await exaLoadSet(arg); if(!fresh()) return; exaRenderSet(); }
     else if(view === 'rounds'){ const d = await examApi('adminListRounds'); if(!fresh()) return; EXA.cache.rounds = d; if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.rounds = d; exaRenderRounds(); } }
     else if(view === 'round'){ await exaPrepareRound(arg); if(!fresh()) return; exaRenderRoundEditor(); }
     else if(view === 'grading'){ const r = await examApi('adminListGrading', { roundId:arg||'' }); if(!fresh()) return; EXA.grading = r.items; EXA.gradeRound = arg||''; if(!arg) EXA.gradeCount = r.items.length; exaRenderGradingList(); }
@@ -13051,10 +13059,12 @@ function exaModelSelect(cat, sel){
 function exaRenderSet(){
   const s = EXA.set, root = $('exa-root');
   const isNew = !s.setId;
+  const tp = isNew ? 'settings' : (EXA.setTab || 'q'), tabSt = n => tp === n ? '' : 'style="display:none"';
   let html = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการ</button><b>${isNew ? 'สร้างชุดข้อสอบใหม่' : exH(s.title)}</b>${!isNew && exaCourseOf(s) ? ' '+exCourse(exaCourseOf(s)) : ''}
       ${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}</div>
     ${exaDraftBanner()}${isNew ? '' : exaPracticeBanner(s.setId)}
-    <div class="panel-block"><h2>ตั้งค่าชุดข้อสอบ</h2><div class="ex-form">
+    ${isNew ? '' : `<div class="subtab-bar ex-settabs"><button class="${tp==='q'?'active':''}" data-ex="settab" data-v="q">📝 ข้อสอบ (${EXA.qs.length}${EXA.pending.length ? '+'+EXA.pending.length : ''})</button><button class="${tp==='settings'?'active':''}" data-ex="settab" data-v="settings">⚙️ ตั้งค่า</button><button class="${tp==='pub'?'active':''}" data-ex="settab" data-v="pub">🚀 เผยแพร่</button></div>`}
+    <div class="ex-tabpane" data-pane="settings" ${tabSt('settings')}><div class="panel-block"><h2>ตั้งค่าชุดข้อสอบ</h2><div class="ex-form">
       <label>ชื่อชุดข้อสอบ<input id="exa-s-title" type="text" value="${exH(s.title)}" placeholder="เช่น Maglumi 800 L1: Coordinates"></label>
       <label>ประเภทเครื่อง (Category)${exaCatSelect(s.category)}</label>
       <label>รุ่น<span id="exa-s-model-wrap">${exaModelSelect(s.category, s.model)}</span></label>
@@ -13066,15 +13076,15 @@ function exaRenderSet(){
       <label>อายุใบ Cer (เดือน, 0 = ไม่หมดอายุ)<input id="exa-s-valid" type="number" min="0" max="120" value="${Number(s.validMonths)||0}"></label>
       <label>สถานะ<select id="exa-s-status"><option value="active" ${s.status!=='hidden'?'selected':''}>ใช้งาน</option><option value="hidden" ${s.status==='hidden'?'selected':''}>ซ่อน (ผู้สอบมองไม่เห็น)</option></select></label>
     </div><div class="ex-row"><button class="btn btn-primary" data-ex="saveset">💾 บันทึกการตั้งค่า</button>${isNew ? '' : `<button class="btn btn-ghost" data-ex="copyset" data-id="${exH(s.setId)}" ${EXA.qs.length?'':'disabled'}>📑 คัดลอกทั้งชุด</button><button class="btn btn-ghost" data-ex="delset" data-id="${exH(s.setId)}">🗑 ลบชุดข้อสอบ</button>`}</div>
-      ${isNew ? '' : '<div class="ex-hint">ลบได้เฉพาะชุดที่ยังไม่มีใครสอบและยังไม่ออกใบ Cer · ชุดที่มีผู้สอบแล้วให้ตั้งสถานะ "ซ่อน" แทน</div>'}</div>`;
+      ${isNew ? '' : '<div class="ex-hint">ลบได้เฉพาะชุดที่ยังไม่มีใครสอบและยังไม่ออกใบ Cer · ชุดที่มีผู้สอบแล้วให้ตั้งสถานะ "ซ่อน" แทน</div>'}</div></div>`;
   if(!isNew){
-    html += `<div class="panel-block ex-forms"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button><button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
+    html += `<div class="ex-tabpane" data-pane="q" ${tabSt('q')}><div class="panel-block ex-forms"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button><button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
       ${exaCopyPanelHtml()}
       ${EXA.pending.length ? `<div class="ex-note ex-pendbar"><b>มี ${EXA.pending.length} ข้อที่ยังไม่บันทึกลงระบบ</b> (อยู่ในเครื่องนี้เท่านั้น ถ้ารีเฟรชหน้าจะหาย)<div class="ex-act"><button class="btn btn-primary" data-ex="saveall">💾 บันทึกทั้งหมด ${EXA.pending.length} ข้อ ในครั้งเดียว</button></div></div>` : ''}
       <div class="ex-split"><div class="ex-split-l">${exaQListHtml()}
       ${EXA.qs.length || EXA.pending.length ? '<div class="ex-hint">ผู้สอบจะเห็นลำดับข้อสุ่มทุกครั้ง (ถ้าแบ่งเป็นบท: เรียงตามบทที่เห็นนี้ แล้วสุ่มเฉพาะภายในบท) ลำดับนี้ใช้เฉพาะตอนแก้ไข</div>' : '<div class="ex-hint">ยังไม่มีข้อสอบ กด "+ เพิ่มข้อ"</div>'}
-      ${exaAddBarHtml()}</div><div class="ex-split-r">${exaEditorPaneHtml()}</div></div></div>
-    <div class="panel-block"><h2>เผยแพร่เป็นเวอร์ชันใหม่ ${EXA.set.latestVersion ? '(v'+(EXA.set.latestVersion+1)+')' : '(v1)'}</h2>
+      ${exaAddBarHtml()}</div><div class="ex-split-r">${exaEditorPaneHtml()}</div></div></div></div>
+    <div class="ex-tabpane" data-pane="pub" ${tabSt('pub')}><div class="panel-block"><h2>เผยแพร่เป็นเวอร์ชันใหม่ ${EXA.set.latestVersion ? '(v'+(EXA.set.latestVersion+1)+')' : '(v1)'}</h2>
       <div class="ex-hint">เวอร์ชันที่เผยแพร่แล้วแก้ไขไม่ได้ ผลสอบและ Cer ผูกกับเวอร์ชันที่สอบจริง การแก้ไขข้อสอบต่อจากนี้เป็น "ร่าง" จนกว่าจะเผยแพร่</div>
       ${EXA.set.latestVersion ? `<label class="ex-opt"><input type="radio" name="exa-kind" value="minor" checked><span><b>แก้เล็กน้อย</b> เช่น พิมพ์ผิด ผู้ที่ผ่านแล้วยังใช้ผลเดิม</span></label>
         <label class="ex-opt"><input type="radio" name="exa-kind" value="major"><span><b>แก้สาระสำคัญ</b> ผู้ที่ผ่านเวอร์ชันก่อนจะมีสถานะ "ต้องสอบใหม่"</span></label>` : ''}
@@ -13082,13 +13092,15 @@ function exaRenderSet(){
         <button class="btn btn-ghost" data-ex="practice" data-id="${exH(EXA.set.setId)}" data-src="draft" ${EXA.qs.length?'':'disabled'}>🧪 ทดลองทำ (ร่างล่าสุด)</button>
         ${EXA.set.latestVersion ? `<button class="btn btn-ghost" data-ex="itemstats" data-id="${exH(EXA.set.setId)}" data-back="">📈 สถิติรายข้อ</button><button class="btn btn-ghost" data-ex="practice" data-id="${exH(EXA.set.setId)}" data-src="published">🧪 ทดลองทำ (v${EXA.set.latestVersion} ที่เผยแพร่)</button>` : ''}</div>
       <div class="ex-hint">ทดลองทำเหมือนผู้สอบจริง (จับเวลา สุ่มข้อ ดูผลและใบ Cer ตัวอย่างเมื่อผ่าน) แต่ไม่บันทึกคะแนนและไม่ออกใบ Cer จริง</div>
-      ${EXA.vers.length ? '<div class="ex-hint" style="margin-top:8px;">ประวัติ: '+EXA.vers.sort((a,b)=>b.version-a.version).map(v=>`v${v.version} (${v.kind==='major'?'สาระสำคัญ':'เล็กน้อย'}, ${v.qCount} ข้อ, ${exFmtDT(v.publishedAt)})`).join(' · ')+'</div>' : ''}</div>`;
+      ${EXA.vers.length ? '<div class="ex-hint" style="margin-top:8px;">ประวัติ: '+EXA.vers.sort((a,b)=>b.version-a.version).map(v=>`v${v.version} (${v.kind==='major'?'สาระสำคัญ':'เล็กน้อย'}, ${v.qCount} ข้อ, ${exFmtDT(v.publishedAt)})`).join(' · ')+'</div>' : ''}</div></div>`;
   }
   const y0 = window.scrollY;
   const lEl = root.querySelector('.ex-split-l'), lTop = lEl ? lEl.scrollTop : 0; // ไม่ให้รายการซ้ายเด้งกลับไปบนสุดทุกครั้งที่เลือกข้อ
   root.innerHTML = html;
   { const l2 = root.querySelector('.ex-split-l'); if(l2 && lTop) l2.scrollTop = lTop; }
-  if(EXA.scrollEdit){ EXA.scrollEdit = false; const wide = (window.innerWidth||1200) >= 900; const ed = wide ? document.querySelector('#exa-root .ex-split') : $('exa-qeditor'); if(ed && ed.scrollIntoView){ try{ ed.scrollIntoView({ block:'start', behavior:'smooth' }); }catch(e){ ed.scrollIntoView(); } } }
+  const wideScr = (window.innerWidth||1200) >= 900, qOn = !isNew && tp === 'q';
+  if(wideScr && qOn){ const force = EXA.scrollEdit || EXA.fitScroll; EXA.scrollEdit = false; EXA.fitScroll = false; window.scrollTo(0, y0); exaFitSplit(force); }
+  else if(EXA.scrollEdit){ EXA.scrollEdit = false; const wide = (window.innerWidth||1200) >= 900; const ed = wide ? document.querySelector('#exa-root .ex-split') : $('exa-qeditor'); if(ed && ed.scrollIntoView){ try{ ed.scrollIntoView({ block:'start', behavior:'smooth' }); }catch(e){ ed.scrollIntoView(); } } }
   else window.scrollTo(0, y0);
   exaDraftSave();
 }
@@ -13269,6 +13281,15 @@ function exaReadChPicker(selId, inpId){
   if(sel.value === '__new'){ const i = $(inpId); return i ? i.value.replace(/\s+/g,' ').trim().slice(0,60) : ''; }
   return sel.value;
 }
+/* ช่องซ้าย/ขวาสูงเต็มจอใต้แถบเมนู — เลื่อนแยกกัน หน้าหลักไม่ต้องเลื่อน */
+function exaFitSplit(scroll){
+  const sp = document.querySelector('#exa-root .ex-split'); if(!sp) return;
+  if((window.innerWidth||1200) < 900){ sp.style.height = ''; return; }
+  const TOP = 64;
+  if(scroll){ const t = sp.getBoundingClientRect().top; if(Math.abs(t - TOP) > 4) window.scrollBy(0, t - TOP); }
+  sp.style.height = Math.max(440, (window.innerHeight||800) - TOP - 12) + 'px';
+}
+if(typeof window !== 'undefined' && !window.__exaFitBound){ window.__exaFitBound = true; window.addEventListener('resize', ()=>{ try{ exaFitSplit(false); }catch(e){} }); }
 function exaEditorPaneHtml(){
   const open = !!(EXA.bulk || EXA.qEdit);
   return `<div class="ex-qeditor ex-pane ${open?'open':''}" id="exa-qeditor">${open ? exaQEditorHtml() : '<div class="ex-pane-empty">✏️<br><b>เลือกข้อทางซ้ายเพื่อแก้ไข</b><br>หรือกด “+ เพิ่มข้อ” เพื่อสร้างข้อใหม่<br><small>ทุกข้อต้องใส่เฉลยก่อนบันทึก</small></div>'}</div>`;
@@ -14128,6 +14149,7 @@ function exOnEvent(e){
       case 'copyclose': EXA.copyUI = null; exaReadQForm(); exaRenderSet(); return;
       case 'copyall': { const u = EXA.copyUI; if(u && u.qs){ if(u.sel.size === u.qs.length) u.sel.clear(); else u.qs.forEach(q=>u.sel.add(q.qid)); exaReadQForm(); exaRenderSet(); } return; }
       case 'copygo': exaCopyGo(); return;
+      case 'settab': { exaReadQForm(); EXA.setTab = t.getAttribute('data-v'); EXA.fitScroll = true; exaRenderSet(); return; }
       case 'dupq': exaDupQuestion(); return;
       case 'duppend': { exaReadQForm(); const src = EXA.pending.find(x=>x.pid===t.getAttribute('data-p')); if(!src) return; const nd = JSON.parse(JSON.stringify(src)); nd.qid = ''; nd.pid = exaNewPid(); EXA.bulk = false; EXA.qEdit = nd; EXA.scrollEdit = true; exaRenderSet(); showToast('✓ ทำสำเนาแล้ว — แก้แล้วกด "เก็บข้อนี้"'); return; }
       case 'draftrestore': exaDraftRestore(); return;
