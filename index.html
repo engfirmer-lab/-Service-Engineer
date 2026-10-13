@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.73
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 19:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.76
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 19:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.73</title>
+<title>F1 Service — v9.76</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -770,9 +770,9 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-forms .ex-qcard.ex-qnew{border:1px solid var(--accent,#2563eb);border-radius:12px;padding:10px;margin-top:8px;background:var(--panel);box-shadow:0 2px 14px rgba(37,99,235,.18);}
 .ex-forms .ex-qlist li.ex-pend.ex-qcard{grid-template-columns:1fr auto;}
 .ex-addbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;position:sticky;bottom:8px;}
-.ex-bar{height:8px;border-radius:6px;background:rgba(100,116,139,.18);overflow:hidden;margin:6px 0;}
-.ex-bar i{display:block;height:100%;border-radius:6px;}
-.ex-bar.sm{height:6px;margin:0;flex:1;min-width:60px;}
+.ex-sbar{height:8px;border-radius:6px;background:rgba(100,116,139,.18);overflow:hidden;margin:6px 0;}
+.ex-sbar i{display:block;height:100%;border-radius:6px;}
+.ex-sbar.sm{height:6px;margin:0;flex:1;min-width:60px;}
 .ex-opts{display:flex;flex-direction:column;gap:4px;margin-top:6px;font-size:13px;}
 .ex-optrow{display:flex;align-items:center;gap:8px;}
 .ex-optrow > span:first-child{flex:2;min-width:0;overflow:hidden;text-overflow:ellipsis;}
@@ -821,6 +821,17 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-wsbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:4px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;}
 .ex-wsgap{flex:1;}
 @media (max-width:899px){ .ex-split-l{overflow:visible !important;display:block;} .ex-split-ls{overflow:visible;} .ex-split-l .ex-addbar{position:sticky;bottom:8px;} .ex-workspace.full{position:static;} }
+/* v9.74 mobile exam compaction */
+.ex-bar>div:first-child{min-width:0;flex:1;}
+.ex-timer{flex:none;white-space:nowrap;}
+@media(max-width:560px){
+  .ex-bar{padding:6px 10px;margin-bottom:6px;font-size:13px;}
+  .ex-bar .ex-hint{font-size:11px;}
+  .ex-timer{font-size:16px;}
+  #ex-attempt .ex-note{font-size:12px;padding:6px 10px;}
+  #ex-attempt .ex-opt{padding:8px 10px;margin:4px 0;font-size:14px;}
+  #ex-attempt .panel-block{padding:12px;}
+}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2466,8 +2477,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.73";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 19:10 น. เวลาไทย";
+const APP_VERSION = "9.76";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 19:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12935,9 +12946,9 @@ function exaRenderItemStats(){
       const wrongTop = q.options.filter(o=>!o.isAnswer && o.count > 0).sort((a,b)=>b.count-a.count)[0];
       const flag = q.shown >= 5 && q.pct !== null && q.pct < 50 ? ' ' + exChip('ควรทบทวน','bad') : '';
       return `<div class="ex-card"><div class="ex-card-h"><div><b>${q.order}.</b> ${q.chapter ? '<small class="ex-course">'+exH(q.chapter)+' · </small>' : ''}${exH(String(q.text).slice(0,120))}</div><div>${flag}</div></div>
-        <div class="ex-bar"><i style="width:${q.pct===null?0:q.pct}%;background:${color(q.pct)}"></i></div>
+        <div class="ex-sbar"><i style="width:${q.pct===null?0:q.pct}%;background:${color(q.pct)}"></i></div>
         <div class="ex-meta"><b style="color:${color(q.pct)}">${q.pct===null?'-':q.pct+'%'}</b> ตอบถูก ${q.correct}/${q.shown}${q.blank?' · ไม่ตอบ '+q.blank:''}${wrongTop ? ' · ผิดบ่อยสุด: <b>'+exH(String(wrongTop.text).slice(0,60))+'</b> ('+wrongTop.count+')' : ''}</div>
-        ${q.options.length ? `<div class="ex-opts">${q.options.map(o=>`<div class="ex-optrow ${o.isAnswer?'ok':''}"><span>${o.isAnswer?'✓ ':''}${exH(String(o.text).slice(0,70))}</span><span class="ex-bar sm"><i style="width:${q.shown?Math.round(o.count*100/q.shown):0}%;background:${o.isAnswer?'var(--green)':'var(--text-faint)'}"></i></span><b>${o.count}</b></div>`).join('')}</div>` : ''}</div>`;
+        ${q.options.length ? `<div class="ex-opts">${q.options.map(o=>`<div class="ex-optrow ${o.isAnswer?'ok':''}"><span>${o.isAnswer?'✓ ':''}${exH(String(o.text).slice(0,70))}</span><span class="ex-sbar sm"><i style="width:${q.shown?Math.round(o.count*100/q.shown):0}%;background:${o.isAnswer?'var(--green)':'var(--text-faint)'}"></i></span><b>${o.count}</b></div>`).join('')}</div>` : ''}</div>`;
     }).join('') : ''}`;
 }
 /* ---------- ทักษะ & Cer: ใครสอบผ่านอะไร + Cer ใกล้หมด/หมดอายุ ---------- */
@@ -13724,6 +13735,24 @@ function exaRenderRounds(){
   root.innerHTML = html;
 }
 /* ชื่อ Supervisor บนใบ Cer: ค่าเริ่มต้น = เจ้าของ Product (ตามหน้าตั้งค่าผู้ดูแล) → ชื่อในชุดข้อสอบเดิม → ชื่อตัวเอง */
+const EXA_TITLES = ['Engineer Supervisor','Engineer Product'];
+function exaTitlePickerHtml(cur){
+  cur = String(cur||'Engineer Supervisor');
+  const known = EXA_TITLES.indexOf(cur) >= 0;
+  return `<label>ตำแหน่งผู้เทรนบนใบ Cer
+    <select id="exa-r-suptitle-sel" onchange="document.getElementById('exa-r-suptitle').style.display=this.value==='__other'?'':'none'">
+      ${EXA_TITLES.map(t=>`<option value="${exH(t)}" ${t===cur?'selected':''}>${exH(t)}</option>`).join('')}
+      <option value="__other" ${known?'':'selected'}>อื่นๆ (กรอกเอง)</option>
+    </select>
+    <input id="exa-r-suptitle" type="text" maxlength="60" placeholder="ระบุตำแหน่ง" value="${known?'':exH(cur)}" style="${known?'display:none;':''}margin-top:6px;">
+  </label>`;
+}
+function exaTitleValue(){
+  const sel = document.getElementById('exa-r-suptitle-sel');
+  if(!sel) return 'Engineer Supervisor';
+  if(sel.value !== '__other') return sel.value;
+  return (document.getElementById('exa-r-suptitle').value||'').trim() || 'Engineer Supervisor';
+}
 function exaDefaultSigner(setId){
   const s = EXA.sets.find(x=>x.setId===setId); if(!s) return exaMyEnName();
   let ident = ''; try{ ident = ownerOf(s.category, s.model) || ''; }catch(e){}
@@ -13751,7 +13780,7 @@ async function exaPrepareRound(roundId){
   } else {
     const s = EXA.sets.find(x=>x.latestVersion>0) || EXA.sets[0];
     const now = Date.now();
-    EXA.round = { roundId:'', setId:s?s.setId:'', name:'', openAt:now, closeAt:now+7*86400000, passPercent:s?s.passPercent:100, durationMin:s?s.durationMin:30, graceMin:s?s.graceMin:5, trainingDate:'', eligible:[], supName:exaDefaultSigner(s?s.setId:''), supTitle:'Supervisor' };
+    EXA.round = { roundId:'', setId:s?s.setId:'', name:'', openAt:now, closeAt:now+7*86400000, passPercent:s?s.passPercent:100, durationMin:s?s.durationMin:30, graceMin:s?s.graceMin:5, trainingDate:'', eligible:[], supName:exaDefaultSigner(s?s.setId:''), supTitle:'Engineer Supervisor' };
     EXA.elig = new Set();
   }
   EXA.search = '';
@@ -13774,7 +13803,7 @@ function exaRenderRoundEditor(){
       <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-r-dur" type="number" min="0" max="600" value="${r.durationMin}"></label>
       <label>ช่วงผ่อนผันส่งหลังหมดเวลา (นาที)<input id="exa-r-grace" type="number" min="0" max="60" value="${r.graceMin}"></label>
       <label>ชื่อ Supervisor บนใบ Cer (อังกฤษ, ใส่ได้คนเดียว)<input id="exa-r-sup" type="text" maxlength="80" value="${exH(r.supName)}" placeholder="ค่าเริ่มต้น = เจ้าของ Product"></label>
-      <label>ตำแหน่งบนใบ Cer<input id="exa-r-suptitle" type="text" maxlength="60" value="${exH(r.supTitle||'Supervisor')}"></label>
+      ${exaTitlePickerHtml(r.supTitle)}
       <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
     </div>
     <div class="ex-hint">ผู้เข้าสอบที่เริ่มสอบก่อนปิดรอบ จะสอบต่อได้จนหมดเวลาของตัวเอง</div></div>
@@ -13788,7 +13817,7 @@ async function exaSaveRound(){
   const r = EXA.round, g = id => $(id).value;
   const picked = EXA.profiles.filter(p=>EXA.elig.has(p.email)).map(p=>({ email:p.email, name:p.name, nameEn:p.nameEn }));
   const round = { roundId:r.roundId || undefined, setId:g('exa-r-set'), name:g('exa-r-name'), openAt:exFromInput(g('exa-r-open')), closeAt:exFromInput(g('exa-r-close')),
-    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), graceMin:Number(g('exa-r-grace')), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:g('exa-r-suptitle').trim(), eligible:picked };
+    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), graceMin:Number(g('exa-r-grace')), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:exaTitleValue(), eligible:picked };
   showLoadingOverlay('กำลังบันทึกรอบสอบ...');
   try{
     const res = await examApi('adminSaveRound', { round });
@@ -14482,6 +14511,7 @@ function trRender(){
   let html = '';
   html += `<div class="tr-top">
     <div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="yr" data-d="-1" aria-label="ปีก่อน">‹</button><b>${TR.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="yr" data-d="1" aria-label="ปีถัดไป">›</button></div>
+    <button class="btn btn-ghost btn-sm" data-tr="calsub" title="เพิ่มตารางเทรนเข้า Google Calendar ของฉัน">➕ เพิ่มเข้า Google Calendar</button>
     <div class="subtab-bar tr-views"><button class="${TR.view==='cal'?'active':''}" data-tr="view" data-v="cal">📅 ปฏิทิน</button><button class="${TR.view==='list'?'active':''}" data-tr="view" data-v="list">📋 รายการ</button><button class="${TR.view==='mine'?'active':''}" data-tr="view" data-v="mine">🙋 ของฉัน</button></div>
   </div>`;
   if(needs.length) html += `<div class="ex-note ex-bad tr-alert">⚠ วันเทรนเปลี่ยน ต้องขอเข้าเทรนใหม่ ${needs.length} งาน: ${needs.map(s=>`<a href="#" data-tr="open" data-id="${trH(s.sessionId)}">${trH(s.title)}</a>`).join(' · ')}</div>`;
@@ -15620,6 +15650,7 @@ function trOnEvent(e){
   switch(act){
     /* ----- ผู้ใช้ ----- */
     case 'reload': TR.detail = null; trLoad(); return;
+    case 'calsub': trCalSubscribe(); return;
     case 'yr': TR.year += num('data-d'); TR.detail = null; trLoad(); return;
     case 'view': TR.view = v; trRender(); return;
     case 'day': trOpenDay(t.getAttribute('data-d')); return;
@@ -15724,6 +15755,15 @@ function trOnEvent(e){
   mk('tr-file-mfr', { accept:'image/*,application/pdf,.pdf,.doc,.docx' }, fs=>traUploadMfr(TRA.attachFor, fs[0]));
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden) return; if(currentMode === 'trainadmin' && TRA.view === 'detail' && TRA.dtab === 'checkin') traStartClock(); });
 })();
+
+async function trCalSubscribe(){
+  showLoadingOverlay('กำลังเปิด Google Calendar...');
+  try{
+    const r = await examApi('trCalInfo', {});
+    hideLoadingOverlay();
+    window.open('https://calendar.google.com/calendar/u/0/r?cid='+encodeURIComponent(r.calId), '_blank');
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
 
 
 
