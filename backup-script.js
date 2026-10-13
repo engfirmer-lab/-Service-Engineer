@@ -232,6 +232,11 @@ async function main(schedule){
   // ชีตเพิ่มสำหรับทุกคอลเลกชันที่เหลือ (ไว้เปิดดูด้วยตา — ฉบับกู้ข้อมูลจริงคือไฟล์ JSON)
   const usedNames = new Set(wb.SheetNames.map(n => n.toLowerCase()));
   Object.entries(otherCollections).forEach(([name, docs]) => {
+    // v9.52 — แท็บ activityLogs เพิ่มคอลัมน์เวลาไทยที่อ่านง่าย และเรียงใหม่→เก่า
+    if (name === 'activityLogs') {
+      docs = docs.slice().sort((a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0))
+        .map(d => ({ ...d, เวลาไทย: d.timestamp ? new Date(Number(d.timestamp)).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '' }));
+    }
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs.length ? rowsOf(docs) : [{ หมายเหตุ: 'ไม่มีเอกสาร' }]), sheetName(name, usedNames));
   });
 
