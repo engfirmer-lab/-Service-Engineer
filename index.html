@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.62
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 12:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.63
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 13:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.62</title>
+<title>F1 Service — v9.63</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -741,6 +741,21 @@
 .ex-chbadge{display:inline-block;margin-bottom:6px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(37,99,235,.12);color:var(--accent,#2563eb);}
 @keyframes exmoved{0%{background:rgba(250,204,21,.55)}100%{background:transparent}}
 .ex-qlist li.ex-moved{animation:exmoved 1.8s ease-out;border-radius:8px;}
+.ex-qlist{list-style:none;padding:0;margin:0 0 4px;}
+.ex-qlist li{display:grid;grid-template-columns:auto 1fr auto;gap:4px 6px;align-items:center;}
+.ex-qlist li > .ex-qitem{min-width:0;}
+.ex-qlist li > .ex-mv{margin-left:0;}
+.ex-qlist li > .ex-qchap{grid-column:2 / 4;font-size:13px;padding:4px 8px;max-width:100%;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text);}
+.ex-qlist li.ex-pend{grid-template-columns:1fr auto;}
+.ex-grip{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;font-size:22px;line-height:1;padding:8px 6px;color:var(--text-faint);}
+.ex-grip:active{cursor:grabbing;}
+.ex-chhead .ex-mv{flex-wrap:wrap;justify-content:flex-end;}
+.ex-ghost{position:fixed !important;z-index:2147483000;pointer-events:none;opacity:.92;box-shadow:0 8px 24px rgba(0,0,0,.3);background:var(--panel,#fff);border-radius:10px;margin:0;}
+.ex-ghost .ex-qchap,.ex-ghost .ex-mv{display:none;}
+li.ex-dragging{opacity:.35;}
+li.ex-dropbefore{box-shadow:0 -3px 0 0 var(--accent,#2563eb);}
+li.ex-dropafter{box-shadow:0 3px 0 0 var(--accent,#2563eb);}
+.ex-chhead.ex-dropchap{outline:2px solid var(--accent,#2563eb);}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2386,8 +2401,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.62";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 12:15 น. เวลาไทย";
+const APP_VERSION = "9.63";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 13:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13050,8 +13065,7 @@ function exaQEditorHtml(){
   }
   return `<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">${d.qid?'แก้ไขข้อ':'ข้อใหม่'}</h2><span class="ex-row" style="margin:0;gap:6px">${d.qid?'<button class="btn btn-ghost btn-sm" data-ex="dupq">📑 ทำสำเนาข้อนี้</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="delq">ลบข้อนี้</button>':''}</span></div>
     <div class="ex-form"><label>รูปแบบข้อสอบ<select id="exa-q-type" data-ex="qtype">${Object.keys(EX_TYPES).map(t=>`<option value="${t}" ${t===d.type?'selected':''}>${EX_TYPES[t]}</option>`).join('')}</select></label></div>
-    <label class="ex-block">บท / หัวข้อ (ไม่บังคับ — สุ่มลำดับข้อเฉพาะภายในบทเดียวกัน)<input id="exa-q-chapter" type="text" list="exa-chapters" maxlength="60" value="${exH(d.chapter||'')}" placeholder="เช่น Reference Position — เลือกบทที่มีอยู่หรือพิมพ์ใหม่" autocomplete="off"></label>
-    <datalist id="exa-chapters">${exaChapterNames().map(c=>`<option value="${exH(c)}">`).join('')}</datalist>
+    <label class="ex-block">บท / หัวข้อ (ไม่บังคับ — สุ่มลำดับข้อเฉพาะภายในบทเดียวกัน)${exaChPickerHtml('exa-q-chsel','exa-q-chapter',d.chapter||'')}</label>
     <label class="ex-block">โจทย์<textarea id="exa-q-text" rows="3">${exH(d.text)}</textarea></label>
     <div class="ex-row">${d.imageUrl ? `<img class="ex-qimg ex-thumb" src="${exH(exImg(d.imageUrl,'w400'))}" alt=""><button class="btn btn-ghost btn-sm" data-ex="qimg">🖼 เปลี่ยนรูปประกอบ</button><button class="btn btn-ghost btn-sm" data-ex="qimgdel">✕ เอารูปออก</button>` : '<button class="btn btn-ghost btn-sm" data-ex="qimg">🖼 แนบรูปประกอบโจทย์</button>'}</div>
     <input type="file" id="exa-file" accept="image/*" style="display:none">
@@ -13074,8 +13088,7 @@ function exaBulkHtml(){
 *Maglumi 800
 *Maglumi X3
 AU680</pre>
-    <label class="ex-block">บทของข้อที่วางทั้งหมด (ไม่บังคับ)<input id="exa-bulk-chapter" type="text" list="exa-chapters" maxlength="60" placeholder="เช่น Reference Position" autocomplete="off"></label>
-    <datalist id="exa-chapters">${exaChapterNames().map(c=>`<option value="${exH(c)}">`).join('')}</datalist>
+    <label class="ex-block">บทของข้อที่วางทั้งหมด (ไม่บังคับ)${exaChPickerHtml('exa-bulk-chsel','exa-bulk-chapter',EXA.bulkChapter||'')}</label>
     <textarea id="exa-bulk" rows="12" class="tr-in" style="width:100%;box-sizing:border-box;font-size:15px;" placeholder="วางข้อสอบที่นี่..."></textarea>
     <div class="ex-row"><button class="btn btn-primary" data-ex="bulkparse">แปลงเป็นข้อสอบ</button><span class="ex-hint">ข้อที่แปลงแล้วจะอยู่ในรายการ "ยังไม่บันทึก" ตรวจ/แก้ได้ แล้วกดบันทึกทั้งหมดครั้งเดียว</span></div>`;
 }
@@ -13126,33 +13139,154 @@ function exaGroups(){ // [{name, qs:[...]}] — บทตามลำดับ�
   if(map['']) names.push('');
   return names.map(k=>({ name:k, qs:map[k] }));
 }
-function exaQRow(q, n, g, gi, moved){
-  const first = gi === 0, last = gi === g.qs.length - 1;
-  return `<li class="${EXA.qEdit && EXA.qEdit.qid===q.qid ? 'cur':''} ${moved===q.qid?'ex-moved':''}" data-qid="${exH(q.qid)}"><button class="ex-qitem" data-ex="editq" data-id="${exH(q.qid)}"><span class="ex-qn">${n}</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.imageUrl?' · มีรูป':''}</small></span></button>
-    <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="-1" ${first?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="1" ${last?'disabled':''}>▼</button></span></li>`;
+function exaChPickerHtml(selId, inpId, value){ // เลือกบทจากที่มี หรือ "บทใหม่…" แล้วพิมพ์ชื่อ
+  const names = exaChapterNames(); if(value && names.indexOf(value) < 0) names.push(value);
+  return `<select id="${selId}" data-ex="chsel" data-inp="${inpId}"><option value="">— ทั่วไป (ไม่ระบุบท) —</option>${names.map(c=>`<option value="${exH(c)}" ${c===value?'selected':''}>${exH(c)}</option>`).join('')}<option value="__new">➕ บทใหม่…</option></select>
+    <input id="${inpId}" type="text" maxlength="60" placeholder="พิมพ์ชื่อบทใหม่ เช่น Reference Position" autocomplete="off" style="display:none;margin-top:6px;">`;
+}
+function exaReadChPicker(selId, inpId){
+  const sel = $(selId); if(!sel) return '';
+  if(sel.value === '__new'){ const i = $(inpId); return i ? i.value.replace(/\s+/g,' ').trim().slice(0,60) : ''; }
+  return sel.value;
+}
+function exaQRow(q, n, g, gi, moved, names){
+  const first = gi === 0, last = gi === g.qs.length - 1, cur = q.chapter || '';
+  const opts = `<option value="">ทั่วไป (ไม่ระบุบท)</option>${names.map(c=>`<option value="${exH(c)}" ${c===cur?'selected':''}>${exH(c)}</option>`).join('')}<option value="__new">➕ บทใหม่…</option>`;
+  return `<li class="${EXA.qEdit && EXA.qEdit.qid===q.qid ? 'cur':''} ${moved===q.qid?'ex-moved':''}" data-qid="${exH(q.qid)}"><span class="ex-grip" data-ex="drag" title="ลากเพื่อย้าย" aria-label="ลากเพื่อย้ายข้อ">⠿</span><button class="ex-qitem" data-ex="editq" data-id="${exH(q.qid)}"><span class="ex-qn">${n}</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.imageUrl?' · มีรูป':''}</small></span></button>
+    <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="-1" ${first?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="1" ${last?'disabled':''}>▼</button></span>
+    <select class="ex-qchap" data-ex="qchap" data-id="${exH(q.qid)}" aria-label="บทของข้อนี้">${opts}</select></li>`;
 }
 function exaQListHtml(){
   const groups = exaGroups(), moved = EXA.moved || '';
+  const names = exaChapterNames();
   const hasCh = groups.some(g=>g.name);
   const namedN = groups.filter(g=>g.name).length;
   let n = 0, html = '';
   groups.forEach((g, ci)=>{
     if(hasCh){
       const label = g.name ? exH(g.name) : 'ทั่วไป (ไม่ระบุบท)';
-      const mv = g.name && namedN > 1 ? `<span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="chapmv" data-ch="${exH(g.name)}" data-dir="-1" ${ci===0?'disabled':''} aria-label="ย้ายบทขึ้น">▲</button><button class="btn btn-ghost btn-sm" data-ex="chapmv" data-ch="${exH(g.name)}" data-dir="1" ${ci>=namedN-1?'disabled':''} aria-label="ย้ายบทลง">▼</button></span>` : '';
-      html += `<div class="ex-chhead"><span>📚 ${label} <small>(${g.qs.length} ข้อ)</small></span>${mv}</div>`;
+      const mv = g.name ? `<span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="chren" data-ch="${exH(g.name)}" aria-label="แก้ชื่อบท">✏️ แก้ชื่อ</button>${namedN > 1 ? `<button class="btn btn-ghost btn-sm" data-ex="chapmv" data-ch="${exH(g.name)}" data-dir="-1" ${ci===0?'disabled':''} aria-label="ย้ายบทขึ้น">▲</button><button class="btn btn-ghost btn-sm" data-ex="chapmv" data-ch="${exH(g.name)}" data-dir="1" ${ci>=namedN-1?'disabled':''} aria-label="ย้ายบทลง">▼</button>` : ''}</span>` : '';
+      html += `<div class="ex-chhead" data-chname="${exH(g.name)}"><span>📚 ${label} <small>(${g.qs.length} ข้อ)</small></span>${mv}</div>`;
     }
-    html += '<ol class="ex-qlist">' + g.qs.map((q,gi)=>exaQRow(q, ++n, g, gi, moved)).join('') + '</ol>';
+    html += '<ol class="ex-qlist">' + g.qs.map((q,gi)=>exaQRow(q, ++n, g, gi, moved, names)).join('') + '</ol>';
   });
   const pend = EXA.pending.map((q,i)=>`<li class="ex-pend ${EXA.qEdit && EXA.qEdit.pid===q.pid ? 'cur':''}"><button class="ex-qitem" data-ex="editp" data-p="${exH(q.pid)}"><span class="ex-qn">${EXA.qs.length+i+1}</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.chapter?' · บท '+exH(q.chapter):''} · <b style="color:var(--amber)">ยังไม่บันทึก</b></small></span></button><span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="delp" data-p="${exH(q.pid)}" aria-label="เอาออก">🗑</button></span></li>`).join('');
   if(pend) html += '<ol class="ex-qlist">' + pend + '</ol>';
   return html || '<ol class="ex-qlist"></ol>';
 }
+/* วางข้อ qid เข้าบท chapter ก่อน/หลังข้อ refQid (ไม่ระบุ ref = ท้ายบท) — ใช้กับการลาก และการเลือกบทที่ข้อ */
+function exaPlace(qid, chapter, refQid, after){
+  const groups = exaGroups();
+  let q = null;
+  groups.forEach(g=>{ const i = g.qs.findIndex(x=>x.qid===qid); if(i>=0){ q = g.qs[i]; g.qs.splice(i,1); } });
+  if(!q) return;
+  let tg = groups.find(g=>g.name===chapter);
+  if(!tg){ tg = { name:chapter, qs:[] }; const gi = groups.findIndex(g=>!g.name); if(chapter && gi>=0) groups.splice(gi,0,tg); else groups.push(tg); }
+  let at = tg.qs.length;
+  if(refQid){ const ri = tg.qs.findIndex(x=>x.qid===refQid); if(ri>=0) at = ri + (after ? 1 : 0); }
+  tg.qs.splice(at, 0, q);
+  exaApplyOrder(groups.filter(g=>g.qs.length), qid);
+}
+function exaSetQChapter(qid, value){
+  let ch = value;
+  if(value === '__new'){
+    const nm = (prompt('ชื่อบทใหม่') || '').replace(/\s+/g,' ').trim().slice(0,60);
+    if(!nm){ exaReadQForm(); const y = window.scrollY; exaRenderSet(); window.scrollTo(0,y); return; } // คืนค่าเดิมในช่องเลือก
+    ch = nm;
+  }
+  exaPlace(qid, ch);
+}
+async function exaRenameChapter(name){
+  const nm = prompt('ชื่อบทใหม่ (เว้นว่าง = ย้ายข้อทั้งหมดไปอยู่ "ทั่วไป")', name);
+  if(nm === null) return;
+  const to = nm.replace(/\s+/g,' ').trim().slice(0,60);
+  if(to === name) return;
+  if(to && exaChapterNames().indexOf(to) >= 0 && !confirm('มีบท "'+to+'" อยู่แล้ว — รวมข้อของบท "'+name+'" เข้าไปในบทนั้น?')) return;
+  exaReadQForm();
+  const prevQs = EXA.qs.map(q=>[q, q.chapter]), prevPend = EXA.pending.map(q=>[q, q.chapter]);
+  EXA.qs.forEach(q=>{ if((q.chapter||'')===name) q.chapter = to; });
+  EXA.pending.forEach(q=>{ if((q.chapter||'')===name) q.chapter = to; });
+  if(EXA.qEdit && (EXA.qEdit.chapter||'')===name) EXA.qEdit.chapter = to;
+  const y = window.scrollY; exaRenderSet(); window.scrollTo(0,y);
+  const setId = EXA.set.setId;
+  try{ await examApi('adminRenameChapter', { setId, from:name, to }); }
+  catch(e){ prevQs.forEach(x=>{ x[0].chapter = x[1]; }); prevPend.forEach(x=>{ x[0].chapter = x[1]; }); exaRenderSet(); alert('เปลี่ยนชื่อบทไม่สำเร็จ: '+e.message); return; }
+  exaApplyOrder(exaGroups(), ''); // รวมบท/ย้ายไป "ทั่วไป" แล้วข้อต้องอยู่ติดกัน — บันทึกลำดับตามที่เห็น
+}
+
+/* ---- ลากเพื่อย้ายข้อ (เมาส์/นิ้ว) ข้ามบทได้ เลื่อนหน้าอัตโนมัติเมื่อลากใกล้ขอบ ---- */
+function exaDragStart(e, handle){
+  if(EXA.drag) return;
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  const li = handle.closest('li[data-qid]'); if(!li) return;
+  e.preventDefault();
+  const r = li.getBoundingClientRect();
+  const ghost = li.cloneNode(true); ghost.classList.add('ex-ghost'); ghost.style.width = r.width+'px'; ghost.style.left = r.left+'px'; ghost.style.top = r.top+'px';
+  document.body.appendChild(ghost);
+  li.classList.add('ex-dragging');
+  EXA.drag = { qid:li.dataset.qid, li, ghost, x:e.clientX, y:e.clientY, off:e.clientY - r.top, target:null, raf:0 };
+  try{ handle.setPointerCapture && handle.setPointerCapture(e.pointerId); }catch(er){}
+  document.addEventListener('pointermove', exaDragMove, { passive:false });
+  document.addEventListener('pointerup', exaDragEnd);
+  document.addEventListener('pointercancel', exaDragCancel);
+  exaDragTick();
+}
+function exaDragMove(e){ const d = EXA.drag; if(!d) return; e.preventDefault(); d.x = e.clientX; d.y = e.clientY; }
+function exaDragClear(){ document.querySelectorAll('#exa-root .ex-dropbefore,#exa-root .ex-dropafter,#exa-root .ex-dropchap').forEach(el=>el.classList.remove('ex-dropbefore','ex-dropafter','ex-dropchap')); }
+function exaDragUpdate(){
+  const d = EXA.drag; if(!d) return;
+  d.ghost.style.top = (d.y - d.off) + 'px';
+  exaDragClear();
+  const el = document.elementFromPoint ? document.elementFromPoint(d.x, d.y) : null;
+  let t = null;
+  const row = el && el.closest ? el.closest('#exa-root li[data-qid]') : null;
+  if(row && row.dataset.qid !== d.qid){
+    const r = row.getBoundingClientRect(), after = d.y > r.top + r.height/2;
+    t = { kind:'q', qid:row.dataset.qid, after }; row.classList.add(after ? 'ex-dropafter' : 'ex-dropbefore');
+  } else if(!row){
+    const hd = el && el.closest ? el.closest('#exa-root .ex-chhead') : null;
+    if(hd){ t = { kind:'chap', name:hd.dataset.chname || '' }; hd.classList.add('ex-dropchap'); }
+  }
+  d.target = t;
+}
+function exaDragTick(){
+  const d = EXA.drag; if(!d) return;
+  const edge = 80, vh = window.innerHeight || 600;
+  let v = 0; if(d.y < edge) v = -Math.ceil((edge - d.y) / 6); else if(d.y > vh - edge) v = Math.ceil((d.y - (vh - edge)) / 6);
+  if(v) window.scrollBy(0, Math.max(-28, Math.min(28, v)));
+  exaDragUpdate();
+  d.raf = (window.requestAnimationFrame || (f=>setTimeout(f,16)))(exaDragTick);
+}
+function exaDragStop(){
+  const d = EXA.drag; if(!d) return null;
+  if(d.raf && window.cancelAnimationFrame) window.cancelAnimationFrame(d.raf);
+  document.removeEventListener('pointermove', exaDragMove);
+  document.removeEventListener('pointerup', exaDragEnd);
+  document.removeEventListener('pointercancel', exaDragCancel);
+  exaDragUpdate(); exaDragClear();
+  d.ghost.remove(); d.li.classList.remove('ex-dragging');
+  EXA.drag = null; d.raf = 0;
+  return d;
+}
+function exaDragCancel(){ exaDragStop(); }
+function exaDragEnd(){
+  const d = exaDragStop(); if(!d || !d.target) return;
+  const t = d.target;
+  if(t.kind === 'q'){
+    const q = EXA.qs.find(x=>x.qid===t.qid); if(!q) return;
+    exaPlace(d.qid, q.chapter || '', t.qid, t.after);
+  } else {
+    const g = exaGroups().find(x=>x.name===t.name);
+    const first = g && g.qs.find(x=>x.qid!==d.qid);
+    if(first) exaPlace(d.qid, t.name, first.qid, false); else exaPlace(d.qid, t.name);
+  }
+}
 function exaFlatIds(groups){ return groups.reduce((a,g)=>a.concat(g.qs.map(q=>q.qid)), []); }
 /* ย้ายแล้วแสดงทันทีบนจอ (ไม่โหลดหน้าใหม่) บันทึกลำดับเบื้องหลัง ถ้าไม่สำเร็จค่อยโหลดใหม่ให้ตรงกับระบบ */
 function exaApplyOrder(groups, movedQid){
-  const flat = exaFlatIds(groups), pos = {};
+  const flat = exaFlatIds(groups), pos = {}, chapters = {};
   flat.forEach((id,i)=>{ pos[id] = i + 1; });
+  groups.forEach(g=>g.qs.forEach(q=>{ q.chapter = g.name; chapters[q.qid] = g.name; }));
   EXA.qs.forEach(q=>{ q.order = pos[q.qid]; });
   EXA.qs.sort((a,b)=>a.order-b.order);
   exaReadQForm();
@@ -13162,7 +13296,7 @@ function exaApplyOrder(groups, movedQid){
   window.scrollTo(0, y);
   if(movedQid) setTimeout(()=>{ EXA.moved = ''; const li = document.querySelector('#exa-root li.ex-moved'); if(li) li.classList.remove('ex-moved'); }, 1800);
   const setId = EXA.set.setId;
-  EXA.reorderP = (EXA.reorderP || Promise.resolve()).then(()=>examApi('adminReorder', { setId, qids:flat }))
+  EXA.reorderP = (EXA.reorderP || Promise.resolve()).then(()=>examApi('adminReorder', { setId, qids:flat, chapters }))
     .catch(er=>{ alert('บันทึกลำดับไม่สำเร็จ: '+er.message+'\n(จะโหลดลำดับจากระบบใหม่)'); return exaGo('set', setId); });
 }
 function exaMoveQ(qid, dir){
@@ -13192,7 +13326,7 @@ function exaKeepDraft(){
   if(!d.pid) d.pid = exaNewPid();
   const i = EXA.pending.findIndex(x=>x.pid===d.pid);
   if(i >= 0) EXA.pending[i] = d; else EXA.pending.push(d);
-  const nd = exaNewDraft(d.type); EXA.qEdit = nd; exaRenderSet();
+  const nd = exaNewDraft(d.type); nd.chapter = d.chapter || ''; EXA.qEdit = nd; exaRenderSet();
   showToast('✓ เก็บไว้แล้ว ('+EXA.pending.length+' ข้อรอบันทึก) — พิมพ์ข้อถัดไปได้เลย');
 }
 async function exaSaveAll(){
@@ -13224,7 +13358,7 @@ function exaMergeSaved(qs){
 function exaReadQForm(){ // คัดลอกค่าในฟอร์มกลับเข้า EXA.qEdit ก่อนทำอะไรที่ต้อง render ใหม่
   const d = EXA.qEdit; if(!d || !$('exa-q-text')) return;
   d.text = $('exa-q-text').value;
-  { const ce = $('exa-q-chapter'); if(ce) d.chapter = ce.value; }
+  { const cs = $('exa-q-chsel'); if(cs) d.chapter = exaReadChPicker('exa-q-chsel','exa-q-chapter'); }
   if(d.type==='mcq' || d.type==='multi'){
     document.querySelectorAll('.exa-ch-text').forEach(el=>{ d.choices[Number(el.dataset.i)].text = el.value; });
     const l = $('exa-lock'); if(l) d.lockPos = l.checked;
@@ -13743,6 +13877,7 @@ function exOnEvent(e){
   const c = EX.cur;
   /* ----- ผู้สอบ ----- */
   if(ev === 'pointerdown' && act==='hsdraw'){ exaHsStart(e, t); return; }
+  if(ev === 'pointerdown' && act==='drag'){ exaDragStart(e, t); return; }
   if(ev === 'click'){
     if(act==='reload'){ examLoadHome(true); return; }
     if(act==='start'){ examStart(id); return; }
@@ -13809,6 +13944,7 @@ function exOnEvent(e){
       case 'newq': exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); exaRenderSet(); return;
       case 'editq': { const q = EXA.qs.find(x=>x.qid===id); if(q){ EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); exaRenderSet(); } return; }
       case 'qmv': exaMoveQ(id, Number(t.getAttribute('data-dir'))); return;
+      case 'chren': exaRenameChapter(t.getAttribute('data-ch')); return;
       case 'chapmv': exaMoveChapter(t.getAttribute('data-ch'), Number(t.getAttribute('data-dir'))); return;
       case 'delq': if(EXA.qEdit && EXA.qEdit.qid && confirm('ลบข้อนี้ออกจากร่าง? (เวอร์ชันที่เผยแพร่แล้วไม่ได้รับผลกระทบ)')){
         { const qid = EXA.qEdit.qid; showLoadingOverlay('กำลังลบ...'); examApi('adminDeleteQuestion', { setId:EXA.set.setId, qid }).then(()=>{ hideLoadingOverlay(); EXA.qs = EXA.qs.filter(x=>x.qid!==qid); if(EXA.set) EXA.set.qCount = EXA.qs.length; EXA.qEdit = null; exaRenderSet(); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } } return;
@@ -13818,7 +13954,7 @@ function exOnEvent(e){
       case 'bulk': exaReadQForm(); EXA.bulk = true; exaRefreshEditor(); return;
       case 'bulkclose': EXA.bulk = false; exaRefreshEditor(); return;
       case 'bulkparse': { const r = exaParseBulk($('exa-bulk').value); if(!r.drafts.length && !r.skipped.length){ alert('ยังไม่ได้วางข้อสอบ'); return; }
-        { const bc = ($('exa-bulk-chapter')||{value:''}).value.replace(/\s+/g,' ').trim(); r.drafts.forEach(d=>{ d.chapter = bc; EXA.pending.push(d); }); } EXA.bulk = false; if(r.drafts.length) EXA.qEdit = null; exaRenderSet();
+        { const bc = exaReadChPicker('exa-bulk-chsel','exa-bulk-chapter'); r.drafts.forEach(d=>{ d.chapter = bc; EXA.pending.push(d); }); } EXA.bulk = false; if(r.drafts.length) EXA.qEdit = null; exaRenderSet();
         if(r.skipped.length) alert('เพิ่ม '+r.drafts.length+' ข้อ · ข้าม '+r.skipped.length+' ข้อ:\n'+r.skipped.slice(0,12).join('\n')); else showToast('✓ แปลงได้ '+r.drafts.length+' ข้อ — ตรวจแล้วกด "บันทึกทั้งหมด"'); return; }
       case 'editp': { exaReadQForm(); const q = EXA.pending.find(x=>x.pid===t.getAttribute('data-p')); if(q){ EXA.bulk = false; EXA.qEdit = q; exaRenderSet(); } return; }
       case 'delp': { const pid = t.getAttribute('data-p'); EXA.pending = EXA.pending.filter(x=>x.pid!==pid); if(EXA.qEdit && EXA.qEdit.pid===pid) EXA.qEdit = null; exaRenderSet(); return; }
@@ -13856,9 +13992,11 @@ function exOnEvent(e){
     }
   }
   if(ev === 'change'){
-    if(act==='qtype'){ exaReadQForm(); const old = EXA.qEdit; const nd = exaNewDraft(t.value); nd.qid = old.qid; nd.pid = old.pid; nd.text = old.text; nd.imageUrl = old.imageUrl; EXA.qEdit = nd; exaRefreshEditor(); return; }
+    if(act==='qtype'){ exaReadQForm(); const old = EXA.qEdit; const nd = exaNewDraft(t.value); nd.qid = old.qid; nd.pid = old.pid; nd.text = old.text; nd.imageUrl = old.imageUrl; nd.chapter = old.chapter || ''; EXA.qEdit = nd; exaRefreshEditor(); return; }
     if(act==='sigfile' || act==='sigopt'){ exaSigPick(); return; }
     if(act==='copysrc'){ exaCopyPick(t.value); return; }
+    if(act==='qchap'){ exaSetQChapter(id, t.value); return; }
+    if(act==='chsel'){ const inp = $(t.getAttribute('data-inp')); if(inp){ inp.style.display = t.value==='__new' ? '' : 'none'; if(t.value==='__new') inp.focus(); } return; }
     if(act==='copysel'){ const u = EXA.copyUI; if(u){ if(t.checked) u.sel.add(t.value); else u.sel.delete(t.value); const nEl = $('exa-copy-n'); if(nEl) nEl.textContent = u.sel.size; const go = document.querySelector('[data-ex="copygo"]'); if(go) go.textContent = '➕ เพิ่ม '+u.sel.size+' ข้อที่เลือกเข้าชุดนี้'; } return; }
     if(act==='scat'){ const w = $('exa-s-model-wrap'); if(w) w.innerHTML = exaModelSelect(t.value, ''); return; }
     if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ if(!EXA.round.roundId) $('exa-r-sup').value = exaDefaultSigner(s.setId); $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; $('exa-r-grace').value = s.graceMin; } return; }
