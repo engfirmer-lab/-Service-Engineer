@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.67
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 15:49 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.70
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 16:34 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.67</title>
+<title>F1 Service — v9.70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -787,6 +787,21 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-sk-soon{color:var(--amber,#d97706);font-weight:700}
 .ex-sk-expired{color:#dc2626;font-weight:700}
 .ex-sk-none,.ex-sk-tried{opacity:.5}
+/* แบ่งหน้า: ซ้าย = รายการข้อแบ่งตามบท · ขวา = ข้อที่กำลังแก้ */
+.ex-split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px;align-items:start;}
+.ex-split-l{min-width:0;}
+.ex-split-r{min-width:0;position:sticky;top:8px;max-height:calc(100vh - 16px);overflow-y:auto;}
+.ex-pane{border:1px dashed var(--border);border-radius:12px;padding:12px;background:var(--panel);}
+.ex-pane.open{border:1px solid var(--accent,#2563eb);box-shadow:0 2px 14px rgba(37,99,235,.18);}
+.ex-pane-empty{text-align:center;color:var(--text-faint);padding:40px 12px;line-height:1.7;}
+.ex-forms .ex-split-r .ex-qeditor{border-top:none;margin-top:0;padding-top:0;}
+@media (max-width:899px){ .ex-split{grid-template-columns:1fr;} .ex-split-r{position:static;max-height:none;} }
+/* กรอบแดงบอกเหตุผลที่บันทึกไม่ได้ */
+.ex-qerr{border:2px solid #dc2626;background:rgba(220,38,38,.09);color:#b91c1c;border-radius:10px;padding:10px 12px;margin:10px 0;line-height:1.55;animation:exshake .35s;}
+.ex-qerr b{display:block;margin-bottom:2px;}
+.ex-pane.err{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,.18);}
+@keyframes exshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-color-scheme:dark){.ex-qerr{color:#fca5a5;}}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2432,8 +2447,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.67";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 15:49 น. เวลาไทย";
+const APP_VERSION = "9.70";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 16:34 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13056,9 +13071,9 @@ function exaRenderSet(){
     html += `<div class="panel-block ex-forms"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button><button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
       ${exaCopyPanelHtml()}
       ${EXA.pending.length ? `<div class="ex-note ex-pendbar"><b>มี ${EXA.pending.length} ข้อที่ยังไม่บันทึกลงระบบ</b> (อยู่ในเครื่องนี้เท่านั้น ถ้ารีเฟรชหน้าจะหาย)<div class="ex-act"><button class="btn btn-primary" data-ex="saveall">💾 บันทึกทั้งหมด ${EXA.pending.length} ข้อ ในครั้งเดียว</button></div></div>` : ''}
-      ${exaQListHtml()}
-      ${EXA.qs.length || EXA.pending.length ? '<div class="ex-hint">ผู้สอบจะเห็นลำดับข้อสุ่มทุกครั้ง (ถ้าแบ่งเป็นบท: เรียงตามบทที่เห็นนี้ แล้วสุ่มเฉพาะภายในบท) ลำดับนี้ใช้เฉพาะตอนแก้ไข</div>' : '<div class="ex-hint">ยังไม่มีข้อสอบ กด "+ เพิ่มข้อ"</div>'}</div>
-      ${exaAddBarHtml()}</div>
+      <div class="ex-split"><div class="ex-split-l">${exaQListHtml()}
+      ${EXA.qs.length || EXA.pending.length ? '<div class="ex-hint">ผู้สอบจะเห็นลำดับข้อสุ่มทุกครั้ง (ถ้าแบ่งเป็นบท: เรียงตามบทที่เห็นนี้ แล้วสุ่มเฉพาะภายในบท) ลำดับนี้ใช้เฉพาะตอนแก้ไข</div>' : '<div class="ex-hint">ยังไม่มีข้อสอบ กด "+ เพิ่มข้อ"</div>'}
+      ${exaAddBarHtml()}</div><div class="ex-split-r">${exaEditorPaneHtml()}</div></div></div>
     <div class="panel-block"><h2>เผยแพร่เป็นเวอร์ชันใหม่ ${EXA.set.latestVersion ? '(v'+(EXA.set.latestVersion+1)+')' : '(v1)'}</h2>
       <div class="ex-hint">เวอร์ชันที่เผยแพร่แล้วแก้ไขไม่ได้ ผลสอบและ Cer ผูกกับเวอร์ชันที่สอบจริง การแก้ไขข้อสอบต่อจากนี้เป็น "ร่าง" จนกว่าจะเผยแพร่</div>
       ${EXA.set.latestVersion ? `<label class="ex-opt"><input type="radio" name="exa-kind" value="minor" checked><span><b>แก้เล็กน้อย</b> เช่น พิมพ์ผิด ผู้ที่ผ่านแล้วยังใช้ผลเดิม</span></label>
@@ -13071,7 +13086,7 @@ function exaRenderSet(){
   }
   const y0 = window.scrollY;
   root.innerHTML = html;
-  if(EXA.scrollEdit){ EXA.scrollEdit = false; const ed = $('exa-qeditor'); if(ed && ed.scrollIntoView){ try{ ed.scrollIntoView({ block:'start', behavior:'smooth' }); }catch(e){ ed.scrollIntoView(); } } }
+  if(EXA.scrollEdit){ EXA.scrollEdit = false; const ed = $('exa-qeditor'); if(ed && ed.scrollIntoView && (window.innerWidth||1200) < 900){ try{ ed.scrollIntoView({ block:'start', behavior:'smooth' }); }catch(e){ ed.scrollIntoView(); } } }
   else window.scrollTo(0, y0);
   exaDraftSave();
 }
@@ -13106,7 +13121,7 @@ async function exaPublish(){
 
 /* ---------- ตัวแก้ไขข้อสอบรายข้อ ---------- */
 function exaNewDraft(type){
-  const d = { qid:'', type:type||'mcq', text:'', imageUrl:'', lockPos:false, choices:[], correct:[], tfAnswer:'T', pairs:[{l:'',r:''},{l:'',r:''}], extras:[], items:[{text:''},{text:''},{text:''}], accepted:'', regions:[], model:'', chapter:'' };
+  const d = { qid:'', type:type||'mcq', text:'', imageUrl:'', lockPos:false, choices:[], correct:[], tfAnswer:'', pairs:[{l:'',r:''},{l:'',r:''}], extras:[], items:[{text:''},{text:''},{text:''}], accepted:'', regions:[], model:'', chapter:'' };
   if(d.type==='mcq' || d.type==='multi') d.choices = [{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''},{id:'',text:'',img:''}];
   return d;
 }
@@ -13164,9 +13179,9 @@ function exaQEditorHtml(){
       : '<div class="ex-note ex-warn">ข้อนี้ต้องแนบรูปประกอบโจทย์ก่อน (กดปุ่ม "แนบรูปประกอบโจทย์" ด้านบน) แล้วจึงวาดกรอบคำตอบได้</div>';
   } else if(d.type==='essay'){
     body = `<div class="ex-hint">ผู้สอบพิมพ์คำตอบยาว (สูงสุด 4,000 ตัวอักษร) · <b>Sup ตรวจและให้คะแนนทุกข้อเอง</b> (ข้อละ 0–1 คะแนน) · แนวคำตอบด้านล่างเห็นเฉพาะ Sup ไม่แสดงให้ผู้สอบ</div>
-      <textarea id="exa-model" rows="4" placeholder="แนวคำตอบ / เกณฑ์ให้คะแนน (ไม่บังคับ)">${exH(d.model)}</textarea>`;
+      <textarea id="exa-model" rows="4" placeholder="เฉลย / แนวคำตอบ / เกณฑ์ให้คะแนน (บังคับ — ไว้ให้ Sup ตรวจ)">${exH(d.model)}</textarea>`;
   }
-  return `<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">${d.qid?'แก้ไขข้อ':'ข้อใหม่'}</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="qclose">✕ ปิด</button>${d.qid?'<button class="btn btn-ghost btn-sm" data-ex="dupq">📑 ทำสำเนาข้อนี้</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="delq">ลบข้อนี้</button>':''}</span></div>
+  return `<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">${d.qid?'แก้ไขข้อ':'ข้อใหม่'}</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="qclose">✕ ปิด</button><button class="btn btn-ghost btn-sm" data-ex="dupq">📑 ทำสำเนาข้อนี้</button>${d.qid?'<button class="btn btn-ghost btn-sm" style="color:var(--red)" data-ex="delq">ลบข้อนี้</button>':''}</span></div>${exaErrHtml()}
     <div class="ex-form"><label>รูปแบบข้อสอบ<select id="exa-q-type" data-ex="qtype">${Object.keys(EX_TYPES).map(t=>`<option value="${t}" ${t===d.type?'selected':''}>${EX_TYPES[t]}</option>`).join('')}</select></label></div>
     <label class="ex-block">บท / หัวข้อ (ไม่บังคับ — สุ่มลำดับข้อเฉพาะภายในบทเดียวกัน)${exaChPickerHtml('exa-q-chsel','exa-q-chapter',d.chapter||'')}</label>
     <label class="ex-block">โจทย์<textarea id="exa-q-text" rows="3">${exH(d.text)}</textarea></label>
@@ -13252,6 +13267,10 @@ function exaReadChPicker(selId, inpId){
   if(sel.value === '__new'){ const i = $(inpId); return i ? i.value.replace(/\s+/g,' ').trim().slice(0,60) : ''; }
   return sel.value;
 }
+function exaEditorPaneHtml(){
+  const open = !!(EXA.bulk || EXA.qEdit);
+  return `<div class="ex-qeditor ex-pane ${open?'open':''}" id="exa-qeditor">${open ? exaQEditorHtml() : '<div class="ex-pane-empty">✏️<br><b>เลือกข้อทางซ้ายเพื่อแก้ไข</b><br>หรือกด “+ เพิ่มข้อ” เพื่อสร้างข้อใหม่<br><small>ทุกข้อต้องใส่เฉลยก่อนบันทึก</small></div>'}</div>`;
+}
 function exaAddBarHtml(){
   return `<div class="ex-addbar"><button class="btn btn-primary" data-ex="newq">+ เพิ่มข้อ</button><button class="btn btn-ghost" data-ex="bulk">📋 วางหลายข้อ</button><button class="btn btn-ghost" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button></div>`;
 }
@@ -13264,8 +13283,7 @@ function exaQRow(q, n, g, gi, moved, names){
     : `<button class="ex-qitem" data-ex="editq" data-id="${exH(q.qid)}"><span class="ex-qn">${n}</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.imageUrl?' · มีรูป':''}</small></span></button>`;
   return `<li class="${open ? 'ex-qcard open':'ex-qcard'} ${moved===q.qid?'ex-moved':''}" data-qid="${exH(q.qid)}"><span class="ex-grip" data-ex="drag" title="ลากเพื่อย้าย" aria-label="ลากเพื่อย้ายข้อ">⠿</span>${main}
     <span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="-1" ${first?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="qmv" data-id="${exH(q.qid)}" data-dir="1" ${last?'disabled':''}>▼</button></span>
-    <select class="ex-qchap" data-ex="qchap" data-id="${exH(q.qid)}" aria-label="บทของข้อนี้">${opts}</select>
-    ${open ? `<div class="ex-qeditor" id="exa-qeditor">${exaQEditorHtml()}</div>` : ''}</li>`;
+    <select class="ex-qchap" data-ex="qchap" data-id="${exH(q.qid)}" aria-label="บทของข้อนี้">${opts}</select></li>`;
 }
 function exaQListHtml(){
   const groups = exaGroups(), moved = EXA.moved || '';
@@ -13286,11 +13304,10 @@ function exaQListHtml(){
   const pend = EXA.pending.map(q=>{
     const open = !!(d && !EXA.bulk && d.pid === q.pid && !d.qid);
     if(open) editorPlaced = true;
-    return `<li class="ex-pend ex-qcard ${open?'open':''}"><button class="ex-qitem" data-ex="editp" data-p="${exH(q.pid)}"><span class="ex-qn">+</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.chapter?' · บท '+exH(q.chapter):''} · <b style="color:var(--amber)">ยังไม่บันทึก</b></small></span></button><span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="delp" data-p="${exH(q.pid)}" aria-label="เอาออก">🗑</button></span>${open ? `<div class="ex-qeditor" id="exa-qeditor">${exaQEditorHtml()}</div>` : ''}</li>`;
+    return `<li class="ex-pend ex-qcard ${open?'open':''}"><button class="ex-qitem" data-ex="editp" data-p="${exH(q.pid)}"><span class="ex-qn">+</span><span class="ex-qt">${exH(q.text).slice(0,70)}<small>${exH(EX_TYPES[q.type]||q.type)}${q.chapter?' · บท '+exH(q.chapter):''} · <b style="color:var(--amber)">ยังไม่บันทึก</b></small></span></button><span class="ex-mv"><button class="btn btn-ghost btn-sm" data-ex="duppend" data-p="${exH(q.pid)}" aria-label="ทำสำเนา" title="ทำสำเนา">📑</button><button class="btn btn-ghost btn-sm" data-ex="delp" data-p="${exH(q.pid)}" aria-label="เอาออก">🗑</button></span></li>`;
   }).join('');
   if(pend) html += '<ol class="ex-qlist">' + pend + '</ol>';
   // ข้อใหม่ / โหมดวางหลายข้อ: การ์ดแก้ไขอยู่ท้ายรายการ
-  if(!editorPlaced && (EXA.bulk || d)) html += `<div class="ex-qcard open ex-qnew"><div class="ex-qeditor" id="exa-qeditor">${exaQEditorHtml()}</div></div>`;
   return html || '<ol class="ex-qlist"></ol>';
 }
 /* วางข้อ qid เข้าบท chapter ก่อน/หลังข้อ refQid (ไม่ระบุ ref = ท้ายบท) — ใช้กับการลาก และการเลือกบทที่ข้อ */
@@ -13435,13 +13452,51 @@ function exaMoveChapter(name, dir){
   exaApplyOrder(named.concat(rest), '');
 }
 function exaNewPid(){ return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function exaCheckDraft(d){ // ตรวจเบื้องต้นฝั่งเครื่อง (ตัวเต็มตรวจที่เซิร์ฟเวอร์)
+/* กรอบแดงในหน้าแก้ไข บอกเหตุผลที่บันทึกไม่ได้ (แทน alert) */
+function exaErrHtml(){ return EXA.qErr ? `<div class="ex-qerr" id="exa-q-err" role="alert"><b>⚠ บันทึกไม่ได้</b><div>${exH(EXA.qErr)}</div></div>` : ''; }
+function exaClearErr(){ if(!EXA.qErr) return; EXA.qErr = ''; const b = $('exa-q-err'); if(b) b.remove(); const p = $('exa-qeditor'); if(p) p.classList.remove('err'); }
+function exaShowErr(msg){
+  EXA.qErr = msg;
+  const p = $('exa-qeditor');
+  if(!p){ alert(msg); return; }
+  const old = $('exa-q-err'); if(old) old.remove();
+  p.classList.add('err');
+  const box = document.createElement('div'); box.className = 'ex-qerr'; box.id = 'exa-q-err'; box.setAttribute('role','alert');
+  box.innerHTML = '<b>⚠ บันทึกไม่ได้</b><div></div>'; box.lastChild.textContent = msg;
+  const first = p.firstElementChild; if(first && first.nextSibling) p.insertBefore(box, first.nextSibling); else p.insertBefore(box, p.firstChild);
+  if(box.scrollIntoView) try{ box.scrollIntoView({ block:'nearest', behavior:'smooth' }); }catch(e){}
+  if(!EXA.errBound){ EXA.errBound = true; document.addEventListener('input', ev=>{ if(EXA.qErr && ev.target && ev.target.closest && ev.target.closest('#exa-qeditor')) exaClearErr(); }); document.addEventListener('change', ev=>{ if(EXA.qErr && ev.target && ev.target.closest && ev.target.closest('#exa-qeditor')) exaClearErr(); }); }
+}
+function exaCheckDraft(d){ // ตรวจเบื้องต้นฝั่งเครื่อง (ตัวเต็มตรวจที่เซิร์ฟเวอร์) — ทุกข้อต้องมีเฉลย
   if(!String(d.text||'').trim()) return 'กรุณากรอกโจทย์';
+  const t = d.type, filled = x=>!!String(x||'').trim();
+  if(t==='mcq' || t==='multi'){
+    const cs = d.choices.map((c,i)=>({ c, id:c.id||('#'+i) })).filter(x=>filled(x.c.text) || x.c.img);
+    if(cs.length < 2) return 'ต้องมีช้อยส์อย่างน้อย 2 ข้อ';
+    const ok = cs.filter(x=>d.correct.indexOf(x.id)>=0);
+    if(!ok.length) return 'ยังไม่ได้เลือกเฉลย — ติ๊กหน้าช้อยส์ที่ถูกอย่างน้อย 1 ข้อ';
+    if(t==='mcq' && ok.length > 1) return 'ข้อปรนัยเลือกเฉลยได้ข้อเดียว';
+  } else if(t==='tf'){
+    if(d.tfAnswer !== 'T' && d.tfAnswer !== 'F') return 'ยังไม่ได้เลือกเฉลย — เลือก “ถูก” หรือ “ผิด”';
+  } else if(t==='short'){
+    if(!String(d.accepted||'').split('\n').some(filled)) return 'ยังไม่ได้ใส่คำตอบที่ยอมรับ (เฉลย) อย่างน้อย 1 แบบ';
+  } else if(t==='match'){
+    const half = d.pairs.some(p=>filled(p.l) !== filled(p.r));
+    if(half) return 'มีคู่ที่กรอกไม่ครบ — ทุกคู่ต้องมีทั้งซ้ายและขวา (ขวา = เฉลย)';
+    if(d.pairs.filter(p=>filled(p.l) && filled(p.r)).length < 2) return 'การจับคู่ต้องมีอย่างน้อย 2 คู่ พร้อมเฉลยฝั่งขวา';
+  } else if(t==='order'){
+    if(d.items.filter(x=>filled(x.text)).length < 2) return 'ต้องกรอกขั้นตอนอย่างน้อย 2 ขั้น เรียงตามลำดับที่ถูก (เฉลย)';
+  } else if(t==='hotspot'){
+    if(!d.imageUrl) return 'ข้อคลิกตำแหน่งต้องแนบรูปก่อน';
+    if(!d.regions.length) return 'ยังไม่ได้วาดกรอบตำแหน่งที่ถูก (เฉลย) บนรูป';
+  } else if(t==='essay'){
+    if(!filled(d.model)) return 'ยังไม่ได้ใส่เฉลย/แนวคำตอบสำหรับ Sup ตรวจ';
+  }
   return '';
 }
 function exaKeepDraft(){
   exaReadQForm(); const d = EXA.qEdit; if(!d || d.qid) return;
-  const er = exaCheckDraft(d); if(er){ alert(er); return; }
+  const er = exaCheckDraft(d); if(er){ exaShowErr(er); return; }
   if(!d.pid) d.pid = exaNewPid();
   const i = EXA.pending.findIndex(x=>x.pid===d.pid);
   if(i >= 0) EXA.pending[i] = d; else EXA.pending.push(d);
@@ -13456,6 +13511,7 @@ async function exaSaveAll(){
     if(String(cur.text||'').trim()){ if(cur.pid){ const i = list.findIndex(x=>x.pid===cur.pid); if(i>=0) list[i] = cur; else list.push(cur); } else list.push(cur); }
   }
   if(!list.length){ alert('ยังไม่มีข้อที่จะบันทึก'); return; }
+  for(let i=0;i<list.length;i++){ const er = exaCheckDraft(list[i]); if(er){ const msg = 'ข้อ "'+String(list[i].text||'').slice(0,40)+'" — '+er; if(list[i].pid && list[i]!==cur){ EXA.bulk = false; EXA.qEdit = list[i]; EXA.qErr = msg; EXA.scrollEdit = true; exaRenderSet(); } else exaShowErr(msg); return; } }
   const savedEdit = cur;
   const prev = EXA.qEdit; EXA.qEdit = null;
   const payload = [];
@@ -13467,7 +13523,7 @@ async function exaSaveAll(){
     exaMergeSaved(r.questions);
     hideLoadingOverlay(); exaRenderSet();
     showToast('✓ บันทึก '+r.questions.length+' ข้อแล้ว (ร่าง — ต้องกดเผยแพร่ผู้สอบจึงจะเห็น)');
-  }catch(e){ hideLoadingOverlay(); EXA.qEdit = savedEdit; alert('บันทึกไม่สำเร็จ: '+e.message+'\n(ข้อที่ยังไม่บันทึกยังอยู่ในหน้านี้ แก้แล้วกดบันทึกใหม่ได้)'); }
+  }catch(e){ hideLoadingOverlay(); EXA.qEdit = savedEdit; if($('exa-qeditor')) exaShowErr('บันทึกไม่สำเร็จ: '+e.message+' (ข้อที่ยังไม่บันทึกยังอยู่ในหน้านี้ แก้แล้วกดบันทึกใหม่ได้)'); else alert('บันทึกไม่สำเร็จ: '+e.message); }
 }
 function exaMergeSaved(qs){
   (qs||[]).forEach(q=>{ const i = EXA.qs.findIndex(x=>x.qid===q.qid); if(i>=0) EXA.qs[i] = q; else EXA.qs.push(q); });
@@ -13524,12 +13580,13 @@ function exaBuildQuestion(){ // draft → รูปแบบที่ส่ง�
 }
 async function exaSaveQ(){
   exaReadQForm();
+  { const er = exaCheckDraft(EXA.qEdit); if(er){ exaShowErr(er); return; } }
   showLoadingOverlay('กำลังบันทึกข้อสอบ...');
   try{
     const r = await examApi('adminSaveQuestion', { setId:EXA.set.setId, question:exaBuildQuestion() });
     hideLoadingOverlay(); showToast('✓ บันทึกข้อสอบแล้ว (ร่าง — ต้องกดเผยแพร่ผู้สอบจึงจะเห็น)');
     if(r && r.question){ exaMergeSaved([r.question]); EXA.qEdit = null; exaRenderSet(); } else await exaGo('set', EXA.set.setId);
-  }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+  }catch(e){ hideLoadingOverlay(); exaShowErr('บันทึกไม่สำเร็จ: '+e.message); }
 }
 /* ---------- ขอสิทธิ์ Google Drive ด้วยปุ่มที่ผู้ใช้กดเอง (เบราว์เซอร์บล็อกป๊อปอัปถ้าไม่ได้มาจากการกด เช่น หลังเลือกไฟล์) ---------- */
 function exDriveReady(){ try{ return !!((driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000) || (!driveAccessToken && driveTokenRestore())); }catch(e){ return false; } }
@@ -13844,6 +13901,7 @@ function exaCopyGo(){
   showToast('✓ เพิ่ม '+chosen.length+' ข้อเข้ารายการ "ยังไม่บันทึก" — ตรวจ/แก้แล้วกด "บันทึกทั้งหมด"');
 }
 function exaCloseEditor(){
+  EXA.qErr = '';
   exaReadQForm(); const d = EXA.qEdit;
   if(EXA.bulk){ EXA.bulk = false; exaRenderSet(); return; }
   if(d){
@@ -13857,8 +13915,12 @@ function exaCloseEditor(){
 function exaBuildQuestionOf(d){ const prev = EXA.qEdit; EXA.qEdit = d; try{ return exaBuildQuestion(); } finally { EXA.qEdit = prev; } }
 function exaDupQuestion(){
   exaReadQForm(); const d = EXA.qEdit; if(!d) return;
+  if(!d.qid && String(d.text||'').trim()){ // ข้อร่างที่ยังไม่บันทึก: เก็บต้นฉบับเข้ารายการรอบันทึกก่อน ไม่ให้หายตอนเปิดสำเนา
+    if(!d.pid) d.pid = exaNewPid();
+    const i = EXA.pending.findIndex(x=>x.pid===d.pid); if(i >= 0) EXA.pending[i] = d; else EXA.pending.push(d);
+  }
   const nd = JSON.parse(JSON.stringify(d)); nd.qid = ''; nd.pid = exaNewPid();
-  EXA.qEdit = nd; exaRenderSet();
+  EXA.scrollEdit = true; EXA.qEdit = nd; exaRenderSet();
   showToast('✓ ทำสำเนาแล้ว — แก้โจทย์/คำตอบแล้วกด "เก็บข้อนี้" หรือ "บันทึก"');
 }
 
@@ -14065,6 +14127,7 @@ function exOnEvent(e){
       case 'copyall': { const u = EXA.copyUI; if(u && u.qs){ if(u.sel.size === u.qs.length) u.sel.clear(); else u.qs.forEach(q=>u.sel.add(q.qid)); exaReadQForm(); exaRenderSet(); } return; }
       case 'copygo': exaCopyGo(); return;
       case 'dupq': exaDupQuestion(); return;
+      case 'duppend': { exaReadQForm(); const src = EXA.pending.find(x=>x.pid===t.getAttribute('data-p')); if(!src) return; const nd = JSON.parse(JSON.stringify(src)); nd.qid = ''; nd.pid = exaNewPid(); EXA.bulk = false; EXA.qEdit = nd; EXA.scrollEdit = true; exaRenderSet(); showToast('✓ ทำสำเนาแล้ว — แก้แล้วกด "เก็บข้อนี้"'); return; }
       case 'draftrestore': exaDraftRestore(); return;
       case 'draftdiscard': exaDraftDiscard(); return;
       case 'practice': exaPractice(id, t.getAttribute('data-src')); return;
@@ -14076,8 +14139,8 @@ function exOnEvent(e){
       case 'sigsave': exaSigSave(); return;
       case 'certsample': exaCertSample(); return;
       case 'sigdel': exaSigDel(); return;
-      case 'newq': { exaReadQForm(); const ch = EXA.qEdit ? (EXA.qEdit.chapter||'') : ''; EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); EXA.qEdit.chapter = ch || (EXA.qs.length ? (EXA.qs[EXA.qs.length-1].chapter||'') : ''); EXA.scrollEdit = true; exaRenderSet(); return; }
-      case 'editq': { const q = EXA.qs.find(x=>x.qid===id); if(q){ exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); EXA.scrollEdit = true; exaRenderSet(); } return; }
+      case 'newq': { EXA.qErr = ''; exaReadQForm(); const ch = EXA.qEdit ? (EXA.qEdit.chapter||'') : ''; EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); EXA.qEdit.chapter = ch || (EXA.qs.length ? (EXA.qs[EXA.qs.length-1].chapter||'') : ''); EXA.scrollEdit = true; exaRenderSet(); return; }
+      case 'editq': { EXA.qErr = ''; const q = EXA.qs.find(x=>x.qid===id); if(q){ exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); EXA.scrollEdit = true; exaRenderSet(); } return; }
       case 'qclose': exaCloseEditor(); return;
       case 'itemstats': EXA.itemVer = 0; EXA.itemBack = t.getAttribute('data-back') || ''; exaGo('itemstats', id); return;
       case 'itemback': if(EXA.itemBack) exaGo('summary', EXA.itemBack); else exaGo('set', EXA.items.set.setId); return;
@@ -14094,7 +14157,7 @@ function exOnEvent(e){
       case 'bulkparse': { const r = exaParseBulk($('exa-bulk').value); if(!r.drafts.length && !r.skipped.length){ alert('ยังไม่ได้วางข้อสอบ'); return; }
         { const bc = exaReadChPicker('exa-bulk-chsel','exa-bulk-chapter'); r.drafts.forEach(d=>{ d.chapter = bc; EXA.pending.push(d); }); } EXA.bulk = false; if(r.drafts.length) EXA.qEdit = null; exaRenderSet();
         if(r.skipped.length) alert('เพิ่ม '+r.drafts.length+' ข้อ · ข้าม '+r.skipped.length+' ข้อ:\n'+r.skipped.slice(0,12).join('\n')); else showToast('✓ แปลงได้ '+r.drafts.length+' ข้อ — ตรวจแล้วกด "บันทึกทั้งหมด"'); return; }
-      case 'editp': { exaReadQForm(); const q = EXA.pending.find(x=>x.pid===t.getAttribute('data-p')); if(q){ EXA.bulk = false; EXA.qEdit = q; EXA.scrollEdit = true; exaRenderSet(); } return; }
+      case 'editp': { EXA.qErr = ''; exaReadQForm(); const q = EXA.pending.find(x=>x.pid===t.getAttribute('data-p')); if(q){ EXA.bulk = false; EXA.qEdit = q; EXA.scrollEdit = true; exaRenderSet(); } return; }
       case 'delp': { const pid = t.getAttribute('data-p'); EXA.pending = EXA.pending.filter(x=>x.pid!==pid); if(EXA.qEdit && EXA.qEdit.pid===pid) EXA.qEdit = null; exaRenderSet(); return; }
       case 'chadd': exaReadQForm(); EXA.qEdit.choices.push({id:'',text:'',img:''}); exaRefreshEditor(); return;
       case 'chdel': { exaReadQForm(); const d = EXA.qEdit; if(d.choices.length<=2){ showToast('ต้องมีช้อยส์อย่างน้อย 2 ข้อ'); return; } const key = d.choices[i].id || ('#'+i); d.choices.splice(i,1); d.correct = d.correct.filter(k=>k!==key).map(k=>k); exaRefreshEditor(); return; }
