@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.47
-  อัปเดตล่าสุด   : 12 ตุลาคม 2569 19:46 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.52
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 00:21 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.47</title>
+<title>F1 Service — v9.52</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -296,6 +296,11 @@
   @media(min-width:460px){ .profile-grid .field-wrap.half{grid-column:span 1;} }
   .profile-readonly-note{font-size:11px;color:var(--text-faint);margin:2px 0 4px;}
   .profile-locked input, .profile-locked select{opacity:.55;pointer-events:none;background:var(--panel);}
+  .profile-warn{display:none;border:2px solid #dc2626;background:rgba(220,38,38,.08);border-radius:10px;padding:10px 12px;margin:8px 0 10px;font-size:13px;line-height:1.55;}
+  .profile-warn b.t{display:block;color:#dc2626;font-size:14px;margin-bottom:4px;}
+  .profile-warn ul{margin:4px 0 4px 18px;padding:0;}
+  .profile-warn.lock{border-color:var(--border);background:var(--panel);}
+  .profile-warn.lock b.t{color:var(--text);}
   .profile-age-hint{font-size:11px;color:var(--text-faint);margin-top:2px;}
   .province-picker{border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--panel-alt);}
   .province-picker input[type=text]{margin-bottom:6px;}
@@ -1599,6 +1604,7 @@ setTimeout(function(){
       <h3 id="profile-modal-title">ยินดีต้อนรับ 👋 กรุณากรอกข้อมูลส่วนตัว</h3>
       <p class="panel-sub" id="profile-modal-sub">ใช้ในระบบงาน Service ภายในบริษัท กรอกให้ครบก่อนเริ่มใช้งาน (แก้ไขทีหลังได้)</p>
 
+      <div class="profile-warn" id="profile-name-warn"></div>
       <div class="profile-section-title">ข้อมูลส่วนตัว</div>
       <div class="profile-grid">
         <div class="field-wrap half"><label>ชื่อ (ไทย) <span style="color:var(--red);">*</span></label><input type="text" id="profile-firstNameTh"></div>
@@ -2368,8 +2374,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.47";
-const APP_UPDATED_AT = "12 ตุลาคม 2569 19:46 น. เวลาไทย";
+const APP_VERSION = "9.52";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 00:21 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3167,20 +3173,21 @@ async function fsWriteLog(action){
 async function fsGetRecentLogs(n){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'activityLogs'), sdk.orderBy('timestamp','desc'), sdk.limit(n||30))); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
 async function fsGetLogsAfter(ts){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'activityLogs'), sdk.where('timestamp','>',Number(ts)||0))); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
 async function fsGetAllLogs(){ await initFirebase(); const sdk=window._firebaseSdk; const snap = await sdk.getDocs(sdk.collection(db,'activityLogs')); const out=[]; snap.forEach(d=>out.push({id:d.id, ...d.data()})); return out.sort((a,b)=>b.timestamp-a.timestamp); }
-// ลบ activityLogs ที่อายุเกิน 45 วัน — ทำงานเงียบๆ หลัง login ไม่กระทบ UX และไม่ throw ถ้าเกิด error
-// เรียกได้เฉพาะ isEditor() เพื่อไม่ให้ Engineer ที่ไม่มีสิทธิ์ write ถูก Firestore rules ปฏิเสธ
+// ลบ activityLogs ที่อายุเกิน 90 วัน — ทำงานเงียบๆ หลัง login ไม่กระทบ UX และไม่ throw ถ้าเกิด error (v9.52: ลบทีละไม่เกิน 400 รายการ เพราะ batch เดียวใส่ได้ไม่เกิน 500 · ใช้เส้นตาย 91 วันกันนาฬิกาเครื่องเร็วกว่าเซิร์ฟเวอร์ให้ rules ปฏิเสธทั้ง batch)
+// ข้อมูลเก่ากว่านี้ยังอยู่ในไฟล์ Backup (แท็บ ActivityLogs) ตามอายุการเก็บ Backup · เรียกได้เฉพาะ isEditor() และ rules อนุญาตลบเฉพาะ log ที่เก่ากว่า 90 วันเท่านั้น
 async function fsCleanupOldLogs(){
-  if(!isEditor()) return; // เฉพาะ Sup Product เท่านั้น มีสิทธิ์ลบ
+  if(!isEditor()) return;
   try{
     await initFirebase(); const sdk=window._firebaseSdk;
-    const cutoff = Date.now() - 45*24*60*60*1000; // 45 วันที่แล้ว (milliseconds)
-    const q = sdk.query(sdk.collection(db,'activityLogs'), sdk.where('timestamp','<',cutoff));
-    const snap = await sdk.getDocs(q);
-    if(snap.empty) return;
-    const batch = sdk.writeBatch(db);
-    snap.forEach(d=> batch.delete(d.ref));
-    await batch.commit();
-
+    const cutoff = Date.now() - 91*24*60*60*1000;
+    for(let round=0; round<3; round++){
+      const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'activityLogs'), sdk.where('timestamp','<',cutoff), sdk.limit(400)));
+      if(snap.empty) return;
+      const batch = sdk.writeBatch(db);
+      snap.forEach(d=> batch.delete(d.ref));
+      await batch.commit();
+      if(snap.size < 400) return;
+    }
   } catch(e){ console.warn('[Cleanup] ลบ activityLogs ไม่สำเร็จ (ไม่กระทบการทำงานหลัก):', e); }
 }
 async function fsGetBackupAlertDismissed(){ await initFirebase(); const sdk=window._firebaseSdk; const d = await sdk.getDoc(sdk.doc(db,'meta','backupAlertDismissed')); return d.exists() ? (d.data().dismissedAt||0) : 0; }
@@ -3645,7 +3652,7 @@ function nicknameFor(email){ // CEO → "CEO" · ชื่อเล่น+เข
   if(!email) return '';
   const e = email.toLowerCase();
   if(ceoEmails.includes(e)) return 'CEO';
-  return profileLabelMap[e] || nicknamesMap[e] || email;
+  return profileLabelMap[e] || email;
 }
 function myDisplayName(){ return myClaimantName(); }
 // ชื่อสำหรับช่อง "ผู้เคลม/ผู้แจ้ง": ชื่อเล่น - เขตรับผิดชอบ (ดึงจาก userProfiles)
@@ -3653,7 +3660,7 @@ function myDisplayName(){ return myClaimantName(); }
 function myClaimantName(){
   if(isCEO()) return 'CEO'; // CEO ไม่ต้องกรอกชื่อเล่น — แสดงเป็น CEO
   const lb = myUserProfile ? profileLabelOf(myUserProfile) : '';
-  return lb || (myUserEmail && nicknamesMap[myUserEmail]) || myUserName || myUserEmail || '';
+  return lb || myUserName || myUserEmail || '';
 }
 // ชื่อทั้งหมดที่เคยใช้บันทึกรายการของผู้ใช้คนนี้ (รายการเก่าที่บันทึกด้วยชื่อเล่นเดิมยังต้องเจอ)
 function mySubmitterNames(){
@@ -5804,7 +5811,7 @@ async function checkAccessAndLoad(){
   await loadData();
   showSignedInPill(); // อัปเดต pill อีกครั้งหลังโหลดข้อมูล — ตอน sign-in ครั้งแรก nicknamesMap ยังไม่มา เลยต้องรีเฟรชชื่อที่แสดงให้เป็นชื่อเล่นจริง
   updateModeButtonVisibility();
-  fsCleanupOldLogs(); // ลบ activityLogs > 45 วัน แบบ background — ไม่ await เพื่อไม่ให้ชะลอหน้าจอ
+  fsCleanupOldLogs(); // ลบ activityLogs > 90 วัน แบบ background — ไม่ await เพื่อไม่ให้ชะลอหน้าจอ
   initVersionCheck();
   if(!LIVE.on.claims) initClaimsRealtimeWatch(); // v9.34: ถ้าโหมดสดทำงานอยู่ ไม่ต้องฟังสัญญาณเก่า (ใช้เป็น fallback เท่านั้น)
   initRpRealtimeWatch();
@@ -6101,7 +6108,31 @@ function updateProfileAreaVisibility(){
 // ฟิลด์ที่ user ทั่วไปแก้เองไม่ได้ (เฉพาะ Manager/SuperAdmin) — ตามสเปกที่ตกลงกัน: ตำแหน่ง/เขตพื้นที่/จังหวัดที่ดูแล/วันที่เริ่มงาน
 // ตอนกรอกครั้งแรก (profileModalIsFirstTime) ทุกฟิลด์แก้ไขได้หมดเสมอ — ล็อกเฉพาะตอนเปิดแก้ไขทีหลังและผู้แก้ไม่ใช่ Manager
 // TODO: ตอนนี้รองรับแค่ "Manager แก้โปรไฟล์ตัวเอง" (ปลดล็อกหมด) — ส่วน "Manager แก้โปรไฟล์คนอื่น" (roster UI) เป็นเฟสถัดไปคู่กับ org-chart ยังไม่ทำตอนนี้
+const PROFILE_NAME_KEYS = ['firstNameTh','lastNameTh','nicknameTh','firstNameEn','lastNameEn','nicknameEn'];
+const PROFILE_NAME_GRACE_MS = 24*3600*1000; // แก้เองได้ภายใน 24 ชม. หลังกรอกครั้งแรก — หลังจากนั้นล็อก ให้ Manager แก้
+function profileNameGraceLeftMs(p){ return p && p.createdAt ? (Number(p.createdAt) + PROFILE_NAME_GRACE_MS - Date.now()) : -1; }
+function profileNamesLocked(){ // ล็อกชื่อ: ไม่ใช่กรอกครั้งแรก, ไม่ใช่ Manager, และพ้นช่วง 24 ชม.
+  if(profileModalIsFirstTime || isManager()) return false;
+  return profileNameGraceLeftMs(myUserProfile) <= 0;
+}
+function applyProfileNameLock(){
+  const locked = profileNamesLocked();
+  PROFILE_NAME_KEYS.forEach(k=>{ const w = $('profile-'+k).closest('.field-wrap'); if(w) w.classList.toggle('profile-locked', locked); });
+  const box = $('profile-name-warn'); if(!box) return;
+  if(locked){
+    box.className = 'profile-warn lock'; box.style.display = 'block';
+    box.innerHTML = '<b class="t">🔒 ชื่อ-นามสกุลและชื่อเล่นถูกล็อกแล้ว</b>เพื่อไม่ให้ข้อมูลในระบบ (ใบ Certificate, รายการเคลม, ตารางเทรน, ข้อสอบ) ไม่ตรงกัน หากต้องแก้ไข กรุณาแจ้ง Manager';
+    return;
+  }
+  if(isManager() && !profileModalIsFirstTime){ box.style.display = 'none'; return; }
+  const left = profileNameGraceLeftMs(myUserProfile);
+  const leftTxt = profileModalIsFirstTime ? 'หลังกดบันทึก คุณแก้ไขเองได้อีกภายใน 24 ชั่วโมง จากนั้นระบบจะ <b>ล็อก</b> ต้องให้ Manager แก้ให้' : `คุณแก้ไขเองได้อีกประมาณ <b>${Math.max(1,Math.ceil(left/3600000))} ชั่วโมง</b> จากนั้นระบบจะ <b>ล็อก</b> ต้องให้ Manager แก้ให้`;
+  box.className = 'profile-warn'; box.style.display = 'block';
+  box.innerHTML = '<b class="t">⚠ กรุณาตรวจสอบชื่อให้ถูกต้องก่อนบันทึก — มีผลต่อเอกสารและข้อมูลทั้งระบบ</b>'+
+    'ชื่อ-นามสกุล (ไทย/อังกฤษ) และชื่อเล่น จะถูกนำไปใช้ที่:<ul><li><b>ใบ Certificate</b> ที่ออกให้ (ชื่ออังกฤษพิมพ์บนใบ — ออกแล้วแก้ไม่ได้)</li><li>ชื่อ <b>ผู้เคลม / ผู้แจ้ง</b> ในรายการเคลมอะไหล่ คืนอะไหล่ แจ้งปัญหา</li><li>รายชื่อ <b>ลงทะเบียนเทรน เช็คชื่อ และผลสอบ</b></li><li>ชื่อ Supervisor/วิทยากรบนใบ Cer (กรณีเป็น Sup)</li></ul>'+leftTxt;
+}
 function applyProfileFieldPermissions(){
+  applyProfileNameLock();
   const lockedIds = ['profile-position-wrap','profile-area-wrap','profile-provinces-covered-wrap','profile-startdate-wrap'];
   const shouldLock = !profileModalIsFirstTime && !isManager();
   lockedIds.forEach(id=>{
@@ -6163,6 +6194,11 @@ async function saveUserProfile(){
     mindrayNone: $('profile-mindrayNone').checked,
     updatedAt: Date.now(),
   };
+  const _namesEditable = !rosterEditingEmail && !isManager() && !profileNamesLocked();
+  if(_namesEditable){
+    const _changed = profileModalIsFirstTime || PROFILE_NAME_KEYS.some(k=>String((myUserProfile||{})[k]||'') !== String(payload[k]||''));
+    if(_changed && !confirm('ยืนยันชื่อของคุณ\n\nชื่อ-นามสกุล (ไทย): '+payload.firstNameTh+' '+payload.lastNameTh+'\nชื่อเล่น (ไทย): '+payload.nicknameTh+'\nName (EN): '+payload.firstNameEn+' '+payload.lastNameEn+'\nNickname (EN): '+payload.nicknameEn+'\n\n⚠ ชื่อนี้จะปรากฏบนใบ Certificate และใช้ในทุกรายการ\nแก้เองได้ภายใน 24 ชั่วโมง หลังจากนั้นต้องให้ Manager แก้\n\nข้อมูลถูกต้องแล้วใช่ไหม?')) return;
+  }
   const btn = $('profile-save-btn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   const isEditingOther = !!rosterEditingEmail;
@@ -6178,6 +6214,15 @@ async function saveUserProfile(){
     // v8.90 — ตำแหน่ง/เขต/จังหวัดที่ดูแล/วันที่เริ่มงาน ล็อกไว้หลังกรอกครั้งแรก: ผู้ที่ไม่ใช่ Manager แก้ผ่าน DOM/console ไม่ได้ (บังคับที่ตัวบันทึกด้วย ไม่ใช่แค่ซ่อนช่อง)
     if(!isEditingOther && !profileModalIsFirstTime && !isManager() && existing){
       ['position','area','provincesCovered','startDate'].forEach(k=>{ if(existing[k]!==undefined) payload[k] = existing[k]; else delete payload[k]; });
+    }
+    // v9.52 — ชื่อ/ชื่อเล่นล็อกหลังพ้น 24 ชม.: ผู้ใช้ทั่วไปแก้ผ่าน DOM/console ไม่ได้ (คืนค่าเดิม) · เก็บประวัติเมื่อมีการเปลี่ยนชื่อ
+    if(!isEditingOther && !isManager() && !profileModalIsFirstTime && existing && profileNameGraceLeftMs(existing) <= 0){
+      PROFILE_NAME_KEYS.forEach(k=>{ if(existing[k]!==undefined) payload[k] = existing[k]; else delete payload[k]; });
+    }
+    if(existing && PROFILE_NAME_KEYS.some(k=>payload[k]!==undefined && String(existing[k]||'') !== String(payload[k]||''))){
+      const from = {}, to = {};
+      PROFILE_NAME_KEYS.forEach(k=>{ if(payload[k]!==undefined && String(existing[k]||'') !== String(payload[k]||'')){ from[k] = existing[k]||''; to[k] = payload[k]; } });
+      payload.nameHistory = [ ...((existing.nameHistory)||[]), { at:Date.now(), by:myUserEmail||'', from, to } ].slice(-20);
     }
     await sdk.setDoc(sdk.doc(db,'userProfiles', docId), payload, { merge:true });
     const merged = { ...(existing||{}), ...payload };
@@ -7958,7 +8003,7 @@ function renderSupIdentityOptions(){
   $('sup-identity').innerHTML = SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
   // Auto-select: ถ้าชื่อที่ตรงกับ email ของตัวเองอยู่ใน SUP_PRODUCTS ให้เลือกอัตโนมัติ
   // โดย match จาก nicknamesMap ที่ map email → nickname แล้วเทียบกับชื่อใน SUP_PRODUCTS
-  const nickCands = [myUserEmail && (profileLabelMap[myUserEmail.toLowerCase()]||'').split(' - ')[0], myUserEmail && nicknamesMap[myUserEmail], myUserProfile && myUserProfile.nicknameTh, myUserProfile && myUserProfile.nicknameEn, myUserProfile && myUserProfile.firstNameTh].filter(Boolean);
+  const nickCands = [myUserEmail && (profileLabelMap[myUserEmail.toLowerCase()]||'').split(' - ')[0], myUserProfile && myUserProfile.nicknameTh, myUserProfile && myUserProfile.nicknameEn, myUserProfile && myUserProfile.firstNameTh].filter(Boolean);
   let autoMatch = null;
   for(const myNick of nickCands){
     autoMatch = SUP_PRODUCTS.find(n=> n===myNick || n.includes(myNick) || myNick.includes(n.replace(/\s*\(.*\)/,'').trim()));
@@ -9007,7 +9052,7 @@ function renderUnifiedPermissionList(){
     return `<select class="perm-role-toggle" data-permrole="${escapeHtml(email)}" data-curtier="${role}" ${canEdit?'':'disabled'} style="${canEdit?'':'opacity:.35;'}">${ROLE_OPTS.map(([v,l])=>`<option value="${v}" ${role===v?'selected':''}>${l}</option>`).join('')}</select>`;
   }
   function permLabel(email){
-    const nick = ceoEmails.includes(email.toLowerCase()) ? 'CEO' : (profileLabelMap[email.toLowerCase()] || nicknamesMap[email.toLowerCase()]);
+    const nick = ceoEmails.includes(email.toLowerCase()) ? 'CEO' : profileLabelMap[email.toLowerCase()];
     return nick ? `👤 ${escapeHtml(nick)} <span style="color:var(--text-faint);font-size:11px;">(${escapeHtml(email)})</span>` : `✉️ ${escapeHtml(email)}`;
   }
   // row สำหรับ Manager/CEO/AdminService
@@ -11816,6 +11861,7 @@ async function gatherFullBackup(statusElId){
       try{ const sn = await sdk.getDocs(sdk.collection(db,col)); extra[col] = []; sn.forEach(d=>extra[col].push({id:d.id, ...d.data()})); }
       catch(e){ backupWarnings.push(col+': '+e.message); }
     }
+    if(isSuperAdmin()){ try{ const sn = await sdk.getDocs(sdk.collection(db,'activityLogs')); extra.activityLogs = []; sn.forEach(d=>extra.activityLogs.push({id:d.id, ...d.data()})); extra.activityLogs.sort((x,y)=>(y.timestamp||0)-(x.timestamp||0)); }catch(e){ backupWarnings.push('activityLogs: '+e.message); } }
     try{ const cr = await sdk.getDoc(sdk.doc(db,'meta','certRequirements')); if(cr.exists()) extra.certRequirements = cr.data(); }catch(e){ backupWarnings.push('meta/certRequirements: '+e.message); }
     if(backupWarnings.length) showToast('⚠ Backup ไม่ครบบางคอลเลกชัน: '+backupWarnings.join(' | '));
 
@@ -11875,6 +11921,11 @@ function buildBackupWorkbook(data){
     });
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), 'Categories');
+
+  if(Array.isArray(data.activityLogs)){ // v9.52 — ประวัติการใช้งาน (Firestore เก็บ 90 วัน เก่ากว่านั้นถูกลบ)
+    const logRows = data.activityLogs.map(l=>({ การกระทำ:l.action||'', ผู้ใช้:l.name||'', อีเมล:l.email||'', เวลา: l.timestamp ? new Date(l.timestamp).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'}) : '', timestamp:l.timestamp||'' }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(logRows.length?logRows:[{หมายเหตุ:'ไม่มีบันทึก'}]), 'ActivityLogs');
+  }
 
   return wb;
 }
@@ -12147,6 +12198,7 @@ async function examApi(action, payload){
   try{ j = await res.json(); }
   catch(e){ const er = new Error('ระบบสอบตอบกลับไม่ถูกต้อง (ตรวจว่า deploy Apps Script เป็น Anyone แล้ว)'); er.network = true; throw er; }
   if(j && j.serverNow) _exOffset = j.serverNow - (t0 + Date.now())/2;
+  if(j && j.fsStale) window._trFsStale = Date.now() + 120000; // เซิร์ฟเวอร์ซิงก์ Firestore ไม่สำเร็จ → อ่านจาก Sheet ชั่วคราว
   if(!j || !j.ok) throw new Error((j && j.error) || 'ระบบสอบขัดข้อง');
   return j.data;
 }
@@ -12187,18 +12239,27 @@ async function examEnter(){
 }
 async function examLoadHome(autoResume){
   const root = $('ex-root');
-  root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดข้อสอบของคุณ...</div>';
+  // v9.50 — แสดงรายการครั้งก่อนทันที (ถ้ามี) แล้วอัปเดตเบื้องหลัง · ตอนกลับเข้าสอบที่ค้างอยู่ไม่ใช้ของเก่า
+  const ck = 'f1_exhome_' + String(typeof myUserEmail !== 'undefined' ? myUserEmail : '').toLowerCase();
+  let warm = false;
+  if(!autoResume){
+    try{ const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Array.isArray(c.items)){ EX.data = c; examRenderHome(); warm = true; } }catch(_){}
+  }
+  if(!warm){ root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดข้อสอบของคุณ...</div>'; }
   try{
     const d = await examApi('myExams');
+    try{ localStorage.setItem(ck, JSON.stringify(d)); }catch(_){}
     EX.data = d;
     if(autoResume){
       const r = d.items.find(i=>i.inProgressAttemptId);
       if(r){ await examResume(r.inProgressAttemptId); return; }
     }
-    examRenderHome();
+    // ถ้าระหว่างรอผู้ใช้เปิดหน้าอื่นไปแล้ว (เช่นเริ่มสอบ) ไม่เขียนทับ
+    if(!warm || root.innerHTML === EX.homeHtml) examRenderHome();
     examSyncMyCerts(d.certs);
     examIssueLinked(d);
   }catch(e){
+    if(warm) return; // มีของเดิมแสดงอยู่แล้ว
     root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" data-ex="reload">ลองใหม่</button></div>`;
   }
 }
@@ -12247,7 +12308,7 @@ function examRenderHome(){
       <div class="ex-act">${safeHttpUrl(c.pdfUrl) ? `<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${exH(safeHttpUrl(c.pdfUrl))}">📄 เปิด PDF</a>` : ''}</div></div>`).join('') + '</div>';
   }
   html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงเฉพาะคะแนนและผ่าน/ไม่ผ่าน · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
-  root.innerHTML = html;
+  root.innerHTML = html; EX.homeHtml = root.innerHTML;
 }
 
 async function examStart(roundId){
@@ -12501,6 +12562,7 @@ async function examAdminEnter(){
   const root = $('exa-root');
   root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
+    await exLoadProfileNames();
     let init = await examApi('adminInit');
     if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('adminInit'); }
     EXA.role = init.role;
@@ -12516,6 +12578,7 @@ async function examAdminEnter(){
   }
 }
 async function exaSyncAdmins(){
+  await exLoadProfileNames();
   const map = {};
   (adminEmails||[]).forEach(e=>{ map[e.toLowerCase()] = { email:e.toLowerCase(), role:'sup', name:nicknameFor(e) }; });
   (managerEmails||[]).concat(ceoEmails||[], [SUPER_ADMIN_EMAIL]).forEach(e=>{ map[e.toLowerCase()] = { email:e.toLowerCase(), role:'manager', name:nicknameFor(e) }; });
@@ -12559,6 +12622,13 @@ function exaRenderSets(){
   html += exaPurgePanelHtml(); // TEST-PURGE
   root.innerHTML = html;
 }
+
+/* ชื่อคน = ชื่อเล่น(+เขต)จากโปรไฟล์ล่าสุดเท่านั้น — ไม่ใช้ชื่อเล่นเก่า; ไม่มีโปรไฟล์ใช้ชื่อที่บันทึกไว้ในรายการ */
+function exPerson(email, name){
+  const e = String(email||'').toLowerCase();
+  return (e && typeof profileLabelMap !== 'undefined' && profileLabelMap[e]) || name || email || '';
+}
+async function exLoadProfileNames(){ try{ if(typeof ensureProfileLabels === 'function') await ensureProfileLabels(); }catch(e){} }
 
 /* ---------- ชุดข้อสอบ: ตัวแก้ไข ---------- */
 function exaMyEnName(){
@@ -13004,7 +13074,7 @@ async function exaPrepareRound(roundId){
 function exaEligListHtml(){
   const q = EXA.search.trim().toLowerCase();
   const rows = EXA.profiles.filter(p=>!q || (p.name+' '+p.email+' '+p.nameEn+' '+p.area).toLowerCase().indexOf(q)>=0);
-  return rows.map(p=>`<label class="ex-opt ex-el"><input type="checkbox" data-ex="elig" value="${exH(p.email)}" ${EXA.elig.has(p.email)?'checked':''}><span>${exH(p.name)}<small>${exH(p.email)}${p.nameEn?'':' · ⚠ ยังไม่มีชื่ออังกฤษในโปรไฟล์ (ใบ Cer จะใช้ชื่อไทย)'}</small></span></label>`).join('') || '<div class="ex-hint">ไม่พบรายชื่อ</div>';
+  return rows.map(p=>`<label class="ex-opt ex-el"><input type="checkbox" data-ex="elig" value="${exH(p.email)}" ${EXA.elig.has(p.email)?'checked':''}><span>${exH(exPerson(p.email,p.name))}<small>${exH(p.email)}${p.nameEn?'':' · ⚠ ยังไม่มีชื่ออังกฤษในโปรไฟล์ (ใบ Cer จะใช้ชื่อไทย)'}</small></span></label>`).join('') || '<div class="ex-hint">ไม่พบรายชื่อ</div>';
 }
 function exaRenderRoundEditor(){
   const r = EXA.round, root = $('exa-root');
@@ -13061,7 +13131,7 @@ function exaRenderSummary(){
     <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">สรุปผู้ตอบ</h2>
       <select id="exa-sum-filter" data-ex="sumfilter"><option value="">ทุกสถานะ</option>${Object.keys(EX_STATUS).map(k=>`<option value="${k}" ${f===k?'selected':''}>${EX_STATUS[k][0]}</option>`).join('')}</select></div>
       <div style="overflow-x:auto"><table class="ex-table"><thead><tr><th>ชื่อ</th><th>ครั้งที่สอบ</th><th>คะแนนล่าสุด</th><th>ดีที่สุด</th><th>สถานะ</th><th>ระดับ</th><th>Cer</th></tr></thead><tbody>
-      ${rows.map(x=>`<tr><td>${exH(x.name)}<small>${exH(x.email)}</small></td><td>${x.attemptCount}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
+      ${rows.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${x.attemptCount}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
         <td>${exChip(EX_STATUS[x.status][0], EX_STATUS[x.status][1])}</td>
         <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
         <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="7" class="ex-hint">ไม่มีรายการ</td></tr>'}
@@ -13070,7 +13140,7 @@ function exaRenderSummary(){
 function exaRenderGradingList(){
   const root = $('exa-root'), items = EXA.grading || [];
   root.innerHTML = exaTabs() + `<div class="panel-block"><h2>ข้อสอบที่รอ Sup ตรวจข้อเขียน ${EXA.gradeRound?'(เฉพาะรอบนี้)':''}</h2>
-    ${items.length ? `<table class="ex-table"><thead><tr><th>ผู้สอบ</th><th>รอบ</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>${items.map(x=>`<tr><td>${exH(x.name)}<small>${exH(x.email)}</small></td><td>${exH(x.roundName)}<small>${exH(x.setTitle)}</small></td><td>${exFmtDT(x.submittedAt)}</td><td><button class="btn btn-primary btn-sm" data-ex="opengrade" data-id="${exH(x.attemptId)}">ตรวจ</button></td></tr>`).join('')}</tbody></table>`
+    ${items.length ? `<table class="ex-table"><thead><tr><th>ผู้สอบ</th><th>รอบ</th><th>ส่งเมื่อ</th><th></th></tr></thead><tbody>${items.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${exH(x.roundName)}<small>${exH(x.setTitle)}</small></td><td>${exFmtDT(x.submittedAt)}</td><td><button class="btn btn-primary btn-sm" data-ex="opengrade" data-id="${exH(x.attemptId)}">ตรวจ</button></td></tr>`).join('')}</tbody></table>`
     : '<div class="ex-hint">ไม่มีข้อสอบที่รอตรวจ ✓</div>'}</div>`;
 }
 const EX_SCORES = [0, 0.25, 0.5, 0.75, 1];
@@ -13348,6 +13418,101 @@ async function trEnter(){
   if(TR.detail){ trRenderDetail(); return; }
   await trLoad();
 }
+/* ===== v9.50 — อ่านเร็วจาก Firestore (สำเนาของ Sheet ที่ Apps Script อัปเดตให้ทุกครั้งที่บันทึก) =====
+   ถ้าอ่าน Firestore ไม่ได้ (ยังไม่ตั้งค่า / rules ยังไม่เผยแพร่ / ออฟไลน์ / เซิร์ฟเวอร์แจ้งว่าซิงก์ค้าง) จะกลับไปอ่านจาก Apps Script แบบเดิมอัตโนมัติ
+   งานที่จบเกิน 730 วันเก็บเฉพาะสรุปใน Firestore → เปิดรายละเอียดจะอ่านจาก Sheet ผ่าน Apps Script */
+const TRFS = { offUntil:0 };
+function trFsOn(){ return Date.now() > TRFS.offUntil && Date.now() > (window._trFsStale||0) && !!window._firebaseSdk; }
+function trFsFail(e){ TRFS.offUntil = Date.now() + 300000; try{ console.warn('Firestore fast-read paused 5 min:', e && (e.code || e.message)); }catch(_){} }
+function trMe(){ return String(myUserEmail||'').toLowerCase(); }
+async function trFast(fsFn, apiFn){
+  if(trFsOn()){
+    try{ await initFirebase(); return await fsFn(window._firebaseSdk); }
+    catch(e){ if(!(e && e.trFsSkip)) trFsFail(e); }
+  }
+  return apiFn();
+}
+function trFsStrip(s){ const o = Object.assign({}, s); ['days','years','archived','syncedAt'].forEach(k=>{ delete o[k]; }); return o; }
+function trListFast(year){
+  if(!year) return examApi('trList', { year:year });
+  return trFast(async S=>{
+    const me = trMe();
+    const [meta, yd, mine] = await Promise.all([
+      S.getDoc(S.doc(db,'trMeta','years')), S.getDoc(S.doc(db,'trYears',String(year))),
+      S.getDocs(S.query(S.collection(db,'trRegs'), S.where('email','==',me)))
+    ]);
+    if(!meta.exists()) throw new Error('fs-not-built');
+    const years = (meta.data().years||[]).map(String);
+    if(!yd.exists() && years.indexOf(String(year)) >= 0) throw new Error('fs-year-missing');
+    const myBy = {};
+    mine.docs.forEach(d=>{ const r = d.data(); const o = myBy[r.sessionId]; if(!o || num0(r.requestedAt) >= num0(o.requestedAt)) myBy[r.sessionId] = r; });
+    const mgr = isManager();
+    const sessions = (yd.exists() ? (yd.data().sessions||[]) : []).map(s=>{
+      const o = Object.assign({}, s), m = myBy[s.sessionId];
+      o.canManage = mgr || String(s.ownerEmail||'').toLowerCase() === me;
+      o.my = m ? { regId:m.regId, status:m.status, requestDateVersion:m.requestDateVersion } : null;
+      return o;
+    });
+    return { sessions, role:TRA.role||'user', today:trToday(), years, serverNow:exNow(), _fs:true };
+  }, ()=>examApi('trList', { year:year }));
+}
+function num0(v){ const n = Number(v); return isFinite(n) ? n : 0; }
+function trGetFast(id){
+  return trFast(async S=>{
+    const me = trMe(), mgr = isManager();
+    const sd = await S.getDoc(S.doc(db,'trSessions',id));
+    if(!sd.exists()){ const e = new Error('fs-session-missing'); e.trFsSkip = true; throw e; }
+    const s = sd.data();
+    if(s.archived){ const e = new Error('archived'); e.trFsSkip = true; throw e; }
+    const manage = mgr || String(s.ownerEmail||'').toLowerCase() === me;
+    const q = (c, extra)=>S.getDocs(S.query.apply(null, [S.collection(db,c), S.where('sessionId','==',id)].concat(extra)));
+    const own = mgr ? [] : [S.where('ownerEmail','==',me)], mineQ = [S.where('email','==',me)];
+    let regs, att, files = null;
+    if(manage) [regs, att, files] = await Promise.all([q('trRegs',own), q('trAtt',own), q('trFiles',own)]);
+    else [regs, att] = await Promise.all([q('trRegs',mineQ), q('trAtt',mineQ)]);
+    const sess = trFsStrip(s); sess.canManage = manage;
+    const R = regs.docs.map(d=>d.data());
+    const mineReg = R.filter(r=>r.email === me)[0] || null;
+    const attB = a=>({ attId:a.attId, regId:a.regId, email:a.email||'', name:a.name, dayDate:a.dayDate, checkInAt:a.checkInAt, checkInBy:a.checkInBy||'', startRef:a.startRef, diffMin:a.diffMin, status:a.status, history:a.history||[] });
+    const out = { session:sess, days:s.days||[], my:mineReg, today:trToday(), serverNow:exNow(), canManage:manage, _pending:true, _fs:true };
+    if(!manage){
+      if(mineReg) out.myAttendance = att.docs.map(d=>d.data()).filter(a=>a.regId === mineReg.regId && a.status === 'ok').map(attB);
+    }else{
+      out.regs = R;
+      out.attendance = att.docs.map(d=>attB(d.data()));
+      out.files = files.docs.map(d=>{ const f = Object.assign({}, d.data()); delete f.ownerEmail; delete f.sessionId; return f; });
+      out.log = [];
+    }
+    return out;
+  }, ()=>examApi('trGet', { sessionId:id }));
+}
+/* ข้อมูลที่ Firestore ไม่เก็บ (ประวัติการดำเนินการ + สถานะรอบสอบ) — ดึงเบื้องหลังจาก Apps Script แล้วเติมเข้าไป ไม่ต้องรอ */
+function trIdle(){ const a = document.activeElement; return !(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) && !$('tr-sheet'); }
+function trGetExtras(g, getCur, redraw){
+  if(!g || !g._pending) return;
+  const id = g.session.sessionId;
+  const need = g.canManage || (g.my && g.my.status === 'approved' && (g.session.examRoundId || g.session.examSetId));
+  if(!need){ g._pending = false; return; }
+  examApi('trGet', { sessionId:id }).then(full=>{
+    g.exam = full.exam; if(full.log) g.log = full.log; g._pending = false;
+    if(getCur() === g && trIdle()) redraw();
+  }).catch(()=>{ g._pending = false; if(getCur() === g && trIdle()) redraw(); });
+}
+function trQueueFast(){
+  return trFast(async S=>{
+    const me = trMe(), mgr = isManager();
+    const c = [S.collection(db,'trRegs'), S.where('status','in',['requested','needsReconfirm'])];
+    if(!mgr) c.push(S.where('ownerEmail','==',me));
+    const snap = await S.getDocs(S.query.apply(null, c));
+    const items = snap.docs.map(d=>Object.assign({}, d.data()));
+    const ids = Array.from(new Set(items.map(r=>r.sessionId)));
+    const sds = await Promise.all(ids.map(id=>S.getDoc(S.doc(db,'trSessions',id))));
+    const sessions = [], okIds = {};
+    sds.forEach(d=>{ if(!d.exists()) return; const s = d.data(); if(s.status === 'closed' || s.status === 'cancelled') return; okIds[s.sessionId] = 1; sessions.push(trFsStrip(s)); });
+    return { items:items.filter(r=>okIds[r.sessionId]).sort((a,b)=>num0(a.requestedAt) - num0(b.requestedAt)), sessions };
+  }, ()=>examApi('trQueue'));
+}
+
 async function trLoad(){
   const root = $('tr-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
@@ -13355,7 +13520,7 @@ async function trLoad(){
   const warm = !!(TR.data && TR.listFor === TR.year);
   if(warm) trRender(); else root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดตารางเทรน...</div>';
   try{
-    const yr = TR.year, d = await examApi('trList', { year:yr });
+    const yr = TR.year, d = await trListFast(yr);
     if(yr !== TR.year) return;
     TR.data = d; TR.listFor = yr;
     if(!TR.detail || !warm) trRender();
@@ -13486,9 +13651,10 @@ async function trOpen(id){
   const root = $('tr-root');
   root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    TR.detail = await examApi('trGet', { sessionId:id });
+    TR.detail = await trGetFast(id);
     trRenderDetail();
     window.scrollTo(0,0);
+    trGetExtras(TR.detail, ()=>TR.detail, ()=>{ if(TR.detail) trRenderDetail(); });
   }catch(e){ TR.detail = null; trErr(root, e, 'reload'); }
 }
 function trIsBreak(it){ return /lunch|break|พักเที่ยง|พักกลางวัน|พัก/i.test(String(it.content||'')) && !String(it.media||'').trim(); }
@@ -13571,7 +13737,7 @@ async function trDoRequest(id){
   try{
     await examApi('trRequest', { sessionId:id, name:myClaimantName(), nameEn:exaMyEnName() });
     hideLoadingOverlay(); showToast('✓ ส่งคำขอแล้ว รอ Sup อนุมัติ');
-    TR.detail = await examApi('trGet', { sessionId:id }); trRenderDetail(); TR.data = null;
+    TR.detail = await trGetFast(id); trRenderDetail(); TR.data = null; trGetExtras(TR.detail, ()=>TR.detail, ()=>{ if(TR.detail) trRenderDetail(); });
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 async function trDoCancel(id){
@@ -13581,7 +13747,7 @@ async function trDoCancel(id){
   try{
     await examApi('trCancelRequest', { sessionId:id });
     hideLoadingOverlay(); showToast('✓ ยกเลิกแล้ว');
-    TR.detail = await examApi('trGet', { sessionId:id }); trRenderDetail(); TR.data = null;
+    TR.detail = await trGetFast(id); trRenderDetail(); TR.data = null; trGetExtras(TR.detail, ()=>TR.detail, ()=>{ if(TR.detail) trRenderDetail(); });
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 
@@ -13592,6 +13758,7 @@ async function trDoCancel(id){
 async function trAdminEnter(){
   const root = $('tra-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
+  await exLoadProfileNames();
   const roleKnown = TRA.role && TRA.role !== 'user';
   if(!roleKnown) root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
@@ -13624,13 +13791,14 @@ async function traGo(view, arg){
   if(warmQ) traRenderQueue(); else if(warmS) traRenderSessions();
   else root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    if(view === 'queue'){ const q = await examApi('trQueue'); if(TRA.view !== 'queue') return; TRA.queue = q; traRenderQueue(); }
-    else if(view === 'sessions'){ const yr = TRA.year, d = await examApi('trList', { year:yr }); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
+    if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; traRenderQueue(); }
+    else if(view === 'sessions'){ const yr = TRA.year, d = await trListFast(yr); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
     else if(view === 'detail'){
-      if(!TRA.queue) examApi('trQueue').then(q=>{ TRA.queue = q; }).catch(()=>{});
-      TRA.g = await examApi('trGet', { sessionId:arg });
-      if(!TRA.g.canManage){ TR.detail = TRA.g; switchMode('train'); trRenderDetail(); return; }
+      if(!TRA.queue) trQueueFast().then(q=>{ TRA.queue = q; }).catch(()=>{});
+      const g0 = await trGetFast(arg); TRA.g = g0;
+      if(!g0.canManage){ TR.detail = g0; switchMode('train'); trRenderDetail(); trGetExtras(g0, ()=>TR.detail, ()=>{ if(TR.detail === g0) trRenderDetail(); }); return; }
       TRA.view = 'detail'; traRenderDetail();
+      trGetExtras(g0, ()=>TRA.g, ()=>{ if(TRA.view === 'detail' && TRA.g === g0) { const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } });
     }
     else if(view === 'form'){ await traPrepareForm(arg); traRenderForm(); }
     else if(view === 'import'){ await traPrepareImport(); traRenderImport(); }
@@ -13638,9 +13806,12 @@ async function traGo(view, arg){
 }
 async function traReload(keepScroll){
   const y = window.scrollY;
-  TRA.g = await examApi('trGet', { sessionId:TRA.g.session.sessionId });
+  const g1 = await trGetFast(TRA.g.session.sessionId);
+  if(TRA.g && TRA.g.exam && !g1.exam && g1._pending) { g1.exam = TRA.g.exam; g1.log = TRA.g.log; } // ระหว่างรอข้อมูลใหม่ ใช้ของเดิมไปก่อน ไม่ให้กระพริบ
+  TRA.g = g1;
   traRenderDetail();
   if(keepScroll) window.scrollTo(0, y);
+  trGetExtras(g1, ()=>TRA.g, ()=>{ if(TRA.view === 'detail' && TRA.g === g1) { const y2 = window.scrollY; traRenderDetail(); window.scrollTo(0, y2); } });
 }
 
 /* ----- คิวรออนุมัติ ----- */
@@ -13654,10 +13825,10 @@ function traRenderQueue(){
     const pend = rows.filter(r=>r.status==='requested'), re = rows.filter(r=>r.status==='needsReconfirm');
     h += `<div class="tr-qs" style="--tc:${trColor(s.category)}"><div class="tr-qs-h" data-tr="manage" data-id="${trH(s.sessionId)}" role="button"><b>${trH(s.title)}</b><small>${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))} · ${trSeatText(s)}${s.seats>0&&s.approved>=s.seats?' <span style="color:var(--red)">เต็ม</span>':''}</small></div>`;
     pend.forEach(r=>{
-      h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓ อนุมัติ</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`;
+      h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓ อนุมัติ</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`;
     });
     if(pend.length > 1) h += `<div class="ex-act"><button class="btn btn-ghost" data-tr="aprall" data-sid="${trH(s.sessionId)}">✓ อนุมัติทั้งหมดของงานนี้ (${pend.length})</button></div>`;
-    re.forEach(r=>{ h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>วันเทรนเปลี่ยน — รอให้เจ้าตัวกดขอใหม่</small></div><div class="tr-row-a">${trChip('รอยืนยันใหม่','bad')}</div></div>`; });
+    re.forEach(r=>{ h += `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>วันเทรนเปลี่ยน — รอให้เจ้าตัวกดขอใหม่</small></div><div class="tr-row-a">${trChip('รอยืนยันใหม่','bad')}</div></div>`; });
     h += '</div>';
   });
   root.innerHTML = h;
@@ -13668,7 +13839,7 @@ async function traApprove(sid, ids, op, force){
     await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
     hideLoadingOverlay();
     if(TRA.view === 'detail') await traReload(true);
-    else { TRA.queue = await examApi('trQueue'); traRenderQueue(); }
+    else { TRA.queue = await trQueueFast(); traRenderQueue(); }
   }catch(e){
     hideLoadingOverlay();
     if(op === 'approve' && !force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message + '\nอนุมัติเกินที่นั่งต่อไป?')) return traApprove(sid, ids, op, true);
@@ -13765,22 +13936,22 @@ function traPeopleHtml(g){
   if(s.seats > 0) h += `<div class="tr-seat"><div style="width:${Math.min(100, s.approved/s.seats*100)}%"></div><span>${s.approved}/${s.seats} ที่นั่ง</span></div>`;
   if(!closed && s.status !== 'cancelled') h += `<div class="ex-act"><button class="btn btn-primary tr-big" data-tr="addp">➕ เพิ่มผู้เข้าเทรน</button></div>`;
   const req = by('requested');
-  if(req.length) h += `<div class="tr-mh">⏳ รออนุมัติ (${req.length})</div>` + req.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${trH(r.nameEn)} · ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`).join('') +
+  if(req.length) h += `<div class="tr-mh">⏳ รออนุมัติ (${req.length})</div>` + req.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>${trH(r.nameEn)} · ขอเมื่อ ${trH(exFmtDT(r.requestedAt))}</small></div><div class="tr-row-a"><button class="btn btn-primary tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="approve">✓</button><button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">✗</button></div></div>`).join('') +
     (req.length>1 ? `<div class="ex-act"><button class="btn btn-ghost" data-tr="aprall" data-sid="${trH(s.sessionId)}">✓ อนุมัติทั้งหมด (${req.length})</button></div>` : '');
   const ap = by('approved');
   h += `<div class="tr-mh">✅ อนุมัติแล้ว (${ap.length})</div>` + (ap.length ? ap.map(r=>{
     const n = traAttendedDays(g, r.regId);
-    return `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${trH(r.nameEn)}${r.email?'':' · <span style="color:var(--amber)">ไม่มีบัญชีในแอป (สอบออนไลน์/รับ Cer อัตโนมัติไม่ได้)</span>'}${n?` · เข้าเทรนแล้ว ${n} วัน`:''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="pmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}</div></div>`;
+    return `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>${trH(r.nameEn)}${r.email?'':' · <span style="color:var(--amber)">ไม่มีบัญชีในแอป (สอบออนไลน์/รับ Cer อัตโนมัติไม่ได้)</span>'}${n?` · เข้าเทรนแล้ว ${n} วัน`:''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="pmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}</div></div>`;
   }).join('') : '<div class="ex-hint">ยังไม่มี</div>');
   const re = by('needsReconfirm');
-  if(re.length) h += `<div class="tr-mh">🔁 รอยืนยันใหม่ เพราะวันเทรนเปลี่ยน (${re.length})</div>` + re.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">ตัดออก</button>`}</div></div>`).join('');
+  if(re.length) h += `<div class="tr-mh">🔁 รอยืนยันใหม่ เพราะวันเทรนเปลี่ยน (${re.length})</div>` + re.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="reject">ตัดออก</button>`}</div></div>`).join('');
   const rj = by('rejected').concat(by('cancelled'));
-  if(rj.length) h += `<details class="tr-sec"><summary>ไม่อนุมัติ / ยกเลิก (${rj.length})</summary>${rj.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>${r.status==='rejected'?'ไม่อนุมัติ':'ยกเลิก'}${r.note?': '+trH(r.note):''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="undo">↩</button>`}</div></div>`).join('')}</details>`;
+  if(rj.length) h += `<details class="tr-sec"><summary>ไม่อนุมัติ / ยกเลิก (${rj.length})</summary>${rj.map(r=>`<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>${r.status==='rejected'?'ไม่อนุมัติ':'ยกเลิก'}${r.note?': '+trH(r.note):''}</small></div><div class="tr-row-a">${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="apr" data-sid="${trH(s.sessionId)}" data-id="${trH(r.regId)}" data-op="undo">↩</button>`}</div></div>`).join('')}</details>`;
   return h;
 }
 function traPersonMenu(regId){
   const r = TRA.g.regs.find(x=>x.regId===regId); if(!r) return;
-  trSheet(`<div class="ex-hint">${trH(r.name)}</div><div class="tr-menu"><button class="btn btn-ghost tr-big" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="undo">↩ ย้อนกลับเป็น "รออนุมัติ"</button><button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="remove">🗑 ลบออกจากรายชื่อ</button></div>`, { title:'จัดการรายชื่อ' });
+  trSheet(`<div class="ex-hint">${trH(exPerson(r.email,r.name))}</div><div class="tr-menu"><button class="btn btn-ghost tr-big" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="undo">↩ ย้อนกลับเป็น "รออนุมัติ"</button><button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="apr" data-sid="${trH(r.sessionId)}" data-id="${trH(regId)}" data-op="remove">🗑 ลบออกจากรายชื่อ</button></div>`, { title:'จัดการรายชื่อ' });
 }
 async function traAddPersonSheet(){
   showLoadingOverlay('กำลังโหลดรายชื่อ...');
@@ -13848,7 +14019,7 @@ function traCheckinHtml(g){
     if(a) right = `<div class="tr-ckok"><b>✓ ${trFmtTime(a.checkInAt)}</b>${a.diffMin>0?trChip('สาย '+a.diffMin+' นาที','warn'):trChip(a.diffMin<0?'ก่อนเวลา '+(-a.diffMin)+' นาที':'ตรงเวลา','ok')}${a.history && a.history.length>1?'<small>แก้ไขแล้ว</small>':''}</div>${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="ckmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}`;
     else if(closed) right = '<span class="ex-hint">ไม่ได้เช็คชื่อ</span>';
     else right = isToday ? `<button class="btn btn-primary tr-ckbtn" data-tr="ckin" data-id="${trH(r.regId)}">✓ เช็คชื่อ</button>` : `<button class="btn btn-ghost tr-ckbtn" data-tr="ckmenu" data-id="${trH(r.regId)}">ลงเวลาเอง</button>`;
-    return `<div class="tr-row ${a?'done':''}"><div class="tr-row-n"><b>${trH(r.name)}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div><div class="tr-row-a">${right}</div></div>`;
+    return `<div class="tr-row ${a?'done':''}"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div><div class="tr-row-a">${right}</div></div>`;
   }).join('');
   h += `<div class="ex-act" style="margin-top:14px"><button class="btn btn-ghost" data-tr="ckxls">⬇ ดาวน์โหลด Excel เช็คชื่อ</button></div>`;
   return h;
@@ -13867,7 +14038,7 @@ function traCkMenu(regId){
   const a = traAttOf(g, regId, TRA.day);
   const hist = (a && a.history || []).map(x=>`<div class="tr-log"><span>${trH(exFmtDT(x.at))}</span> ${({in:'เช็คชื่อ',undo:'ยกเลิก',edit:'แก้เวลา',manual:'ลงเวลาเอง'})[x.op]||x.op} ${x.to?'→ '+trFmtTime(x.to):''} <small>— ${trH(x.by)}${x.note?' · '+trH(x.note):''}</small></div>`).join('');
   const dflt = a ? trFmtTime(a.checkInAt) : (TRA.day === trToday() ? trFmtTime(exNow()) : traRefTime(g, TRA.day));
-  trSheet(`<div class="ex-hint">${trH(r.name)} · ${trH(trFmtDate(TRA.day))}</div>
+  trSheet(`<div class="ex-hint">${trH(exPerson(r.email,r.name))} · ${trH(trFmtDate(TRA.day))}</div>
     <label class="tr-lb">${a?'แก้เวลาเช็คชื่อ':'ลงเวลาเอง'} (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${dflt}">
     <label class="tr-lb">หมายเหตุ (ไม่บังคับ)</label><input type="text" id="tra-ck-note" class="tr-in" placeholder="เช่น ลืมเช็คชื่อ / มาถึงตรงเวลา">
     <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="ckedit" data-id="${trH(regId)}">💾 บันทึกเวลา</button>${a?`<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="ckundo" data-id="${trH(regId)}">ยกเลิกการเช็คชื่อ</button>`:''}</div>
@@ -13893,6 +14064,7 @@ function traCheckinXls(){
 /* ----- สอบ (เฉพาะ Cer ภายใน) ----- */
 function traExamHtml(g){
   const s = g.session, e = g.exam;
+  if(g._pending && !e) return '<div class="ex-note">⏳ กำลังโหลดข้อมูลรอบสอบ...</div>';
   if(!s.examSetId && !e) return '<div class="ex-note">งานนี้ยังไม่ผูกชุดข้อสอบ — กด "แก้ไข" ในแท็บข้อมูล แล้วเลือกชุดข้อสอบที่เผยแพร่แล้ว</div>';
   if(!e || e.error) return `<div class="ex-note ex-bad">โหลดข้อมูลรอบสอบไม่สำเร็จ${e&&e.error?': '+trH(e.error):''}</div>`;
   const st = e.state === 'pending' ? trChip('ยังไม่เปิดสอบ','') : e.state === 'closed' ? trChip('ปิดสอบแล้ว','bad') : e.isOpen ? trChip('เปิดสอบอยู่','ok') : trChip('ไม่ได้เปิด','');
@@ -13902,7 +14074,7 @@ function traExamHtml(g){
     <div class="ex-hint">ข้อสอบจะเปิดเฉพาะเมื่อ Sup กด "เริ่มสอบ" · ผู้สอบไม่ผ่านสอบใหม่ได้เรื่อยๆ จนกว่า Sup กด "ปิดสอบ" · ผู้สอบผ่านจะได้ใบ Cer อัตโนมัติ</div></div>`;
   h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่าน %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลา (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div><div><label class="tr-lb">ผ่อนผัน (นาที)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-grace" value="${e.graceMin}" min="0" max="60"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
   const stText = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','warn'], grading:['รอตรวจข้อเขียน','warn'], none:['ยังไม่สอบ',''] };
-  h += `<div class="tr-sec"><b>ผลสอบ</b>${e.rows.length ? e.rows.map(r=>{ const t = stText[r.status] || ['-','']; return `<div class="tr-row"><div class="tr-row-n"><b>${trH(r.name)}</b><small>สอบ ${r.attemptCount||0} ครั้ง${r.lastScore!=null?' · ล่าสุด '+r.lastScore+'%':''}${r.certNo?' · '+trH(r.certNo):''}</small></div><div class="tr-row-a">${trChip(t[0],t[1])}${r.certUrl?`<a class="btn btn-ghost tr-sq" target="_blank" rel="noopener" href="${trH(safeHttpUrl(r.certUrl))}">📄</a>`:''}</div></div>`; }).join('') : '<div class="ex-hint">ยังไม่มีผู้มีสิทธิ์สอบ</div>'}</div>
+  h += `<div class="tr-sec"><b>ผลสอบ</b>${e.rows.length ? e.rows.map(r=>{ const t = stText[r.status] || ['-','']; return `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>สอบ ${r.attemptCount||0} ครั้ง${r.lastScore!=null?' · ล่าสุด '+r.lastScore+'%':''}${r.certNo?' · '+trH(r.certNo):''}</small></div><div class="tr-row-a">${trChip(t[0],t[1])}${r.certUrl?`<a class="btn btn-ghost tr-sq" target="_blank" rel="noopener" href="${trH(safeHttpUrl(r.certUrl))}">📄</a>`:''}</div></div>`; }).join('') : '<div class="ex-hint">ยังไม่มีผู้มีสิทธิ์สอบ</div>'}</div>
     <div class="ex-act"><button class="btn btn-ghost" data-tr="exissue">🎓 ออกใบ Cer ที่ค้าง / ซิงก์เข้าแท็บ Certificate</button>${e.counts.grading?`<button class="btn btn-ghost" data-tr="exgrade">✍️ ไปตรวจข้อเขียน (${e.counts.grading})</button>`:''}</div>
     <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่มนี้ไว้กดเมื่อมีใบค้าง</div>`;
   return h;
@@ -13983,7 +14155,7 @@ function traCloseHtml(g){
     h += m.rows.map(x=>{
       const r = x.r, mf = (g.files||[]).filter(f=>f.kind==='mfrCert' && f.regId===r.regId);
       let st = x.ok ? trChip(x.kind==='mfr'?'แนบแล้ว':x.kind==='exam'?'ผ่าน+ได้ Cer':'เข้าเทรน','ok') : (x.reason ? trChip('มีเหตุผล','warn') : trChip('ต้องดำเนินการ','bad'));
-      let h2 = `<div class="tr-pr ${x.ok||x.reason?'':'need'}"><div class="tr-pr-h"><b>${trH(r.name)}</b>${st}</div>`;
+      let h2 = `<div class="tr-pr ${x.ok||x.reason?'':'need'}"><div class="tr-pr-h"><b>${trH(exPerson(r.email,r.name))}</b>${st}</div>`;
       if(x.msg && !x.ok) h2 += `<div class="ex-hint">${trH(x.msg)}</div>`;
       if(x.kind === 'mfr' && x.attended){
         h2 += mf.map(f=>`<div class="tr-file"><a href="${trH(safeHttpUrl(f.driveUrl))}" target="_blank" rel="noopener">📎 ${trH(f.fileName)}</a>${f.certDocId?trChip('ส่งเข้า Certificate แล้ว','ok'):(closed?trChip('ยังไม่เข้า Certificate','warn'):'')}${closed?'':`<button class="tr-x" data-tr="rmfile" data-id="${trH(f.fileId)}" aria-label="ลบไฟล์">✕</button>`}</div>`).join('');
@@ -14118,10 +14290,10 @@ function traBlankForm(){
 }
 async function traPrepareForm(id){
   const yr = TRA.year, needList = !TRA.data || TRA.dataFor !== yr;
-  const [sets, lst] = await Promise.all([examApi('trExamSets'), needList ? examApi('trList', { year:yr }) : Promise.resolve(null)]);
+  const [sets, lst] = await Promise.all([examApi('trExamSets'), needList ? trListFast(yr) : Promise.resolve(null)]);
   TRA.sets = sets; if(lst){ TRA.data = lst; TRA.dataFor = yr; }
   if(id){
-    const g = (TRA.g && TRA.g.session.sessionId === id) ? TRA.g : await examApi('trGet', { sessionId:id });
+    const g = (TRA.g && TRA.g.session.sessionId === id) ? TRA.g : await trGetFast(id);
     const s = g.session;
     TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
       category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:s.startDate.slice(0,7), location:s.location,
@@ -14258,7 +14430,7 @@ async function traFormCopy(){
 async function traFormCopyPick(id){
   showLoadingOverlay('กำลังคัดลอก...');
   try{
-    const g = await examApi('trGet', { sessionId:id });
+    const g = await trGetFast(id);
     const F = TRA.form, f = F.f;
     let dates = F.days.map(d=>d.date);
     if(!dates.length && f.startDate && f.endDate){ for(let d = f.startDate; d <= f.endDate; d = trAddDays(d,1)) dates.push(d); }
@@ -14363,6 +14535,8 @@ function traRenderImport(){
   h += `<div class="ex-act"><button class="btn btn-primary tr-big" data-tr="imp_run">📥 นำเข้าที่เลือก (${I.rows.filter(r=>r.include&&!r.done).length} รายการ)</button></div></div>`;
   h += `<div class="tr-fs"><b>🗓 Google Calendar "F1 Training"</b><div class="ex-hint">ซิงก์ทางเดียวจากแอป → ปฏิทิน (งานที่กำหนดวันแน่นอนเท่านั้น) · ต้องรัน setupCalendar ใน Apps Script หนึ่งครั้งก่อน (ดูคู่มือติดตั้ง) · งานใหม่/ที่แก้ไขจะซิงก์เองอัตโนมัติ</div>
     <div class="ex-act"><button class="btn btn-ghost" data-tr="calsync" data-all="0">ซิงก์งานที่ยังไม่อยู่ในปฏิทิน</button><button class="btn btn-ghost" data-tr="calsync" data-all="1">ซิงก์ใหม่ทั้งหมด</button></div></div>`;
+  h += `<div class="tr-fs"><b>⚡ ความเร็วหน้าตารางเทรน (Firestore)</b><div class="ex-hint">ระบบทำสำเนาข้อมูลตารางเทรนไว้ใน Firestore ให้หน้าเว็บเปิดเร็ว (ต้นฉบับยังเป็น Google Sheet) · อัปเดตอัตโนมัติทุกครั้งที่บันทึก · กด "สร้างข้อมูล" เมื่อติดตั้งครั้งแรก หรือเมื่อสถานะบอกว่ามีข้อผิดพลาด · งานที่จบเกิน 2 ปีจะเก็บเฉพาะสรุปเพื่อไม่ให้ข้อมูลโตไม่หยุด (ข้อมูลเต็มยังอยู่ใน Sheet)</div>
+    <div class="ex-act"><button class="btn btn-ghost" data-tr="fs_status">ตรวจสถานะ</button><button class="btn btn-ghost" data-tr="fs_rebuild">⚡ สร้างข้อมูล Firestore</button></div><div id="tra-fs-out" class="ex-hint"></div></div>`;
   /* ===== TEST-PURGE:BEGIN (ชั่วคราว — ทดสอบเสร็จให้ลบทั้งก้อนนี้ + ฟังก์ชัน traPurgeGo + trPurge/trPurgePreview ใน Code.gs) ===== */
   h += `<div class="tr-fs" style="border-color:var(--red)"><b>🧹 ล้างข้อมูลทดสอบตารางเทรน <small style="color:var(--red)">(ชั่วคราว)</small></b>
     <div class="ex-hint">ลบงานเทรน ตารางเรียน รายชื่อ เช็คชื่อ ไฟล์แนบ (ย้ายลงถังขยะ Drive) รอบสอบที่ผูกกับงาน ผลสอบ และใบ Cer ที่ออกจากรอบนั้น <b>กู้คืนในแอปไม่ได้</b> (ไม่แตะชุดข้อสอบ)</div>
@@ -14370,6 +14544,24 @@ function traRenderImport(){
     <div class="ex-act"><button class="btn btn-ghost" style="color:var(--red)" data-tr="purge_go">🧹 ตรวจสอบแล้วล้าง...</button></div></div>`;
   /* ===== TEST-PURGE:END ===== */
   root.innerHTML = h;
+}
+async function traFsStatusGo(){
+  const o = $('tra-fs-out'); if(!o) return; o.textContent = '⏳ กำลังตรวจ...';
+  try{
+    const r = await examApi('trFsStatus');
+    o.innerHTML = r.enabled ? `✅ เปิดใช้งาน · ซิงก์ล่าสุด ${r.lastSync ? trH(exFmtDT(r.lastSync)) : '— (ยังไม่เคยสร้างข้อมูล)'}${r.rebuildPending ? ' · <b style="color:var(--amber)">รอสร้างใหม่ (ระบบจะทำเองภายใน 10 นาที หรือกดปุ่มสร้างข้อมูล)</b>' : ''}${r.lastError ? '<br><span style="color:var(--red)">ข้อผิดพลาดล่าสุด: '+trH(r.lastError)+'</span>' : ''}` : '⚠ ยังไม่ได้ตั้งค่า FS_SA_JSON ใน Apps Script (ดูคู่มือติดตั้ง v9.50) — ตอนนี้ระบบอ่านจาก Sheet แบบเดิม';
+  }catch(e){ o.textContent = '⚠ '+e.message; }
+}
+async function traFsRebuildGo(){
+  if(!confirm('สร้างข้อมูลสำเนาใน Firestore ใหม่ทั้งหมด?\n(ระหว่างนี้การบันทึกของคนอื่นจะรอสักครู่ ปกติไม่เกิน 1 นาที)')) return;
+  showLoadingOverlay('กำลังสร้างข้อมูล Firestore...');
+  try{
+    const n = await examApi('trFsRebuild');
+    TRFS.offUntil = 0; window._trFsStale = 0;
+    hideLoadingOverlay();
+    alert('สร้างข้อมูลเรียบร้อย\nงานเทรน '+n.sessions+' · รายชื่อ '+n.regs+' · เช็คชื่อ '+n.att+' · ไฟล์ '+n.files+(n.archived?' · เก็บแบบสรุป '+n.archived+' งาน':'')+(n.removed?' · ลบข้อมูลค้าง '+n.removed:''));
+    traFsStatusGo();
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 async function traImportRun(){
   const I = TRA.imp, sel = I.rows.filter(r=>r.include && !r.done);
@@ -14570,6 +14762,8 @@ function trOnEvent(e){
     case 'imp_run': traImportRun(); return;
     case 'calsync': traCalSync(t.getAttribute('data-all') === '1'); return;
     case 'purge_go': traPurgeGo(); return;
+    case 'fs_status': traFsStatusGo(); return;
+    case 'fs_rebuild': traFsRebuildGo(); return;
   }
 }
 (function trInit(){
@@ -16825,11 +17019,10 @@ async function dxRenderPeople(force){
   dxLoading('dx-people-body');
   try{ if(!_cdState.loaded || force){ _cdState.loaded = false; _cdState.loading = false; await cdLoadData(); } }catch(e){}
   if(force || DX.lastActive===undefined){
-    try{ DX.lastActive = await dxLoadLastActive(); DX.logsErr=''; }catch(e){ DX.lastActive = null; DX.logsErr = e.message||String(e); }
+    DX.lastActive = null;
     try{ DX.access = await fsGetPendingAccessRequests(); DX.accessErr=''; }catch(e){ DX.access = null; DX.accessErr = e.message||String(e); }
-    if(force && DX.logOpen){ try{ DX.recent = await fsGetRecentLogs(30); }catch(e){ DX.recent = null; } } else if(force){ DX.recent = undefined; }
   }
-  let h = dxStamp('เคลมที่ส่ง = สด · Cer/โปรไฟล์/ใช้งานล่าสุด = ตามที่โหลดล่าสุด (กด 🔄 เพื่อดึงใหม่)', true);
+  let h = dxStamp('เคลมที่ส่ง = สด · Cer/โปรไฟล์ = ตามที่โหลดล่าสุด (กด 🔄 เพื่อดึงใหม่)', true);
   // คำขอสิทธิ์
   h += dxH('🔑 คำขอสิทธิ์เข้าระบบที่รออนุมัติ');
   if(DX.access===null) h += '<div style="color:var(--text-faint);font-size:12.5px;">ดูได้เฉพาะ Super Admin (ตามสิทธิ์ใน Firestore Rules)</div>';
@@ -16841,26 +17034,11 @@ async function dxRenderPeople(force){
   const claimBy = {}; (DATA.claims||[]).forEach(c=>{ const e = lc(c.submittedBy); if(e) claimBy[e] = (claimBy[e]||0)+1; });
   const rows = []; let lastG = null;
   people.forEach(p=>{
-    if(p.glabel!==lastG){ lastG = p.glabel; rows.push([`<b>${escapeHtml(p.glabel)}</b>`,'','','','','']); }
-    const lt = last[p.email];
-    const act = DX.lastActive===null ? '<span style="color:var(--text-faint);">—</span>' : lt ? (dxAgeDays(lt)===0?'วันนี้':dxAgeDays(lt)+' วันก่อน') : '<span style="color:var(--red);">ไม่มีใน 45 วัน</span>';
-    rows.push([escapeHtml(p.name), escapeHtml(p.position), claimBy[p.email]||0, p.certs.length, p.miss.length?`<b style="color:var(--red)">${p.miss.length}</b>`:(p.reqI+p.reqM?'<span style="color:var(--green)">ครบ</span>':'—'), act]);
+    if(p.glabel!==lastG){ lastG = p.glabel; rows.push([`<b>${escapeHtml(p.glabel)}</b>`,'','','','']); }
+    rows.push([escapeHtml(p.name), escapeHtml(p.position), claimBy[p.email]||0, p.certs.length, p.miss.length?`<b style="color:var(--red)">${p.miss.length}</b>`:(p.reqI+p.reqM?'<span style="color:var(--green)">ครบ</span>':'—')]);
   });
-  h += dxH('👥 การมีส่วนร่วมรายคน','ขาด = Cer ที่ Sup กำหนดว่าต้องมี (ตามรุ่นที่รับผิดชอบ) ลบด้วยที่แนบแล้ว · "ใช้งานล่าสุด" มาจากบันทึกกิจกรรม 45 วัน') + dxTable(['ชื่อเล่น','ตำแหน่ง','เคลม/แจ้งปัญหาที่ส่ง','ใบ Cer ที่แนบ','Cer ที่ยังขาด','ใช้งานล่าสุด'], rows);
-  // log — ซ่อนไว้เป็นค่าเริ่มต้น กดปุ่มเพื่อดู
-  h += `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:22px;border-top:1px solid var(--border);padding-top:12px;"><h3 style="font-size:14px;margin:0;">📜 กิจกรรมล่าสุด 30 รายการ</h3><button class="btn btn-ghost btn-sm" id="dx-log-toggle">👁 แสดง</button></div><div id="dx-log-body" style="display:${DX.logOpen?'block':'none'};margin-top:8px;">`;
-  h += dxLogInner();
-  h += '</div>';
+  h += dxH('👥 การมีส่วนร่วมรายคน','ขาด = Cer ที่ Sup กำหนดว่าต้องมี (ตามรุ่นที่รับผิดชอบ) ลบด้วยที่แนบแล้ว') + dxTable(['ชื่อเล่น','ตำแหน่ง','เคลม/แจ้งปัญหาที่ส่ง','ใบ Cer ที่แนบ','Cer ที่ยังขาด'], rows);
   dxBody('dx-people-body', h);
-  const lt_ = $('dx-log-toggle'); if(lt_){ lt_.textContent = DX.logOpen?'🙈 ซ่อน':'👁 แสดง'; lt_.addEventListener('click', async ()=>{
-    DX.logOpen = !DX.logOpen; const b_ = $('dx-log-body'); if(b_) b_.style.display = DX.logOpen?'block':'none'; lt_.textContent = DX.logOpen?'🙈 ซ่อน':'👁 แสดง';
-    // โหลด 30 รายการล่าสุดเฉพาะตอนเปิดดู (ไม่อ่านทั้งตาราง) · เปิดครั้งต่อไปใช้ของเดิม จนกว่าจะกด 🔄
-    if(DX.logOpen && DX.recent===undefined && b_){
-      b_.innerHTML = '<div style="color:var(--text-faint);font-size:12.5px;padding:6px 0;">กำลังโหลด...</div>';
-      try{ DX.recent = await fsGetRecentLogs(30); }catch(e){ DX.recent = null; }
-      const b2 = $('dx-log-body'); if(b2) b2.innerHTML = dxLogInner();
-    }
-  }); }
 }
 function dxLogInner(){
   if(DX.recent===undefined) return '<div style="color:var(--text-faint);font-size:12.5px;">กด "แสดง" เพื่อโหลด 30 รายการล่าสุด</div>';
@@ -16923,10 +17101,10 @@ async function cdLoad(force){
 }
 function cdPersonName(email, fallback){
   const lbl = profileLabelMap[email]; if(lbl) return String(lbl).split(' - ')[0];
-  return nicknamesMap[email] || fallback || email;
+  return fallback || email;
 }
 function cdSupNameFor(email){
-  const cands = [ (profileLabelMap[email]||'').split(' - ')[0], nicknamesMap[email] ].filter(Boolean);
+  const cands = [ (profileLabelMap[email]||'').split(' - ')[0] ].filter(Boolean);
   for(const c of cands){
     const hit = SUP_PRODUCTS.find(n=> n===c || n.includes(c) || c.includes(n.replace(/\s*\(.*\)/,'').trim()));
     if(hit) return hit;
