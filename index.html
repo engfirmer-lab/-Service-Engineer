@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.66
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 15:18 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.67
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 15:49 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.66</title>
+<title>F1 Service — v9.67</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2432,8 +2432,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.66";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 15:18 น. เวลาไทย";
+const APP_VERSION = "9.67";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 15:49 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13148,7 +13148,7 @@ function exaQEditorHtml(){
       <button class="btn btn-ghost btn-sm" data-ex="itmv" data-dir="-1" data-i="${i}" ${i===0?'disabled':''}>▲</button><button class="btn btn-ghost btn-sm" data-ex="itmv" data-dir="1" data-i="${i}" ${i===d.items.length-1?'disabled':''}>▼</button>
       <button class="btn btn-ghost btn-sm" data-ex="itdel" data-i="${i}">ลบ</button></div>`).join('') + '<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="itadd">+ เพิ่มขั้น</button></div>';
   } else if(d.type==='match'){
-    body = '<div class="ex-hint">กรอกคู่ที่ถูกต้อง (ซ้าย → ขวา) ผู้สอบจะเห็นฝั่งซ้ายเป็นโจทย์ และเลือกฝั่งขวาจากรายการ</div>' + d.pairs.map((p,i)=>`<div class="ex-chrow"><input type="text" class="exa-pl" data-i="${i}" value="${exH(p.l)}" placeholder="ซ้าย ${i+1}"><span>→</span>
+    body = '<div class="ex-hint">กรอกคู่ที่ถูกต้อง (ซ้าย → ขวา) ผู้สอบจะเห็นฝั่งซ้ายเป็นโจทย์ และเลือกฝั่งขวาจากรายการ · ข้อซ้ายหลายข้อตอบเหมือนกันได้ (พิมพ์คำตอบเดียวกัน)</div>' + d.pairs.map((p,i)=>`<div class="ex-chrow"><input type="text" class="exa-pl" data-i="${i}" value="${exH(p.l)}" placeholder="ซ้าย ${i+1}"><span>→</span>
       <input type="text" class="exa-pr" data-i="${i}" value="${exH(p.r)}" placeholder="ขวา (คู่ที่ถูก) ${i+1}"><button class="btn btn-ghost btn-sm" data-ex="pdel" data-i="${i}">ลบ</button></div>`).join('') +
       '<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="padd">+ เพิ่มคู่</button></div><div class="ex-hint">ตัวหลอกฝั่งขวา (ไม่บังคับ)</div>' +
       d.extras.map((x,i)=>`<div class="ex-chrow"><input type="text" class="exa-px" data-i="${i}" value="${exH(x)}" placeholder="ตัวหลอก ${i+1}"><button class="btn btn-ghost btn-sm" data-ex="xdel" data-i="${i}">ลบ</button></div>`).join('') +
@@ -13511,10 +13511,12 @@ function exaBuildQuestion(){ // draft → รูปแบบที่ส่ง�
   else if(d.type==='match'){
     const pairs = d.pairs.filter(p=>p.l.trim() && p.r.trim());
     const left = pairs.map((p,i)=>({ id:'L'+(i+1), text:p.l.trim() }));
-    const right = pairs.map((p,i)=>({ id:'R'+(i+1), text:p.r.trim() }));
-    d.extras.filter(x=>x.trim()).forEach((x,i)=>right.push({ id:'X'+(i+1), text:x.trim() }));
+    const right = [], idOf = {}; // คำตอบฝั่งขวาข้อความเดียวกัน = ตัวเลือกเดียว (ข้อซ้ายหลายข้อตอบซ้ำได้)
+    const key = t=>t.replace(/\s+/g,' ').trim().toLowerCase();
+    pairs.forEach(p=>{ const k = key(p.r); if(!(k in idOf)){ idOf[k] = 'R'+(right.length+1); right.push({ id:idOf[k], text:p.r.trim() }); } });
+    d.extras.filter(x=>x.trim()).forEach(x=>{ const k = key(x); if(!(k in idOf)){ idOf[k] = 'X'+(right.length+1); right.push({ id:idOf[k], text:x.trim() }); } });
     out.choices = { left, right };
-    out.answer = {}; left.forEach((l,i)=>{ out.answer[l.id] = 'R'+(i+1); });
+    out.answer = {}; left.forEach((l,i)=>{ out.answer[l.id] = idOf[key(pairs[i].r)]; });
   } else if(d.type==='short'){ out.answer = d.accepted.split('\n').map(x=>x.trim()).filter(Boolean); }
   else if(d.type==='hotspot'){ out.answer = d.regions; }
   else if(d.type==='essay'){ out.answer = d.model.trim(); }
