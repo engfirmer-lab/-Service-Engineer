@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.57
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 11:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.59
+  อัปเดตล่าสุด   : 13 ตุลาคม 2569 11:34 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.57</title>
+<title>F1 Service — v9.59</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2380,8 +2380,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.57";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 11:15 น. เวลาไทย";
+const APP_VERSION = "9.59";
+const APP_UPDATED_AT = "13 ตุลาคม 2569 11:34 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12356,7 +12356,8 @@ async function examResume(attemptId){
 }
 function examLocalLoad(id){ try{ return JSON.parse(localStorage.getItem(EX_LS_PREFIX+id)||'null'); }catch(e){ return null; } }
 function examLocalSave(){
-  const c = EX.cur; if(!c || c.practice) return;
+  const c = EX.cur; if(!c) return;
+  if(c.practice){ exaPracticeSave(); return; }
   try{ localStorage.setItem(EX_LS_PREFIX+c.p.attemptId, JSON.stringify({ ts:Date.now(), idx:c.idx, answers:c.answers })); }catch(e){}
 }
 function examLocalClear(id){ try{ localStorage.removeItem(EX_LS_PREFIX+id); }catch(e){} }
@@ -12457,7 +12458,7 @@ function examUpdateChrome(){
   const sv = $('ex-save');
   if(sv){
     if(c.submitting) sv.textContent = '⏳ กำลังส่งข้อสอบ...';
-    else if(c.practice) sv.textContent = '🧪 โหมดทดลอง — คำตอบอยู่ในหน้านี้เท่านั้น ปิดหน้าแล้วหาย';
+    else if(c.practice) sv.textContent = '🧪 โหมดทดลอง — คำตอบเก็บในเครื่องนี้ รีเฟรชแล้วทำต่อได้ (ไม่ส่งขึ้นระบบ)';
     else if(c.offline) sv.textContent = '⚠ ออฟไลน์ — คำตอบบันทึกไว้ในเครื่องแล้ว จะซิงก์เมื่อมีอินเทอร์เน็ต';
     else sv.textContent = c.dirty ? 'บันทึกในเครื่องแล้ว · ซิงก์ขึ้นระบบอัตโนมัติ' : '✓ ซิงก์ล่าสุดแล้ว';
     sv.className = 'ex-save' + (c.offline ? ' ex-warn' : '');
@@ -12546,6 +12547,7 @@ function examFinish(result){
   const c = EX.cur;
   if(c && c.practice){ // โหมดทดลอง: เก็บคำตอบไว้ใช้ขอดูใบ Cer ตัวอย่างเท่านั้น
     c.active = false; if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
+    exaPracticeClear(c.practice.setId);
     EX.practiceLast = { setId:c.practice.setId, source:c.practice.source, version:c.practice.version, answers:c.answers, title:c.title, level:c.level };
     examRenderResult(result, '');
     return;
@@ -12615,21 +12617,86 @@ async function exaPractice(setId, source){
     const p = { attemptId:'PRACTICE', roundId:'', setId:r.setId, version:r.version, questions:r.questions, answers:{}, lastSyncAt:0,
       deadlineAt: r.durationMin > 0 ? exNow() + r.durationMin*60000 : 0, graceMin:r.graceMin, passPercent:r.passPercent };
     EX.practiceLast = null;
-    examOpenAttempt(p, { title:r.title, level:r.level }, { setId:r.setId, source:r.source, version:r.version });
+    p.deadlineLocal = r.durationMin > 0 ? Date.now() + r.durationMin*60000 : 0;
+    examOpenAttempt(p, { title:r.title, level:r.level, passPercent:r.passPercent }, { setId:r.setId, source:r.source, version:r.version });
+    exaPracticeSave();
   }catch(e){ hideLoadingOverlay(); alert('เริ่มโหมดทดลองไม่ได้: '+e.message); }
 }
-function exaPracticeAbandon(){ // ออกจากหน้าทดลองกลางคัน (เช่นกดแท็บอื่น) = ทิ้งคำตอบ
-  if(EX.cur && EX.cur.practice){ EX.cur = null; if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; } }
+/* ----- จำการทดลองไว้ในเครื่อง (รีเฟรช/ปิดแท็บ/เน็ตหลุดแล้วทำต่อได้) — ไม่ส่งขึ้นระบบ ไม่ปนกับข้อมูลจริง ----- */
+const EX_PRACTICE_PREFIX = 'f1expractice:';
+const EX_PRACTICE_HOURS = 24;
+function exaPracticeKey(setId){ return EX_PRACTICE_PREFIX + String(typeof myUserEmail !== 'undefined' ? myUserEmail : '').toLowerCase() + ':' + setId; }
+function exaPracticeSave(){
+  const c = EX.cur; if(!c || !c.practice || !c.active) return;
+  try{ localStorage.setItem(exaPracticeKey(c.practice.setId), JSON.stringify({ ts:Date.now(), practice:c.practice, p:c.p, answers:c.answers, idx:c.idx, title:c.title, level:c.level })); }catch(e){}
+}
+function exaPracticeClear(setId){ try{ localStorage.removeItem(exaPracticeKey(setId)); }catch(e){} }
+function exaPracticeSaved(setId){
+  try{
+    const o = JSON.parse(localStorage.getItem(exaPracticeKey(setId)) || 'null');
+    if(!o || !o.ts || !o.p || !Array.isArray(o.p.questions) || !o.p.questions.length) return null;
+    if(Date.now() - o.ts > EX_PRACTICE_HOURS*3600000){ exaPracticeClear(setId); return null; }
+    return o;
+  }catch(e){ return null; }
+}
+async function exaPracticeResume(setId){
+  const o = exaPracticeSaved(setId); if(!o){ showToast('ไม่พบการทดลองที่ค้างอยู่'); return; }
+  if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
+  const p = o.p;
+  if(p.deadlineLocal > 0){
+    if(Date.now() > p.deadlineLocal + (p.graceMin||0)*60000){ // หมดเวลาระหว่างที่ปิดไป → ส่งให้อัตโนมัติ
+      showLoadingOverlay('หมดเวลาแล้ว กำลังตรวจ...');
+      try{
+        const r = await examApi('practiceSubmit', { setId:o.practice.setId, source:o.practice.source, version:o.practice.version, answers:o.answers||{}, expired:true });
+        hideLoadingOverlay(); exaPracticeClear(setId);
+        EX.practiceLast = { setId:o.practice.setId, source:o.practice.source, version:o.practice.version, answers:o.answers||{}, title:o.title, level:o.level };
+        EX.cur = { practice:o.practice, p, answers:o.answers||{}, active:false };
+        examRenderPracticeResult(r);
+      }catch(e){ hideLoadingOverlay(); alert('ตรวจการทดลองไม่ได้: '+e.message); }
+      return;
+    }
+    p.deadlineAt = p.deadlineLocal + _exOffset; // นับเวลาต่อจากเดิมตามนาฬิกาจริง
+  }
+  examOpenAttempt(p, { title:o.title, level:o.level }, o.practice);
+  EX.cur.answers = Object.assign({}, o.answers||{});
+  EX.cur.idx = Math.min(o.idx||0, Math.max(0, p.questions.length-1));
+  examRenderAttempt();
+}
+function exaPracticeDiscard(setId){
+  if(!confirm('ทิ้งการทดลองที่ค้างอยู่? คำตอบที่ทำไว้จะหาย')) return;
+  exaPracticeClear(setId);
+  if(EXA.view === 'sets') exaGo('sets'); else if(EXA.set && EXA.set.setId === setId) exaRenderSet(); else exaGo('sets');
+}
+function exaPracticeBanner(setId){
+  const o = exaPracticeSaved(setId); if(!o) return '';
+  const done = o.p.questions.filter(q=>exAnswered(q, (o.answers||{})[q.qid])).length;
+  return `<div class="ex-note ex-practice">🧪 <b>มีการทดลองทำข้อสอบค้างอยู่</b> (ตอบแล้ว ${done}/${o.p.questions.length} ข้อ · ${exFmtDT(o.ts)})
+    <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="pxresume" data-id="${exH(setId)}">▶ ทำต่อ</button><button class="btn btn-ghost btn-sm" data-ex="pxdiscard" data-id="${exH(setId)}">🗑 ทิ้ง</button></div></div>`;
+}
+function exaPracticeAbandon(){ // ออกจากหน้าทดลองกลางคัน (เช่นกดแท็บอื่น): เก็บสถานะล่าสุดไว้ในเครื่อง กลับมา "ทำต่อ" ได้
+  if(EX.cur && EX.cur.practice){ exaPracticeSave(); EX.cur = null; if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; } }
   EX.practiceLast = null;
+}
+function exPdfUrl(b64){
+  const bin = atob(b64), arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return URL.createObjectURL(new Blob([arr], { type:'application/pdf' }));
+}
+async function exaCertSample(){
+  const out = $('exa-sample-out'); if(out) out.innerHTML = '<span class="ex-hint">⏳ กำลังสร้างตัวอย่างใบ Cer...</span>';
+  try{
+    const r = await examApi('adminCertSample', { nameEn:exaMyEnName() });
+    const url = exPdfUrl(r.base64);
+    if(out) out.innerHTML = `<div class="ex-hint">ใช้: <b>${r.template==='custom' ? 'เทมเพลต Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b> · ชื่อ Sup บนใบ: <b>${exH(r.supName||'—')}</b> · ลายเซ็น: <b>${r.hasSignature ? 'มี' : 'ไม่มี'}</b></div>
+      <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">ข้อมูลสมมติ (Somchai Example · TEST-0000) ไม่บันทึกในระบบ</span>`;
+  }catch(e){ if(out) out.innerHTML = `<span class="ex-hint ex-warn">สร้างตัวอย่างไม่สำเร็จ: ${exH(e.message)}</span>`; }
 }
 async function exaPracticeCert(){
   const L = EX.practiceLast; if(!L) return;
   const out = $('ex-pxcert-out'); if(out) out.innerHTML = '<span class="ex-hint">⏳ กำลังสร้างใบ Cer ตัวอย่าง...</span>';
   try{
     const r = await examApi('practiceCert', { setId:L.setId, source:L.source, version:L.version, answers:L.answers, nameEn:exaMyEnName() });
-    const bin = atob(r.base64), arr = new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([arr], { type:'application/pdf' }));
+    const url = exPdfUrl(r.base64);
     if(out) out.innerHTML = `<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูใบ Cer ตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">ตัวอย่างเท่านั้น (เลขที่ TEST-0000) ไม่ถูกบันทึกในระบบ</span>`;
   }catch(e){ if(out) out.innerHTML = `<span class="ex-hint ex-warn">สร้างใบตัวอย่างไม่สำเร็จ: ${exH(e.message)}</span>`; }
 }
@@ -12650,6 +12717,10 @@ async function exaRenderSign(){
     </div>
     <div class="ex-act"><button class="btn btn-primary" data-ex="sigsave" id="exa-sig-save" disabled>💾 บันทึกลายเซ็น</button>
       ${d.has ? '<button class="btn btn-ghost" data-ex="sigdel">🗑 ลบลายเซ็น</button>' : ''}</div>
+    <div class="panel-block" style="margin-top:12px;"><h3 style="margin:0 0 6px">👁 ตรวจเทมเพลตใบ Cer</h3>
+      <div class="ex-hint">ใช้ตรวจหน้าตาใบ Cer โดยไม่ต้องทำข้อสอบ — ใช้ชื่อสมมติ และลายเซ็นของคุณ (ถ้ามี) · เทมเพลตตอนนี้: <b>${d.template==='custom' ? 'Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b></div>
+      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">👁 ดูตัวอย่างใบ Cer</button></div>
+      <div id="exa-sample-out" class="ex-act" style="margin-top:8px;"></div></div>
     <div class="ex-hint" style="margin-top:8px;">ใช้แม่แบบ Google Slides ของตัวเอง? ใส่กล่องข้อความที่มีคำว่า <code>{{SUP_SIGN}}</code> ตรงตำแหน่งที่จะวางลายเซ็น ระบบจะวางรูปแทนที่ให้ (ไม่มีกล่องนี้ = ไม่แสดงลายเซ็น)</div></div>`;
 }
 function exaSigProcess(file, clean){ // ย่อรูป → (ทำพื้นขาวโปร่งใส + ตัดขอบ) → PNG
@@ -12789,6 +12860,7 @@ function exaRenderSets(){
       <div class="ex-meta">${exH(s.title)} · ${s.qCount} ข้อ · เกณฑ์ผ่าน ${s.passPercent}% · ${s.durationMin>0 ? s.durationMin+' นาที' : 'ไม่จำกัดเวลา'}${EXA.role==='manager' ? ' · เจ้าของ: '+exH(s.ownerName||s.ownerEmail) : ''}</div>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="openset" data-id="${exH(s.setId)}">✏️ แก้ไข</button>
         <button class="btn btn-ghost btn-sm" data-ex="practice" data-id="${exH(s.setId)}" data-src="draft" ${s.qCount?'':'disabled'}>🧪 ทดลองทำ</button>
+        ${exaPracticeSaved(s.setId) ? `<button class="btn btn-ghost btn-sm" data-ex="pxresume" data-id="${exH(s.setId)}">▶ ทำการทดลองต่อ</button>` : ''}
         <button class="btn btn-ghost btn-sm" data-ex="delset" data-id="${exH(s.setId)}">🗑 ลบ</button></div></div>`;
   });
   html += exaPurgePanelHtml(); // TEST-PURGE
@@ -12843,7 +12915,7 @@ function exaRenderSet(){
   const isNew = !s.setId;
   let html = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการ</button><b>${isNew ? 'สร้างชุดข้อสอบใหม่' : exH(s.title)}</b>
       ${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}</div>
-    ${exaDraftBanner()}
+    ${exaDraftBanner()}${isNew ? '' : exaPracticeBanner(s.setId)}
     <div class="panel-block"><h2>ตั้งค่าชุดข้อสอบ</h2><div class="ex-form">
       <label>ชื่อชุดข้อสอบ<input id="exa-s-title" type="text" value="${exH(s.title)}" placeholder="เช่น Maglumi 800 L1: Coordinates"></label>
       <label>ประเภทเครื่อง (Category)${exaCatSelect(s.category)}</label>
@@ -13391,6 +13463,7 @@ async function exaDeleteSet(setId){
   try{
     const r = await examApi('adminDeleteSet', { setId });
     try{ localStorage.removeItem(exaDraftKey(setId)); }catch(e){}
+    exaPracticeClear(setId);
     EXA.pending = []; EXA.pendSet = ''; EXA.qEdit = null; EXA.draftOffer = null;
     hideLoadingOverlay(); showToast('✓ ลบชุดข้อสอบแล้ว ('+r.counts.questions+' ข้อ)');
     exaGo('sets');
@@ -13432,7 +13505,14 @@ function exaDraftSave(){
 }
 let _exaDraftTimer = 0;
 function exaDraftSoon(){ clearTimeout(_exaDraftTimer); _exaDraftTimer = setTimeout(exaDraftSave, 700); }
-function exaDraftSweep(){ // ลบร่างเก่าเกิน 14 วัน (ทุกชุด) ตอนเข้าหน้าจัดการ
+function exaDraftSweep(){ // ลบร่างเก่าเกิน 14 วัน (ทุกชุด) และการทดลองที่ค้างเกิน 24 ชม. ตอนเข้าหน้าจัดการ
+  try{
+    for(let i=localStorage.length-1; i>=0; i--){
+      const k = localStorage.key(i); if(!k || k.indexOf(EX_PRACTICE_PREFIX) !== 0) continue;
+      let o = null; try{ o = JSON.parse(localStorage.getItem(k)); }catch(e){}
+      if(!o || !o.ts || Date.now() - o.ts > EX_PRACTICE_HOURS*3600000) localStorage.removeItem(k);
+    }
+  }catch(e){}
   try{
     for(let i=localStorage.length-1; i>=0; i--){
       const k = localStorage.key(i); if(!k || k.indexOf(EX_DRAFT_PREFIX) !== 0) continue;
@@ -13527,7 +13607,10 @@ function exOnEvent(e){
       case 'pxback': { const sid = EX.practiceLast && EX.practiceLast.setId; EX.cur = null; EX.practiceLast = null; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
       case 'pxagain': { const L = EX.practiceLast; EX.cur = null; if(L) exaPractice(L.setId, L.source); else exaGo('sets'); return; }
       case 'pxcert': exaPracticeCert(); return;
+      case 'pxresume': exaPracticeResume(id); return;
+      case 'pxdiscard': exaPracticeDiscard(id); return;
       case 'sigsave': exaSigSave(); return;
+      case 'certsample': exaCertSample(); return;
       case 'sigdel': exaSigDel(); return;
       case 'newq': exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); exaRenderSet(); return;
       case 'editq': { const q = EXA.qs.find(x=>x.qid===id); if(q){ EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); exaRenderSet(); } return; }
