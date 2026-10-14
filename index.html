@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.92
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 20:59 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.95
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 21:22 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.92</title>
+<title>F1 Service — v9.95</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2514,8 +2514,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.92";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 20:59 น. เวลาไทย";
+const APP_VERSION = "9.95";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 21:22 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14552,11 +14552,21 @@ async function trEnter(){
 const TRFS = { offUntil:0 };
 function trFsOn(){ return Date.now() > TRFS.offUntil && Date.now() > (window._trFsStale||0) && !!window._firebaseSdk; }
 function trFsFail(e){ TRFS.offUntil = Date.now() + 300000; TRFS.lastErr = String(e && (e.code || e.message) || e).slice(0,120); TRFS.failN = (TRFS.failN||0) + 1; try{ console.warn('Firestore fast-read paused 5 min:', e && (e.code || e.message)); }catch(_){} }
+/* v9.93 — ยังไม่เคยสร้างสำเนา Firestore → ขอให้เซิร์ฟเวอร์สร้างให้เอง (เบื้องหลัง ครั้งเดียวต่อรอบการเปิดแอป) */
+let _trAutoBuilt = false;
+async function trFsAutoBuild(){
+  if(_trAutoBuilt) return; _trAutoBuilt = true;
+  try{
+    const r = await examApi('trFsEnsure');
+    if(r && r.built){ TRFS.offUntil = 0; window._trFsStale = 0; TRFS.lastErr = ''; }
+    else { _trAutoBuilt = false; }
+  }catch(e){ _trAutoBuilt = false; }
+}
 function trMe(){ return String(myUserEmail||'').toLowerCase(); }
 async function trFast(fsFn, apiFn){
   if(trFsOn()){
     try{ await initFirebase(); return await fsFn(window._firebaseSdk); }
-    catch(e){ if(!(e && e.trFsSkip)) trFsFail(e); }
+    catch(e){ if(!(e && e.trFsSkip)) trFsFail(e); if(e && e.message === 'fs-not-built') trFsAutoBuild(); }
   }
   return apiFn();
 }
@@ -15772,13 +15782,35 @@ function traRenderImport(){
     <div class="ex-act"><button class="btn btn-ghost" data-tr="calsync" data-all="0">ซิงก์งานที่ยังไม่อยู่ในปฏิทิน</button><button class="btn btn-ghost" data-tr="calsync" data-all="1">ซิงก์ใหม่ทั้งหมด</button></div></div>`;
   h += `<div class="tr-fs"><b>⚡ ความเร็วหน้าตารางเทรน (Firestore)</b><div class="ex-hint">ระบบทำสำเนาข้อมูลตารางเทรนไว้ใน Firestore ให้หน้าเว็บเปิดเร็ว (ต้นฉบับยังเป็น Google Sheet) · อัปเดตอัตโนมัติทุกครั้งที่บันทึก · กด "สร้างข้อมูล" เมื่อติดตั้งครั้งแรก หรือเมื่อสถานะบอกว่ามีข้อผิดพลาด · งานที่จบเกิน 2 ปีจะเก็บเฉพาะสรุปเพื่อไม่ให้ข้อมูลโตไม่หยุด (ข้อมูลเต็มยังอยู่ใน Sheet)</div>
     <div class="ex-act"><button class="btn btn-ghost" data-tr="fs_status">ตรวจสถานะ</button><button class="btn btn-ghost" data-tr="fs_rebuild">⚡ สร้างข้อมูล Firestore</button></div><div id="tra-fs-out" class="ex-hint"></div></div>`;
+  h += `<div class="tr-fs"><b>💾 สำรองข้อมูลรายปี</b><div class="ex-hint">คัดลอกข้อมูลตารางเทรนของปีที่เลือก (งาน ตารางเรียน รายชื่อ เช็คชื่อ ไฟล์ ประวัติ รอบสอบ ใบ Cer) ไปเก็บใน Google Sheet แยกต่างหาก ไม่ลบอะไรออกจากชีตหลัก · ต้นปีใหม่ระบบสำรองปีที่แล้วให้เองอัตโนมัติ · กดซ้ำได้ ข้อมูลในชีตสำรองจะอัปเดตเป็นล่าสุด</div>
+    <div class="ex-act"><select class="tr-in" id="tra-bk-year" style="max-width:160px">${[0,1,2,3].map(i=>{ const y = new Date().getFullYear()-i; return `<option value="${y}">ปี ${y+543}</option>`; }).join('')}</select><button class="btn btn-ghost" data-tr="bk_go">💾 สำรองปีนี้ตอนนี้</button><button class="btn btn-ghost" data-tr="bk_list">ดูรายการสำรอง</button></div><div id="tra-bk-out" class="ex-hint"></div></div>`;
   /* ===== TEST-PURGE:BEGIN (ชั่วคราว — ทดสอบเสร็จให้ลบทั้งก้อนนี้ + ฟังก์ชัน traPurgeGo + trPurge/trPurgePreview ใน Code.gs) ===== */
   h += `<div class="tr-fs" style="border-color:var(--red)"><b>🧹 ล้างข้อมูลทดสอบตารางเทรน <small style="color:var(--red)">(ชั่วคราว)</small></b>
     <div class="ex-hint">ลบงานเทรน ตารางเรียน รายชื่อ เช็คชื่อ ไฟล์แนบ (ย้ายลงถังขยะ Drive) รอบสอบที่ผูกกับงาน ผลสอบ และใบ Cer ที่ออกจากรอบนั้น <b>กู้คืนในแอปไม่ได้</b> (ไม่แตะชุดข้อสอบ)</div>
-    <select class="tr-in" id="tra-purge-scope"><option value="test">เฉพาะงานที่สร้างในแอป (ไม่รวมที่นำเข้า)</option><option value="all">ทั้งหมด รวมที่นำเข้า (ก่อนนำเข้าใหม่)</option></select>
+    <select class="tr-in" id="tra-purge-scope"><option value="imported">เฉพาะที่นำเข้าจากไฟล์ Excel (เก็บงานที่สร้างในแอปไว้)</option><option value="test">เฉพาะงานที่สร้างในแอป (ไม่รวมที่นำเข้า)</option><option value="all">ทั้งหมด รวมที่นำเข้า (ก่อนนำเข้าใหม่)</option></select>
     <div class="ex-act"><button class="btn btn-ghost" style="color:var(--red)" data-tr="purge_go">🧹 ตรวจสอบแล้วล้าง...</button></div></div>`;
   /* ===== TEST-PURGE:END ===== */
   root.innerHTML = h;
+}
+async function traBkList(){
+  const o = $('tra-bk-out'); if(!o) return; o.textContent = '⏳ กำลังโหลด...';
+  try{
+    const r = await examApi('trBackupList');
+    const sel = $('tra-bk-year');
+    if(sel){ const cur = String(new Date().getFullYear()); const ys = Array.from(new Set(r.years.concat([cur]))).sort().reverse(); sel.innerHTML = ys.map(y=>`<option value="${y}">${+y+543}</option>`).join(''); }
+    o.innerHTML = (r.backups.length ? r.backups.map(b=>`ปี ${+b.year+543}: ${b.url?`<a href="${trH(b.url)}" target="_blank" rel="noopener">เปิด Google Sheet</a>`:'(เปิดไม่ได้)'} · ล่าสุด ${b.at?trH(exFmtDT(b.at)):'-'}`).join('<br>') : 'ยังไม่มีชีตสำรอง') + (r.lastError ? '<br><span style="color:var(--red)">ข้อผิดพลาดล่าสุด: '+trH(r.lastError)+'</span>' : '');
+  }catch(e){ o.textContent = '⚠ '+e.message; }
+}
+async function traBkGo(){
+  const y = ($('tra-bk-year')||{}).value; if(!y) { await traBkList(); return; }
+  if(!confirm('สำรองข้อมูลตารางเทรนปี '+(+y+543)+' ไป Google Sheet แยก?\n(ไม่ลบข้อมูลในชีตหลัก)')) return;
+  showLoadingOverlay('กำลังสำรองข้อมูล...');
+  try{
+    const r = await examApi('trBackupYear', { year:y });
+    hideLoadingOverlay();
+    alert('สำรองเรียบร้อย: '+r.name+'\n'+Object.keys(r.counts).map(k=>k+' '+r.counts[k]).join(' · '));
+    traBkList();
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 async function traFsStatusGo(){
   const o = $('tra-fs-out'); if(!o) return; o.textContent = '⏳ กำลังตรวจ...';
@@ -16011,6 +16043,8 @@ function trOnEvent(e){
     case 'calsync': traCalSync(t.getAttribute('data-all') === '1'); return;
     case 'purge_go': traPurgeGo(); return;
     case 'fs_status': traFsStatusGo(); return;
+    case 'bk_go': traBkGo(); return;
+    case 'bk_list': traBkList(); return;
     case 'fs_rebuild': traFsRebuildGo(); return;
   }
 }
