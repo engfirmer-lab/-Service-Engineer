@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.91
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 16:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.92
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 20:59 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.91</title>
+<title>F1 Service — v9.92</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2514,8 +2514,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.91";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 16:20 น. เวลาไทย";
+const APP_VERSION = "9.92";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 20:59 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2534,7 +2534,9 @@ document.title = `F1 Service — v${APP_VERSION}`;
     const L = window.F1_TIMING || [];
     if(!L.length){ alert('ยังไม่มีข้อมูลเวลา — ใช้งานหน้าที่ช้าสัก 1-2 ครั้งก่อน แล้วแตะใหม่'); return; }
     const f = v => v == null ? '-' : v;
-    alert('เวลา (มิลลิวินาที)  รวมฝั่งเครื่อง | เซิร์ฟเวอร์รวม | รอคิว | ทำงาน | ซิงก์DB | ตรวจ token\n' + L.slice().reverse().map(x=>x.a+'  '+x.ms+' | '+f(x.tm&&x.tm.total)+' | '+f(x.tm&&x.tm.lock)+' | '+f(x.tm&&x.tm.run)+' | '+f(x.tm&&x.tm.flush)+' | '+f(x.tm&&x.tm.verify)).join('\n'));
+    let fsLine = '';
+    try{ fsLine = 'Firestore อ่านเร็ว: ' + (typeof trFsOn === 'function' ? (trFsOn() ? 'เปิด' : 'ปิดอยู่') : '?') + (typeof TRFS !== 'undefined' && TRFS.lastErr ? ' · ล้มเหลว '+(TRFS.failN||0)+' ครั้ง ล่าสุด: '+TRFS.lastErr : '') + (window._trFsStale && window._trFsStale > Date.now() ? ' · เซิร์ฟเวอร์แจ้งซิงก์ค้าง' : '') + (window._firebaseSdk ? '' : ' · SDK ยังไม่พร้อม') + '\n'; }catch(_){}
+    alert(fsLine + 'เวลา (มิลลิวินาที)  รวมฝั่งเครื่อง | เซิร์ฟเวอร์รวม | รอคิว | ทำงาน | ซิงก์DB | ตรวจ token\n' + L.slice().reverse().map(x=>x.a+'  '+x.ms+' | '+f(x.tm&&x.tm.total)+' | '+f(x.tm&&x.tm.lock)+' | '+f(x.tm&&x.tm.run)+' | '+f(x.tm&&x.tm.flush)+' | '+f(x.tm&&x.tm.verify)).join('\n'));
   });
 })();
 
@@ -14549,7 +14551,7 @@ async function trEnter(){
    งานที่จบเกิน 730 วันเก็บเฉพาะสรุปใน Firestore → เปิดรายละเอียดจะอ่านจาก Sheet ผ่าน Apps Script */
 const TRFS = { offUntil:0 };
 function trFsOn(){ return Date.now() > TRFS.offUntil && Date.now() > (window._trFsStale||0) && !!window._firebaseSdk; }
-function trFsFail(e){ TRFS.offUntil = Date.now() + 300000; try{ console.warn('Firestore fast-read paused 5 min:', e && (e.code || e.message)); }catch(_){} }
+function trFsFail(e){ TRFS.offUntil = Date.now() + 300000; TRFS.lastErr = String(e && (e.code || e.message) || e).slice(0,120); TRFS.failN = (TRFS.failN||0) + 1; try{ console.warn('Firestore fast-read paused 5 min:', e && (e.code || e.message)); }catch(_){} }
 function trMe(){ return String(myUserEmail||'').toLowerCase(); }
 async function trFast(fsFn, apiFn){
   if(trFsOn()){
