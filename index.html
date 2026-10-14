@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.89
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 15:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.91
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 16:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.89</title>
+<title>F1 Service — v9.91</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1046,6 +1046,9 @@ body.tr-noscroll{overflow:hidden;}
 /* v9.89 รอบเช็คชื่อ */
 .tr-rounds{margin-top:-2px;}
 .tr-rounds button.tr-radd{flex:0 0 auto;min-width:64px;}
+.tr-selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0;padding:8px 10px;border-radius:10px;background:var(--bg-soft,rgba(128,128,128,.1));}
+.tr-selrow{cursor:pointer;}
+.tr-selrow.sel{outline:2px solid var(--accent,#b9721c);border-radius:10px;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2511,14 +2514,28 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.89";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 15:50 น. เวลาไทย";
+const APP_VERSION = "9.91";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 16:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
   if(brandEl) brandEl.textContent = `Version ${APP_VERSION}`;
   const footerEl = document.getElementById('app-footer-version');
   if(footerEl) footerEl.textContent = `จัดทำโดย Visanu Sombatpattanakul · เริ่มสร้าง 26 สิงหาคม 2569 · เวอร์ชัน ${APP_VERSION} (อัปเดตล่าสุด ${APP_UPDATED_AT})`;
+})();
+
+// v9.91 — แตะที่บรรทัดเวอร์ชันท้ายหน้า 5 ครั้งติดกัน = แสดงเวลาที่ระบบหลังบ้านใช้ของ 25 คำสั่งล่าสุด (ไว้หาว่าช้าที่ขั้นไหน)
+(function(){
+  let n = 0, t = 0;
+  document.addEventListener('click', e=>{
+    const el = e.target && e.target.closest && e.target.closest('#app-footer-version'); if(!el) return;
+    const now = Date.now(); n = (now - t < 1500) ? n + 1 : 1; t = now;
+    if(n < 5) return; n = 0;
+    const L = window.F1_TIMING || [];
+    if(!L.length){ alert('ยังไม่มีข้อมูลเวลา — ใช้งานหน้าที่ช้าสัก 1-2 ครั้งก่อน แล้วแตะใหม่'); return; }
+    const f = v => v == null ? '-' : v;
+    alert('เวลา (มิลลิวินาที)  รวมฝั่งเครื่อง | เซิร์ฟเวอร์รวม | รอคิว | ทำงาน | ซิงก์DB | ตรวจ token\n' + L.slice().reverse().map(x=>x.a+'  '+x.ms+' | '+f(x.tm&&x.tm.total)+' | '+f(x.tm&&x.tm.lock)+' | '+f(x.tm&&x.tm.run)+' | '+f(x.tm&&x.tm.flush)+' | '+f(x.tm&&x.tm.verify)).join('\n'));
+  });
 })();
 
 function waitForFirebaseSdk(){
@@ -12384,6 +12401,7 @@ async function examApi(action, payload){
   try{ j = await res.json(); }
   catch(e){ const er = new Error('ระบบสอบตอบกลับไม่ถูกต้อง (ตรวจว่า deploy Apps Script เป็น Anyone แล้ว)'); er.network = true; throw er; }
   if(j && j.serverNow) _exOffset = j.serverNow - (t0 + Date.now())/2;
+  try{ const L = (window.F1_TIMING = window.F1_TIMING || []); L.push({ a:action, ms:Date.now()-t0, tm:j&&j.tm||null }); if(L.length>25) L.shift(); }catch(e){}
   if(j && j.fsStale) window._trFsStale = Date.now() + 120000; // เซิร์ฟเวอร์ซิงก์ Firestore ไม่สำเร็จ → อ่านจาก Sheet ชั่วคราว
   if(!j || !j.ok) throw new Error((j && j.error) || 'ระบบสอบขัดข้อง');
   return j.data;
@@ -14607,6 +14625,9 @@ function trGetExtras(g, getCur, redraw){
   }).catch(()=>{ g._pending = false; if(getCur() === g && trIdle()) redraw(); });
 }
 function trQueueFast(){
+  return trQueueFast0().then(q=>{ try{ if(typeof traDecidedFilterQ === 'function') traDecidedFilterQ(q); }catch(e){} return q; });
+}
+function trQueueFast0(){
   return trFast(async S=>{
     const me = trMe(), mgr = isManager();
     const c = [S.collection(db,'trRegs'), S.where('status','in',['requested','needsReconfirm'])];
@@ -14901,7 +14922,7 @@ async function traGo(view, arg){
   if(warmQ) traRenderQueue(); else if(warmS) traRenderSessions();
   else root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; trPendApply(q); traRenderQueue(); }
+    if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; traDecidedApply(); trPendApply(TRA.queue); traRenderQueue(); }
     else if(view === 'sessions'){ const yr = TRA.year, d = await trListFast(yr); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
     else if(view === 'detail'){
       if(!TRA.queue) trQueueFast().then(q=>{ TRA.queue = q; }).catch(()=>{});
@@ -14944,34 +14965,50 @@ function traRenderQueue(){
   root.innerHTML = h;
 }
 var TRAPR_BUSY = {};
+var TRA_DECIDED = {}; // regId -> { st, at } — สถานะที่เพิ่งบันทึกสำเร็จ กันข้อมูลเก่าจากฐานข้อมูลสำรอง (Firestore) ที่ยังไม่อัปเดตมาทับ
+function traDecidedApply(){
+  const now = Date.now();
+  Object.keys(TRA_DECIDED).forEach(k=>{ if(now - TRA_DECIDED[k].at > 90000) delete TRA_DECIDED[k]; });
+  if(TRA.queue && TRA.queue.items){
+    const before = TRA.queue.items.length;
+    TRA.queue.items = TRA.queue.items.filter(r=>{ const d = TRA_DECIDED[r.regId]; return !(d && (d.st === 'approved' || d.st === 'rejected' || d.st === 'removed') && (r.status === 'requested' || r.status === 'needsReconfirm')); });
+    if(TRA.queue.items.length !== before){ const have = {}; TRA.queue.items.forEach(r=>{ have[r.sessionId] = 1; }); TRA.queue.sessions = (TRA.queue.sessions||[]).filter(x=>have[x.sessionId]); }
+  }
+  if(TRA.g && TRA.g.regs){
+    TRA.g.regs = TRA.g.regs.filter(r=>!(TRA_DECIDED[r.regId] && TRA_DECIDED[r.regId].st === 'removed'));
+    TRA.g.regs.forEach(r=>{ const d = TRA_DECIDED[r.regId]; if(d && d.st !== 'removed' && r.status !== d.st) r.status = d.st; });
+  }
+}
+function traDecidedFilterQ(q){
+  if(!q || !q.items) return q;
+  const now = Date.now();
+  q.items = q.items.filter(r=>{ const d = TRA_DECIDED[r.regId]; return !(d && now - d.at < 90000 && d.st !== 'requested'); });
+  const have = {}; q.items.forEach(r=>{ have[r.sessionId] = 1; }); if(q.sessions) q.sessions = q.sessions.filter(x=>have[x.sessionId]);
+  return q;
+}
 async function traApprove(sid, ids, op, force){
   const key = ids.join(',');
   if(TRAPR_BUSY[key]) return;
   TRAPR_BUSY[key] = 1;
-  const inQueue = TRA.view !== 'detail' && TRA.queue && TRA.queue.items;
-  let snap = null;
-  if(inQueue){
-    /* optimistic: เอาแถวออกจากคิวทันที */
-    snap = { items: TRA.queue.items.slice(), sessions: JSON.parse(JSON.stringify(TRA.queue.sessions || [])) };
-    const idset = {}; ids.forEach(i=>{ idset[i] = 1; });
-    const n = TRA.queue.items.filter(r=>idset[r.regId]).length;
-    TRA.queue.items = TRA.queue.items.filter(r=>!idset[r.regId]);
-    if(op === 'approve') (TRA.queue.sessions || []).forEach(s=>{ if(s.sessionId === sid) s.approved = (s.approved||0) + n; });
-    try{ trPendApply(TRA.queue); }catch(e){}
-    traRenderQueue();
-  } else showLoadingOverlay('กำลังบันทึก...');
+  showLoadingOverlay('กำลังบันทึก... (รอสักครู่ ระบบกำลังอัปเดตรายการ)');
   try{
     await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
+    const st = ({ approve:'approved', reject:'rejected', undo:'requested', remove:'removed' })[op];
+    ids.forEach(i=>{ TRA_DECIDED[i] = { st, at:Date.now() }; });
+    // โหลดข้อมูลใหม่ แล้วทับด้วยผลที่เพิ่งบันทึก — หน้าจอเปลี่ยนจริงก่อนปิดหน้า Load
+    if(TRA.view === 'detail') { await traReload(true); }
+    else { TRA.queue = await trQueueFast(); }
+    traDecidedApply();
+    try{ trPendApply(TRA.queue); }catch(e){}
+    if(TRA.view === 'detail') traRenderDetail(); else traRenderQueue();
     delete TRAPR_BUSY[key];
+    hideLoadingOverlay();
     setTimeout(trPendRefresh, 1500);
-    if(!inQueue){ hideLoadingOverlay(); if(TRA.view === 'detail') await traReload(true); }
-    else { try{ TRA.queue = await trQueueFast(); trPendApply(TRA.queue); if(TRA.view !== 'detail') traRenderQueue(); }catch(e){} }
   }catch(e){
     delete TRAPR_BUSY[key];
-    if(inQueue && snap){ TRA.queue.items = snap.items; TRA.queue.sessions = snap.sessions; try{ trPendApply(TRA.queue); }catch(_){} if(TRA.view !== 'detail') traRenderQueue(); }
-    else hideLoadingOverlay();
+    hideLoadingOverlay();
     if(op === 'approve' && !force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message + '\nอนุมัติเกินที่นั่งต่อไป?')) return traApprove(sid, ids, op, true);
-    alert('บันทึกไม่สำเร็จ — คืนรายการกลับแล้ว\n' + e.message);
+    alert(e.message);
   }
 }
 
@@ -15152,16 +15189,48 @@ function traCheckinHtml(g){
     <div class="subtab-bar tr-days tr-rounds">${rbar}${closed?'':'<button data-tr="ckradd" class="tr-radd">➕<small>เพิ่มรอบ</small></button>'}</div>
     <div class="ex-hint">เวลาเริ่ม${rounds.length>1?' '+trH(rd.label||''):'ของวันนี้'}: <b>${trH(rd.time)} น.</b> — เช็คหลังเวลานี้ระบบนับเป็น "สาย"${closed?'':` <button type="button" class="btn btn-ghost btn-sm" data-tr="ckredit">⚙ แก้เวลา/ลบรอบนี้</button>`}${isToday?'':' · <span style="color:var(--amber)">ไม่ใช่วันนี้: ใช้ปุ่ม "ลงเวลาเอง"</span>'}${closed?' · <span style="color:var(--amber)">งานปิดแล้ว แก้ไม่ได้</span>':''}</div>`;
   if(!people.length) h += '<div class="ex-note">ยังไม่มีผู้ได้รับอนุมัติ — ไปแท็บ "ผู้เข้าเทรน" เพื่ออนุมัติหรือเพิ่มชื่อ</div>';
+  const pendingPeople = people.filter(r=>!traAttOf(g, r.regId, TRA.day, slot));
+  const selMode = !closed && !!TRA.ckSel;
+  if(!closed && pendingPeople.length > 1){
+    h += selMode
+      ? `<div class="tr-selbar"><b>เลือกแล้ว ${Object.keys(TRA.ckSel).filter(k=>TRA.ckSel[k]).length} คน</b><button type="button" class="btn btn-ghost btn-sm" data-tr="ckselall">เลือกทั้งหมดที่ยังไม่เช็ค (${pendingPeople.length})</button><button type="button" class="btn btn-ghost btn-sm" data-tr="ckselclr">ล้าง</button><button type="button" class="btn btn-ghost btn-sm" data-tr="ckmode">ออกจากโหมดเลือก</button></div>`
+      : `<div class="ex-act" style="margin:8px 0"><button type="button" class="btn btn-ghost" data-tr="ckmode">☑ เลือกหลายคนเช็คพร้อมกัน</button></div>`;
+  }
   h += people.map(r=>{
     const a = traAttOf(g, r.regId, TRA.day, slot);
     let right;
+    if(selMode && !a){
+      const on = !!TRA.ckSel[r.regId];
+      return `<div class="tr-row tr-selrow ${on?'sel':''}" data-tr="cksel" data-id="${trH(r.regId)}" role="button" tabindex="0"><div class="tr-row-n"><b>${on?'☑':'☐'} ${trH(exPerson(r.email,r.name))}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div></div>`;
+    }
     if(a) right = `<div class="tr-ckok"><b>✓ ${trFmtTime(a.checkInAt)}</b>${a.diffMin>0?trChip('สาย '+a.diffMin+' นาที','warn'):trChip(a.diffMin<0?'ก่อนเวลา '+(-a.diffMin)+' นาที':'ตรงเวลา','ok')}${a.history && a.history.length>1?'<small>แก้ไขแล้ว</small>':''}</div>${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="ckmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}`;
     else if(closed) right = '<span class="ex-hint">ไม่ได้เช็คชื่อ</span>';
     else right = isToday ? `<button class="btn btn-primary tr-ckbtn" data-tr="ckin" data-id="${trH(r.regId)}">✓ เช็คชื่อ</button>` : `<button class="btn btn-ghost tr-ckbtn" data-tr="ckmenu" data-id="${trH(r.regId)}">ลงเวลาเอง</button>`;
     return `<div class="tr-row ${a?'done':''}"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div><div class="tr-row-a">${right}</div></div>`;
   }).join('');
   h += `<div class="ex-act" style="margin-top:14px"><button class="btn btn-ghost" data-tr="ckxls">⬇ ดาวน์โหลด Excel เช็คชื่อ</button></div>`;
+  if(selMode){ const n = Object.keys(TRA.ckSel).filter(k=>TRA.ckSel[k]).length;
+    h += `<div class="tr-bar"><button type="button" class="btn btn-primary" data-tr="ckmany" ${n&&isToday?'':'disabled'}>✓ เช็คตอนนี้ (${n})</button><button type="button" class="btn btn-ghost" data-tr="ckmanyt" ${n?'':'disabled'}>🕐 ระบุเวลา (${n})</button></div>`; }
   return h;
+}
+function traCkSelIds(){ return Object.keys(TRA.ckSel||{}).filter(k=>TRA.ckSel[k]); }
+async function traCheckMany(op, extra){
+  const ids = traCkSelIds(); if(!ids.length) return;
+  showLoadingOverlay('กำลังบันทึก '+ids.length+' คน...');
+  try{
+    const r = await examApi('trCheckMany', Object.assign({ sessionId:TRA.g.session.sessionId, regIds:ids, dayDate:TRA.day, slot:TRA.slot||'', op }, extra||{}));
+    TRA.g.attendance = r.attendance; TRA.ckSel = null;
+    hideLoadingOverlay(); trSheetClose(); traRenderDetail();
+    showToast('✓ บันทึก '+r.done+' คน'+(r.skipped && r.skipped.length ? ' (ข้ามที่เช็คแล้ว '+r.skipped.length+')' : ''));
+  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+}
+function traCkManySheet(){
+  const n = traCkSelIds().length; if(!n) return;
+  const dflt = TRA.day === trToday() ? trFmtTime(exNow()) : traRoundOf(TRA.g, TRA.day, TRA.slot).time;
+  trSheet(`<div class="ex-hint">${n} คน · ${trH(trFmtDate(TRA.day))}</div>
+    <label class="tr-lb">เวลาเช็คชื่อ (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${dflt}">
+    <label class="tr-lb">หมายเหตุ (ไม่บังคับ)</label><input type="text" id="tra-ck-note" class="tr-in" placeholder="เช่น มาพร้อมกัน">
+    <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="ckmanysave">💾 บันทึกเวลา ${n} คน</button></div>`, { title:'ระบุเวลาเช็คชื่อ' });
 }
 /* จัดการรอบเช็คชื่อ: เพิ่ม / แก้เวลา / ลบ */
 function traRoundSheet(mode){
@@ -15885,8 +15954,15 @@ function trOnEvent(e){
     case 'pmenu': traPersonMenu(id); return;
     case 'addperson': { const p = (EXA.profiles||[]).find(x=>x.email===t.getAttribute('data-email')); if(p) traAddPerson(p.email, p.name, p.nameEn); } return;
     case 'addguest': { const n = ($('tra-guest')||{}).value || ''; if(!n.trim()){ alert('พิมพ์ชื่อก่อน'); return; } traAddPerson('', n.trim(), ''); } return;
-    case 'ckday': TRA.day = v; TRA.slot = ''; traRenderDetail(); return;
-    case 'ckslot': TRA.slot = v || ''; traRenderDetail(); return;
+    case 'ckday': TRA.day = v; TRA.slot = ''; TRA.ckSel = null; traRenderDetail(); return;
+    case 'ckmode': TRA.ckSel = TRA.ckSel ? null : {}; traRenderDetail(); return;
+    case 'cksel': TRA.ckSel = TRA.ckSel || {}; TRA.ckSel[id] = !TRA.ckSel[id]; { const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } return;
+    case 'ckselall': { const g = TRA.g, slot = String(TRA.slot||''); TRA.ckSel = {}; (g.regs||[]).filter(r=>r.status==='approved' && !traAttOf(g, r.regId, TRA.day, slot)).forEach(r=>{ TRA.ckSel[r.regId] = true; }); const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } return;
+    case 'ckselclr': TRA.ckSel = {}; traRenderDetail(); return;
+    case 'ckmany': if(confirm('เช็คชื่อ '+traCkSelIds().length+' คน ตอนนี้?')) traCheckMany('in'); return;
+    case 'ckmanyt': traCkManySheet(); return;
+    case 'ckmanysave': traCheckMany('edit', { time:($('tra-ck-time')||{}).value, note:($('tra-ck-note')||{}).value }); return;
+    case 'ckslot': TRA.slot = v || ''; TRA.ckSel = null; traRenderDetail(); return;
     case 'ckradd': traRoundSheet('add'); return;
     case 'ckredit': traRoundSheet('edit'); return;
     case 'ckrsave': traRoundSave(v); return;
