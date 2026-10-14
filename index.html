@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.95
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 21:22 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.96
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 22:08 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.95</title>
+<title>F1 Service — v9.96</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2514,8 +2514,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.95";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 21:22 น. เวลาไทย";
+const APP_VERSION = "9.96";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 22:08 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15601,7 +15601,7 @@ function traRenderForm(){
     <div class="tr-fs"><b>สถานะ</b>
       ${closed ? '<div class="ex-note">งานนี้ปิดแล้ว — ใช้ปุ่ม "เปิดงานกลับ" ในหน้าจัดการก่อนถ้าต้องการเปลี่ยนสถานะ</div>' :
       `<div class="subtab-bar tr-seg">${seg('f_status','plan',f.status,'แผน (ยังไม่เปิดรับ)')}${seg('f_status','open',f.status,'เปิดรับลงทะเบียน', f.dateMode==='month')}</div>`}
-      ${TRA.role==='manager' && (TRA.sets.owners||[]).length ? `<label class="tr-lb">เจ้าของงาน (Sup ที่อนุมัติ/เช็คชื่อ)</label><select class="tr-in" data-tr="f_fld" data-k="ownerEmail">${TRA.sets.owners.map(o=>`<option value="${trH(o.email)}" ${f.ownerEmail===o.email?'selected':''}>${trH(o.name)} (${o.role==='manager'?'Manager':'Sup'})</option>`).join('')}</select>` : ''}
+      ${TRA.role==='manager' && ((TRA.sets && TRA.sets.owners)||[]).length ? `<label class="tr-lb">เจ้าของงาน (Sup ที่อนุมัติ/เช็คชื่อ)</label><select class="tr-in" data-tr="f_fld" data-k="ownerEmail">${TRA.sets.owners.map(o=>`<option value="${trH(o.email)}" ${f.ownerEmail===o.email?'selected':''}>${trH(o.name)} (${o.role==='manager'?'Manager':'Sup'})</option>`).join('')}</select>` : ''}
       <label class="tr-lb">หมายเหตุ</label><textarea class="tr-in" rows="2" data-tr="f_fld" data-k="note" placeholder="เช่น ไม่เกิน 6 คนต่อรอบ">${trH(f.note)}</textarea></div>`;
   if(f.dateMode === 'exact') h += traScheduleHtml();
   h += `<div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="f_save">💾 บันทึก</button><button class="btn btn-ghost tr-big" data-tr="f_cancel">ยกเลิก</button></div></div>`;
@@ -15740,11 +15740,11 @@ function trMatchName(raw){
 }
 async function traPrepareImport(){
   await exaLoadProfiles();
-  TRA.sets = await examApi('trExamSets');
+  { const st = await examApi('trExamSets'); TRA.sets = (st && typeof st === 'object') ? st : { sets:[], owners:[], role:TRA.role||'' }; if(!Array.isArray(TRA.sets.owners)) TRA.sets.owners = []; }
   const all = await examApi('trList', { year:0 });
-  const have = {}; all.sessions.forEach(s=>{ if(s.importKey) have[s.importKey] = 1; });
+  const have = {}; ((all && all.sessions) || []).forEach(s=>{ if(s.importKey) have[s.importKey] = 1; });
   const today = trToday();
-  const owners = TRA.sets.owners || [];
+  const owners = (TRA.sets && TRA.sets.owners) || [];
   const meEmail = String(myUserEmail).toLowerCase();
   if(!TRA.imp) TRA.imp = {};
   TRA.imp.have = have; TRA.imp.today = today;
@@ -15773,7 +15773,7 @@ function traRenderImport(){
       <div class="ex-hint">${trH(range)} · ${trH(s.trainer||'-')} · ผู้เข้าเทรน ${r.att.length} คน${r.att.length?` (จับคู่บัญชีได้ ${matched})`:''}</div>
       <div class="tr-3"><div><label class="tr-lb">Product</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="category"><option value="">— เลือก —</option>${Object.keys(DATA.categories||{}).map(c=>`<option ${r.category===c?'selected':''}>${trH(c)}</option>`).join('')}</select></div>
         <div><label class="tr-lb">Cer</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="cert"><option value="internal" ${r.cert==='internal'?'selected':''}>ภายใน</option><option value="manufacturer" ${r.cert==='manufacturer'?'selected':''}>ผู้ผลิต</option><option value="none" ${r.cert==='none'?'selected':''}>ไม่มี</option></select></div>
-        <div><label class="tr-lb">เจ้าของงาน</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="owner">${(TRA.sets.owners||[]).map(o=>`<option value="${trH(o.email)}" ${r.owner===o.email?'selected':''}>${trH(o.name)}</option>`).join('')}</select></div></div>
+        <div><label class="tr-lb">เจ้าของงาน</label><select class="tr-in" data-tr="imp_fld" data-i="${r.i}" data-k="owner">${((TRA.sets && TRA.sets.owners)||[]).map(o=>`<option value="${trH(o.email)}" ${r.owner===o.email?'selected':''}>${trH(o.name)}</option>`).join('')}</select></div></div>
       ${s.note?`<div class="ex-hint" style="color:var(--amber)">⚠ ${trH(s.note)}</div>`:''}
       ${r.att.length && matched < r.att.length ? `<details><summary class="ex-hint">ชื่อที่ยังจับคู่บัญชีไม่ได้ ${r.att.length-matched} คน (จะนำเข้าเป็น "ไม่มีบัญชี")</summary><div class="ex-hint">${r.att.filter(a=>!a.p).map(a=>trH(a.raw)).join(' · ')}</div></details>`:''}</div>`;
   }).join('');
