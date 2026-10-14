@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.3
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 23:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.4
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 23:36 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.3</title>
+<title>F1 Service — v10.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1049,6 +1049,25 @@ body.tr-noscroll{overflow:hidden;}
 .tr-selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0;padding:8px 10px;border-radius:10px;background:var(--bg-soft,rgba(128,128,128,.1));}
 .tr-selrow{cursor:pointer;}
 .tr-selrow.sel{outline:2px solid var(--accent,#b9721c);border-radius:10px;}
+
+/* v10.4 — เช็คชื่อแบบแตะ */
+.tr-timebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 10px;padding:8px 10px;margin:8px 0 4px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2,transparent);font-size:14px;}
+.tr-timebar.custom{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent);}
+.tr-tbA{display:flex;gap:6px;flex-wrap:wrap;}
+.tr-tiphint{margin:2px 0 6px;}
+.tr-cklist{display:flex;flex-direction:column;}
+.tr-ckrow{display:flex;align-items:center;gap:10px;min-height:46px;padding:6px 10px;border-top:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.tr-ckrow:active{background:color-mix(in srgb,var(--accent,#3b82f6) 14%,transparent);}
+.tr-ckrow.done{background:color-mix(in srgb,var(--green) 10%,transparent);}
+.tr-ckrow.tmp{opacity:.7;}
+.tr-ckm{font-size:20px;line-height:1;flex:0 0 auto;}
+.tr-ckn{flex:1;min-width:0;font-size:16px;line-height:1.3;word-break:break-word;}
+.tr-ckn small{color:var(--text-dim);font-size:12px;}
+.tr-ckr{display:flex;align-items:center;gap:8px;flex:0 0 auto;font-size:15px;}
+.tr-ckhint{color:var(--text-faint);font-size:13px;}
+.tr-ckc.late{color:var(--amber);font-size:12.5px;font-weight:600;}
+.tr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+@media (max-width:480px){.tr-ckn{font-size:15.5px;}}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2514,8 +2533,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.3";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 23:30 น. เวลาไทย";
+const APP_VERSION = "10.4";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 23:36 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15265,50 +15284,123 @@ function traCheckinHtml(g){
     <div class="tr-sum"><b>${done.length}</b>/${people.length}<small>เช็คแล้ว</small></div><div class="tr-sum ${late?'late':''}"><b>${late}</b><small>สาย</small></div></div>
     <div class="subtab-bar tr-days">${days.map((d,i)=>`<button class="${TRA.day===d?'active':''}" data-tr="ckday" data-v="${d}">วัน ${i+1}<small>${trH(trFmtDate(d,false))}${d===today?' • วันนี้':''}</small></button>`).join('')}</div>
     <div class="subtab-bar tr-days tr-rounds">${rbar}${closed?'':'<button data-tr="ckradd" class="tr-radd">➕<small>เพิ่มรอบ</small></button>'}</div>
-    <div class="ex-hint">เวลาเริ่ม${rounds.length>1?' '+trH(rd.label||''):'ของวันนี้'}: <b>${trH(rd.time)} น.</b> — เช็คหลังเวลานี้ระบบนับเป็น "สาย"${closed?'':` <button type="button" class="btn btn-ghost btn-sm" data-tr="ckredit">⚙ แก้เวลา/ลบรอบนี้</button>`}${isToday?'':' · <span style="color:var(--amber)">ไม่ใช่วันนี้: ใช้ปุ่ม "ลงเวลาเอง"</span>'}${closed?' · <span style="color:var(--amber)">งานปิดแล้ว แก้ไม่ได้</span>':''}</div>`;
+    <div class="ex-hint">เวลาเริ่ม${rounds.length>1?' '+trH(rd.label||''):'ของวันนี้'}: <b>${trH(rd.time)} น.</b> — เช็คหลังเวลานี้ระบบนับเป็น "สาย"${closed?'':` <button type="button" class="btn btn-ghost btn-sm" data-tr="ckredit">⚙ แก้เวลา/ลบรอบนี้</button>`}${closed?' · <span style="color:var(--amber)">งานปิดแล้ว แก้ไม่ได้</span>':''}</div>`;
   if(!people.length) h += '<div class="ex-note">ยังไม่มีผู้ได้รับอนุมัติ — ไปแท็บ "ผู้เข้าเทรน" เพื่ออนุมัติหรือเพิ่มชื่อ</div>';
   const pendingPeople = people.filter(r=>!traAttOf(g, r.regId, TRA.day, slot));
-  const selMode = !closed && !!TRA.ckSel;
-  if(!closed && pendingPeople.length > 1){
-    h += selMode
-      ? `<div class="tr-selbar"><b>เลือกแล้ว ${Object.keys(TRA.ckSel).filter(k=>TRA.ckSel[k]).length} คน</b><button type="button" class="btn btn-ghost btn-sm" data-tr="ckselall">เลือกทั้งหมดที่ยังไม่เช็ค (${pendingPeople.length})</button><button type="button" class="btn btn-ghost btn-sm" data-tr="ckselclr">ล้าง</button><button type="button" class="btn btn-ghost btn-sm" data-tr="ckmode">ออกจากโหมดเลือก</button></div>`
-      : `<div class="ex-act" style="margin:8px 0"><button type="button" class="btn btn-ghost" data-tr="ckmode">☑ เลือกหลายคนเช็คพร้อมกัน</button></div>`;
+  const ti = traCkTimeInfo(g);
+  if(!closed && people.length){
+    h += `<div class="tr-timebar ${ti.custom?'custom':''}"><span>🕐 บันทึกเวลา: <b>${ti.custom ? trH(ti.time)+(ti.auto?' (เวลาเริ่มรอบ)':' (กำหนดเอง)') : 'ตอนนี้ '+trH(trFmtTime(exNow()))}</b></span><span class="tr-tbA"><button type="button" class="btn btn-ghost btn-sm" data-tr="cktime">✎ ปรับเวลา</button>${TRA.ckTime?'<button type="button" class="btn btn-ghost btn-sm" data-tr="cktimereset">↺ เวลาปัจจุบัน</button>':''}</span></div>
+      <div class="ex-hint tr-tiphint">แตะที่ชื่อเพื่อเช็ค · แตะชื่อที่เช็คแล้วเพื่อแก้เวลา/ยกเลิก</div>`;
   }
-  h += people.map(r=>{
+  h += '<div class="tr-cklist">' + people.map(r=>{
     const a = traAttOf(g, r.regId, TRA.day, slot);
-    let right;
-    if(selMode && !a){
-      const on = !!TRA.ckSel[r.regId];
-      return `<div class="tr-row tr-selrow ${on?'sel':''}" data-tr="cksel" data-id="${trH(r.regId)}" role="button" tabindex="0"><div class="tr-row-n"><b>${on?'☑':'☐'} ${trH(exPerson(r.email,r.name))}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div></div>`;
+    const nm = trH(exPerson(r.email,r.name)) + (r.email?'':' <small>(ไม่มีบัญชี)</small>');
+    if(a){
+      const chip = a.diffMin>0 ? `<span class="tr-ckc late">สาย ${a.diffMin} น.</span>` : '';
+      return `<div class="tr-ckrow done ${a._tmp?'tmp':''}" ${closed?'':`data-tr="cktap" data-id="${trH(r.regId)}" role="button" tabindex="0"`}><span class="tr-ckm">✅</span><span class="tr-ckn">${nm}</span><span class="tr-ckr">${chip}<b>${trFmtTime(a.checkInAt)}</b></span></div>`;
     }
-    if(a) right = `<div class="tr-ckok"><b>✓ ${trFmtTime(a.checkInAt)}</b>${a.diffMin>0?trChip('สาย '+a.diffMin+' นาที','warn'):trChip(a.diffMin<0?'ก่อนเวลา '+(-a.diffMin)+' นาที':'ตรงเวลา','ok')}${a.history && a.history.length>1?'<small>แก้ไขแล้ว</small>':''}</div>${closed?'':`<button class="btn btn-ghost tr-sq" data-tr="ckmenu" data-id="${trH(r.regId)}" aria-label="เมนู">⋯</button>`}`;
-    else if(closed) right = '<span class="ex-hint">ไม่ได้เช็คชื่อ</span>';
-    else right = isToday ? `<button class="btn btn-primary tr-ckbtn" data-tr="ckin" data-id="${trH(r.regId)}">✓ เช็คชื่อ</button>` : `<button class="btn btn-ghost tr-ckbtn" data-tr="ckmenu" data-id="${trH(r.regId)}">ลงเวลาเอง</button>`;
-    return `<div class="tr-row ${a?'done':''}"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b>${r.email?'':'<small>ไม่มีบัญชี</small>'}</div><div class="tr-row-a">${right}</div></div>`;
-  }).join('');
+    if(closed) return `<div class="tr-ckrow"><span class="tr-ckm">⬜</span><span class="tr-ckn">${nm}</span><span class="tr-ckr"><span class="ex-hint">ไม่ได้เช็คชื่อ</span></span></div>`;
+    return `<div class="tr-ckrow" data-tr="cktap" data-id="${trH(r.regId)}" role="button" tabindex="0"><span class="tr-ckm">⬜</span><span class="tr-ckn">${nm}</span><span class="tr-ckr"><span class="tr-ckhint">แตะเพื่อเช็ค</span></span></div>`;
+  }).join('') + '</div>';
   h += `<div class="ex-act" style="margin-top:14px"><button class="btn btn-ghost" data-tr="ckxls">⬇ ดาวน์โหลด Excel เช็คชื่อ</button></div>`;
-  if(selMode){ const n = Object.keys(TRA.ckSel).filter(k=>TRA.ckSel[k]).length;
-    h += `<div class="tr-bar"><button type="button" class="btn btn-primary" data-tr="ckmany" ${n&&isToday?'':'disabled'}>✓ เช็คตอนนี้ (${n})</button><button type="button" class="btn btn-ghost" data-tr="ckmanyt" ${n?'':'disabled'}>🕐 ระบุเวลา (${n})</button></div>`; }
+  if(!closed && pendingPeople.length) h += `<div class="tr-bar"><button type="button" class="btn btn-primary" data-tr="ckall">✓ เช็คทุกคนที่เหลือ (${pendingPeople.length})</button></div>`;
   return h;
 }
-function traCkSelIds(){ return Object.keys(TRA.ckSel||{}).filter(k=>TRA.ckSel[k]); }
-async function traCheckMany(op, extra){
-  const ids = traCkSelIds(); if(!ids.length) return;
-  showLoadingOverlay('กำลังบันทึก '+ids.length+' คน...');
-  try{
-    const r = await examApi('trCheckMany', Object.assign({ sessionId:TRA.g.session.sessionId, regIds:ids, dayDate:TRA.day, slot:TRA.slot||'', op }, extra||{}));
-    TRA.g.attendance = r.attendance; TRA.ckSel = null;
-    hideLoadingOverlay(); trSheetClose(); traRenderDetail();
-    showToast('✓ บันทึก '+r.done+' คน'+(r.skipped && r.skipped.length ? ' (ข้ามที่เช็คแล้ว '+r.skipped.length+')' : ''));
-  }catch(e){ hideLoadingOverlay(); alert(e.message); }
+/* ---- เช็คชื่อแบบแตะ: แสดงผลทันที (optimistic) แล้วบันทึกเบื้องหลังเป็นก้อนเดียว ---- */
+function traCkTimeInfo(g){
+  const rd = traRoundOf(g, TRA.day, TRA.slot);
+  if(TRA.ckTime) return { custom:true, time:TRA.ckTime };
+  if(TRA.day !== trToday()) return { custom:true, auto:true, time:rd.time };
+  return { custom:false, time:'' };
 }
-function traCkManySheet(){
-  const n = traCkSelIds().length; if(!n) return;
-  const dflt = TRA.day === trToday() ? trFmtTime(exNow()) : traRoundOf(TRA.g, TRA.day, TRA.slot).time;
-  trSheet(`<div class="ex-hint">${n} คน · ${trH(trFmtDate(TRA.day))}</div>
-    <label class="tr-lb">เวลาเช็คชื่อ (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${dflt}">
-    <label class="tr-lb">หมายเหตุ (ไม่บังคับ)</label><input type="text" id="tra-ck-note" class="tr-in" placeholder="เช่น มาพร้อมกัน">
-    <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="ckmanysave">💾 บันทึกเวลา ${n} คน</button></div>`, { title:'ระบุเวลาเช็คชื่อ' });
+function traCkKey(sid, regId, day, slot){ return sid+'|'+regId+'|'+day+'|'+slot; }
+function traCkOptRec(g, reg, day, slot, timeStr){
+  const rd = traRoundOf(g, day, slot);
+  const startRef = Date.parse(day+'T'+rd.time+':00+07:00');
+  const at = timeStr ? Date.parse(day+'T'+timeStr+':00+07:00') : exNow();
+  return { attId:'tmp_'+reg.regId, sessionId:g.session.sessionId, regId:reg.regId, email:reg.email||'', name:reg.name, dayDate:day, slot, checkInAt:at, checkInBy:'', startRef, diffMin:Math.round((at-startRef)/60000), status:'ok', slot_:slot, history:[], _tmp:true };
+}
+function traCkRerender(){ const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); }
+function traCkMark(regIds){
+  const g = TRA.g; if(!g) return;
+  TRA.ckPend = TRA.ckPend || {};
+  const sid = g.session.sessionId, day = TRA.day, slot = String(TRA.slot||''), info = traCkTimeInfo(g);
+  let n = 0;
+  regIds.forEach(id=>{
+    const reg = (g.regs||[]).find(x=>x.regId===id); if(!reg || reg.status !== 'approved') return;
+    const key = traCkKey(sid, id, day, slot);
+    if(TRA.ckPend[key] || traAttOf(g, id, day, slot)) return;
+    g.attendance = (g.attendance||[]).filter(a=>!(a.regId===id && a.dayDate===day && String(a.slot||'')===slot)).concat([traCkOptRec(g, reg, day, slot, info.time)]);
+    TRA.ckPend[key] = { sid, regId:id, day, slot, time:info.time||'', sent:false };
+    n++;
+  });
+  if(!n) return;
+  traCkRerender();
+  traCkFlush();
+}
+function traCkTap(regId){
+  const g = TRA.g; if(!g || g.session.status === 'closed') return;
+  if(traAttOf(g, regId, TRA.day, TRA.slot)){ if(!(TRA.ckPend && TRA.ckPend[traCkKey(g.session.sessionId, regId, TRA.day, String(TRA.slot||''))])) traCkMenu(regId); return; }
+  traCkMark([regId]);
+}
+function traCkAll(){
+  const g = TRA.g, slot = String(TRA.slot||'');
+  const ids = (g.regs||[]).filter(r=>r.status==='approved' && !traAttOf(g, r.regId, TRA.day, slot)).map(r=>r.regId);
+  if(ids.length > 1 && !confirm('เช็คชื่อที่เหลือ '+ids.length+' คน '+(traCkTimeInfo(g).custom ? 'เวลา '+traCkTimeInfo(g).time : 'ตอนนี้')+' ?')) return;
+  traCkMark(ids);
+}
+async function traCkFlush(){
+  if(TRA.ckBusy) return; TRA.ckBusy = true;
+  try{
+    for(let guard = 0; guard < 50; guard++){
+      const items = Object.keys(TRA.ckPend||{}).map(k=>({ k, p:TRA.ckPend[k] })).filter(x=>!x.p.sent);
+      if(!items.length) break;
+      const grp = {};
+      items.forEach(x=>{ x.p.sent = true; const gk = x.p.sid+'|'+x.p.day+'|'+x.p.slot+'|'+x.p.time; (grp[gk] = grp[gk] || []).push(x); });
+      for(const gk of Object.keys(grp)){
+        const arr = grp[gk], p0 = arr[0].p;
+        try{
+          const r = await examApi('trCheckMany', { sessionId:p0.sid, regIds:arr.map(x=>x.p.regId), dayDate:p0.day, slot:p0.slot, op:p0.time?'edit':'in', time:p0.time||undefined });
+          arr.forEach(x=>{ delete TRA.ckPend[x.k]; });
+          if(TRA.g && TRA.g.session.sessionId === p0.sid){
+            const left = Object.keys(TRA.ckPend).filter(k=>TRA.ckPend[k].sid === p0.sid).map(k=>TRA.ckPend[k]);
+            const keep = (TRA.g.attendance||[]).filter(a=>a._tmp && left.some(p=>p.regId===a.regId && p.day===a.dayDate && p.slot===String(a.slot||'')));
+            TRA.g.attendance = r.attendance.concat(keep);
+          }
+        }catch(e){
+          arr.forEach(x=>{ delete TRA.ckPend[x.k]; });
+          if(TRA.g && TRA.g.session.sessionId === p0.sid) TRA.g.attendance = (TRA.g.attendance||[]).filter(a=>!(a._tmp && arr.some(x=>x.p.regId===a.regId && x.p.day===a.dayDate && x.p.slot===String(a.slot||''))));
+          if(typeof traCkRerender === 'function' && TRA.view === 'detail') traCkRerender();
+          alert('เช็คชื่อไม่สำเร็จ ('+arr.length+' คน): '+e.message);
+        }
+      }
+      if(TRA.view === 'detail' && TRA.g) traCkRerender();
+    }
+  } finally { TRA.ckBusy = false; }
+}
+function traCkTimeSheet(){
+  const g = TRA.g, rd = traRoundOf(g, TRA.day, TRA.slot), cur = TRA.ckTime || (TRA.day === trToday() ? trFmtTime(exNow()) : rd.time);
+  const m = n=>trFmtTime(exNow() - n*60000);
+  const isToday = TRA.day === trToday();
+  trSheet(`<div class="ex-hint">เวลาที่จะบันทึกให้คนที่แตะเช็ค · ${trH(trFmtDate(TRA.day))}</div>
+    <div class="tr-chips">
+      ${isToday?'<button type="button" class="btn btn-primary" data-tr="cktimeset" data-v="now">ตอนนี้</button>':''}
+      <button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="start">ตรงเวลา ${trH(rd.time)}</button>
+      ${isToday?`<button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(5)}">5 นาทีก่อน (${m(5)})</button><button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(15)}">15 นาทีก่อน (${m(15)})</button><button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(30)}">30 นาทีก่อน (${m(30)})</button>`:''}
+    </div>
+    <label class="tr-lb">หรือระบุเวลาเอง (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${cur}">
+    <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="cktimeset" data-v="custom">ตกลง</button></div>`, { title:'ปรับเวลาเช็คชื่อ' });
+}
+function traCkTimeSet(v){
+  const g = TRA.g, rd = traRoundOf(g, TRA.day, TRA.slot);
+  let t = '';
+  if(v === 'now') t = '';
+  else if(v === 'start') t = rd.time;
+  else if(v === 'custom') t = ($('tra-ck-time')||{}).value || '';
+  else t = v;
+  if(t && !/^([01]\d|2[0-3]):[0-5]\d$/.test(t)){ alert('กรอกเวลาเป็นรูปแบบ 09:00'); return; }
+  TRA.ckTime = t || null;
+  trSheetClose(); traCkRerender();
 }
 /* จัดการรอบเช็คชื่อ: เพิ่ม / แก้เวลา / ลบ */
 function traRoundSheet(mode){
@@ -16089,15 +16181,13 @@ function trOnEvent(e){
     case 'pmenu': traPersonMenu(id); return;
     case 'addperson': { const p = (EXA.profiles||[]).find(x=>x.email===t.getAttribute('data-email')); if(p) traAddPerson(p.email, p.name, p.nameEn); } return;
     case 'addguest': { const n = ($('tra-guest')||{}).value || ''; if(!n.trim()){ alert('พิมพ์ชื่อก่อน'); return; } traAddPerson('', n.trim(), ''); } return;
-    case 'ckday': TRA.day = v; TRA.slot = ''; TRA.ckSel = null; traRenderDetail(); return;
-    case 'ckmode': TRA.ckSel = TRA.ckSel ? null : {}; traRenderDetail(); return;
-    case 'cksel': TRA.ckSel = TRA.ckSel || {}; TRA.ckSel[id] = !TRA.ckSel[id]; { const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } return;
-    case 'ckselall': { const g = TRA.g, slot = String(TRA.slot||''); TRA.ckSel = {}; (g.regs||[]).filter(r=>r.status==='approved' && !traAttOf(g, r.regId, TRA.day, slot)).forEach(r=>{ TRA.ckSel[r.regId] = true; }); const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } return;
-    case 'ckselclr': TRA.ckSel = {}; traRenderDetail(); return;
-    case 'ckmany': if(confirm('เช็คชื่อ '+traCkSelIds().length+' คน ตอนนี้?')) traCheckMany('in'); return;
-    case 'ckmanyt': traCkManySheet(); return;
-    case 'ckmanysave': traCheckMany('edit', { time:($('tra-ck-time')||{}).value, note:($('tra-ck-note')||{}).value }); return;
-    case 'ckslot': TRA.slot = v || ''; TRA.ckSel = null; traRenderDetail(); return;
+    case 'ckday': TRA.day = v; TRA.slot = ''; TRA.ckTime = null; traRenderDetail(); return;
+    case 'cktap': traCkTap(id); return;
+    case 'ckall': traCkAll(); return;
+    case 'cktime': traCkTimeSheet(); return;
+    case 'cktimeset': traCkTimeSet(v); return;
+    case 'cktimereset': TRA.ckTime = null; traCkRerender(); return;
+    case 'ckslot': TRA.slot = v || ''; TRA.ckTime = null; traRenderDetail(); return;
     case 'ckradd': traRoundSheet('add'); return;
     case 'ckredit': traRoundSheet('edit'); return;
     case 'ckrsave': traRoundSave(v); return;
