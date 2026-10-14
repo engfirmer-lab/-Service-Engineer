@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.98
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 22:21 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.99
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 22:44 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.98</title>
+<title>F1 Service — v9.99</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2514,8 +2514,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.98";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 22:21 น. เวลาไทย";
+const APP_VERSION = "9.99";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 22:44 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12438,6 +12438,10 @@ async function examSyncMyCerts(certs){ // ใบของตัวเองท�
    ฝั่ง Engineer — ทำข้อสอบ
    ===================================================================== */
 const EX = { data:null, cur:null, tick:0, token:0 };
+/* แคชในเครื่อง (แยกตามบัญชี) — แสดงข้อมูลครั้งก่อนทันที แล้วอัปเดตเบื้องหลัง */
+function exCacheKey(k){ return 'f1c1x:' + String(typeof myUserEmail !== 'undefined' ? myUserEmail : '').toLowerCase() + ':' + k; }
+function exCacheGet(k){ try{ const v = localStorage.getItem(exCacheKey(k)); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function exCacheSet(k, val){ try{ const j = JSON.stringify(val); if(j.length < 1500000) localStorage.setItem(exCacheKey(k), j); }catch(e){} }
 
 async function examEnter(){
   if(EX.cur && EX.cur.practice){ EX.cur = null; EX.practiceLast = null; } // เปลี่ยนมาหน้าผู้สอบ = เลิกโหมดทดลอง
@@ -12449,9 +12453,7 @@ async function examLoadHome(autoResume){
   // v9.50 — แสดงรายการครั้งก่อนทันที (ถ้ามี) แล้วอัปเดตเบื้องหลัง · ตอนกลับเข้าสอบที่ค้างอยู่ไม่ใช้ของเก่า
   const ck = 'f1_exhome_' + String(typeof myUserEmail !== 'undefined' ? myUserEmail : '').toLowerCase();
   let warm = false;
-  if(!autoResume){
-    try{ const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Array.isArray(c.items)){ EX.data = c; examRenderHome(); warm = true; } }catch(_){}
-  }
+  try{ const c = JSON.parse(localStorage.getItem(ck) || 'null'); if(c && Array.isArray(c.items)){ EX.data = c; examRenderHome(); warm = true; } }catch(_){}
   if(!warm){ root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดข้อสอบของคุณ...</div>'; }
   try{
     const d = await examApi('myExams');
@@ -13033,9 +13035,16 @@ async function examAdminEnter(){
   const root = $('exa-root');
   if(!root.innerHTML.trim()) root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
-    await exLoadProfileNames();
-    let init = await examApi('adminInit');
-    if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('adminInit'); }
+    exLoadProfileNames().then(()=>{ try{ if(EXA.view === 'sets' && EXA.sets && EXA.sets.length && $('exa-root').querySelector('.ex-card')) exaRenderSets(); }catch(e){} });
+    let init, cr = exCacheGet('arole');
+    if(cr === 'manager' || cr === 'sup'){
+      init = { role:cr };
+      examApi('adminInit').then(r=>{ if(r && r.role){ EXA.role = r.role; exCacheSet('arole', r.role); } }).catch(()=>{});
+    } else {
+      init = await examApi('adminInit');
+      if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('adminInit'); }
+      exCacheSet('arole', init.role);
+    }
     EXA.role = init.role;
     if(init.role === 'user'){
       root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการข้อสอบในระบบสอบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
@@ -13116,7 +13125,7 @@ async function exaGo(view, arg){
   const tok = EXA.navTok = (EXA.navTok||0) + 1;
   EXA.view = view;
   const cacheKey = view === 'sets' ? 'sets' : view === 'rounds' ? 'rounds' : '';
-  const cached = cacheKey ? EXA.cache[cacheKey] : null;
+  const cached = cacheKey ? (EXA.cache[cacheKey] || exCacheGet('a' + cacheKey)) : null;
   const fresh = ()=> EXA.navTok === tok;
   if(cached){
     if(view === 'sets'){ EXA.sets = cached; exaRenderSets(); } else { EXA.rounds = cached; exaRenderRounds(); }
@@ -13127,9 +13136,9 @@ async function exaGo(view, arg){
     root.innerHTML = exaTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   }
   try{
-    if(view === 'sets'){ const d = await examApi('adminListSets'); if(!fresh()) return; EXA.cache.sets = d; if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.sets = d; exaRenderSets(); } }
+    if(view === 'sets'){ const d = await examApi('adminListSets'); if(!fresh()) return; EXA.cache.sets = d; exCacheSet('asets', d); if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.sets = d; exaRenderSets(); } }
     else if(view === 'set'){ if(!EXA.set || EXA.set.setId !== arg){ EXA.setTab = 'q'; } EXA.fitScroll = true; await exaLoadSet(arg); if(!fresh()) return; exaRenderSet(); }
-    else if(view === 'rounds'){ const d = await examApi('adminListRounds'); if(!fresh()) return; EXA.cache.rounds = d; if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.rounds = d; exaRenderRounds(); } }
+    else if(view === 'rounds'){ const d = await examApi('adminListRounds'); if(!fresh()) return; EXA.cache.rounds = d; exCacheSet('arounds', d); if(!cached || JSON.stringify(d) !== JSON.stringify(cached)){ EXA.rounds = d; exaRenderRounds(); } }
     else if(view === 'round'){ await exaPrepareRound(arg); if(!fresh()) return; exaRenderRoundEditor(); }
     else if(view === 'grading'){ const r = await examApi('adminListGrading', { roundId:arg||'' }); if(!fresh()) return; EXA.grading = r.items; EXA.gradeRound = arg||''; if(!arg) EXA.gradeCount = r.items.length; exaRenderGradingList(); }
     else if(view === 'grade'){ const g = await examApi('adminGetGrading', { attemptId:arg }); if(!fresh()) return; EXA.grade = g; exaRenderGrade(); }
