@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.83
-  อัปเดตล่าสุด   : 13 ตุลาคม 2569 21:22 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.87
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 08:37 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.83</title>
+<title>F1 Service — v9.87</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1037,6 +1037,11 @@ body.tr-noscroll{overflow:hidden;}
 .tr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
 .tr-chip{min-height:38px;font-size:12.5px;padding:4px 10px;}
 
+
+/* v9.86 มือถือ: แถบบนไม่ล้นจอ — ปุ่มปฏิทิน/แท็บมุมมองลงบรรทัดใหม่ */
+.tr-top .tr-views{flex:1 1 100%;order:3;display:flex;gap:6px;overflow:visible;}
+.tr-top .tr-views button{flex:1 1 0;min-width:0;white-space:nowrap;padding-left:6px;padding-right:6px;}
+.tr-top [data-tr="calsub"]{flex:1 1 auto;min-width:0;white-space:normal;text-align:center;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2502,8 +2507,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.83";
-const APP_UPDATED_AT = "13 ตุลาคม 2569 21:22 น. เวลาไทย";
+const APP_VERSION = "9.87";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 08:37 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8155,7 +8160,9 @@ function renderSupIdentityOptions(){
   const nickCands = [myUserEmail && (profileLabelMap[myUserEmail.toLowerCase()]||'').split(' - ')[0], myUserProfile && myUserProfile.nicknameTh, myUserProfile && myUserProfile.nicknameEn, myUserProfile && myUserProfile.firstNameTh].filter(Boolean);
   let autoMatch = null;
   for(const myNick of nickCands){
-    autoMatch = SUP_PRODUCTS.find(n=> n===myNick || n.includes(myNick) || myNick.includes(n.replace(/\s*\(.*\)/,'').trim()));
+    const _nm = x=>String(x||'').replace(/[\u0E47-\u0E4E]/g,'').replace(/\s+/g,'').toLowerCase(); // v9.87 — ไม่สนวรรณยุกต์/ไม้ไต่คู้ (แจ็ค = แจ๊ค)
+    const _nn = _nm(myNick);
+    autoMatch = SUP_PRODUCTS.find(n=> n===myNick || n.includes(myNick) || myNick.includes(n.replace(/\s*\(.*\)/,'').trim()) || (_nn.length>=2 && (_nm(n).includes(_nn) || _nn.includes(_nm(n.replace(/\s*\(.*\)/,''))) )));
     if(autoMatch) break;
   }
   if(autoMatch && (!currentSupIdentity || currentSupIdentity===SUP_PRODUCTS[0])){
@@ -14911,18 +14918,35 @@ function traRenderQueue(){
   });
   root.innerHTML = h;
 }
+var TRAPR_BUSY = {};
 async function traApprove(sid, ids, op, force){
-  showLoadingOverlay('กำลังบันทึก...');
+  const key = ids.join(',');
+  if(TRAPR_BUSY[key]) return;
+  TRAPR_BUSY[key] = 1;
+  const inQueue = TRA.view !== 'detail' && TRA.queue && TRA.queue.items;
+  let snap = null;
+  if(inQueue){
+    /* optimistic: เอาแถวออกจากคิวทันที */
+    snap = { items: TRA.queue.items.slice(), sessions: JSON.parse(JSON.stringify(TRA.queue.sessions || [])) };
+    const idset = {}; ids.forEach(i=>{ idset[i] = 1; });
+    const n = TRA.queue.items.filter(r=>idset[r.regId]).length;
+    TRA.queue.items = TRA.queue.items.filter(r=>!idset[r.regId]);
+    if(op === 'approve') (TRA.queue.sessions || []).forEach(s=>{ if(s.sessionId === sid) s.approved = (s.approved||0) + n; });
+    try{ trPendApply(TRA.queue); }catch(e){}
+    traRenderQueue();
+  } else showLoadingOverlay('กำลังบันทึก...');
   try{
     await examApi('trApprove', { sessionId:sid, regIds:ids, op, force:!!force });
+    delete TRAPR_BUSY[key];
     setTimeout(trPendRefresh, 1500);
-    hideLoadingOverlay();
-    if(TRA.view === 'detail') await traReload(true);
-    else { TRA.queue = await trQueueFast(); trPendApply(TRA.queue); traRenderQueue(); }
+    if(!inQueue){ hideLoadingOverlay(); if(TRA.view === 'detail') await traReload(true); }
+    else { try{ TRA.queue = await trQueueFast(); trPendApply(TRA.queue); if(TRA.view !== 'detail') traRenderQueue(); }catch(e){} }
   }catch(e){
-    hideLoadingOverlay();
+    delete TRAPR_BUSY[key];
+    if(inQueue && snap){ TRA.queue.items = snap.items; TRA.queue.sessions = snap.sessions; try{ trPendApply(TRA.queue); }catch(_){} if(TRA.view !== 'detail') traRenderQueue(); }
+    else hideLoadingOverlay();
     if(op === 'approve' && !force && /ที่นั่งเต็ม/.test(e.message) && confirm(e.message + '\nอนุมัติเกินที่นั่งต่อไป?')) return traApprove(sid, ids, op, true);
-    alert(e.message);
+    alert('บันทึกไม่สำเร็จ — คืนรายการกลับแล้ว\n' + e.message);
   }
 }
 
@@ -15916,8 +15940,14 @@ function trPendOpenQueue(){
 (function trPendStart(){
   if(TRPEND.started) return; TRPEND.started = true;
   if(typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent||'')) return;
-  [2500, 6000, 12000, 25000, 45000, 75000].forEach(ms=>setTimeout(()=>{ if(!TRPEND.ok) trPendRefresh(); }, ms));
-  setInterval(()=>{ if(!document.hidden) trPendRefresh(); }, 90000);
+  [1200, 4000, 10000, 22000, 45000, 75000].forEach(ms=>setTimeout(()=>{ if(!TRPEND.ok) trPendRefresh(); }, ms));
+  let n = 0;
+  setInterval(()=>{
+    if(document.hidden) return;
+    trPendRefresh();
+    // ปลุก Apps Script ระหว่างใช้งาน (ทุก ~4.5 นาที) กันหลับ → กดอะไรแล้วไม่ต้องรอสตาร์ทเครื่อง
+    if(++n % 3 === 0 && typeof trGuard === 'function' && trGuard() && typeof auth !== 'undefined' && auth && auth.currentUser) examApi('me').catch(()=>{});
+  }, 90000);
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) trPendRefresh(); });
 })();
 
