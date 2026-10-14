@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.4
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 23:36 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.5
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 23:43 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.4</title>
+<title>F1 Service — v10.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2533,8 +2533,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.4";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 23:36 น. เวลาไทย";
+const APP_VERSION = "10.5";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 23:43 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4059,7 +4059,7 @@ async function ensureClaimsLogSpreadsheet(){
     const created = await createRes.json();
     const sheetId = created.spreadsheetId;
     const defaultTabGid = (created.sheets && created.sheets[0] && created.sheets[0].properties) ? created.sheets[0].properties.sheetId : 0;
-    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
+    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&removeParents=root&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
     if(!moveRes.ok) throw new Error('ย้ายชีตบันทึกเคลมเข้าโฟลเดอร์ไม่สำเร็จ: '+await googleApiErrorMessage(moveRes));
     _claimsSheetIdCache = sheetId;
     DATA.claimsSheetMeta.spreadsheetId = sheetId;
@@ -4433,7 +4433,7 @@ async function ensureProfilesSpreadsheet(){
     const created = await createRes.json();
     const sheetId = created.spreadsheetId;
     const tabGid = (created.sheets && created.sheets[0] && created.sheets[0].properties) ? created.sheets[0].properties.sheetId : 0;
-    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
+    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&removeParents=root&fields=id,parents&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
     if(!moveRes.ok) throw new Error('ย้ายชีตรายชื่อผู้ใช้งานเข้าโฟลเดอร์ไม่สำเร็จ: '+await googleApiErrorMessage(moveRes));
     _profilesSheetIdCache = sheetId;
     DATA.profilesSheetMeta.spreadsheetId = sheetId;
@@ -16613,7 +16613,7 @@ async function ensureReturnPartsSheet(){
     const tabGid = created.sheets[0].properties.sheetId;
     _rpTabGidCache[waitingTab] = tabGid;
     // ย้ายเข้าโฟลเดอร์ root ของแอป
-    await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&fields=id&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
+    await fetch(`https://www.googleapis.com/drive/v3/files/${sheetId}?addParents=${DRIVE_ROOT_FOLDER_ID}&removeParents=root&fields=id&supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}` } });
     // เขียน header + format
     await rpSetupTabHeader(token, sheetId, waitingTab, tabGid);
     _rpSheetIdCache = sheetId;
