@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 9.96
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 22:08 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 9.98
+  อัปเดตล่าสุด   : 14 ตุลาคม 2569 22:21 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v9.96</title>
+<title>F1 Service — v9.98</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2514,8 +2514,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "9.96";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 22:08 น. เวลาไทย";
+const APP_VERSION = "9.98";
+const APP_UPDATED_AT = "14 ตุลาคม 2569 22:21 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14571,7 +14571,16 @@ async function trFast(fsFn, apiFn){
   return apiFn();
 }
 function trFsStrip(s){ const o = Object.assign({}, s); ['days','years','archived','syncedAt'].forEach(k=>{ delete o[k]; }); return o; }
+/* ---------- แคชในเครื่อง (localStorage): โชว์ข้อมูลล่าสุดทันทีตอนเปิดหน้า แล้วโหลดของจริงเบื้องหลัง ---------- */
+function trCacheKey(k){ return 'f1c1:' + String(typeof myUserEmail !== 'undefined' ? myUserEmail : '').toLowerCase() + ':' + k; }
+function trCacheGet(k){ try{ const v = localStorage.getItem(trCacheKey(k)); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function trCacheSet(k, val){ try{ const s = JSON.stringify(val); if(s.length < 1500000) localStorage.setItem(trCacheKey(k), s); }catch(e){} }
 function trListFast(year){
+  const p = trListFast0(year);
+  if(!year) return p;
+  return p.then(d=>{ trCacheSet('list' + year, d); return d; });
+}
+function trListFast0(year){
   if(!year) return examApi('trList', { year:year });
   return trFast(async S=>{
     const me = trMe();
@@ -14658,7 +14667,8 @@ async function trLoad(){
   const root = $('tr-root');
   if(!trGuard()){ root.innerHTML = '<div class="ex-note ex-bad">ยังไม่ได้ตั้งค่า EXAM_API_URL (ดูคู่มือติดตั้ง)</div>'; return; }
   // แสดงข้อมูลเดิมทันที (ถ้ามีของปีเดียวกัน) แล้วรีเฟรชเบื้องหลัง — ไม่ต้องรอหน้าโหลดทุกครั้ง
-  const warm = !!(TR.data && TR.listFor === TR.year);
+  let warm = !!(TR.data && TR.listFor === TR.year);
+  if(!warm){ const c = trCacheGet('list' + TR.year); if(c && c.sessions){ TR.data = c; TR.listFor = TR.year; warm = true; } }
   if(warm) trRender(); else root.innerHTML = '<div class="ex-note">⏳ กำลังโหลดตารางเทรน...</div>';
   try{
     const yr = TR.year, d = await trListFast(yr);
@@ -14906,10 +14916,12 @@ async function trAdminEnter(){
   if(!roleKnown) root.innerHTML = '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
     let init = { role:TRA.role };
-    if(!roleKnown){
+    let roleCached = false;
+    if(!roleKnown){ const cr = trCacheGet('role'); if(cr === 'manager' || cr === 'sup'){ TRA.role = cr; init = { role:cr }; roleCached = true; examApi('me').then(r=>{ if(r && r.role){ TRA.role = r.role; trCacheSet('role', r.role); } }).catch(()=>{}); } }
+    if(!roleKnown && !roleCached){
       init = await examApi('me');
       if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('me'); }
-      TRA.role = init.role;
+      TRA.role = init.role; trCacheSet('role', init.role);
     }
     if(init.role === 'user'){
       root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการตารางเทรนในระบบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
@@ -14935,7 +14947,9 @@ async function traGo(view, arg){
   else root.innerHTML = traTabs() + '<div class="ex-note">⏳ กำลังโหลด...</div>';
   try{
     if(view === 'queue'){ const q = await trQueueFast(); if(TRA.view !== 'queue') return; TRA.queue = q; traDecidedApply(); trPendApply(TRA.queue); traRenderQueue(); }
-    else if(view === 'sessions'){ const yr = TRA.year, d = await trListFast(yr); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
+    else if(view === 'sessions'){ const yr = TRA.year;
+      if(!TRA.data || TRA.dataFor !== yr){ const c = trCacheGet('list' + yr); if(c && c.sessions){ TRA.data = c; TRA.dataFor = yr; traRenderSessions(); } }
+      const d = await trListFast(yr); if(TRA.view !== 'sessions' || yr !== TRA.year) return; TRA.data = d; TRA.dataFor = yr; traRenderSessions(); }
     else if(view === 'detail'){
       if(!TRA.queue) trQueueFast().then(q=>{ TRA.queue = q; }).catch(()=>{});
       const g0 = await trGetFast(arg); TRA.g = g0;
@@ -15535,7 +15549,10 @@ function traBlankForm(){
 }
 async function traPrepareForm(id){
   const yr = TRA.year, needList = !TRA.data || TRA.dataFor !== yr;
-  const [sets, lst] = await Promise.all([examApi('trExamSets'), needList ? trListFast(yr) : Promise.resolve(null)]);
+  const cs = trCacheGet('sets');
+  const setsP = examApi('trExamSets').then(x=>{ if(x && typeof x === 'object') trCacheSet('sets', x); return x; });
+  const [sets, lst] = await Promise.all([(cs && !TRA.sets) ? Promise.resolve(cs) : setsP, needList ? trListFast(yr) : Promise.resolve(null)]);
+  if(cs && !TRA.sets) setsP.then(x=>{ if(x && typeof x === 'object') TRA.sets = x; }).catch(()=>{});
   TRA.sets = sets; if(lst){ TRA.data = lst; TRA.dataFor = yr; }
   if(id){
     const g = (TRA.g && TRA.g.session.sessionId === id) ? TRA.g : await trGetFast(id);
@@ -15864,12 +15881,13 @@ async function traCalSync(all){
   showLoadingOverlay('กำลังซิงก์ปฏิทิน...');
   try{
     let done = 0, failed = 0, off = 0;
-    for(let g = 0; g < 20; g++){
+    for(let g = 0; g < 60; g++){
       const r = await examApi('trSyncCalendar', { all:!!all, offset:off });
       done += r.synced; failed += r.failed; off = r.nextOffset;
-      showLoadingOverlay('กำลังซิงก์ปฏิทิน... '+done);
+      showLoadingOverlay('กำลังซิงก์ปฏิทิน... '+done+(failed?' (ไม่สำเร็จ '+failed+')':''));
+      if(r.synced === 0 && r.failed > 0){ hideLoadingOverlay(); alert('ซิงก์ปฏิทินไม่สำเร็จ — หยุดการทำงาน\nสาเหตุ: '+(r.firstError || 'ไม่ทราบ')+'\n\n(ส่งข้อความนี้ให้ผู้พัฒนาได้เลย)'); return; }
       if(!r.remaining) break;
-      if(!all) off = 0; // โหมด "ที่ยังไม่อยู่ในปฏิทิน" รายการที่เสร็จแล้วหลุดจากตัวกรองเอง
+      if(!all) off = failed; // โหมดไม่ใช่ทั้งหมด: งานที่เสร็จหลุดจากตัวกรองเอง เลื่อนข้ามเฉพาะที่ล้มเหลว
     }
     hideLoadingOverlay(); alert('ซิงก์ปฏิทินแล้ว '+done+' งาน'+(failed?' · ไม่สำเร็จ '+failed+' (ดูประวัติของงานนั้น)':''));
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
