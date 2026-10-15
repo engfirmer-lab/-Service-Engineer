@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.15
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:37 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.17
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 12:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.15</title>
+<title>F1 Service — v10.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2545,8 +2545,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.15";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 11:37 น. เวลาไทย";
+const APP_VERSION = "10.17";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 12:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3812,7 +3812,7 @@ function compressImage(file){
     }catch(err){ fallback(); }
   });
 }
-function imgSrcOf(img){ return typeof img==='string' ? img : img.dataUrl; } // ใช้แสดงรูปทั้งตอน preview (ยังไม่อัปโหลด) และตอนอัปโหลดแล้ว (เป็นลิงก์จริง)
+function imgSrcOf(img){ return typeof img==='string' ? img : (img.dataUrl || img.copyFrom); } // ใช้แสดงรูปทั้งตอน preview (ยังไม่อัปโหลด) และตอนอัปโหลดแล้ว (เป็นลิงก์จริง)
 
 /* ===================== REAL GOOGLE SIGN-IN (Firebase Authentication — redirect flow, reliable on mobile) ===================== */
 // v9.06 — ชื่อที่แสดงทั้งแอป = ชื่อเล่น (จากโปรไฟล์) + เขต เช่น "แจ็ค - เหนือบน" · ไม่มีโปรไฟล์ → ใช้ชื่อเล่นเดิม (ข้อมูลเก่า) → ชื่อบัญชี Google → อีเมล
@@ -5402,6 +5402,19 @@ async function driveUploadImage(blob, filename, parentId){
   return `https://lh3.googleusercontent.com/d/${fileId}`; // ลิงก์ที่ใช้เป็น <img src> ได้ตรงๆ
 }
 // อัปโหลดรูปที่ยัง "pending" (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) ขึ้น Drive จริง — รูปที่อัปโหลดไปแล้ว (เป็นลิงก์อยู่แล้ว) จะข้ามไป
+// v10.16 — คัดลอกไฟล์ใน Drive ไปโฟลเดอร์ใหม่ (ใช้ตอนกดบันทึก Error ที่คัดลอกมา) คืน fileId ใหม่ — ตั้งสิทธิ์ดูได้เหมือนไฟล์ปกติ
+async function driveCopyFileTo(srcUrl, parentId, name){
+  const srcId = driveFileIdFromUrl(srcUrl); if(!srcId) throw new Error('อ่านลิงก์ไฟล์ต้นฉบับไม่ได้');
+  const token = await ensureDriveAccess();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${srcId}/copy?fields=id`, {
+    method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ name, parents:[parentId] })
+  });
+  if(!res.ok) throw new Error('คัดลอกไฟล์ใน Drive ไม่สำเร็จ ('+res.status+')');
+  const id = (await res.json()).id;
+  await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, { method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ role:'reader', type:'anyone' }) }).catch(()=>{});
+  return id;
+}
 async function resolveImagesForUpload(images, category, model, errorCode, symptom, solutionIndex){
   if(!images || images.length===0) return [];
   const needsUpload = images.some(img=>typeof img!=='string');
@@ -5413,6 +5426,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     for(let i=0;i<images.length;i++){
       const img = images[i];
       if(typeof img==='string'){ resolved.push(img); continue; }
+      if(img.copyFrom){ const nid = await driveCopyFileTo(img.copyFrom, folderId, `img-${Date.now()}-${i}.jpg`); resolved.push(`https://lh3.googleusercontent.com/d/${nid}`); continue; }
       const filename = `img-${Date.now()}-${i}.jpg`;
       const url = await driveUploadImage(img.blob, filename, folderId);
       resolved.push(url);
@@ -5431,6 +5445,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
     const resolved = [];
     for(const v of videos){
       if(typeof v==='string'){ resolved.push(v); continue; }
+      if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดวิดีโอ... ${pct}%`); });
       resolved.push(url);
     }
@@ -5447,6 +5462,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
+  if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
 async function handleGisCredential(response){
@@ -7412,7 +7428,7 @@ function renderErrorCard(e, adminMode){
       </div>
       <span class="chev">⤢</span>
     </div>
-    ${adminMode?`<div class="card-admin-actions"><button class="icon-btn" data-edit="${e.id}">แก้ไข Error นี้</button><button class="icon-btn danger" data-del="${e.id}">ลบ Error นี้</button></div>`:''}
+    ${adminMode?`<div class="card-admin-actions"><button class="icon-btn" data-edit="${e.id}">แก้ไข Error นี้</button><button class="icon-btn" data-copy="${e.id}">📋 คัดลอก</button><button class="icon-btn danger" data-del="${e.id}">ลบ Error นี้</button></div>`:''}
   </div>`;
 }
 
@@ -8364,6 +8380,7 @@ function renderModelErrorsList(){
   list.innerHTML = errs.map(e=>renderErrorCard(e,true)).join('');
   list.querySelectorAll('.card-head').forEach(h=>{ h.addEventListener('click', ()=>{ $('model-errors-modal').classList.remove('show'); errorDetailReturnTo = true; openErrorDetail(h.closest('.card').getAttribute('data-id')); }); });
   list.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); $('model-errors-modal').classList.remove('show'); startEditError(b.getAttribute('data-edit')); }));
+  list.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click', ev=>{ ev.stopPropagation(); $('model-errors-modal').classList.remove('show'); startCopyError(b.getAttribute('data-copy')); }));
   list.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', async ev=>{ ev.stopPropagation(); await deleteError(b.getAttribute('data-del')); renderModelErrorsList(); }));
 }
 $('model-errors-search-input').addEventListener('input', e=>{ modelErrorsQuery = e.target.value; });
@@ -8504,6 +8521,14 @@ $('save-error-btn').addEventListener('click', async ()=>{
   const errorCode = $('f-code').value.trim();
   const validSolutions = supValidation.validSolutions;
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
+  { // v10.15 — กัน Error ซ้ำ (แก้ไขเดิม: เช็คเฉพาะตอนเปลี่ยน Product/รุ่น/รหัส/อาการ)
+    const cur = editingErrorId ? DATA.errors.find(e=>e.id===editingErrorId) : null;
+    const changed = !cur || errDupKey(cur.category, cur.model, cur.errorCode, cur.symptom) !== errDupKey(category, model, errorCode, symptom);
+    if(changed){
+      const dup = await findDuplicateError(category, model, errorCode, symptom, editingErrorId || (reviewingPendingErrorId ? 'e_'+reviewingPendingErrorId : null));
+      if(dup){ showToast(dupErrorMsg(dup)); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+    }
+  }
 
   if(reviewingPendingErrorId){
     const pe = DATA.pendingErrors.find(p=>p.id===reviewingPendingErrorId);
@@ -8546,6 +8571,31 @@ function canManageErrorOf(category, model){
   if(isSuperAdmin()) return true;
   if(ownerOf(category, model)!==currentSupIdentity){ showToast('⚠ รุ่นนี้ไม่ใช่ Product ที่คุณดูแล'); return false; }
   return true;
+}
+// v10.15 — กัน Error ซ้ำ: Product + รุ่น + Error Code + อาการ เหมือนกับที่มีอยู่แล้ว (ไม่สนช่องว่าง/ตัวพิมพ์ใหญ่-เล็ก)
+const errNorm = x=>String(x||'').replace(/\s+/g,' ').trim().toLowerCase();
+const errDupKey = (c,m,code,sym)=>[c,m,errNorm(code),errNorm(sym)].join('\u0001');
+async function findDuplicateError(category, model, code, symptom, excludeId){
+  try{ await ensureErrorsLoadedForCategory(category); }catch(e){ console.warn('โหลด Error เพื่อเช็คซ้ำไม่สำเร็จ:', e.message); }
+  const k = errDupKey(category, model, code, symptom);
+  return (DATA.errors||[]).find(e=>e.id!==excludeId && errDupKey(e.category, e.model, e.errorCode, e.symptom)===k) || null;
+}
+function dupErrorMsg(d){ return `⚠ มี Error นี้อยู่แล้ว (${d.model}${d.errorCode?' · '+d.errorCode:''} · ${String(d.symptom||'').slice(0,40)}) — แก้ Error Code หรืออาการให้ต่างจากเดิมก่อนบันทึก`; }
+async function startCopyError(id){
+  const err = DATA.errors.find(e=>e.id===id); if(!err) return;
+  if(!canManageErrorOf(err.category, err.model)) return;
+  await loadSolutionsFor(id);
+  resetErrorForm();
+  $('f-category-field').style.display=''; $('f-model-field').style.display='';
+  $('add-error-modal').classList.add('show');
+  $('sup-form-heading').innerHTML = 'คัดลอก Error <span class="tag">SUP PRODUCT</span>';
+  $('sup-form-sub').textContent = 'คัดลอกจาก Error เดิม (รวมรูป/วิดีโอ — ไฟล์จริงจะถูกคัดลอกใน Drive ตอนกดบันทึกเท่านั้น) — แก้ Error Code หรืออาการให้ต่างจากเดิมก่อนบันทึก';
+  $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
+  $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom||'';
+  editingSolutions = (err.solutions||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', images:(s.images||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), videos:(s.videos||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'' }));
+  if(!editingSolutions.length) editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
+  renderSolutionsEditor();
+  showToast('📋 คัดลอกแล้ว — แก้ Error Code/อาการ ให้ต่างจากเดิม แล้วกดบันทึก');
 }
 async function startEditError(id){
   const err = DATA.errors.find(e=>e.id===id); if(!err) return;
