@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.5
-  อัปเดตล่าสุด   : 14 ตุลาคม 2569 23:43 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.10
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 10:37 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.5</title>
+<title>F1 Service — v10.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1068,6 +1068,16 @@ body.tr-noscroll{overflow:hidden;}
 .tr-ckc.late{color:var(--amber);font-size:12.5px;font-weight:600;}
 .tr-chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
 @media (max-width:480px){.tr-ckn{font-size:15.5px;}}
+
+/* v10.7 — เสาร์-อาทิตย์ = แดง · วันหยุดนักขัตฤกษ์ = ส้ม */
+.tr-dow.we{color:#d32f2f;font-weight:600;}
+.tr-cell.we,.tr-cell.has.we{background:rgba(229,57,53,.13);}
+.tr-cell.we>span{color:#d32f2f;font-weight:600;}
+.tr-cell.hol,.tr-cell.has.hol{background:rgba(255,152,0,.22);}
+.tr-cell.hol>span{color:#e65100;font-weight:700;}
+.tr-cell.has.we,.tr-cell.has.hol{border-color:var(--border);}
+.tr-hn{display:block;font-size:9px;line-height:1.15;color:#e65100;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.tr-cell.today>span{color:#fff;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2533,8 +2543,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.5";
-const APP_UPDATED_AT = "14 ตุลาคม 2569 23:43 น. เวลาไทย";
+const APP_VERSION = "10.10";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 10:37 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12420,7 +12430,7 @@ function exChip(text, cls){ return `<span class="ex-chip ${cls||''}">${exH(text)
 
 /* v10.3 — ลดการเรียกซ้ำ: คำขออ่าน (read) ที่เหมือนกันและกำลังรออยู่ใช้ผลเดียวกัน (หน้าเดียวเคยเรียก trQueue 5 ครั้ง / me 3 ครั้ง)
    + จำ "สิทธิ์ผู้ใช้/รายการชุดข้อสอบ" ไว้สั้นๆ · ทุกคำขอเขียนจะล้างทั้งหมด เพื่อไม่ให้ได้ข้อมูลเก่าหลังแก้ */
-const EXAPI_READS = { me:60000, adminInit:60000, trExamSets:15000, trQueue:0, trList:0, trGet:0, adminListSets:0, adminListRounds:0, myExams:0 };
+const EXAPI_READS = { me:60000, adminInit:60000, trExamSets:15000, trHolidays:0, adminCertNames:0, trQueue:0, trList:0, trGet:0, adminListSets:0, adminListRounds:0, myExams:0 };
 const EXAPI_MEM = { fly:{}, ttl:{} };
 function examApi(action, payload){
   if(!Object.prototype.hasOwnProperty.call(EXAPI_READS, action)){ EXAPI_MEM.fly = {}; EXAPI_MEM.ttl = {}; return examApi0(action, payload); }
@@ -12439,7 +12449,65 @@ function examApi(action, payload){
   fly[key] = p;
   return p.then(clone);
 }
+/* v10.6 — รายการชุด/รอบข้อสอบอ่านจากสำเนา Firestore (ไม่มีโจทย์/เฉลย) · พลาดตรงไหนกลับไปอ่านจาก Sheet เอง
+   ปิดเฉพาะส่วนนี้ 5 นาทีเมื่อ Firestore ใช้ไม่ได้ (เช่น rules ยังไม่ได้เผยแพร่) — ไม่กระทบการอ่านตารางเทรน */
+const EXFS = { offUntil:0, built:false, lastErr:'' };
+async function exFsAdminRole(){ try{ const r = await examApi('adminInit'); return r && r.role; }catch(e){ return ''; } }
+async function exFsDocs(S, col, role){
+  const me = String(myUserEmail||'').toLowerCase();
+  if(!EXFS.built){ const st = await S.getDoc(S.doc(db,'exMeta','state')); if(!st.exists()) throw new Error('ex-not-built'); EXFS.built = true; }
+  const c = S.collection(db, col);
+  const snap = await S.getDocs(role === 'manager' ? c : S.query(c, S.where('ownerKey','==',me)));
+  return snap.docs.map(d=>d.data());
+}
+const EX_FS_STRIP = o=>{ const x = Object.assign({}, o); delete x.ownerKey; return x; };
+const EXFS_FAST = {
+  async adminListSets(S, role){
+    if(role !== 'manager' && role !== 'sup') return undefined;
+    const l = (await exFsDocs(S, 'exSets', role)).map(EX_FS_STRIP);
+    return l.sort((a,b)=>(a.category+a.model+a.level).localeCompare(b.category+b.model+b.level));
+  },
+  async adminListRounds(S, role){
+    if(role !== 'manager' && role !== 'sup') return undefined;
+    const t = exNow();
+    const l = (await exFsDocs(S, 'exRounds', role)).map(EX_FS_STRIP).map(r=>{
+      r.isOpen = !(r.state === 'closed' || r.state === 'pending') && !(r.openAt && t < r.openAt) && !(r.closeAt && t > r.closeAt);
+      return r;
+    });
+    return l.sort((a,b)=>b.createdAt - a.createdAt);
+  },
+  async trExamSets(S, role){
+    if(role !== 'manager' && role !== 'sup') return undefined;
+    const sets = (await exFsDocs(S, 'exSets', role)).filter(s=>s.status !== 'hidden' && s.latestVersion > 0)
+      .map(s=>{ const x = EX_FS_STRIP(s); x.qCount = 0; return x; });
+    let owners = [];
+    if(role === 'manager'){ const a = await S.getDoc(S.doc(db,'exMeta','admins')); if(!a.exists()) throw new Error('ex-not-built'); owners = (a.data().list||[]); }
+    return { sets, owners, role };
+  }
+};
+async function exFsTry(action){
+  const fn = EXFS_FAST[action];
+  if(!fn || Date.now() < EXFS.offUntil || Date.now() < (window._trFsStale||0) || !window._firebaseSdk) return undefined;
+  try{
+    await initFirebase();
+    const role = await exFsAdminRole();
+    return await fn(window._firebaseSdk, role);
+  }catch(e){
+    EXFS.offUntil = Date.now() + 300000; EXFS.lastErr = String(e && (e.code || e.message) || e).slice(0,120);
+    if(e && e.message === 'ex-not-built') EXFS.built = false;
+    try{ console.warn('Exam Firestore read paused 5 min:', EXFS.lastErr); }catch(_){}
+    if(e && e.message === 'ex-not-built') exFsEnsure();
+    return undefined;
+  }
+}
+let _exFsEnsuring = false;
+async function exFsEnsure(){
+  if(_exFsEnsuring) return; _exFsEnsuring = true;
+  try{ const r = await examApi0('trFsEnsure'); if(r && r.built){ EXFS.offUntil = 0; EXFS.built = false; } }catch(e){}
+  setTimeout(()=>{ _exFsEnsuring = false; }, 120000);
+}
 async function examApi0(action, payload){
+  { const fv = await exFsTry(action); if(fv !== undefined) return fv; }
   if(!EXAM_API_URL) throw new Error('ยังไม่ได้ตั้งค่า EXAM_API_URL ใน index.html (ดูคู่มือติดตั้ง)');
   await initFirebase();
   const u = auth && auth.currentUser;
@@ -12662,6 +12730,7 @@ function examRenderAttempt(){
       <button class="btn btn-ghost" data-ex="next">ถัดไป ▶</button>
       <button class="btn btn-primary" data-ex="submit">ส่งข้อสอบ</button>
     </div>
+    ${c.practice ? '<div class="ex-nav"><button class="btn btn-ghost btn-sm" data-ex="pxedit">✏️ แก้ข้อนี้ทันที</button><span class="ex-hint">เปิดหน้าแก้ไขข้อนี้ — แก้เสร็จกดกลับมาทดลองต่อได้เลย (คำตอบที่ทำไว้ไม่หาย)</span></div>' : ''}
     <div class="ex-dots" id="ex-dots"></div>
   </div>`;
   examRenderQuestion();
@@ -12893,7 +12962,23 @@ function examRenderPracticeResult(r){
       ${r.passed ? '<button class="btn btn-primary" data-ex="pxcert">🎓 ดูใบ Cer ตัวอย่าง</button>' : ''}</div>
     <div id="ex-pxcert-out" class="ex-act" style="margin-top:10px;"></div></div>`;
 }
-async function exaPractice(setId, source){
+/* v10.8 — แก้ข้อสอบจากหน้าทดลองทำ: เปิดหน้าแก้ไขของข้อที่กำลังดูทันที แล้วกลับมาทำต่อ (คำตอบเดิมถูกเก็บไว้) */
+async function exaPracticeEdit(){
+  const c = EX.cur; if(!c || !c.practice) return;
+  const q = c.p.questions[c.idx]; if(!q || !q.qid) return;
+  const R = { setId:c.practice.setId, source:c.practice.source, idx:c.idx, qid:q.qid };
+  exaPracticeSave();
+  EXA.pxReturn = R; EXA.setTab = 'q';
+  await exaGo('set', R.setId);
+  const cur = EXA.qs.find(x=>x.qid === R.qid);
+  if(!cur){ showToast('ไม่พบข้อนี้ในชุด (อาจถูกลบแล้ว)'); return; }
+  EXA.qErr = ''; EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(cur); EXA.scrollEdit = true; exaRenderSet();
+}
+function exaPxBar(){
+  const R = EXA.pxReturn; if(!R || !EXA.set || EXA.set.setId !== R.setId) return '';
+  return `<div class="ex-note ex-practice" style="position:sticky;top:0;z-index:5">✏️ <b>กำลังแก้ข้อจากโหมดทดลอง</b> (ข้อที่ ${R.idx+1}) <button class="btn btn-primary btn-sm" data-ex="pxreturn">▶ กลับไปทดลองทำต่อ</button> <button class="btn btn-ghost btn-sm" data-ex="pxreturnx">ปิด</button><div class="ex-hint">บันทึกข้อที่แก้ก่อน แล้วกดกลับ — ข้อสอบทดลองจะโหลดฉบับล่าสุด คำตอบข้ออื่นยังอยู่</div></div>`;
+}
+async function exaPractice(setId, source, keep){
   if(!setId) return;
   if(EXA.pending && EXA.pending.length && EXA.pendSet === setId && !confirm('มี '+EXA.pending.length+' ข้อที่ยังไม่บันทึกลงระบบ — โหมดทดลองจะไม่รวมข้อเหล่านั้น\nทดลองต่อเลยหรือไม่?')) return;
   showLoadingOverlay('กำลังเตรียมข้อสอบทดลอง...');
@@ -12905,7 +12990,16 @@ async function exaPractice(setId, source){
       deadlineAt: r.durationMin > 0 ? exNow() + r.durationMin*60000 : 0, graceMin:r.graceMin, passPercent:r.passPercent };
     EX.practiceLast = null;
     p.deadlineLocal = r.durationMin > 0 ? Date.now() + r.durationMin*60000 : 0;
+    const saved = keep ? exaPracticeSaved(setId) : null; // กลับมาจากหน้าแก้ไข: คืนคำตอบเดิมและข้อที่ค้างไว้ (ข้อที่เพิ่งแก้ถือว่ายังไม่ตอบ)
     examOpenAttempt(p, { title:r.title, level:r.level, passPercent:r.passPercent }, { setId:r.setId, source:r.source, version:r.version });
+    if(saved && EX.cur){
+      const ids = {}; r.questions.forEach(q=>{ ids[q.qid] = 1; });
+      const ans = {}; Object.keys(saved.answers||{}).forEach(k=>{ if(ids[k] && k !== keep.qid) ans[k] = saved.answers[k]; });
+      EX.cur.answers = ans;
+      const at = r.questions.findIndex(q=>q.qid === keep.qid);
+      EX.cur.idx = at >= 0 ? at : Math.min(keep.idx||0, Math.max(0, r.questions.length-1));
+      examRenderAttempt();
+    }
     exaPracticeSave();
   }catch(e){ hideLoadingOverlay(); alert('เริ่มโหมดทดลองไม่ได้: '+e.message); }
 }
@@ -12969,13 +13063,14 @@ function exPdfUrl(b64){
   for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
   return URL.createObjectURL(new Blob([arr], { type:'application/pdf' }));
 }
-async function exaCertSample(){
+async function exaCertSample(name){
+  const inp = $('exa-sample-name'); if(typeof name === 'string' && inp) inp.value = name;
   const out = $('exa-sample-out'); if(out) out.innerHTML = '<span class="ex-hint">⏳ กำลังสร้างตัวอย่างใบ Cer...</span>';
   try{
-    const r = await examApi('adminCertSample', { nameEn:exaMyEnName() });
+    const r = await examApi('adminCertSample', { nameEn:exaMyEnName(), testName: inp ? inp.value : '', course: ($('exa-sample-course')||{}).value || '', trainingDate: ($('exa-sample-date')||{}).value || '', level: ($('exa-sample-level')||{}).value || '' });
     const url = exPdfUrl(r.base64);
     if(out) out.innerHTML = `<div class="ex-hint">ใช้: <b>${r.template==='custom' ? 'เทมเพลต Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b> · ชื่อ Sup บนใบ: <b>${exH(r.supName||'—')}</b> · ลายเซ็น: <b>${r.hasSignature ? 'มี' : 'ไม่มี'}</b></div>
-      <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">ข้อมูลสมมติ (Somchai Example · TEST-0000) ไม่บันทึกในระบบ</span>`;
+      <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">${r.manual ? 'ออกใบเอง — ไม่บันทึกในระบบ ไม่ออกเลขที่ใบ ไม่เก็บลง Drive' : 'ข้อมูลสมมติ (TEST-0000) ไม่บันทึกในระบบ'}</span>`;
   }catch(e){ if(out) out.innerHTML = `<span class="ex-hint ex-warn">สร้างตัวอย่างไม่สำเร็จ: ${exH(e.message)}</span>`; }
 }
 async function exaPracticeCert(){
@@ -12993,6 +13088,7 @@ async function exaRenderSign(){
   const root = $('exa-root');
   const d = await examApi('adminGetSignature');
   EXA.sign = d; EXA.signNew = null;
+  examApi('adminCertNames').then(r=>{ const el = $('exa-sample-names'); if(!el || !r || !r.names || !r.names.length) return; el.innerHTML = '<span class="ex-hint">ชื่อยาวสุดในระบบ:</span> ' + r.names.slice(0,8).map(x=>`<button class="btn btn-ghost btn-sm" data-ex="certname" data-n="${exH(x.nameEn)}">${exH(x.nameEn)} <small>(${x.len})</small></button>`).join(' '); }).catch(()=>{});
   const nm = exaMyEnName();
   root.innerHTML = exaTabs() + `<div class="panel-block"><h2>✍️ ลายเซ็นของฉันบนใบ Cer</h2>
     <div class="ex-hint">ลายเซ็นจะขึ้นบนใบ Cer ที่ "ชื่อ Supervisor บนใบ" ตรงกับชื่ออังกฤษของคุณ: <b>${exH(nm || '— ยังไม่มีชื่ออังกฤษในโปรไฟล์ —')}</b>
@@ -13004,9 +13100,14 @@ async function exaRenderSign(){
     </div>
     <div class="ex-act"><button class="btn btn-primary" data-ex="sigsave" id="exa-sig-save" disabled>💾 บันทึกลายเซ็น</button>
       ${d.has ? '<button class="btn btn-ghost" data-ex="sigdel">🗑 ลบลายเซ็น</button>' : ''}</div>
-    <div class="panel-block" style="margin-top:12px;"><h3 style="margin:0 0 6px">👁 ตรวจเทมเพลตใบ Cer</h3>
+    <div class="panel-block" style="margin-top:12px;"><h3 style="margin:0 0 6px">📄 ออกใบ Cer เอง / ตรวจเทมเพลต <small>(ไม่บันทึกในระบบ)</small></h3>
+      <div class="ex-hint">กรอก "หลักสูตร" = ออกใบ Cer ตามข้อมูลที่กรอกเป็น PDF ใช้เทมเพลตเดิม (ออกก่อนสอบจริง/ทดลองออกใบได้) — เว้นหลักสูตร = ใบตัวอย่างชื่อสมมติ</div>
       <div class="ex-hint">ใช้ตรวจหน้าตาใบ Cer โดยไม่ต้องทำข้อสอบ — ใช้ชื่อสมมติ และลายเซ็นของคุณ (ถ้ามี) · เทมเพลตตอนนี้: <b>${d.template==='custom' ? 'Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b></div>
-      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">👁 ดูตัวอย่างใบ Cer</button></div>
+      <label style="display:block;margin:6px 0">ชื่อที่ต้องการทดสอบ (พิมพ์ชื่อภาษาอังกฤษของผู้รับ หรือเลือกจากชื่อยาวสุดด้านล่าง — เว้นว่าง = ชื่อสมมติ)<input id="exa-sample-name" type="text" maxlength="60" placeholder="เช่น Visanu Sombatpattanakul"></label>
+      <div id="exa-sample-names" class="ex-act" style="margin:4px 0;flex-wrap:wrap"></div>
+      <label style="display:block;margin:6px 0">หลักสูตร<input id="exa-sample-course" type="text" maxlength="100" placeholder="เช่น Maglumi 800 Advance"></label>
+      <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันที่เทรน<input id="exa-sample-date" type="date"></label><label>Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1"></label></div>
+      <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">📄 สร้างใบ Cer (PDF)</button></div>
       <div id="exa-sample-out" class="ex-act" style="margin-top:8px;"></div></div>
     <div class="ex-hint" style="margin-top:8px;">ใช้แม่แบบ Google Slides ของตัวเอง? ใส่กล่องข้อความที่มีคำว่า <code>{{SUP_SIGN}}</code> ตรงตำแหน่งที่จะวางลายเซ็น ระบบจะวางรูปแทนที่ให้ (ไม่มีกล่องนี้ = ไม่แสดงลายเซ็น)</div></div>`;
 }
@@ -13301,6 +13402,7 @@ function exaRenderSet(){
   if(!isNew){
     html += `<div class="ex-tabpane" data-pane="q" ${tabSt('q')}><div class="panel-block ex-forms ex-workspace ${wsFull ? 'full' : ''}">${wsFull ? `<div class="ex-wsbar"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการชุด</button><b>${exH(s.title)}</b>${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}<span class="ex-wsgap"></span><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="settings">⚙️ ตั้งค่า</button><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="pub">🚀 เผยแพร่</button><button class="btn btn-ghost btn-sm" data-ex="wsfull" data-v="0" title="ออกจากโหมดเต็มจอ">⤡ ย่อ</button></div>` : ''}<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button>${wsFull ? '' : '<button class="btn btn-ghost btn-sm" data-ex="wsfull" data-v="1">⤢ เต็มจอ</button>'}<button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
       ${exaCopyPanelHtml()}
+      ${exaPxBar()}
       ${EXA.pending.length ? `<div class="ex-note ex-pendbar"><b>มี ${EXA.pending.length} ข้อที่ยังไม่บันทึกลงระบบ</b> (อยู่ในเครื่องนี้เท่านั้น ถ้ารีเฟรชหน้าจะหาย)<div class="ex-act"><button class="btn btn-primary" data-ex="saveall">💾 บันทึกทั้งหมด ${EXA.pending.length} ข้อ ในครั้งเดียว</button></div></div>` : ''}
       <div class="ex-split"><div class="ex-split-l"><div class="ex-split-ls">${exaQListHtml()}
       ${EXA.qs.length || EXA.pending.length ? '<div class="ex-hint">ผู้สอบจะเห็นลำดับข้อสุ่มทุกครั้ง (ถ้าแบ่งเป็นบท: เรียงตามบทที่เห็นนี้ แล้วสุ่มเฉพาะภายในบท) ลำดับนี้ใช้เฉพาะตอนแก้ไข</div>' : '<div class="ex-hint">ยังไม่มีข้อสอบ กด "+ เพิ่มข้อ"</div>'}</div>
@@ -14429,6 +14531,9 @@ function exOnEvent(e){
       case 'draftrestore': exaDraftRestore(); return;
       case 'draftdiscard': exaDraftDiscard(); return;
       case 'practice': exaPractice(id, t.getAttribute('data-src')); return;
+      case 'pxedit': exaPracticeEdit(); return;
+      case 'pxreturn': { const R = EXA.pxReturn; EXA.pxReturn = null; if(R) exaPractice(R.setId, R.source, R); return; }
+      case 'pxreturnx': EXA.pxReturn = null; exaRenderSet(); return;
       case 'pxback': { const sid = EX.practiceLast && EX.practiceLast.setId; EX.cur = null; EX.practiceLast = null; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
       case 'pxagain': { const L = EX.practiceLast; EX.cur = null; if(L) exaPractice(L.setId, L.source); else exaGo('sets'); return; }
       case 'pxcert': exaPracticeCert(); return;
@@ -14436,6 +14541,7 @@ function exOnEvent(e){
       case 'pxdiscard': exaPracticeDiscard(id); return;
       case 'sigsave': exaSigSave(); return;
       case 'certsample': exaCertSample(); return;
+      case 'certname': exaCertSample(t.getAttribute('data-n')); return;
       case 'sigdel': exaSigDel(); return;
       case 'newq': { EXA.qErr = ''; exaReadQForm(); const ch = EXA.qEdit ? (EXA.qEdit.chapter||'') : ''; EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); EXA.qEdit.chapter = ch || (EXA.qs.length ? (EXA.qs[EXA.qs.length-1].chapter||'') : ''); EXA.scrollEdit = true; exaRenderSet(); return; }
       case 'editq': { EXA.qErr = ''; const q = EXA.qs.find(x=>x.qid===id); if(q){ exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); EXA.scrollEdit = true; exaRenderSet(); } return; }
@@ -14790,11 +14896,37 @@ function trDayMap(list){
   });
   return m;
 }
+
+/* ===== v10.7 — วันหยุด: เสาร์-อาทิตย์ = แดง · นักขัตฤกษ์ = ส้ม (ชื่อวันหยุดดึงจาก Google Calendar "วันหยุดในประเทศไทย" ผ่านเซิร์ฟเวอร์ แคช 7 วัน
+   ถ้าดึงไม่ได้ ใช้วันหยุดที่วันที่ตายตัวที่ฝังไว้ (ไม่มีวันหยุดตามจันทรคติ)) ===== */
+const TR_HOL = { by:{}, busy:{} };
+const TR_HOL_FIXED = [['01-01','วันขึ้นปีใหม่'],['04-06','วันจักรี'],['04-13','วันสงกรานต์'],['04-14','วันสงกรานต์'],['04-15','วันสงกรานต์'],['05-01','วันแรงงานแห่งชาติ'],['05-04','วันฉัตรมงคล'],['06-03','วันเฉลิมพระชนมพรรษาพระบรมราชินี'],['07-28','วันเฉลิมพระชนมพรรษา ร.10'],['08-12','วันแม่แห่งชาติ'],['10-13','วันนวมินทรมหาราช'],['10-23','วันปิยมหาราช'],['12-05','วันพ่อแห่งชาติ'],['12-10','วันรัฐธรรมนูญ'],['12-31','วันสิ้นปี']];
+function trHolMap(year){
+  if(TR_HOL.by[year]) return TR_HOL.by[year];
+  const c = trCacheGet('hol' + year);
+  if(c && c.map){ TR_HOL.by[year] = c.map; if(Date.now() - (c.at||0) > 7*86400000) trHolLoad(year); return c.map; }
+  trHolLoad(year);
+  const o = {}; TR_HOL_FIXED.forEach(x=>{ o[year+'-'+x[0]] = x[1]; }); return o;
+}
+function trHolLoad(year){
+  const t = TR_HOL.busy[year]; if(t && Date.now() - t < 120000) return; TR_HOL.busy[year] = Date.now();
+  examApi('trHolidays', { year:year }).then(r=>{
+    const l = r && r.list; if(!Array.isArray(l) || !l.length) return;
+    const m = {}; l.forEach(x=>{ if(x && x.date) m[x.date] = x.name || 'วันหยุด'; });
+    TR_HOL.by[year] = m; trCacheSet('hol' + year, { at:Date.now(), map:m });
+    try{
+      if(typeof trIdle === 'function' && !trIdle()) return;
+      if(typeof TR !== 'undefined' && TR.view === 'cal' && $('tr-root') && $('tr-root').offsetParent !== null) trRender();
+      if(typeof TRA !== 'undefined' && TRA.view === 'sessions' && TRA.sview === 'cal' && $('tra-root') && $('tra-root').offsetParent !== null) traRenderSessions();
+    }catch(e){}
+  }).catch(()=>{});
+}
 function trMonthGrid(year, mon, dayMap, big, admin){
   const first = year+'-'+trPad(mon+1)+'-01';
   const dow0 = trDow(first), dim = new Date(Date.UTC(year, mon+1, 0)).getUTCDate();
   const today = trToday();
-  let h = `<div class="tr-grid ${big?'big':''} ${admin?'adm':''}">` + TR_DOW.map(x=>`<div class="tr-dow">${x}</div>`).join('');
+  const hol = trHolMap(year);
+  let h = `<div class="tr-grid ${big?'big':''} ${admin?'adm':''}">` + TR_DOW.map((x,i)=>`<div class="tr-dow ${i===0||i===6?'we':''}">${x}</div>`).join('');
   for(let i=0;i<dow0;i++) h += '<div class="tr-cell empty"></div>';
   for(let d=1; d<=dim; d++){
     const ds = year+'-'+trPad(mon+1)+'-'+trPad(d), ev = dayMap[ds] || [];
@@ -14803,7 +14935,9 @@ function trMonthGrid(year, mon, dayMap, big, admin){
       : ev.slice(0,3).map(s=>`<i style="background:${trColor(s.category)}" class="${s.status==='plan'?'plan':''}"></i>`).join('') + (ev.length>3 ? `<em>+${ev.length-3}</em>` : '');
     const mineDot = ev.some(s=>s.my && s.my.status === 'approved') ? '<u></u>' : '';
     const act = admin ? `data-tr="adday" data-d="${ds}" role="button" tabindex="0"` : (ev.length ? `data-tr="day" data-d="${ds}" role="button" tabindex="0"` : '');
-    h += `<div class="tr-cell ${ev.length?'has':''} ${ds===today?'today':''} ${admin?'adm':''}" ${act}><span>${d}</span>${mineDot}<div class="tr-bars">${bars}</div></div>`;
+    const wd = (dow0 + d - 1) % 7, hn = hol[ds] || '';
+    const hl = hn ? `<small class="tr-hn">${trH(hn)}</small>` : '';
+    h += `<div class="tr-cell ${ev.length?'has':''} ${ds===today?'today':''} ${admin?'adm':''} ${wd===0||wd===6?'we':''} ${hn?'hol':''}" ${hn?`title="${trH(hn)}"`:''} ${act}><span>${d}</span>${mineDot}${(big||admin)?hl:''}<div class="tr-bars">${bars}</div></div>`;
   }
   return h + '</div>';
 }
@@ -15006,7 +15140,7 @@ async function trAdminEnter(){
 function traTabs(){
   const v = TRA.view, n = TRA.queue ? TRA.queue.items.length : 0;
   const on = x=> (v===x || (x==='sessions' && v==='detail')) ? 'active' : '';
-  return `<div class="subtab-bar"><button class="${on('queue')}" data-tr="atab" data-v="queue">⏳ รออนุมัติ${n?` (${n})`:''}</button><button class="${on('sessions')}" data-tr="atab" data-v="sessions">🗂 งานเทรน</button><button class="${on('form')}" data-tr="atab" data-v="form">➕ สร้างงาน</button>${TRA.role==='manager'?`<button class="${on('import')}" data-tr="atab" data-v="import">🧰 เครื่องมือ Manager</button>`:''}</div>`;
+  return `<div class="subtab-bar"><button class="${on('sessions')}" data-tr="atab" data-v="sessions">🗂 งานเทรน</button><button class="${on('form')}" data-tr="atab" data-v="form">➕ สร้างงาน</button><button class="${on('queue')}" data-tr="atab" data-v="queue">⏳ อนุมัติ${n?` (${n})`:''}</button>${TRA.role==='manager'?`<button class="${on('import')}" data-tr="atab" data-v="import">🧰 เครื่องมือ Manager</button>`:''}</div>`;
 }
 async function traGo(view, arg){
   const root = $('tra-root');
