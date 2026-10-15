@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.13
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:13 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.15
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:37 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.13</title>
+<title>F1 Service — v10.15</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2545,8 +2545,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.13";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 11:13 น. เวลาไทย";
+const APP_VERSION = "10.15";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 11:37 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4319,7 +4319,7 @@ async function archiveClaimToSheetAndDelete(c){
       updateLoadingOverlayText('กำลังลบข้อมูลออกจากแอพ...');
       await fsDeleteClaim(c.id);
       DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
-      delete _sheetDoneCountCache[currentYearAD()];
+      delete _sheetDoneCountCache[currentYearAD()]; delete _sheetDoneCountCache['r'+currentYearAD()];
       return true;
     }
     // 2) เตรียมสเปรดชีตและแท็บ
@@ -4347,7 +4347,7 @@ async function archiveClaimToSheetAndDelete(c){
     await fsDeleteClaim(c.id);
     DATA.claims = DATA.claims.filter(x=>x.id!==c.id);
     // ล้าง cache จำนวนเสร็จสิ้นของปีปัจจุบัน เพื่อให้ Dashboard โหลดค่าใหม่จาก Sheet ในครั้งถัดไป
-    delete _sheetDoneCountCache[currentYearAD()];
+    delete _sheetDoneCountCache[currentYearAD()]; delete _sheetDoneCountCache['r'+currentYearAD()];
     return true;
   } finally {
     hideLoadingOverlay();
@@ -10982,15 +10982,16 @@ function updateEngMyWorkBadge(){
 let _sheetDoneCountCache = {};
 let _sheetDoneCountYear = currentYearAD(); // ปีที่กำลังแสดงใน Dashboard
 // อ่านจำนวนแถวใน Sheet ของ Sup คนนี้ สำหรับปีที่ระบุ — ส่งคืน count (ลบหัวตาราง 1 แถว) หรือ null ถ้าอ่านไม่ได้
-async function fetchSheetDoneCount(year){
+async function fetchSheetDoneCount(year, kind){
   if(!isEditor() || !claimsSheetLinkVisibleToMe()) return null;
-  if(_sheetDoneCountCache[year] !== undefined) return _sheetDoneCountCache[year];
+  const isRep = kind === 'report', ck = isRep ? 'r'+year : year; // v10.13 — kind='report' นับแท็บ "<ผู้ดูแล> - แจ้งปัญหา - ปี"
+  if(_sheetDoneCountCache[ck] !== undefined) return _sheetDoneCountCache[ck];
   try{
     const sheetId = await ensureClaimsLogSpreadsheet();
     const token = await ensureDriveAccess();
     // อ่านแค่คอลัมน์ A ของแท็บปีนั้น — นับ row ที่มีข้อมูล (ลบหัวตาราง 1 แถว)
     const ownerName = currentSupIdentity || '';
-    const tabTitle = isSuperAdmin() ? null : sanitizeSheetTabName(`${ownerName} - ${year}`);
+    const tabTitle = isSuperAdmin() ? null : sanitizeSheetTabName(isRep ? `${ownerName} - แจ้งปัญหา - ${year}` : `${ownerName} - ${year}`);
     if(!tabTitle && !isSuperAdmin()) return null;
     let count = 0;
     if(isSuperAdmin()){
@@ -10998,7 +10999,7 @@ async function fetchSheetDoneCount(year){
       const metaRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`, { headers:{ Authorization:`Bearer ${token}` } });
       if(!metaRes.ok) return null;
       const metaData = await metaRes.json();
-      const yearTabs = (metaData.sheets||[]).filter(s=>s.properties && s.properties.title.endsWith(` - ${year}`));
+      const yearTabs = (metaData.sheets||[]).filter(s=>s.properties && s.properties.title.endsWith(` - ${year}`) && (s.properties.title.indexOf(' - แจ้งปัญหา - ') >= 0) === isRep);
       for(const tab of yearTabs){
         const t = tab.properties.title;
         const rng = `'${t.replace(/'/g,"''")}'!A:A`;
@@ -11016,7 +11017,7 @@ async function fetchSheetDoneCount(year){
       const rows = (d.values && d.values[0]) ? d.values[0].length : 0;
       count = Math.max(0, rows - 1);
     }
-    _sheetDoneCountCache[year] = count;
+    _sheetDoneCountCache[ck] = count;
     return count;
   } catch(e){ console.warn('fetchSheetDoneCount error:', e.message); return null; }
 }
@@ -11033,6 +11034,7 @@ function renderClaimsDashboard(){
   const canSeeSheet = claimsSheetLinkVisibleToMe();
   const yr = _sheetDoneCountYear;
   const cachedCount = _sheetDoneCountCache[yr];
+  const repCached = _sheetDoneCountCache['r'+yr];
   // แสดง years ที่ available สำหรับ dropdown (ปีปัจจุบัน + ปีก่อน)
   const curYr = parseInt(currentYearAD(), 10);
   const yearOptions = [curYr, curYr-1, curYr-2].map(y=>`<option value="${y}"${y===parseInt(yr,10)?' selected':''}>${y}</option>`).join('');
@@ -11051,9 +11053,12 @@ function renderClaimsDashboard(){
     <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
-    <div class="stat-card cd-c2"><div class="label">จำนวนทั้งหมด</div><div class="value" style="color:var(--blue);">${reports.length}</div><div class="cd-sub" style="font-size:10px;color:var(--text-faint);margin-top:2px;">เฉพาะที่ยังไม่ archive</div></div>
-    <div class="stat-card cd-c2"><div class="label">แก้ไขแล้ว / ยังไม่แก้ไข</div><div class="value"><span class="green">${reportFixedCount}</span> / <span class="amber">${reportUnfixedCount}</span></div></div>
+    <div class="stat-card cd-c3"><div class="label">ยังค้างอยู่ (ในแอป)</div><div class="value amber">${reports.length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แก้ไขแล้ว ${reportFixedCount} / ยังไม่แก้ไข ${reportUnfixedCount}</div></div>
+    ${canSeeSheet ? `<div class="stat-card cd-c3"><div class="label">จบเคสแล้ว (ปี <span id="report-done-yr">${yr}</span>)</div><div class="value green" id="report-done-count-val">${repCached !== undefined ? repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div></div>
+    <div class="stat-card cd-c3"><div class="label">รวมทั้งหมด</div><div class="value" style="color:var(--blue);" id="report-total-val">${repCached !== undefined ? reports.length + repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">ค้าง + จบเคส</div></div>` : ''}
   `;
+  const repShow = n=>{ const a = $('report-done-count-val'), b = $('report-total-val'); if(a) a.textContent = n !== null ? n : '-'; if(b) b.textContent = n !== null ? (reports.length + n) : '-'; };
+  if(canSeeSheet){ if(repCached !== undefined) repShow(repCached); else fetchSheetDoneCount(yr, 'report').then(repShow); }
   // ผูก event dropdown เลือกปี
   const sel = $('sheet-done-year-sel');
   if(sel){
@@ -11063,6 +11068,7 @@ function renderClaimsDashboard(){
       if(val) val.textContent = '...';
       const n = await fetchSheetDoneCount(_sheetDoneCountYear);
       if(val) val.textContent = n !== null ? n : '-';
+      const ry = $('report-done-yr'); if(ry) ry.textContent = _sheetDoneCountYear; const ra = $('report-done-count-val'); if(ra) ra.textContent = '...'; const rn = await fetchSheetDoneCount(_sheetDoneCountYear, 'report'); repShow(rn);
     });
   }
   // โหลด background ถ้ายังไม่มี cache
@@ -18006,7 +18012,7 @@ function certStatusBadge(cert){
   if(!cert) return `<span style="color:var(--text-faint);font-size:12px;">— ยังไม่อัปโหลด —</span>`;
   if(cert.source==='exam') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ผ่านการสอบ ${escapeHtml(String(cert.examScore==null?'':cert.examScore))}%</span>`;
   if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${escapeHtml(String(cert.score))}/5</span>`;
-  return `<span style="color:var(--amber);font-size:12px;">⏳ รอ Manager ตรวจ</span>`;
+  return `<span style="color:var(--green);font-size:12px;">✓ อัปโหลดแล้ว</span>`;
 }
 function certReqBadgeHtml(category, model){
   const req = certRequirements[category+'|'+model];
