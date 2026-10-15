@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.12
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:03 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.13
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:13 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.12</title>
+<title>F1 Service — v10.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1078,6 +1078,8 @@ body.tr-noscroll{overflow:hidden;}
 .tr-cell.has.we,.tr-cell.has.hol{border-color:var(--border);}
 .tr-hn{display:block;font-size:9px;line-height:1.15;color:#e65100;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
 .tr-cell.today>span{color:#fff;}
+
+.tr-card.tr-ro{opacity:.8;background:var(--panel-alt);border-style:dashed;border-left-style:solid;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2543,8 +2545,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.12";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 11:03 น. เวลาไทย";
+const APP_VERSION = "10.13";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 11:13 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15276,20 +15278,33 @@ async function traApprove(sid, ids, op, force){
 /* ----- รายการงาน ----- */
 function traSessionCards(list){
   const today = trToday();
-  return list.map(s=>{ const overdue = s.status==='open' && s.dateMode!=='month' && s.endDate < today;
+  return list.map(s=>{ const overdue = s.canManage && s.status==='open' && s.dateMode!=='month' && s.endDate < today;
+    if(!s.canManage) return `<div class="tr-card tr-ro" data-tr="aother" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
+    <div class="tr-card-t">🔒 <b>${trH(s.title)}</b></div>
+    <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))} · ผู้ดูแล: ${trH(s.ownerName||s.ownerEmail||'-')}</div>
+    <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
+    <div class="tr-card-f">${trStatusChip(s)}<span class="tr-chip">ดูอย่างเดียว</span></div></div>`;
     return `<div class="tr-card" data-tr="manage" data-id="${trH(s.sessionId)}" role="button" tabindex="0" style="--tc:${trColor(s.category)}">
     <div class="tr-card-t"><b>${trH(s.title)}</b></div>
     <div class="tr-card-m">${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}${s.ownerName&&TRA.role==='manager'?' · เจ้าของ: '+trH(s.ownerName):''}</div>
     <div class="tr-card-c">${trH(s.category)}${s.model?' › '+trH(s.model):''}</div>
     <div class="tr-card-f">${trStatusChip(s)}${trCertChip(s)}${s.dateMode==='month'?'':trChip(trSeatText(s),'')}${s.requested?trChip('รออนุมัติ '+s.requested,'warn'):''}${s.needsReconfirm?trChip('รอยืนยันใหม่ '+s.needsReconfirm,'bad'):''}${overdue?trChip('จบแล้ว ยังไม่จบ Training','bad'):''}</div></div>`; }).join('');
 }
+function traShow(s){ if(s.canManage) return true; return TRA.others !== false && s.status !== 'cancelled'; }
+function traOtherSheet(id){
+  const s = ((TRA.data||{}).sessions||[]).find(x=>x.sessionId===id); if(!s) return;
+  trSheet(`<div class="ex-hint">🔒 งานของ Sup ท่านอื่น — ดูได้อย่างเดียว แก้ไขไม่ได้</div>
+    <div class="tr-card-m" style="font-size:14px;line-height:1.7"><b>${trH(s.title)}</b><br>วันที่: ${trH(trFmtRange(s.startDate,s.endDate,s.dateMode))}<br>Product: ${trH(s.category)}${s.model?' › '+trH(s.model):''}<br>ผู้ดูแล: ${trH(s.ownerName||s.ownerEmail||'-')}<br>${s.location?'สถานที่: '+trH(s.location)+'<br>':''}</div>
+    <div class="ex-row">${trStatusChip(s)}${trCertChip(s)}</div>`, { title:'ดูงานเทรน' });
+}
 function traRenderSessions(){
   const root = $('tra-root'), d = TRA.data;
-  const list = d.sessions.filter(s=>s.canManage && (TRA.filter==='all' || s.status===TRA.filter)).sort((a,b)=>a.startDate<b.startDate?-1:1);
+  const list = d.sessions.filter(s=>traShow(s) && (TRA.filter==='all' || s.status===TRA.filter)).sort((a,b)=>a.startDate<b.startDate?-1:1);
   const fb = (k,t)=>`<button class="${TRA.filter===k?'active':''}" data-tr="afilter" data-v="${k}">${t}</button>`;
   const vb = (k,t)=>`<button class="${TRA.sview===k?'active':''}" data-tr="asview" data-v="${k}">${t}</button>`;
   let h = traTabs() + `<div class="tr-top"><div class="tr-yr"><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="-1" aria-label="ปีก่อน">‹</button><b>${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="ayr" data-d="1" aria-label="ปีถัดไป">›</button></div>
     <div class="subtab-bar tr-views tr-seg">${vb('cal','📅 ปฏิทิน')}${vb('list','📋 รายการ')}</div></div>
+    <label class="ex-hint" style="display:flex;gap:6px;align-items:center;margin:4px 0"><input type="checkbox" data-tr="aothers" ${TRA.others!==false?'checked':''}> แสดงงานของ Sup ท่านอื่น (ดูอย่างเดียว)</label>
     <div class="subtab-bar tr-views">${fb('all','ทั้งหมด')}${fb('plan','แผน')}${fb('open','เปิดรับ')}${fb('closed','ปิดแล้ว')}${fb('cancelled','ยกเลิก')}</div>`;
   if(TRA.sview === 'cal') h += traAdminCalHtml(list);
   else {
@@ -15302,7 +15317,7 @@ function traAdminCalHtml(list){
   const cats = Array.from(new Set(list.map(s=>s.category))).sort((a,b)=>a.localeCompare(b,'th'));
   const dm = trDayMap(list), mon = TRA.month;
   const here = list.filter(s=>trInMonth(s, TRA.year, mon));
-  const needAct = list.filter(s=>s.requested>0).length;
+  const needAct = list.filter(s=>s.canManage && s.requested>0).length;
   let h = `<div class="tr-legend">${cats.map(c=>`<span><i style="background:${trColor(c)}"></i>${trH(c)}</span>`).join('')}<span>⏳ มีคำขอรออนุมัติ</span><span>แถบจาง = แผน</span></div>`;
   h += `<div class="tr-mstrip">${TR_MONTHS.map((m,i)=>{ const has = list.some(s=>trInMonth(s, TRA.year, i)); return `<button class="${mon===i?'active':''}" data-tr="amon" data-m="${i}">${m}${has?'<b>•</b>':''}</button>`; }).join('')}</div>
     <div class="tr-mhead"><button class="btn btn-ghost btn-sm" data-tr="amstep" data-d="-1" aria-label="เดือนก่อน">‹</button><b>${TR_MONTHS_FULL[mon]} ${TRA.year+543}</b><button class="btn btn-ghost btn-sm" data-tr="amstep" data-d="1" aria-label="เดือนถัดไป">›</button></div>
@@ -15312,7 +15327,7 @@ function traAdminCalHtml(list){
   return h;
 }
 function traOpenAdminDay(ds){
-  const list = (TRA.data ? TRA.data.sessions : []).filter(s=>s.canManage && s.dateMode!=='month' && s.startDate <= ds && s.endDate >= ds && (TRA.filter==='all' || s.status===TRA.filter));
+  const list = (TRA.data ? TRA.data.sessions : []).filter(s=>traShow(s) && s.dateMode!=='month' && s.startDate <= ds && s.endDate >= ds && (TRA.filter==='all' || s.status===TRA.filter));
   trSheet(`${list.length ? traSessionCards(list) : '<div class="ex-hint">ไม่มีงานเทรนในวันนี้</div>'}
     <div class="tr-menu" style="margin-top:12px;"><button class="btn btn-primary tr-big" data-tr="adcreate" data-d="${trH(ds)}">➕ สร้างงานเทรนเริ่มวันที่ ${trH(trFmtDate(ds))}</button></div>`, { title: TR_DOW[trDow(ds)]+' '+trFmtDate(ds)+' — '+list.length+' งาน' });
 }
@@ -16295,6 +16310,7 @@ function trOnEvent(e){
     if(act === 'reason'){ TRA.reasons[id] = t.value; examApi('trSetReasons', { sessionId:TRA.g.session.sessionId, reasons:{ [id]:t.value } }).catch(()=>{}); return; }
     if(act === 'fcat'){ TR.cat = t.value; trRender(); return; }
     if(act === 'fcert'){ TR.cert = t.value; trRender(); return; }
+    if(act === 'aothers'){ TRA.others = !!t.checked; traRenderSessions(); return; }
     if(act === 'fmine'){ TR.mine = t.checked; trRender(); return; }
     if(act === 'imp_fld'){ const r = TRA.imp.rows[num('data-i')], k = t.getAttribute('data-k'); r[k] = k === 'include' ? t.checked : t.value; if(k === 'include') traRenderImport(); return; }
     return;
@@ -16320,6 +16336,7 @@ function trOnEvent(e){
     /* ----- Sup / Manager ----- */
     case 'areload': trAdminEnter(); return;
     case 'atab': if(v === 'form'){ TRA.form = null; traGo('form', ''); } else traGo(v); return;
+    case 'aother': traOtherSheet(el.getAttribute('data-id')); return;
     case 'afilter': TRA.filter = v; traRenderSessions(); return;
     case 'asview': TRA.sview = v; traRenderSessions(); return;
     case 'amon': TRA.month = num('data-m'); traRenderSessions(); return;
