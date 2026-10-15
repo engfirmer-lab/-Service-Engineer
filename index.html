@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.33
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:56 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.34
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 23:07 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.33</title>
+<title>F1 Service — v10.34</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.33";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 22:56 น. เวลาไทย";
+const APP_VERSION = "10.34";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 23:07 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13194,6 +13194,13 @@ function exaPracticeBanner(setId){
     <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="pxresume" data-id="${exH(setId)}">▶ ทำต่อ</button><button class="btn btn-ghost btn-sm" data-ex="pxdiscard" data-id="${exH(setId)}">🗑 ทิ้ง</button></div></div>`;
 }
 /* ทดลองประเมินข้อปฏิบัติ (Sup/Manager) — แสดงข้อปฏิบัติเหมือนหน้าประเมินจริง กด ผ่าน/ไม่ผ่านเล่นได้ ไม่บันทึกอะไร ไม่ส่งขึ้นระบบ */
+async function exaPracDemoOpen(id){
+  if(id && (!EXA.set || EXA.set.setId !== id || !EXA.qs)){
+    showLoadingOverlay('กำลังโหลดข้อสอบ...');
+    try{ await exaLoadSet(id); hideLoadingOverlay(); }catch(e){ hideLoadingOverlay(); alert('โหลดชุดไม่สำเร็จ: '+e.message); return; }
+  }
+  exaPracDemo();
+}
 function exaPracDemo(){
   const root = $('exa-root'), qs = (EXA.qs||[]).filter(q=>q.type==='practical');
   const setId = EXA.set && EXA.set.setId;
@@ -13484,6 +13491,7 @@ function exaRenderSets(){
       <div class="ex-meta">${exH(s.title)}${exaCourseOf(s) ? ' · หลักสูตร: '+exH(exaCourseOf(s)) : ''} · ${s.qCount} ข้อ · เกณฑ์ผ่าน ${s.passPercent}% · ${s.durationMin>0 ? s.durationMin+' นาที' : 'ไม่จำกัดเวลา'}${EXA.role==='manager' ? ' · เจ้าของ: '+exH(exPerson(s.ownerEmail, s.ownerName)) : ''}</div>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="openset" data-id="${exH(s.setId)}">✏️ แก้ไข</button>
         <button class="btn btn-ghost btn-sm" data-ex="practice" data-id="${exH(s.setId)}" data-src="draft" ${s.qCount?'':'disabled'}>🧪 ทดลองทำ</button>
+        <button class="btn btn-ghost btn-sm" data-ex="pracdemo" data-id="${exH(s.setId)}" ${s.qCount?'':'disabled'}>🧪 ทดลองประเมินปฏิบัติ</button>
         ${exaPracticeSaved(s.setId) ? `<button class="btn btn-ghost btn-sm" data-ex="pxresume" data-id="${exH(s.setId)}">▶ ทำการทดลองต่อ</button>` : ''}
         <button class="btn btn-ghost btn-sm" data-ex="copyset" data-id="${exH(s.setId)}" ${s.qCount?'':'disabled'}>📑 คัดลอกชุด</button>
         <button class="btn btn-ghost btn-sm" data-ex="delset" data-id="${exH(s.setId)}">🗑 ลบ</button></div></div>`;
@@ -14759,7 +14767,7 @@ function exOnEvent(e){
       case 'pxedit': exaPracticeEdit(); return;
       case 'pxreturn': { const R = EXA.pxReturn; EXA.pxReturn = null; if(R) exaPractice(R.setId, R.source, R); return; }
       case 'pxreturnx': EXA.pxReturn = null; exaRenderSet(); return;
-      case 'pracdemo': exaPracDemo(); return;
+      case 'pracdemo': exaPracDemoOpen(id); return;
       case 'pdexit': exaGo(id ? 'set' : 'sets', id || ''); return;
       case 'pxexit': { const sid = EX.cur && EX.cur.practice && EX.cur.practice.setId; if(!confirm('ออกจากโหมดทดลอง?\nคำตอบที่ทำค้างไว้ยังเก็บในเครื่องนี้ กลับมาทำต่อได้')) return; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
       case 'pxback': { const sid = EX.practiceLast && EX.practiceLast.setId; EX.cur = null; EX.practiceLast = null; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
