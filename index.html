@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.22
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 13:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.24
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 18:57 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.22</title>
+<title>F1 Service — v10.24</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.22";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 13:25 น. เวลาไทย";
+const APP_VERSION = "10.24";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 18:57 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13199,11 +13199,16 @@ function exPdfUrl(b64){
   for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
   return URL.createObjectURL(new Blob([arr], { type:'application/pdf' }));
 }
+function exaSampleTitle(){ // ตำแหน่งผู้ออกบนใบ (หน้าออกใบเอง/ตัวอย่าง)
+  const sel = $('exa-sample-title'); if(!sel) return 'Supervisor';
+  if(sel.value !== '__other') return sel.value;
+  return (($('exa-sample-title-o')||{}).value||'').trim() || 'Supervisor';
+}
 async function exaCertSample(name){
   const inp = $('exa-sample-name'); if(typeof name === 'string' && inp) inp.value = name;
   const out = $('exa-sample-out'); if(out) out.innerHTML = '<span class="ex-hint">⏳ กำลังสร้างตัวอย่างใบ Cer...</span>';
   try{
-    const r = await examApi('adminCertSample', { nameEn:exaMyEnName(), testName: inp ? inp.value : '', course: ($('exa-sample-course')||{}).value || '', trainingDate: ($('exa-sample-date')||{}).value || '', trainingEnd: ($('exa-sample-end')||{}).value || '', level: ($('exa-sample-level')||{}).value || '' });
+    const r = await examApi('adminCertSample', { nameEn:exaMyEnName(), testName: inp ? inp.value : '', course: ($('exa-sample-course')||{}).value || '', trainingDate: ($('exa-sample-date')||{}).value || '', trainingEnd: ($('exa-sample-end')||{}).value || '', level: ($('exa-sample-level')||{}).value || '', supTitle: exaSampleTitle() });
     const url = exPdfUrl(r.base64);
     if(out) out.innerHTML = `<div class="ex-hint">ใช้: <b>${r.template==='custom' ? 'เทมเพลต Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b> · ชื่อ Sup บนใบ: <b>${exH(r.supName||'—')}</b> · ลายเซ็น: <b>${r.hasSignature ? 'มี' : 'ไม่มี'}</b></div>
       <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">${r.manual ? 'ออกใบเอง — ไม่บันทึกในระบบ ไม่ออกเลขที่ใบ ไม่เก็บลง Drive' : 'ข้อมูลสมมติ (TEST-0000) ไม่บันทึกในระบบ'}</span>`;
@@ -13243,6 +13248,9 @@ async function exaRenderSign(){
       <div id="exa-sample-names" class="ex-act" style="margin:4px 0;flex-wrap:wrap"></div>
       <label style="display:block;margin:6px 0">หลักสูตร<input id="exa-sample-course" type="text" maxlength="100" placeholder="เช่น Maglumi 800 Advance"></label>
       <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันที่เริ่มเทรน<input id="exa-sample-date" type="date"></label><label>ถึงวันที่ (วันจบ — ว่าง = วันเดียว)<input id="exa-sample-end" type="date"></label></div>
+      <label style="display:block;margin:6px 0">ตำแหน่งผู้ออกบนใบ
+        <select id="exa-sample-title" onchange="document.getElementById('exa-sample-title-o').style.display=this.value==='__other'?'':'none'"><option value="Supervisor" selected>Supervisor</option><option value="Engineer Supervisor">Engineer Supervisor</option><option value="Engineer Product">Engineer Product</option><option value="Engineer Manager">Engineer Manager</option><option value="__other">อื่นๆ (กรอกเอง)</option></select>
+        <input id="exa-sample-title-o" type="text" maxlength="60" placeholder="ระบุตำแหน่ง" style="display:none;margin-top:6px;"></label>
       <label style="display:block;margin:6px 0">Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1" style="max-width:120px"></label>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">📄 สร้างใบ Cer (PDF)</button></div>
       <div id="exa-sample-out" class="ex-act" style="margin-top:8px;"></div></div>
@@ -15282,6 +15290,7 @@ async function trAdminEnter(){
     }
     if(init.role === 'manager' && !EXA.synced){ exaSyncAdmins().catch(()=>{}); }
     if(TRA.openId){ const id = TRA.openId; TRA.openId = ''; await traGo('detail', id); return; }
+    if(TRA.keepView) TRA.keepView = false; else TRA.view = 'sessions'; // เข้าหน้านี้ → เปิดตารางรอบเทรนก่อน (ยกเว้นมาจากแจ้งเตือนรออนุมัติ)
     await traGo(TRA.view === 'detail' && TRA.g ? 'detail' : (TRA.view === 'form' ? 'queue' : TRA.view), TRA.view === 'detail' && TRA.g ? TRA.g.session.sessionId : undefined);
   }catch(e){ trErr(root, e, 'areload'); }
 }
@@ -16599,7 +16608,7 @@ async function trPendRefresh(){
 }
 function trPendOpenQueue(){
   TRA.view = 'queue';
-  if(currentMode === 'trainadmin') traGo('queue'); else requestModeSwitch('trainadmin');
+  if(currentMode === 'trainadmin') traGo('queue'); else { TRA.keepView = true; requestModeSwitch('trainadmin'); }
 }
 (function trPendStart(){
   if(TRPEND.started) return; TRPEND.started = true;
