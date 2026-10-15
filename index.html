@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.29
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 21:42 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.30
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:17 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.29</title>
+<title>F1 Service — v10.30</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.29";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 21:42 น. เวลาไทย";
+const APP_VERSION = "10.30";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 22:17 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14296,9 +14296,11 @@ function exaRenderSummary(){
     <div class="ex-row">${r.sessionId ? '<span class="ex-hint">🔗 รอบนี้ผูกกับงานเทรน — เริ่ม/ปิดสอบที่หน้า ตารางเทรน</span>' : `<button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
       <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button>`}<button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
       <button class="btn btn-ghost btn-sm" data-ex="itemstats" data-id="${exH(r.setId)}" data-back="${exH(r.roundId)}">📈 สถิติรายข้อ</button>
-      ${(d.practicalOnly || d.practicalFirst) && d.counts.none ? `<button class="btn btn-primary btn-sm" data-ex="openprac" data-id="${exH(r.roundId)}">➕ เปิดรายการตรวจปฏิบัติ (${d.counts.none} คนที่ยังไม่มี)</button>` : ''}
+      ${r.sessionId && !d.practicalOnly ? `<label class="ex-hint">ลำดับการสอบ <select data-ex="rstage" data-id="${exH(r.roundId)}"><option value="">เขียนก่อน (ผู้สอบกดเริ่มเอง)</option><option value="practical_first" ${d.practicalFirst?'selected':''}>ปฏิบัติก่อน (Sup เปิดให้ทีละกลุ่ม)</option></select></label>` : ''}
+      ${(d.practicalOnly || d.practicalFirst) && d.counts.none ? `<button class="btn btn-primary btn-sm" data-ex="openprac" data-id="${exH(r.roundId)}">➕ เลือกผู้เข้าสอบปฏิบัติ (${d.counts.none} คนที่ยังไม่มีรายการ)</button>` : ''}
       ${d.counts.pracwait ? `<button class="btn btn-ghost btn-sm" data-ex="gradelist" data-id="${exH(r.roundId)}">ประเมินปฏิบัติ (${d.counts.pracwait} คน)</button>` : ''}
       <button class="btn btn-primary btn-sm" data-ex="issue" data-id="${exH(r.roundId)}" ${d.counts.passed?'':'disabled'}>🎓 ออกใบ Cer ผู้ที่ผ่าน</button></div>
+    ${exaPracPickHtml(d)}
     <div class="ex-stats">
       <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่าน</span></div>
       <div class="ex-stat"><b style="color:var(--red)">${d.counts.failed}</b><span>ยังไม่ผ่าน</span></div><div class="ex-stat"><b>${d.counts.inprogress}</b><span>กำลังสอบ</span></div>
@@ -14354,7 +14356,27 @@ async function exaSaveGrade(){
     await exaGo((r.finalized || r.stageReady) ? 'grading' : 'grade', (r.finalized || r.stageReady) ? '' : EXA.grade.attempt.attemptId);
   }catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
 }
+function exaPracPickHtml(d){
+  const pk = EXA.pracPick; if(!pk) return '';
+  const rows = d.rows.filter(x=>x.status==='none');
+  return `<div class="panel-block"><b>เลือกผู้เข้าสอบปฏิบัติ</b> <span class="ex-hint">เลือกได้หลายคนพร้อมกัน (เลือกแล้ว <b id="exa-prac-n">${pk.size}</b> / ${rows.length} คน)</span>
+    <div class="ex-row" style="gap:6px"><button class="btn btn-ghost btn-sm" data-ex="pracall">☑ เลือกทั้งหมด</button><button class="btn btn-ghost btn-sm" data-ex="pracnone">ล้าง</button></div>
+    <div id="exa-prac-list">${rows.map(x=>`<label class="ex-opt ex-el"><input type="checkbox" data-ex="pracsel" value="${exH(x.email)}" ${pk.has(x.email)?'checked':''}><span>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></span></label>`).join('') || '<div class="ex-hint">ไม่มีผู้ที่ยังไม่มีรายการ</div>'}</div>
+    <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="pracgo" data-id="${exH(d.round.roundId)}">✅ เปิดรายการตรวจให้ที่เลือก</button><button class="btn btn-ghost btn-sm" data-ex="praccancel">ยกเลิก</button></div></div>`;
+}
 async function exaOpenPractical(roundId){
+  const pk = EXA.pracPick; const emails = pk ? Array.from(pk) : [];
+  if(!emails.length){ alert('ยังไม่ได้เลือกผู้สอบ'); return; }
+  if(!confirm('เปิดรายการตรวจข้อสอบปฏิบัติให้ '+emails.length+' คนที่เลือก?\nผู้สอบไม่ต้องทำอะไรในแอพ — Sup ให้ ผ่าน/ไม่ผ่าน ที่ "ประเมินปฏิบัติ"')) return;
+  showLoadingOverlay('กำลังสร้างรายการตรวจ...');
+  try{
+    const r = await examApi('adminOpenPracticalGrading', { roundId, emails });
+    hideLoadingOverlay(); EXA.pracPick = null;
+    showToast(`✓ เปิดรายการตรวจ ${r.made} คน` + (r.skipped && r.skipped.length ? ` (ข้าม ${r.skipped.length} คน)` : ''));
+    await exaGo('grading', roundId);
+  }catch(e){ hideLoadingOverlay(); alert('สร้างรายการไม่สำเร็จ: '+e.message); }
+}
+async function exaOpenPracticalOLD(roundId){
   if(!confirm('เปิดรายการตรวจข้อสอบปฏิบัติให้ผู้มีสิทธิ์ที่ยังไม่มีรายการในรอบนี้?\nผู้สอบไม่ต้องเปิดแอพ — รายการจะขึ้นที่ "รอ Sup ตรวจ" ให้คุณให้ ผ่าน/ไม่ผ่าน')) return;
   showLoadingOverlay('กำลังสร้างรายการตรวจ...');
   try{
@@ -14778,7 +14800,11 @@ function exOnEvent(e){
         examApi('adminRoundAction', { roundId:id, op }).then(()=>{ showToast(op==='close'?'✓ ปิดรอบแล้ว':'✓ เปิดรอบแล้ว'); exaGo('summary', id); }).catch(er=>alert(er.message)); return;
       }
       case 'issue': exaIssueCerts(id); return;
-      case 'openprac': exaOpenPractical(id); return;
+      case 'openprac': EXA.pracPick = new Set((EXA.summary.rows||[]).filter(x=>x.status==='none').map(x=>x.email)); exaRenderSummary(); return;
+      case 'pracall': { const pk = EXA.pracPick; if(pk){ document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ pk.add(x.value); x.checked = true; }); $('exa-prac-n').textContent = pk.size; } return; }
+      case 'pracnone': { const pk = EXA.pracPick; if(pk){ pk.clear(); document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ x.checked = false; }); $('exa-prac-n').textContent = 0; } return; }
+      case 'praccancel': EXA.pracPick = null; exaRenderSummary(); return;
+      case 'pracgo': exaOpenPractical(id); return;
     }
   }
   if(ev === 'change'){
@@ -14794,6 +14820,17 @@ function exOnEvent(e){
     if(act==='copysel'){ const u = EXA.copyUI; if(u){ if(t.checked) u.sel.add(t.value); else u.sel.delete(t.value); const nEl = $('exa-copy-n'); if(nEl) nEl.textContent = u.sel.size; const go = document.querySelector('[data-ex="copygo"]'); if(go) go.textContent = '➕ เพิ่ม '+u.sel.size+' ข้อที่เลือกเข้าชุดนี้'; } return; }
     if(act==='scat'){ const w = $('exa-s-model-wrap'); if(w) w.innerHTML = exaModelSelect(t.value, ''); return; }
     if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ if(!EXA.round.roundId) $('exa-r-sup').value = exaDefaultSigner(s.setId); $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; EXA.round.graceMin = s.graceMin; } return; }
+    if(act==='rstage'){
+      const rid = t.dataset.id, val = t.value;
+      (async()=>{
+        showLoadingOverlay('กำลังบันทึก...');
+        try{ await examApi('adminSetRoundStage', { roundId: rid, stageOrder: val }); hideLoadingOverlay(); showToast('✓ บันทึกลำดับการสอบแล้ว'); }
+        catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+        await exaGo('summary', rid);
+      })();
+      return;
+    }
+    if(act==='pracsel'){ const pk = EXA.pracPick; if(pk){ if(t.checked) pk.add(t.value); else pk.delete(t.value); $('exa-prac-n').textContent = pk.size; } return; }
     if(act==='elig'){ if(t.checked) EXA.elig.add(t.value); else EXA.elig.delete(t.value); $('exa-el-count').textContent = EXA.elig.size; return; }
     if(act==='sumfilter'){ EXA.sumFilter = t.value; exaRenderSummary(); return; }
   }
