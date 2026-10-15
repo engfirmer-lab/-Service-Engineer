@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.30
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:17 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.31
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:37 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.30</title>
+<title>F1 Service — v10.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.30";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 22:17 น. เวลาไทย";
+const APP_VERSION = "10.31";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 22:37 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12835,7 +12835,7 @@ function exPreloadImages(c, onProgress){
 function examRenderAttempt(){
   const c = EX.cur, root = exRoot();
   root.innerHTML = `<div class="ex-protect" id="ex-attempt">
-    ${c.practice ? '<div class="ex-note ex-practice">🧪 <b>โหมดทดลอง</b> — ไม่บันทึกคะแนน ไม่นับครั้งที่สอบ และไม่ออกใบ Cer จริง</div>' : ''}
+    ${c.practice ? '<div class="ex-note ex-practice"><div class="ex-row" style="justify-content:space-between"><span>🧪 <b>โหมดทดลอง</b> — ไม่บันทึกคะแนน ไม่นับครั้งที่สอบ และไม่ออกใบ Cer จริง</span><button class="btn btn-ghost btn-sm" data-ex="pxexit">✖ ออกจากโหมดทดลอง</button></div></div>' : ''}
     <div class="ex-wm" style="background-image:${examWatermark()}"></div>
     <div class="ex-bar">
       <div><b>${exH(c.title)}</b>${c.level ? ' · Level '+exH(c.level) : ''}<div class="ex-hint" id="ex-count"></div><div class="ex-hint" id="ex-imgprog"></div></div>
@@ -14287,16 +14287,16 @@ function exAdminAttempts(x){
   return `<details class="ex-attlist"><summary><b>${x.attemptCount}</b> ครั้ง</summary>${(x.attempts||[]).map(a=>`<div class="ex-hint">ครั้งที่ ${a.no} · ${exFmtDT(a.submittedAt||a.startedAt)} · ${a.status==='grading' ? 'รอตรวจข้อเขียน' : a.scorePct+'% '+(a.passed?'✓ ผ่าน':'✗ ไม่ผ่าน')}${a.status==='expired' ? ' (หมดเวลา)' : ''} · v${a.version}</div>`).join('')}</details>`;
 }
 const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''], grading:['รอ Sup ตรวจ','warn'], pracwait:['รอประเมินปฏิบัติ','warn'], pracready:['ปฏิบัติครบ — รอสอบในแอพ','acc'] };
-function exaRenderSummary(){
-  const d = EXA.summary, r = d.round, root = $('exa-root');
-  const f = EXA.sumFilter || '';
+function exaEmb(){ const el = document.getElementById('tra-ex-sum'); return !!(el && el.offsetParent !== null); } // สรุปผลฝังอยู่ในหน้า ตารางเทรน (ใช้ส่วนเดียวกับหน้าสรุปรอบสอบ)
+function exaSumRerender(){ if(exaEmb() && typeof traRenderDetail === 'function'){ const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } else exaRenderSummary(); }
+async function exaSumRefresh(){ if(exaEmb() && typeof traReload === 'function'){ await traReload(true); } else if(EXA.sumCur) await exaGo('summary', EXA.sumCur.round.roundId); }
+function exaSummaryBodyHtml(d){
+  const r = d.round, f = EXA.sumFilter || '';
+  EXA.sumCur = d;
   const rows = d.rows.filter(x=>!f || x.status===f);
-  root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="rounds">← กลับรายการ</button><b>${exH(r.name)}</b> ${exaRoundState(r)}</div>
-    <div class="ex-meta">${exH(r.category)} › ${exH(r.model)} · Level ${r.level} · ${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · เกณฑ์ผ่าน ${r.passPercent}% · ${r.durationMin>0 ? r.durationMin+' นาที' : 'ไม่จำกัดเวลา'}</div>
-    <div class="ex-row">${r.sessionId ? '<span class="ex-hint">🔗 รอบนี้ผูกกับงานเทรน — เริ่ม/ปิดสอบที่หน้า ตารางเทรน</span>' : `<button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
-      <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button>`}<button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
+  return `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
       <button class="btn btn-ghost btn-sm" data-ex="itemstats" data-id="${exH(r.setId)}" data-back="${exH(r.roundId)}">📈 สถิติรายข้อ</button>
-      ${r.sessionId && !d.practicalOnly ? `<label class="ex-hint">ลำดับการสอบ <select data-ex="rstage" data-id="${exH(r.roundId)}"><option value="">เขียนก่อน (ผู้สอบกดเริ่มเอง)</option><option value="practical_first" ${d.practicalFirst?'selected':''}>ปฏิบัติก่อน (Sup เปิดให้ทีละกลุ่ม)</option></select></label>` : ''}
+      ${!d.practicalOnly ? `<label class="ex-hint">ลำดับการสอบ <select data-ex="rstage" data-id="${exH(r.roundId)}"><option value="">เขียนก่อน (ผู้สอบกดเริ่มเอง)</option><option value="practical_first" ${d.practicalFirst?'selected':''}>ปฏิบัติก่อน (Sup เปิดให้ทีละกลุ่ม)</option></select></label>` : ''}
       ${(d.practicalOnly || d.practicalFirst) && d.counts.none ? `<button class="btn btn-primary btn-sm" data-ex="openprac" data-id="${exH(r.roundId)}">➕ เลือกผู้เข้าสอบปฏิบัติ (${d.counts.none} คนที่ยังไม่มีรายการ)</button>` : ''}
       ${d.counts.pracwait ? `<button class="btn btn-ghost btn-sm" data-ex="gradelist" data-id="${exH(r.roundId)}">ประเมินปฏิบัติ (${d.counts.pracwait} คน)</button>` : ''}
       <button class="btn btn-primary btn-sm" data-ex="issue" data-id="${exH(r.roundId)}" ${d.counts.passed?'':'disabled'}>🎓 ออกใบ Cer ผู้ที่ผ่าน</button></div>
@@ -14314,6 +14314,13 @@ function exaRenderSummary(){
         <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
         <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="7" class="ex-hint">ไม่มีรายการ</td></tr>'}
       </tbody></table></div></div>`;
+}
+function exaRenderSummary(){
+  const d = EXA.summary, r = d.round, root = $('exa-root');
+  root.innerHTML = exaTabs() + `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="rounds">← กลับรายการ</button><b>${exH(r.name)}</b> ${exaRoundState(r)}</div>
+    <div class="ex-meta">${exH(r.category)} › ${exH(r.model)} · Level ${r.level} · ${exFmtDT(r.openAt)} ถึง ${exFmtDT(r.closeAt)} · เกณฑ์ผ่าน ${r.passPercent}% · ${r.durationMin>0 ? r.durationMin+' นาที' : 'ไม่จำกัดเวลา'}</div>
+    <div class="ex-row">${r.sessionId ? '<span class="ex-hint">🔗 รอบนี้ผูกกับงานเทรน — เริ่ม/ปิดสอบที่หน้า ตารางเทรน</span>' : `<button class="btn btn-ghost btn-sm" data-ex="opennow" data-id="${exH(r.roundId)}">⏵ เปิดรอบทันที</button><button class="btn btn-ghost btn-sm" data-ex="closeround" data-id="${exH(r.roundId)}">⏹ ปิดรอบ</button>
+      <button class="btn btn-ghost btn-sm" data-ex="editround" data-id="${exH(r.roundId)}">✏️ แก้ไขรอบ</button>`}</div>` + exaSummaryBodyHtml(d);
 }
 function exaRenderGradingList(){
   const root = $('exa-root'), items = EXA.grading || [];
@@ -14373,17 +14380,7 @@ async function exaOpenPractical(roundId){
     const r = await examApi('adminOpenPracticalGrading', { roundId, emails });
     hideLoadingOverlay(); EXA.pracPick = null;
     showToast(`✓ เปิดรายการตรวจ ${r.made} คน` + (r.skipped && r.skipped.length ? ` (ข้าม ${r.skipped.length} คน)` : ''));
-    await exaGo('grading', roundId);
-  }catch(e){ hideLoadingOverlay(); alert('สร้างรายการไม่สำเร็จ: '+e.message); }
-}
-async function exaOpenPracticalOLD(roundId){
-  if(!confirm('เปิดรายการตรวจข้อสอบปฏิบัติให้ผู้มีสิทธิ์ที่ยังไม่มีรายการในรอบนี้?\nผู้สอบไม่ต้องเปิดแอพ — รายการจะขึ้นที่ "รอ Sup ตรวจ" ให้คุณให้ ผ่าน/ไม่ผ่าน')) return;
-  showLoadingOverlay('กำลังสร้างรายการตรวจ...');
-  try{
-    const r = await examApi('adminOpenPracticalGrading', { roundId });
-    hideLoadingOverlay();
-    showToast(`✓ เปิดรายการตรวจ ${r.made} คน` + (r.skipped && r.skipped.length ? ` (ข้าม ${r.skipped.length} คน)` : ''));
-    await exaGo('grading', roundId);
+    if(exaEmb()) await exaSumRefresh(); else await exaGo('grading', roundId);
   }catch(e){ hideLoadingOverlay(); alert('สร้างรายการไม่สำเร็จ: '+e.message); }
 }
 async function exaIssueCerts(roundId){
@@ -14740,6 +14737,7 @@ function exOnEvent(e){
       case 'pxedit': exaPracticeEdit(); return;
       case 'pxreturn': { const R = EXA.pxReturn; EXA.pxReturn = null; if(R) exaPractice(R.setId, R.source, R); return; }
       case 'pxreturnx': EXA.pxReturn = null; exaRenderSet(); return;
+      case 'pxexit': { const sid = EX.cur && EX.cur.practice && EX.cur.practice.setId; if(!confirm('ออกจากโหมดทดลอง?\nคำตอบที่ทำค้างไว้ยังเก็บในเครื่องนี้ กลับมาทำต่อได้')) return; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
       case 'pxback': { const sid = EX.practiceLast && EX.practiceLast.setId; EX.cur = null; EX.practiceLast = null; exaGo(sid ? 'set' : 'sets', sid || ''); return; }
       case 'pxagain': { const L = EX.practiceLast; EX.cur = null; if(L) exaPractice(L.setId, L.source); else exaGo('sets'); return; }
       case 'pxcert': exaPracticeCert(); return;
@@ -14752,7 +14750,7 @@ function exOnEvent(e){
       case 'newq': { EXA.qErr = ''; exaReadQForm(); const ch = EXA.qEdit ? (EXA.qEdit.chapter||'') : ''; EXA.bulk = false; EXA.qEdit = exaNewDraft('mcq'); EXA.qEdit.chapter = ch || (EXA.qs.length ? (EXA.qs[EXA.qs.length-1].chapter||'') : ''); EXA.scrollEdit = true; exaRenderSet(); return; }
       case 'editq': { EXA.qErr = ''; const q = EXA.qs.find(x=>x.qid===id); if(q){ exaReadQForm(); EXA.bulk = false; EXA.qEdit = exaDraftFromQuestion(q); EXA.scrollEdit = true; exaRenderSet(); } return; }
       case 'qclose': exaCloseEditor(); return;
-      case 'itemstats': EXA.itemVer = 0; EXA.itemBack = t.getAttribute('data-back') || ''; exaGo('itemstats', id); return;
+      case 'itemstats': EXA.itemVer = 0; EXA.itemBack = t.getAttribute('data-back') || ''; if(exaEmb()){ EXA.next = ['itemstats', id]; requestModeSwitch('examadmin'); return; } exaGo('itemstats', id); return;
       case 'itemback': if(EXA.itemBack) exaGo('summary', EXA.itemBack); else exaGo('set', EXA.items.set.setId); return;
       case 'qmv': exaMoveQ(id, Number(t.getAttribute('data-dir'))); return;
       case 'chren': exaRenameChapter(t.getAttribute('data-ch')); return;
@@ -14785,13 +14783,13 @@ function exOnEvent(e){
       case 'purgeall': document.querySelectorAll('.exa-purge-chk').forEach(x=>{ x.checked = true; }); return; // TEST-PURGE
       case 'purgego': exaPurgeGo(); return; // TEST-PURGE
       case 'rgdel': exaReadQForm(); EXA.qEdit.regions.splice(i,1); exaRefreshEditor(); return;
-      case 'gradelist': exaGo('grading', id || ''); return;
+      case 'gradelist': if(exaEmb()){ EXA.next = ['grading', id || '']; requestModeSwitch('examadmin'); return; } exaGo('grading', id || ''); return;
       case 'opengrade': exaGo('grade', id); return;
       case 'savegrade': exaSaveGrade(); return;
       case 'newround': exaGo('round', ''); return;
       case 'editround': exaGo('round', id); return;
       case 'saveround': exaSaveRound(); return;
-      case 'summary': exaGo('summary', id); return;
+      case 'summary': exaSumRefresh(); return;
       case 'elall': document.querySelectorAll('#exa-el-list input[data-ex="elig"]').forEach(x=>{ EXA.elig.add(x.value); x.checked = true; }); $('exa-el-count').textContent = EXA.elig.size; return;
       case 'elnone': EXA.elig.clear(); document.querySelectorAll('#exa-el-list input[data-ex="elig"]').forEach(x=>{ x.checked = false; }); $('exa-el-count').textContent = 0; return;
       case 'opennow': case 'closeround': {
@@ -14799,11 +14797,11 @@ function exOnEvent(e){
         if(op==='close' && !confirm('ปิดรอบนี้ทันที? ผู้ที่กำลังสอบอยู่ยังสอบต่อได้จนหมดเวลาของตัวเอง')) return;
         examApi('adminRoundAction', { roundId:id, op }).then(()=>{ showToast(op==='close'?'✓ ปิดรอบแล้ว':'✓ เปิดรอบแล้ว'); exaGo('summary', id); }).catch(er=>alert(er.message)); return;
       }
-      case 'issue': exaIssueCerts(id); return;
-      case 'openprac': EXA.pracPick = new Set((EXA.summary.rows||[]).filter(x=>x.status==='none').map(x=>x.email)); exaRenderSummary(); return;
+      case 'issue': if(exaEmb() && typeof traIssueCerts === 'function'){ traIssueCerts(); return; } exaIssueCerts(id); return;
+      case 'openprac': EXA.pracPick = new Set(((EXA.sumCur||EXA.summary).rows||[]).filter(x=>x.status==='none').map(x=>x.email)); exaSumRerender(); return;
       case 'pracall': { const pk = EXA.pracPick; if(pk){ document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ pk.add(x.value); x.checked = true; }); $('exa-prac-n').textContent = pk.size; } return; }
       case 'pracnone': { const pk = EXA.pracPick; if(pk){ pk.clear(); document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ x.checked = false; }); $('exa-prac-n').textContent = 0; } return; }
-      case 'praccancel': EXA.pracPick = null; exaRenderSummary(); return;
+      case 'praccancel': EXA.pracPick = null; exaSumRerender(); return;
       case 'pracgo': exaOpenPractical(id); return;
     }
   }
@@ -14826,13 +14824,13 @@ function exOnEvent(e){
         showLoadingOverlay('กำลังบันทึก...');
         try{ await examApi('adminSetRoundStage', { roundId: rid, stageOrder: val }); hideLoadingOverlay(); showToast('✓ บันทึกลำดับการสอบแล้ว'); }
         catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
-        await exaGo('summary', rid);
+        await exaSumRefresh();
       })();
       return;
     }
     if(act==='pracsel'){ const pk = EXA.pracPick; if(pk){ if(t.checked) pk.add(t.value); else pk.delete(t.value); $('exa-prac-n').textContent = pk.size; } return; }
     if(act==='elig'){ if(t.checked) EXA.elig.add(t.value); else EXA.elig.delete(t.value); $('exa-el-count').textContent = EXA.elig.size; return; }
-    if(act==='sumfilter'){ EXA.sumFilter = t.value; exaRenderSummary(); return; }
+    if(act==='sumfilter'){ EXA.sumFilter = t.value; exaSumRerender(); return; }
   }
   if(ev === 'input' && act==='elsearch'){ EXA.search = t.value; const l = $('exa-el-list'); if(l) l.innerHTML = exaEligListHtml(); return; }
 }
@@ -14856,7 +14854,7 @@ function exaHsStart(e, box){
   document.addEventListener('pointermove', draw); document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
 }
 (function exInit(){
-  ['ex-root','exa-root'].forEach(id=>{
+  ['ex-root','exa-root','tra-root'].forEach(id=>{
     const el = $(id); if(!el) return;
     ['click','change','input','pointerdown'].forEach(ev=>el.addEventListener(ev, exOnEvent));
   });
@@ -15846,10 +15844,8 @@ function traExamHtml(g){
     <div class="ex-act">${e.state==='auto' && e.isOpen ? '<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="exclose">■ ปิดสอบ</button>' : `<button class="btn btn-primary tr-big" data-tr="exstart">▶ ${e.state==='closed'?'เปิดสอบอีกครั้ง':'เริ่มสอบ'}</button>`}</div>
     <div class="ex-hint">ข้อสอบจะเปิดเฉพาะเมื่อ Sup กด "เริ่มสอบ" · ผู้สอบไม่ผ่านสอบใหม่ได้เรื่อยๆ จนกว่า Sup กด "ปิดสอบ" · ผู้สอบผ่านจะได้ใบ Cer อัตโนมัติ</div></div>`;
   h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่าน %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลา (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div><div><label class="tr-lb">ผ่อนผัน (นาที)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-grace" value="${e.graceMin}" min="0" max="60"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
-  const stText = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','warn'], grading:['รอตรวจข้อเขียน','warn'], none:['ยังไม่สอบ',''] };
-  h += `<div class="tr-sec"><b>ผลสอบ</b>${e.rows.length ? e.rows.map(r=>{ const t = stText[r.status] || ['-','']; return `<div class="tr-row"><div class="tr-row-n"><b>${trH(exPerson(r.email,r.name))}</b><small>สอบ ${r.attemptCount||0} ครั้ง${r.lastScore!=null?' · ล่าสุด '+r.lastScore+'%':''}${r.certNo?' · '+trH(r.certNo):''}</small></div><div class="tr-row-a">${trChip(t[0],t[1])}${r.certUrl?`<a class="btn btn-ghost tr-sq" target="_blank" rel="noopener" href="${trH(safeHttpUrl(r.certUrl))}">📄</a>`:''}</div></div>`; }).join('') : '<div class="ex-hint">ยังไม่มีผู้มีสิทธิ์สอบ</div>'}</div>
-    <div class="ex-act"><button class="btn btn-ghost" data-tr="exissue">🎓 ออกใบ Cer ที่ค้าง / ซิงก์เข้าแท็บ Certificate</button>${e.counts.grading?`<button class="btn btn-ghost" data-tr="exgrade">✍️ ไปตรวจข้อเขียน (${e.counts.grading})</button>`:''}</div>
-    <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่มนี้ไว้กดเมื่อมีใบค้าง</div>`;
+  h += `<div id="tra-ex-sum">${e.summary ? exaSummaryBodyHtml(e.summary) : '<div class="ex-note">⏳ กำลังโหลดสรุปผล...</div>'}</div>
+    <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่ม "ออกใบ Cer" ไว้กดเมื่อมีใบค้าง · หน้านี้ใช้ส่วนเดียวกับหน้า "จัดการข้อสอบ → รอบสอบ → สรุปผล"</div>`;
   return h;
 }
 async function traExamAct(op, extra){
