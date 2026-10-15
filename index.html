@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.32
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:48 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.33
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 22:56 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.32</title>
+<title>F1 Service — v10.33</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.32";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 22:48 น. เวลาไทย";
+const APP_VERSION = "10.33";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 22:56 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13123,6 +13123,7 @@ async function exaPractice(setId, source, keep){
   try{
     const r = await examApi('practiceStart', { setId, source:source||'draft' });
     hideLoadingOverlay();
+    if(!r || !Array.isArray(r.questions)) throw new Error('ระบบไม่ส่งข้อสอบทดลองกลับมา (ได้: '+(r===undefined?'ไม่มีข้อมูล':typeof r)+') — ลองรีเฟรชหน้า หรือตรวจว่า Deploy Apps Script เวอร์ชันล่าสุดแล้ว');
     if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
     const p = { attemptId:'PRACTICE', roundId:'', setId:r.setId, version:r.version, questions:r.questions, answers:{}, lastSyncAt:0,
       deadlineAt: r.durationMin > 0 ? exNow() + r.durationMin*60000 : 0, graceMin:r.graceMin, passPercent:r.passPercent };
@@ -13139,7 +13140,7 @@ async function exaPractice(setId, source, keep){
       examRenderAttempt();
     }
     exaPracticeSave();
-  }catch(e){ hideLoadingOverlay(); alert('เริ่มโหมดทดลองไม่ได้: '+e.message); }
+  }catch(e){ hideLoadingOverlay(); try{ console.error('practice start failed', e); }catch(_){} const fr = String((e && e.stack) || '').split('\n').slice(1,3).map(x=>x.trim().replace(/https?:\/\/\S*\//,'')).join(' | '); alert('เริ่มโหมดทดลองไม่ได้: '+e.message+(fr?'\n['+fr+']':'')); }
 }
 /* ----- จำการทดลองไว้ในเครื่อง (รีเฟรช/ปิดแท็บ/เน็ตหลุดแล้วทำต่อได้) — ไม่ส่งขึ้นระบบ ไม่ปนกับข้อมูลจริง ----- */
 const EX_PRACTICE_PREFIX = 'f1expractice:';
