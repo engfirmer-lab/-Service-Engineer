@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.21
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 13:14 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.22
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 13:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.21</title>
+<title>F1 Service — v10.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1083,6 +1083,9 @@ body.tr-noscroll{overflow:hidden;}
 
 .ex-weak{margin:10px auto 0;max-width:420px;text-align:left;background:rgba(245,158,11,.12);border:1px solid var(--amber);border-radius:10px;padding:8px 12px;font-size:13px;}
 .ex-weak ul{margin:4px 0 0;padding-left:18px;}
+
+.ex-wrongq{margin:4px 0 0;padding-left:20px;}
+.ex-wrongq li{margin-bottom:6px;white-space:pre-wrap;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2548,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.21";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 13:14 น. เวลาไทย";
+const APP_VERSION = "10.22";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 13:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12742,7 +12745,7 @@ function examRenderHome(){
       <div class="ex-meta">ออกเมื่อ ${exFmtDT(c.issuedAt)} · คะแนน ${c.score}%${c.expiresAt ? ' · '+(c.expState==='expired' ? '<b class="ex-warn">หมดอายุ '+exFmtDT(c.expiresAt)+'</b>' : c.expState==='soon' ? '<b class="ex-warn">ใกล้หมดอายุ '+exFmtDT(c.expiresAt)+'</b>' : 'หมดอายุ '+exFmtDT(c.expiresAt)) : ''}</div>
       <div class="ex-act">${safeHttpUrl(c.pdfUrl) ? `<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${exH(safeHttpUrl(c.pdfUrl))}">📄 เปิด PDF</a>` : ''}</div></div>`).join('') + '</div>';
   }
-  html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงคะแนน ผ่าน/ไม่ผ่าน และเลขข้อที่ตอบผิด · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
+  html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงคะแนน ผ่าน/ไม่ผ่าน และโจทย์ที่ตอบผิด · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
   root.innerHTML = html; EX.homeHtml = root.innerHTML;
 }
 
@@ -13031,11 +13034,10 @@ function exWeakHtml(r){
   let wrong = (r && r.wrongQs) || [];
   if(!w.length && !wrong.length) return '';
   const qs = (EX.cur && EX.cur.p && EX.cur.p.questions) || [];
-  wrong = wrong.map(x=>({ chapter:x.chapter, no: x.no || (qs.findIndex(q=>q.qid===x.qid) + 1) })).filter(x=>x.no > 0).sort((a,b)=>a.no-b.no);
-  const nosOf = ch=>wrong.filter(x=>(x.chapter || '(ไม่ระบุหัวข้อ)') === ch).map(x=>x.no);
+  wrong = wrong.map(x=>{ const no = x.no || (qs.findIndex(q=>q.qid===x.qid) + 1); return { chapter:x.chapter, no, text:x.text, hasImage:x.hasImage }; }).sort((a,b)=>(a.no||1e9)-(b.no||1e9));
   let h = '<div class="ex-weak">';
-  if(wrong.length) h += `<div><b>❌ ข้อที่ตอบผิด:</b> ${wrong.map(x=>'ข้อ '+x.no).join(', ')}</div>`;
-  if(w.length) h += `<div style="margin-top:6px"><b>📚 หัวข้อที่ควรทบทวน</b></div><ul>${w.map(x=>{ const n = nosOf(x.chapter); return `<li>${exH(x.chapter)} — พลาด ${exH(String(x.wrong))} จาก ${exH(String(x.total))} ข้อ${n.length ? ' (ข้อ '+n.join(', ')+')' : ''}</li>`; }).join('')}</ul>`;
+  if(wrong.length) h += `<div><b>❌ โจทย์ที่ตอบผิด (${wrong.length} ข้อ)</b></div><ol class="ex-wrongq">${wrong.map(x=>`<li>${x.text ? exH(x.text) : '<i>(โจทย์เป็นรูปภาพ)</i>'}${x.hasImage && x.text ? ' <span class="ex-hint">🖼 มีรูปประกอบ</span>' : ''}${x.chapter ? `<div class="ex-hint">หัวข้อ: ${exH(x.chapter)}</div>` : ''}</li>`).join('')}</ol>`;
+  if(w.length) h += `<div style="margin-top:6px"><b>📚 หัวข้อที่ควรทบทวน</b></div><ul>${w.map(x=>`<li>${exH(x.chapter)} — พลาด ${exH(String(x.wrong))} จาก ${exH(String(x.total))} ข้อ</li>`).join('')}</ul>`;
   return h + '</div>';
 }
 function examRenderResult(r, roundId){
@@ -13055,7 +13057,7 @@ function examRenderResult(r, roundId){
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
     <div class="ex-meta" id="ex-res-att"></div>
     ${exWeakHtml(r)}
-    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะเลขข้อที่ผิด ไม่เฉลยคำตอบ${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
+    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะโจทย์ที่ผิด ไม่เฉลยคำตอบ${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
     <div class="ex-act" style="margin-top:12px;">
       <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
       ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
@@ -13091,7 +13093,7 @@ function examRenderPracticeResult(r){
     <div class="ex-score">${r.scorePct}%</div>
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่ตอบไว้' : ''}</div>
     ${exWeakHtml(r)}
-    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะเลขข้อที่ผิด ไม่เฉลยคำตอบ (เหมือนที่ผู้สอบเห็น)${r.passed ? '' : ' · ต้องสอบผ่านจึงจะดูใบ Cer ตัวอย่างได้'}</div>
+    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะโจทย์ที่ผิด ไม่เฉลยคำตอบ (เหมือนที่ผู้สอบเห็น)${r.passed ? '' : ' · ต้องสอบผ่านจึงจะดูใบ Cer ตัวอย่างได้'}</div>
     <div class="ex-act" style="margin-top:12px;">${back} ${again}
       ${r.passed ? '<button class="btn btn-primary" data-ex="pxcert">🎓 ดูใบ Cer ตัวอย่าง</button>' : ''}</div>
     <div id="ex-pxcert-out" class="ex-act" style="margin-top:10px;"></div></div>`;
