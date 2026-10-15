@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.18
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 12:46 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.21
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 13:14 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.18</title>
+<title>F1 Service — v10.21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1080,6 +1080,9 @@ body.tr-noscroll{overflow:hidden;}
 .tr-cell.today>span{color:#fff;}
 
 .tr-card.tr-ro{opacity:.8;background:var(--panel-alt);border-style:dashed;border-left-style:solid;}
+
+.ex-weak{margin:10px auto 0;max-width:420px;text-align:left;background:rgba(245,158,11,.12);border:1px solid var(--amber);border-radius:10px;padding:8px 12px;font-size:13px;}
+.ex-weak ul{margin:4px 0 0;padding-left:18px;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2545,8 +2548,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.18";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 12:46 น. เวลาไทย";
+const APP_VERSION = "10.21";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 13:14 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12739,7 +12742,7 @@ function examRenderHome(){
       <div class="ex-meta">ออกเมื่อ ${exFmtDT(c.issuedAt)} · คะแนน ${c.score}%${c.expiresAt ? ' · '+(c.expState==='expired' ? '<b class="ex-warn">หมดอายุ '+exFmtDT(c.expiresAt)+'</b>' : c.expState==='soon' ? '<b class="ex-warn">ใกล้หมดอายุ '+exFmtDT(c.expiresAt)+'</b>' : 'หมดอายุ '+exFmtDT(c.expiresAt)) : ''}</div>
       <div class="ex-act">${safeHttpUrl(c.pdfUrl) ? `<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="${exH(safeHttpUrl(c.pdfUrl))}">📄 เปิด PDF</a>` : ''}</div></div>`).join('') + '</div>';
   }
-  html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงเฉพาะคะแนนและผ่าน/ไม่ผ่าน · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
+  html += '<div class="ex-hint" style="margin-top:6px;">ระบบไม่เฉลยคำตอบ แสดงคะแนน ผ่าน/ไม่ผ่าน และเลขข้อที่ตอบผิด · ปิดแอปหรือรีเฟรชระหว่างสอบได้ เวลาสอบยังเดินต่อตามนาฬิกา</div>';
   root.innerHTML = html; EX.homeHtml = root.innerHTML;
 }
 
@@ -12803,13 +12806,34 @@ function examWatermark(){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="20" y="120" font-size="15" fill="#888" fill-opacity="0.16" transform="rotate(-22 180 100)" font-family="sans-serif">${t}</text></svg>`;
   return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
 }
+/* v10.19 — โหลดรูปประกอบข้อสอบ "ทั้งชุด" ล่วงหน้าพร้อมกัน (เดิมรูปโหลดเมื่อเปิดข้อนั้นถึงจะเริ่มโหลด จึงช้า) — เรียงเริ่มจากข้อปัจจุบัน ครั้งละ 6 รูป ไม่บล็อกหน้าจอ/ไม่หยุดเวลาสอบ */
+const EX_IMG_DONE = new Set();
+function exPreloadImages(c, onProgress){
+  const urls = [], seen = {};
+  const qs = c.p.questions, n = qs.length;
+  for(let k = 0; k < n; k++){
+    const q = qs[(c.idx + k) % n];
+    const add = u=>{ if(u && !seen[u] && !EX_IMG_DONE.has(u)){ seen[u] = 1; urls.push(u); } };
+    if(q.imageUrl) add(exImg(q.imageUrl));
+    (q.choices || []).forEach(ch=>{ if(ch.img) add(exImg(ch.img,'w700')); });
+  }
+  const total = urls.length; if(!total){ if(onProgress) onProgress(0, 0); return; }
+  let next = 0, done = 0;
+  const one = ()=>new Promise(res=>{
+    if(next >= total) return res();
+    const u = urls[next++]; const im = new Image();
+    const fin = ()=>{ EX_IMG_DONE.add(u); done++; if(onProgress) onProgress(done, total); res(); };
+    im.onload = fin; im.onerror = fin; im.src = u;
+  }).then(()=> next < total ? one() : null);
+  for(let w = 0; w < 6; w++) one();
+}
 function examRenderAttempt(){
   const c = EX.cur, root = exRoot();
   root.innerHTML = `<div class="ex-protect" id="ex-attempt">
     ${c.practice ? '<div class="ex-note ex-practice">🧪 <b>โหมดทดลอง</b> — ไม่บันทึกคะแนน ไม่นับครั้งที่สอบ และไม่ออกใบ Cer จริง</div>' : ''}
     <div class="ex-wm" style="background-image:${examWatermark()}"></div>
     <div class="ex-bar">
-      <div><b>${exH(c.title)}</b>${c.level ? ' · Level '+exH(c.level) : ''}<div class="ex-hint" id="ex-count"></div></div>
+      <div><b>${exH(c.title)}</b>${c.level ? ' · Level '+exH(c.level) : ''}<div class="ex-hint" id="ex-count"></div><div class="ex-hint" id="ex-imgprog"></div></div>
       <div class="ex-timer" id="ex-timer">--:--</div>
     </div>
     <div class="ex-save" id="ex-save"></div>
@@ -12824,6 +12848,12 @@ function examRenderAttempt(){
   </div>`;
   examRenderQuestion();
   examTick();
+  try{
+    const tok = c; exPreloadImages(c, (d, t)=>{
+      const el = document.getElementById('ex-imgprog'); if(!el || EX.cur !== tok) return;
+      el.textContent = (t && d < t) ? '🖼 กำลังโหลดรูป '+d+'/'+t : '';
+    });
+  }catch(e){ console.warn('preload images', e); }
 }
 function examRenderQuestion(){
   const c = EX.cur; if(!c) return;
@@ -12995,6 +13025,19 @@ function examFinish(result){
   }
   examRenderResult(result, rid);
 }
+/* v10.19 — หัวข้อที่ตอบผิด: บอกแค่ชื่อบท/หัวข้อ + จำนวนข้อที่พลาด ไม่บอกว่าข้อไหน/ตอบอะไรผิด */
+function exWeakHtml(r){
+  const w = (r && r.weakChapters) || [];
+  let wrong = (r && r.wrongQs) || [];
+  if(!w.length && !wrong.length) return '';
+  const qs = (EX.cur && EX.cur.p && EX.cur.p.questions) || [];
+  wrong = wrong.map(x=>({ chapter:x.chapter, no: x.no || (qs.findIndex(q=>q.qid===x.qid) + 1) })).filter(x=>x.no > 0).sort((a,b)=>a.no-b.no);
+  const nosOf = ch=>wrong.filter(x=>(x.chapter || '(ไม่ระบุหัวข้อ)') === ch).map(x=>x.no);
+  let h = '<div class="ex-weak">';
+  if(wrong.length) h += `<div><b>❌ ข้อที่ตอบผิด:</b> ${wrong.map(x=>'ข้อ '+x.no).join(', ')}</div>`;
+  if(w.length) h += `<div style="margin-top:6px"><b>📚 หัวข้อที่ควรทบทวน</b></div><ul>${w.map(x=>{ const n = nosOf(x.chapter); return `<li>${exH(x.chapter)} — พลาด ${exH(String(x.wrong))} จาก ${exH(String(x.total))} ข้อ${n.length ? ' (ข้อ '+n.join(', ')+')' : ''}</li>`; }).join('')}</ul>`;
+  return h + '</div>';
+}
 function examRenderResult(r, roundId){
   if(r && r.practice){ examRenderPracticeResult(r); return; }
   const root = $('ex-root');
@@ -13011,7 +13054,8 @@ function examRenderResult(r, roundId){
     <div class="ex-score">${r.scorePct}%</div>
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
     <div class="ex-meta" id="ex-res-att"></div>
-    <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
+    ${exWeakHtml(r)}
+    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะเลขข้อที่ผิด ไม่เฉลยคำตอบ${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
     <div class="ex-act" style="margin-top:12px;">
       <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
       ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
@@ -13046,7 +13090,8 @@ function examRenderPracticeResult(r){
     <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
     <div class="ex-score">${r.scorePct}%</div>
     <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่ตอบไว้' : ''}</div>
-    <div class="ex-hint" style="margin-top:8px;">ระบบไม่เฉลยว่าข้อไหนผิด (เหมือนที่ผู้สอบเห็น)${r.passed ? '' : ' · ต้องสอบผ่านจึงจะดูใบ Cer ตัวอย่างได้'}</div>
+    ${exWeakHtml(r)}
+    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะเลขข้อที่ผิด ไม่เฉลยคำตอบ (เหมือนที่ผู้สอบเห็น)${r.passed ? '' : ' · ต้องสอบผ่านจึงจะดูใบ Cer ตัวอย่างได้'}</div>
     <div class="ex-act" style="margin-top:12px;">${back} ${again}
       ${r.passed ? '<button class="btn btn-primary" data-ex="pxcert">🎓 ดูใบ Cer ตัวอย่าง</button>' : ''}</div>
     <div id="ex-pxcert-out" class="ex-act" style="margin-top:10px;"></div></div>`;
