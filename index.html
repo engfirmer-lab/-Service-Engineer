@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.10
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 10:37 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.12
+  อัปเดตล่าสุด   : 15 ตุลาคม 2569 11:03 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.10</title>
+<title>F1 Service — v10.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2543,8 +2543,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.10";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 10:37 น. เวลาไทย";
+const APP_VERSION = "10.12";
+const APP_UPDATED_AT = "15 ตุลาคม 2569 11:03 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3827,6 +3827,16 @@ function setProfileLabel(email, p){
   if(!_profBusy) _profCache = null; // มีการบันทึก/แก้โปรไฟล์จากเครื่องนี้ → แคชรายชื่อทุกคนหมดอายุ
   const lb = profileLabelOf(p);
   if(lb) profileLabelMap[email.toLowerCase()] = lb; else delete profileLabelMap[email.toLowerCase()];
+  // v10.12 — โปรไฟล์ของเราเพิ่งโหลดเสร็จ (เช่น Super Admin ที่ไม่ผ่านด่านกรอกโปรไฟล์ → โหลดทีหลัง): จับคู่ชื่อ Sup ใหม่ แทนที่จะค้างที่ชื่อแรกในรายการ (ฐานวัฒน์) แล้วแสดงข้อมูลผิดคน
+  if(myUserEmail && email.toLowerCase() === String(myUserEmail).toLowerCase()) setTimeout(()=>{ try{ supIdentityRefresh(); }catch(e){} }, 0);
+}
+function supIdentityRefresh(){
+  if(typeof renderSupIdentityOptions !== 'function' || !DATA) return;
+  const before = currentSupIdentity;
+  renderSupIdentityOptions();
+  if(currentSupIdentity !== before){
+    try{ renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(true); navxRender(); }catch(e){}
+  }
 }
 async function ensureProfileLabels(){ // โหลดโปรไฟล์ทุกคนครั้งเดียว ไว้แสดงชื่อในหน้าจัดการสิทธิ์
   if(_profileLabelsLoaded || _profileLabelsLoading) return false;
@@ -8252,6 +8262,10 @@ function renderSupIdentityOptions(){
   if(autoMatch && (!currentSupIdentity || currentSupIdentity===SUP_PRODUCTS[0])){
     currentSupIdentity = autoMatch;
   }
+  { // v10.12 — จับคู่ชื่อไม่ได้ (Manager/Super Admin): ใช้ชื่อ Sup ที่เลือกไว้ครั้งก่อนในเครื่องนี้ ไม่ใช่ชื่อแรกในรายการ
+    let sv = ''; try{ sv = localStorage.getItem('f1supid:' + String(myUserEmail||'').toLowerCase()) || ''; }catch(e){}
+    if(!autoMatch && sv && SUP_PRODUCTS.includes(sv) && (!currentSupIdentity || currentSupIdentity===SUP_PRODUCTS[0])) currentSupIdentity = sv;
+  }
   if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
   $('sup-identity').value = currentSupIdentity;
   // v8.35: ล็อก dropdown สำหรับ Sup Product (Editor ที่ไม่ใช่ Super Admin) ที่ auto-match สำเร็จ
@@ -8384,7 +8398,7 @@ function populateSupSelectors(){
 }
 function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
-$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(true); });
+$('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; try{ localStorage.setItem('f1supid:' + String(myUserEmail||'').toLowerCase(), currentSupIdentity); }catch(_){} if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(true); });
 $('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
 
 function myErrors(){ return DATA.errors.filter(e => ownerOf(e.category, e.model) === currentSupIdentity); }
@@ -13067,7 +13081,7 @@ async function exaCertSample(name){
   const inp = $('exa-sample-name'); if(typeof name === 'string' && inp) inp.value = name;
   const out = $('exa-sample-out'); if(out) out.innerHTML = '<span class="ex-hint">⏳ กำลังสร้างตัวอย่างใบ Cer...</span>';
   try{
-    const r = await examApi('adminCertSample', { nameEn:exaMyEnName(), testName: inp ? inp.value : '', course: ($('exa-sample-course')||{}).value || '', trainingDate: ($('exa-sample-date')||{}).value || '', level: ($('exa-sample-level')||{}).value || '' });
+    const r = await examApi('adminCertSample', { nameEn:exaMyEnName(), testName: inp ? inp.value : '', course: ($('exa-sample-course')||{}).value || '', trainingDate: ($('exa-sample-date')||{}).value || '', trainingEnd: ($('exa-sample-end')||{}).value || '', level: ($('exa-sample-level')||{}).value || '' });
     const url = exPdfUrl(r.base64);
     if(out) out.innerHTML = `<div class="ex-hint">ใช้: <b>${r.template==='custom' ? 'เทมเพลต Google Slides ของบริษัท' : 'แบบพื้นฐาน (ยังไม่ได้ตั้ง CERT_TEMPLATE_ID)'}</b> · ชื่อ Sup บนใบ: <b>${exH(r.supName||'—')}</b> · ลายเซ็น: <b>${r.hasSignature ? 'มี' : 'ไม่มี'}</b></div>
       <a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="${url}">📄 เปิดดูตัวอย่าง</a> <a class="btn btn-ghost btn-sm" href="${url}" download="${exH(r.fileName)}">⬇ ดาวน์โหลด PDF</a> <span class="ex-hint">${r.manual ? 'ออกใบเอง — ไม่บันทึกในระบบ ไม่ออกเลขที่ใบ ไม่เก็บลง Drive' : 'ข้อมูลสมมติ (TEST-0000) ไม่บันทึกในระบบ'}</span>`;
@@ -13106,7 +13120,8 @@ async function exaRenderSign(){
       <label style="display:block;margin:6px 0">ชื่อที่ต้องการทดสอบ (พิมพ์ชื่อภาษาอังกฤษของผู้รับ หรือเลือกจากชื่อยาวสุดด้านล่าง — เว้นว่าง = ชื่อสมมติ)<input id="exa-sample-name" type="text" maxlength="60" placeholder="เช่น Visanu Sombatpattanakul"></label>
       <div id="exa-sample-names" class="ex-act" style="margin:4px 0;flex-wrap:wrap"></div>
       <label style="display:block;margin:6px 0">หลักสูตร<input id="exa-sample-course" type="text" maxlength="100" placeholder="เช่น Maglumi 800 Advance"></label>
-      <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันที่เทรน<input id="exa-sample-date" type="date"></label><label>Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1"></label></div>
+      <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันที่เริ่มเทรน<input id="exa-sample-date" type="date"></label><label>ถึงวันที่ (วันจบ — ว่าง = วันเดียว)<input id="exa-sample-end" type="date"></label></div>
+      <label style="display:block;margin:6px 0">Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1" style="max-width:120px"></label>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">📄 สร้างใบ Cer (PDF)</button></div>
       <div id="exa-sample-out" class="ex-act" style="margin-top:8px;"></div></div>
     <div class="ex-hint" style="margin-top:8px;">ใช้แม่แบบ Google Slides ของตัวเอง? ใส่กล่องข้อความที่มีคำว่า <code>{{SUP_SIGN}}</code> ตรงตำแหน่งที่จะวางลายเซ็น ระบบจะวางรูปแทนที่ให้ (ไม่มีกล่องนี้ = ไม่แสดงลายเซ็น)</div></div>`;
@@ -14103,7 +14118,8 @@ function exaRenderRoundEditor(){
       <label>เวลาสอบ (นาที, 0 = ไม่จำกัด)<input id="exa-r-dur" type="number" min="0" max="600" value="${r.durationMin}"></label>
       <label>ชื่อ Supervisor บนใบ Cer (อังกฤษ, ใส่ได้คนเดียว)<input id="exa-r-sup" type="text" maxlength="80" value="${exH(r.supName)}" placeholder="ค่าเริ่มต้น = เจ้าของ Product"></label>
       ${exaTitlePickerHtml(r.supTitle)}
-      <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
+      <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ หรือเลือกวันเริ่ม–วันจบด้านล่าง)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
+      <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันเริ่มเทรน<input id="exa-r-td1" type="date" data-ex="trdates"></label><label>ถึงวันที่ (วันจบ)<input id="exa-r-td2" type="date" data-ex="trdates"></label></div>
     </div>
     <div class="ex-hint">ผู้เข้าสอบที่เริ่มสอบก่อนปิดรอบ จะสอบต่อได้จนหมดเวลาของตัวเอง</div></div>
     <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">ผู้มีสิทธิ์สอบ (<span id="exa-el-count">${EXA.elig.size}</span> คน)</h2>
@@ -14425,6 +14441,20 @@ function exaDraftDiscard(){
 }
 document.addEventListener('input', e=>{ if(e.target && e.target.closest && e.target.closest('#exa-qeditor')) exaDraftSoon(); });
 document.addEventListener('change', e=>{ if(e.target && e.target.closest && e.target.closest('#exa-qeditor')) exaDraftSoon(); });
+/* v10.11 — เลือกวันเริ่ม–วันจบเทรนในฟอร์มรอบสอบ → เติมข้อความวันที่บนใบ Cer ให้เอง (เช่น "14 - 15 October 2026") */
+const EX_MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function exRangeEn(a, b){
+  const A = a.split('-'), B = (b || a).split('-'), d1 = Number(A[2]), d2 = Number(B[2]), m1 = Number(A[1])-1, m2 = Number(B[1])-1;
+  if(!b || a === b) return d1+' '+EX_MONTHS_EN[m1]+' '+A[0];
+  if(A[0] === B[0] && m1 === m2) return d1+' - '+d2+' '+EX_MONTHS_EN[m1]+' '+A[0];
+  if(A[0] === B[0]) return d1+' '+EX_MONTHS_EN[m1]+' - '+d2+' '+EX_MONTHS_EN[m2]+' '+A[0];
+  return d1+' '+EX_MONTHS_EN[m1]+' '+A[0]+' - '+d2+' '+EX_MONTHS_EN[m2]+' '+B[0];
+}
+document.addEventListener('change', e=>{
+  const t = e.target; if(!t || (t.id !== 'exa-r-td1' && t.id !== 'exa-r-td2')) return;
+  const a = ($('exa-r-td1')||{}).value, b = ($('exa-r-td2')||{}).value, out = $('exa-r-train'); if(!a || !out) return;
+  out.value = exRangeEn(a, b && b > a ? b : '');
+});
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') exaDraftSave(); });
 window.addEventListener('pagehide', ()=>{ exaDraftSave(); });
 
