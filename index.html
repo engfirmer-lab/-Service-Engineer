@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.43
-  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:49 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.44
+  อัปเดตล่าสุด   : 16 ตุลาคม 2569 10:01 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.43</title>
+<title>F1 Service — v10.44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2556,8 +2556,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.43";
-const APP_UPDATED_AT = "16 ตุลาคม 2569 09:49 น. เวลาไทย";
+const APP_VERSION = "10.44";
+const APP_UPDATED_AT = "16 ตุลาคม 2569 10:01 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12730,19 +12730,31 @@ async function examLoadHome(autoResume){
 function exPartsHtml(i){
   if(!i.mixed || !i.parts) return '';
   const w = i.parts.w, p = i.parts.p;
-  const wt = {none:'ยังไม่สอบ — เริ่มสอบเมื่อไรก็ได้',inprogress:'กำลังสอบ',grading:'รอ Sup ตรวจข้อเขียน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — สอบใหม่ได้ทันที'}[w.state] + (w.pct!=null && (w.state==='passed'||w.state==='failed') ? ' ('+w.pct+'%)' : '');
-  const pt = {none:'Sup จะเรียกประเมินเมื่อพร้อม',inprogress:'',grading:'รอ Sup ประเมิน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — รอ Sup เปิดรอบประเมินใหม่'}[p.state];
+  const pc = x=>(x.pct!=null && (x.state==='passed'||x.state==='failed') ? ' — <b>'+x.pct+'%</b>' : '');
+  const wt = {none:'ยังไม่สอบ — เริ่มสอบเมื่อไรก็ได้',inprogress:'กำลังสอบ',grading:'รอ Sup ตรวจข้อเขียน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — สอบใหม่ได้ทันที'}[w.state] + pc(w);
+  const pt = {none:'Sup จะเรียกประเมินเมื่อพร้อม',inprogress:'',grading:'รอ Sup ประเมิน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — รอ Sup เปิดรอบประเมินใหม่'}[p.state] + pc(p);
   return `<div class="ex-meta">📝 <b>ส่วนปรนัย/ข้อเขียน:</b> ${wt}<br>🛠 <b>ส่วนปฏิบัติ:</b> ${pt}<br><span class="ex-hint">สอบสองส่วนแยกกัน — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน</span></div>`;
 }
 function exAttLabel(a){ return a.part === 'practical' ? ' · ส่วนปฏิบัติ' : a.part === 'written' ? ' · ส่วนปรนัย/ข้อเขียน' : ''; }
 function exAttResult(a){ if(a.legacyPrac) return exChip('รอ Sup ประเมินปฏิบัติ','warn'); return a.pendingReview ? exChip(a.part === 'practical' ? 'รอ Sup ประเมินปฏิบัติ' : 'รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
+function exAttScores(a, showP){
+  const w = a.part === 'practical' ? null : (a.writtenPct != null ? a.writtenPct : (a.pendingReview ? null : a.scorePct));
+  let p = null, pTxt = '-';
+  if(a.part === 'practical'){ p = a.pendingReview ? null : a.scorePct; pTxt = p == null ? '⏳ รอประเมิน' : p+'%'; }
+  else if(a.practicalPct != null){ p = a.practicalPct; pTxt = p+'%'; }
+  else if(showP) pTxt = a.legacyPrac || a.pendingReview ? '⏳ รอประเมิน' : '-';
+  return { w: w == null ? '-' : w+'%', p: pTxt };
+}
 function exAttemptsHtml(i){
   const done = (i.attempts||[]).filter(a=>a.no > 0);
   if(!done.length) return '';
   const last = done[0], total = Math.max(i.attemptTotal || 0, done.length);
-  return `<div class="ex-meta">สอบมาแล้ว <b>${total} ครั้ง</b> · ครั้งล่าสุด (ครั้งที่ ${last.no}${exAttLabel(last)}): <b>${last.pendingReview || last.part === 'practical' ? '—' : last.scorePct+'%'}</b> ${exAttResult(last)}</div>
-    <details class="ex-attlist"><summary>ดูประวัติการสอบทั้งหมด</summary><table class="ex-table"><thead><tr><th>ครั้งที่</th><th>วันที่สอบ</th><th>คะแนน</th><th>ผล</th></tr></thead><tbody>
-    ${done.map(a=>`<tr><td>${a.no}${exAttLabel(a)}</td><td>${exFmtDT(a.submittedAt || a.startedAt)}</td><td>${a.pendingReview || a.part === 'practical' ? '—' : a.scorePct+'%'}</td><td>${exAttResult(a)}</td></tr>`).join('')}
+  const showP = !!(i.mixed || i.hasPractical || done.some(a=>a.part==='practical' || a.practicalPct != null));
+  const ls = exAttScores(last, showP);
+  const lastTxt = showP ? `ปรนัย <b>${ls.w}</b> · ปฏิบัติ <b>${ls.p}</b>` : `<b>${last.pendingReview ? '—' : last.scorePct+'%'}</b>`;
+  return `<div class="ex-meta">สอบมาแล้ว <b>${total} ครั้ง</b> · ครั้งล่าสุด (ครั้งที่ ${last.no}${exAttLabel(last)}): ${lastTxt} ${exAttResult(last)}</div>
+    <details class="ex-attlist"><summary>ดูประวัติการสอบทั้งหมด</summary><table class="ex-table"><thead><tr><th>ครั้งที่</th><th>วันที่สอบ</th>${showP ? '<th>ปรนัย/ข้อเขียน</th><th>ปฏิบัติ</th>' : '<th>คะแนน</th>'}<th>ผล</th></tr></thead><tbody>
+    ${done.map(a=>{ const sc = exAttScores(a, showP); return `<tr><td>${a.no}${exAttLabel(a)}</td><td>${exFmtDT(a.submittedAt || a.startedAt)}</td>${showP ? `<td>${sc.w}</td><td>${sc.p}</td>` : `<td>${a.pendingReview ? '—' : a.scorePct+'%'}</td>`}<td>${exAttResult(a)}</td></tr>`; }).join('')}
     </tbody></table>${total > done.length ? `<div class="ex-hint">แสดง ${done.length} ครั้งล่าสุดจากทั้งหมด ${total} ครั้ง</div>` : ''}</details>`;
 }
 function examStatusChip(i){
