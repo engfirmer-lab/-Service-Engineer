@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.40
-  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:14 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.42
+  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:41 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.40</title>
+<title>F1 Service — v10.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2556,8 +2556,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.40";
-const APP_UPDATED_AT = "16 ตุลาคม 2569 09:14 น. เวลาไทย";
+const APP_VERSION = "10.42";
+const APP_UPDATED_AT = "16 ตุลาคม 2569 09:41 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12727,14 +12727,22 @@ async function examLoadHome(autoResume){
   }
 }
 /* v9.53 — จำนวนครั้งที่สอบ + ประวัติทุกครั้ง (ผู้สอบเห็นของตัวเอง) */
-function exAttResult(a){ return a.pendingReview ? exChip('รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
+function exPartsHtml(i){
+  if(!i.mixed || !i.parts) return '';
+  const w = i.parts.w, p = i.parts.p;
+  const wt = {none:'ยังไม่สอบ — เริ่มสอบเมื่อไรก็ได้',inprogress:'กำลังสอบ',grading:'รอ Sup ตรวจข้อเขียน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — สอบใหม่ได้ทันที'}[w.state] + (w.pct!=null && (w.state==='passed'||w.state==='failed') ? ' ('+w.pct+'%)' : '');
+  const pt = {none:'Sup จะเรียกประเมินเมื่อพร้อม',inprogress:'',grading:'รอ Sup ประเมิน',passed:'ผ่านแล้ว ✓',failed:'ยังไม่ผ่าน — รอ Sup เปิดรอบประเมินใหม่'}[p.state];
+  return `<div class="ex-meta">📝 <b>ส่วนปรนัย/ข้อเขียน:</b> ${wt}<br>🛠 <b>ส่วนปฏิบัติ:</b> ${pt}<br><span class="ex-hint">สอบสองส่วนแยกกัน — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน</span></div>`;
+}
+function exAttLabel(a){ return a.part === 'practical' ? ' · ส่วนปฏิบัติ' : a.part === 'written' ? ' · ส่วนปรนัย/ข้อเขียน' : ''; }
+function exAttResult(a){ return a.pendingReview ? exChip(a.part === 'practical' ? 'รอ Sup ประเมินปฏิบัติ' : 'รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
 function exAttemptsHtml(i){
   const done = (i.attempts||[]).filter(a=>a.no > 0);
   if(!done.length) return '';
   const last = done[0], total = Math.max(i.attemptTotal || 0, done.length);
-  return `<div class="ex-meta">สอบมาแล้ว <b>${total} ครั้ง</b> · ครั้งล่าสุด (ครั้งที่ ${last.no}): <b>${last.pendingReview ? '—' : last.scorePct+'%'}</b> ${exAttResult(last)}</div>
+  return `<div class="ex-meta">สอบมาแล้ว <b>${total} ครั้ง</b> · ครั้งล่าสุด (ครั้งที่ ${last.no}${exAttLabel(last)}): <b>${last.pendingReview || last.part === 'practical' ? '—' : last.scorePct+'%'}</b> ${exAttResult(last)}</div>
     <details class="ex-attlist"><summary>ดูประวัติการสอบทั้งหมด</summary><table class="ex-table"><thead><tr><th>ครั้งที่</th><th>วันที่สอบ</th><th>คะแนน</th><th>ผล</th></tr></thead><tbody>
-    ${done.map(a=>`<tr><td>${a.no}</td><td>${exFmtDT(a.submittedAt || a.startedAt)}</td><td>${a.pendingReview ? '—' : a.scorePct+'%'}</td><td>${exAttResult(a)}</td></tr>`).join('')}
+    ${done.map(a=>`<tr><td>${a.no}${exAttLabel(a)}</td><td>${exFmtDT(a.submittedAt || a.startedAt)}</td><td>${a.pendingReview || a.part === 'practical' ? '—' : a.scorePct+'%'}</td><td>${exAttResult(a)}</td></tr>`).join('')}
     </tbody></table>${total > done.length ? `<div class="ex-hint">แสดง ${done.length} ครั้งล่าสุดจากทั้งหมด ${total} ครั้ง</div>` : ''}</details>`;
 }
 function examStatusChip(i){
@@ -12757,23 +12765,23 @@ function examRenderHome(){
   Object.keys(groups).forEach(k=>{
     html += `<div class="panel-block"><h2>${exH(k)}</h2>`;
     groups[k].sort((a,b)=>a.level-b.level || b.openAt-a.openAt).forEach(i=>{
-      const last = i.attempts[0];
+      const last = i.attempts[0], lastW = (i.attempts||[]).find(a=>a.part !== 'practical');
       let action = '';
       if(i.inProgressAttemptId) action = `<button class="btn btn-primary btn-sm" data-ex="resume" data-id="${exH(i.inProgressAttemptId)}">▶ ทำต่อ</button>`;
       else if(i.passed && i.expiresAt && i.expiresAt - exNow() < 60*86400000 && i.isOpen) action = '<span class="ex-hint">ใกล้หมดอายุ — สอบต่ออายุได้หลังหมดอายุ</span>';
       else if(i.passed) action = '';
-      else if(last && last.pendingReview) action = '<span class="ex-hint">รอ Sup ตรวจข้อเขียนก่อน จึงจะสอบใหม่ได้</span>';
-      else if(i.practicalFirst && i.pracStage === 'none') action = '<span class="ex-hint">🛠 รอบนี้สอบปฏิบัติก่อน — รอ Sup เปิดรายการประเมินปฏิบัติให้คุณ</span>';
-      else if(i.practicalFirst && i.pracStage === 'wait') action = '<span class="ex-hint">🛠 รอ Sup ประเมินข้อปฏิบัติของคุณ แล้วจึงเริ่มสอบในแอพได้</span>';
+      else if(i.mixed && i.parts && i.parts.w.state === 'passed') action = '<span class="ex-hint">✅ ผ่านส่วนปรนัย/ข้อเขียนแล้ว — ไม่ต้องสอบซ้ำ (รอผลส่วนปฏิบัติ)</span>';
+      else if(lastW && lastW.pendingReview) action = '<span class="ex-hint">รอ Sup ตรวจข้อเขียนก่อน จึงจะสอบใหม่ได้</span>';
       else if(i.locked) action = '<span class="ex-hint">ต้องสอบผ่าน Level ก่อนหน้าก่อน</span>';
       else if(!i.published) action = '<span class="ex-hint">Sup ยังไม่ได้เผยแพร่ข้อสอบชุดนี้</span>';
       else if(i.state === 'pending') action = '<span class="ex-hint">รอ Sup กดเริ่มสอบ</span>';
       else if(!i.isOpen) action = `<span class="ex-hint">${exNow() < i.openAt ? 'ยังไม่ถึงเวลาเปิดรอบ' : 'รอบสอบนี้ปิดแล้ว'}</span>`;
-      else action = `<button class="btn btn-primary btn-sm" data-ex="start" data-id="${exH(i.roundId)}">${i.expired ? '🔁 สอบต่ออายุ' : i.attempts.length ? '🔁 สอบใหม่' : '▶ เริ่มสอบ'}</button>`;
+      else action = `<button class="btn btn-primary btn-sm" data-ex="start" data-id="${exH(i.roundId)}">${i.expired ? '🔁 สอบต่ออายุ' : i.attempts.length ? '🔁 สอบใหม่' : '▶ เริ่มสอบ'}${i.mixed ? ' (ส่วนปรนัย/ข้อเขียน)' : ''}</button>`;
       html += `<div class="ex-card">
         <div class="ex-card-h"><div><b>Level ${i.level}</b> · ${exH(i.title)}${i.course ? '<br>'+exCourse(i.course) : ''}</div>${examStatusChip(i)}</div>
         <div class="ex-meta">รอบ: ${exH(i.name)} · เปิด ${exFmtDT(i.openAt)} ถึง ${exFmtDT(i.closeAt)}<br>
           ${i.durationMin>0 ? 'เวลาสอบ <b>'+i.durationMin+' นาที</b>' : 'ไม่จำกัดเวลา'} · เกณฑ์ผ่าน <b>${i.passPercent}%</b></div>
+        ${exPartsHtml(i)}
         ${exAttemptsHtml(i)}
         ${i.expired ? '<div class="ex-meta ex-warn">ใบ Cer หมดอายุเมื่อ '+exFmtDT(i.expiresAt)+' — สอบใหม่เพื่อต่ออายุ</div>' : ''}
         ${i.needsRetake ? '<div class="ex-meta ex-warn">ข้อสอบชุดนี้มีการแก้ไขสาระสำคัญ ผลที่ผ่านก่อนหน้าต้องสอบใหม่</div>' : ''}
@@ -13082,6 +13090,12 @@ function exWeakHtml(r){
   if(w.length) h += `<div style="margin-top:6px"><b>📚 หัวข้อที่ควรทบทวน</b></div><ul>${w.map(x=>`<li>${exH(x.chapter)} — พลาด ${exH(String(x.wrong))} จาก ${exH(String(x.total))} ข้อ</li>`).join('')}</ul>`;
   return h + '</div>';
 }
+/* v10.41 — ผลส่วนปรนัยที่ตรวจได้ทันที (ยังไม่ใช่ผลรวม) + โจทย์ที่ตอบผิด — ไม่แสดงข้อปฏิบัติ */
+function exPartialHtml(r){
+  if(r.objTotal == null || !(r.objTotal > 0)) return '';
+  const pct = Math.round(r.objCorrect * 10000 / r.objTotal) / 100;
+  return `<div class="ex-score">${pct}%</div><div class="ex-meta">ส่วนปรนัยในแอพ: ตอบถูก <b>${r.objCorrect}</b> จาก ${r.objTotal} ข้อ${r.essayWait ? '<br>(ข้อเขียนรอ Sup ให้คะแนน — ยังไม่นับรวม)' : ''}</div>${exWeakHtml(r)}`;
+}
 function examRenderResult(r, roundId){
   if(r && r.practice){ examRenderPracticeResult(r); return; }
   const root = $('ex-root');
@@ -13089,17 +13103,20 @@ function examRenderResult(r, roundId){
   if(r.pendingReview || r.status === 'grading'){
     root.innerHTML = `<div class="panel-block ex-result">
       <div class="ex-big">📨 ส่งข้อสอบแล้ว</div>
-      <div class="ex-meta">ข้อสอบชุดนี้มีข้อเขียน ต้องรอ Sup ตรวจและให้คะแนน<br>ผลสอบจะแสดงที่หน้า "ข้อสอบของฉัน" เมื่อตรวจเสร็จ</div>
+      ${exPartialHtml(r)}
+      <div class="ex-meta">ผลรวมและผ่าน/ไม่ผ่าน ต้องรอ Sup ตรวจข้อเขียน/ประเมินส่วนที่เหลือก่อน<br>ผลสอบจะแสดงที่หน้า "ข้อสอบของฉัน" เมื่อเสร็จ</div>
       <div class="ex-act" style="margin-top:12px;"><button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button></div></div>`;
     return;
   }
+  const isPart = r.part === 'written';
+  const th = isPart ? (r.writtenPass > 0 ? r.writtenPass : r.passPercent) : r.passPercent;
   root.innerHTML = `<div class="panel-block ex-result ${r.passed?'ex-ok':'ex-bad'}">
-    <div class="ex-big">${r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน'}</div>
+    <div class="ex-big">${isPart ? (r.passed ? '✓ ผ่านส่วนปรนัย/ข้อเขียน' : '✗ ไม่ผ่านส่วนปรนัย/ข้อเขียน') : (r.passed ? '✓ ผ่าน' : '✗ ไม่ผ่าน')}</div>
     <div class="ex-score">${r.scorePct}%</div>
-    <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${r.passPercent}%${r.writtenPass>0 && r.writtenPct!=null ? '<br>ส่วนปรนัย/ข้อเขียน '+r.writtenPct+'% (เกณฑ์ผ่านส่วนนี้ '+r.writtenPass+'%) '+(r.writtenPct+1e-9>=r.writtenPass?'✓':'✗') : ''}${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
+    <div class="ex-meta">ตอบถูก ${r.correct} จาก ${r.total} ข้อ · เกณฑ์ผ่าน ${th}%${!isPart && r.writtenPass>0 && r.writtenPct!=null ? '<br>ส่วนปรนัย/ข้อเขียน '+r.writtenPct+'% (เกณฑ์ผ่านส่วนนี้ '+r.writtenPass+'%) '+(r.writtenPct+1e-9>=r.writtenPass?'✓':'✗') : ''}${r.status==='expired' ? '<br>หมดเวลา ระบบตรวจจากคำตอบที่บันทึกไว้' : ''}</div>
     <div class="ex-meta" id="ex-res-att"></div>
     ${exWeakHtml(r)}
-    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะโจทย์ที่ผิด ไม่เฉลยคำตอบ${r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : ''}</div>
+    <div class="ex-hint" style="margin-top:8px;">ระบบบอกเฉพาะโจทย์ที่ผิด ไม่เฉลยคำตอบ${isPart ? (r.passed ? ' · ส่วนปฏิบัติ Sup จะประเมินแยกต่างหาก — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน (ดูที่หน้า "ข้อสอบของฉัน")' : ' · กด "สอบใหม่" ได้ทันที ไม่ต้องรอส่วนปฏิบัติ') : (r.passed ? (r.linked ? ' · ระบบกำลังออกใบ Cer ให้ ดูที่หน้า "ข้อสอบของฉัน"' : ' · ใบ Cer จะออกให้เมื่อ Sup ออก Cer ของรอบนี้') : '')}</div>
     <div class="ex-act" style="margin-top:12px;">
       <button class="btn btn-ghost" data-ex="home">กลับหน้าข้อสอบ</button>
       ${!r.passed && rid ? `<button class="btn btn-primary" data-ex="retry" data-id="${exH(rid)}">🔁 สอบใหม่</button>` : ''}
@@ -13608,7 +13625,7 @@ function exaRenderSet(){
       <label>ประเภทเครื่อง (Category)${exaCatSelect(s.category)}</label>
       <label>รุ่น<span id="exa-s-model-wrap">${exaModelSelect(s.category, s.model)}</span></label>
       <label>Level<select id="exa-s-level">${[1,2,3].map(l=>`<option value="${l}" ${l===s.level?'selected':''}>Level ${l}</option>`).join('')}</select></label>
-      <label>เกณฑ์ผ่านรวม (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${s.passPercent}"></label>
+      <label>เกณฑ์ผ่าน (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${s.passPercent}"></label>
       <label>เวลาสอบปรนัย/ข้อเขียนในแอพ (นาที, 0 = ไม่จำกัด)<input id="exa-s-dur" type="number" min="0" max="600" value="${s.durationMin}"></label>
       ${exaPartFieldsHtml('s', s)}
       <label>ชื่อหลักสูตรบนใบ Cer<input id="exa-s-course" type="text" value="${exH(s.certCourse)}" placeholder="ถ้าว่างใช้ชื่อชุดข้อสอบ"></label>
@@ -14334,10 +14351,9 @@ function exaRenderRoundEditor(){
       <label>ชุดข้อสอบ<select id="exa-r-set" data-ex="rset" ${r.roundId?'disabled':''}>${sets.map(s=>`<option value="${exH(s.setId)}" ${s.setId===r.setId?'selected':''}>${exH(s.category)} › ${exH(s.model)} L${s.level} — ${exH(s.title)}${exaCourseOf(s) ? ' (หลักสูตร '+exH(exaCourseOf(s))+')' : ''}${s.latestVersion?'':' (ยังไม่เผยแพร่)'}</option>`).join('')}</select></label>
       <label>เปิดรอบ<input id="exa-r-open" type="datetime-local" value="${exToInput(r.openAt)}"></label>
       <label>ปิดรอบ<input id="exa-r-close" type="datetime-local" value="${exToInput(r.closeAt)}"></label>
-      <label>เกณฑ์ผ่านรวม (%)<input id="exa-r-pass" type="number" min="1" max="100" value="${r.passPercent}"></label>
+      <label>เกณฑ์ผ่าน (%)<input id="exa-r-pass" type="number" min="1" max="100" value="${r.passPercent}"></label>
       <label>เวลาสอบปรนัย/ข้อเขียนในแอพ (นาที, 0 = ไม่จำกัด)<input id="exa-r-dur" type="number" min="0" max="600" value="${r.durationMin}"></label>
       ${exaPartFieldsHtml('r', r)}
-      <label>ลำดับการสอบ (สำหรับชุดที่มีข้อปฏิบัติปนกับข้ออื่น)<select id="exa-r-stage"><option value="" ${r.stageOrder==='practical_first'?'':'selected'}>ข้อในแอพก่อน — Sup ให้คะแนนข้อปฏิบัติทีหลัง</option><option value="practical_first" ${r.stageOrder==='practical_first'?'selected':''}>ปฏิบัติก่อน — Sup ประเมินข้อปฏิบัติครบก่อน ผู้สอบจึงเริ่มสอบข้อในแอพได้</option></select></label>
       <label>ชื่อ Supervisor บนใบ Cer (อังกฤษ, ใส่ได้คนเดียว)<input id="exa-r-sup" type="text" maxlength="80" value="${exH(r.supName)}" placeholder="ค่าเริ่มต้น = เจ้าของ Product"></label>
       ${exaTitlePickerHtml(r.supTitle)}
       <label>วันที่อบรมบนใบ Cer (พิมพ์ข้อความ หรือเลือกวันเริ่ม–วันจบด้านล่าง)<input id="exa-r-train" type="text" value="${exH(r.trainingDate)}" placeholder="เช่น 20 - 21 October 2026"></label>
@@ -14354,7 +14370,7 @@ async function exaSaveRound(){
   const r = EXA.round, g = id => $(id).value;
   const picked = EXA.profiles.filter(p=>EXA.elig.has(p.email)).map(p=>({ email:p.email, name:p.name, nameEn:p.nameEn }));
   const round = { roundId:r.roundId || undefined, setId:g('exa-r-set'), name:g('exa-r-name'), openAt:exFromInput(g('exa-r-open')), closeAt:exFromInput(g('exa-r-close')),
-    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), wPass:Number(g('exa-r-wpass'))||0, pPass:Number(g('exa-r-ppass'))||0, pracMin:Number(g('exa-r-pracmin'))||0, graceMin:(EXA.round.graceMin ?? 5), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:exaTitleValue(), stageOrder:($('exa-r-stage')||{}).value || '', eligible:picked };
+    passPercent:Number(g('exa-r-pass')), durationMin:Number(g('exa-r-dur')), wPass:Number(g('exa-r-wpass'))||0, pPass:Number(g('exa-r-ppass'))||0, pracMin:Number(g('exa-r-pracmin'))||0, graceMin:(EXA.round.graceMin ?? 5), trainingDate:g('exa-r-train'), supName:g('exa-r-sup').trim(), supTitle:exaTitleValue(), stageOrder:'', eligible:picked };
   showLoadingOverlay('กำลังบันทึกรอบสอบ...');
   try{
     const res = await examApi('adminSaveRound', { round });
@@ -14368,14 +14384,25 @@ function exAdminAttempts(x){
   if(!x.attemptCount) return '0';
   return `<details class="ex-attlist"><summary><b>${x.attemptCount}</b> ครั้ง</summary>${(x.attempts||[]).map(a=>`<div class="ex-hint">ครั้งที่ ${a.no} · ${exFmtDT(a.submittedAt||a.startedAt)} · ${a.status==='grading' ? 'รอตรวจข้อเขียน' : a.scorePct+'% '+(a.passed?'✓ ผ่าน':'✗ ไม่ผ่าน')}${a.status==='expired' ? ' (หมดเวลา)' : ''} · v${a.version}</div>`).join('')}</details>`;
 }
-const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''], grading:['รอ Sup ตรวจ','warn'], pracwait:['รอประเมินปฏิบัติ','warn'], pracready:['ปฏิบัติครบ — รอสอบในแอพ','acc'] };
+const EX_STATUS = { passed:['ผ่าน','ok'], failed:['ไม่ผ่าน','bad'], retake:['ต้องสอบใหม่','warn'], inprogress:['กำลังสอบ','acc'], none:['ยังไม่สอบ',''], grading:['รอ Sup ตรวจ','warn'], pracwait:['รอประเมินปฏิบัติ','warn'], pracready:['ปฏิบัติครบ — รอสอบในแอพ','acc'], partial:['ผ่านบางส่วน','warn'] };
 function exaPartFieldsHtml(p, v){ // p = 's' | 'r' · v = {passPercent, wPass, pPass, pracMin}
-  return `<div class="ex-hint" style="grid-column:1/-1;margin-top:6px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ผ่านต่อเมื่อ <b>ทุกส่วนถึงเกณฑ์ของตัวเอง และคะแนนรวมถึงเกณฑ์รวม</b> · ใส่ 0 = ไม่แยก (ใช้เกณฑ์รวมอย่างเดียว)</div>
+  return `<div class="ex-hint" style="grid-column:1/-1;margin-top:6px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ปรนัยกับปฏิบัติ <b>สอบแยกกัน คนละเวลา คนละเกณฑ์</b> — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน · ใส่ 0 = ใช้ "เกณฑ์ผ่าน" ด้านบน</div>
     <label>เกณฑ์ผ่านปรนัย/ข้อเขียน (%, 0 = ไม่แยก)<input id="exa-${p}-wpass" type="number" min="0" max="100" value="${Number(v.wPass)||0}"></label>
     <label>เกณฑ์ผ่านปฏิบัติ (%, 0 = ไม่แยก)<input id="exa-${p}-ppass" type="number" min="0" max="100" value="${Number(v.pPass)||0}"></label>
     <label>เวลาสอบปฏิบัติ (นาที, 0 = ไม่กำหนด)<input id="exa-${p}-pracmin" type="number" min="0" max="600" value="${Number(v.pracMin)||0}"></label>`;
 }
 function exaPartChip(v, need){ const n = Number(need)||0; const ok = n>0 ? v + 1e-9 >= n : null; return v+'%'+(ok===null?'':(ok?' ✓':' ✗')); }
+function exaPartCell(x, k, d){
+  const pt = x.parts && x.parts[k];
+  if(!pt){ const v = k==='w' ? x.lastW : x.lastP; return v==null ? '-' : exaPartChip(v, k==='w' ? d.round.wPass : d.round.pPass); }
+  const pct = pt.pct==null ? '' : ' '+pt.pct+'%';
+  const no = pt.no ? `<small>ครั้งที่ ${pt.no}</small>` : '';
+  if(pt.state==='passed') return exChip('✓ ผ่าน'+pct,'ok')+no;
+  if(pt.state==='failed') return exChip('✗ ไม่ผ่าน'+pct,'bad')+no;
+  if(pt.state==='grading') return exChip(k==='p' ? '⏳ รอประเมิน' : '⏳ รอตรวจ','warn');
+  if(pt.state==='inprogress') return exChip('กำลังสอบ','acc');
+  return '-';
+}
 function exaEmb(){ const el = document.getElementById('tra-ex-sum'); return !!(el && el.offsetParent !== null); } // สรุปผลฝังอยู่ในหน้า ตารางเทรน (ใช้ส่วนเดียวกับหน้าสรุปรอบสอบ)
 function exaSumRerender(){ if(exaEmb() && typeof traRenderDetail === 'function'){ const y = window.scrollY; traRenderDetail(); window.scrollTo(0, y); } else exaRenderSummary(); }
 async function exaSumRefresh(){ if(exaEmb() && typeof traReload === 'function'){ await traReload(true); } else if(EXA.sumCur) await exaGo('summary', EXA.sumCur.round.roundId); }
@@ -14385,20 +14412,19 @@ function exaSummaryBodyHtml(d){
   const rows = d.rows.filter(x=>!f || x.status===f);
   return `<div class="ex-row"><button class="btn btn-ghost btn-sm" data-ex="summary" data-id="${exH(r.roundId)}">↻ รีเฟรช</button>
       <button class="btn btn-ghost btn-sm" data-ex="itemstats" data-id="${exH(r.setId)}" data-back="${exH(r.roundId)}">📈 สถิติรายข้อ</button>
-      ${!d.practicalOnly ? `<label class="ex-hint">ลำดับการสอบ <select data-ex="rstage" data-id="${exH(r.roundId)}"><option value="">เขียนก่อน (ผู้สอบกดเริ่มเอง)</option><option value="practical_first" ${d.practicalFirst?'selected':''}>ปฏิบัติก่อน (Sup เปิดให้ทีละกลุ่ม)</option></select></label>` : ''}
-      ${(d.practicalOnly || d.practicalFirst) && d.counts.none ? `<button class="btn btn-primary btn-sm" data-ex="openprac" data-id="${exH(r.roundId)}">▶ เริ่มสอบปฏิบัติ — เลือกผู้เข้าสอบ (${d.counts.none} คนที่ยังไม่เริ่ม)</button>` : ''}
+      ${d.hasPractical && d.counts.pracOpenable ? `<button class="btn btn-primary btn-sm" data-ex="openprac" data-id="${exH(r.roundId)}">▶ เริ่มสอบปฏิบัติ — เลือกผู้เข้าสอบ (${d.counts.pracOpenable} คนที่เริ่มได้)</button>` : ''}
       ${d.counts.pracwait ? `<button class="btn btn-ghost btn-sm" data-ex="gradelist" data-id="${exH(r.roundId)}">ประเมินปฏิบัติ (${d.counts.pracwait} คน)</button>` : ''}
       <button class="btn btn-primary btn-sm" data-ex="issue" data-id="${exH(r.roundId)}" ${d.counts.passed?'':'disabled'}>🎓 ออกใบ Cer ผู้ที่ผ่าน</button></div>
     ${exaPracPickHtml(d)}
     <div class="ex-stats">
-      <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่าน</span></div>
+      <div class="ex-stat"><b>${d.counts.eligible}</b><span>ผู้มีสิทธิ์</span></div><div class="ex-stat"><b style="color:var(--green)">${d.counts.passed}</b><span>ผ่านครบ</span></div>${d.mixed ? `<div class="ex-stat"><b style="color:var(--amber)">${d.counts.partial||0}</b><span>ผ่านบางส่วน</span></div>` : ''}
       <div class="ex-stat"><b style="color:var(--red)">${d.counts.failed}</b><span>ยังไม่ผ่าน</span></div><div class="ex-stat"><b>${d.counts.inprogress}</b><span>กำลังสอบ</span></div>
       <div class="ex-stat"><b style="color:var(--amber)">${d.counts.none}</b><span>ยังไม่สอบ</span></div>
       ${d.counts.grading ? `<div class="ex-stat"><b style="color:var(--amber)">${d.counts.grading}</b><span>รอตรวจข้อเขียน</span><button class="btn btn-primary btn-sm" data-ex="gradelist" data-id="${exH(r.roundId)}">ตรวจเลย</button></div>` : ''}</div>
     <div class="panel-block"><div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">สรุปผู้ตอบ</h2>
       <select id="exa-sum-filter" data-ex="sumfilter"><option value="">ทุกสถานะ</option>${Object.keys(EX_STATUS).map(k=>`<option value="${k}" ${f===k?'selected':''}>${EX_STATUS[k][0]}</option>`).join('')}</select></div>
       <div style="overflow-x:auto"><table class="ex-table"><thead><tr><th>ชื่อ</th><th>ครั้งที่สอบ</th><th>คะแนนล่าสุด (รวม)</th><th>ปรนัย</th><th>ปฏิบัติ</th><th>ดีที่สุด</th><th>สถานะ</th><th>ระดับ</th><th>Cer</th></tr></thead><tbody>
-      ${rows.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${exAdminAttempts(x)}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${x.lastW==null?'-':exaPartChip(x.lastW, d.round.wPass)}</td><td>${x.lastP==null?'-':exaPartChip(x.lastP, d.round.pPass)}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
+      ${rows.map(x=>`<tr><td>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></td><td>${exAdminAttempts(x)}</td><td>${x.lastScore===null?'-':x.lastScore+'%'}</td><td>${exaPartCell(x, 'w', d)}</td><td>${exaPartCell(x, 'p', d)}</td><td>${x.bestScore===null?'-':x.bestScore+'%'}</td>
         <td>${exChip(EX_STATUS[x.status][0], EX_STATUS[x.status][1])}</td>
         <td>${x.levels.map(l=>exChip('L'+l.level+(l.state==='passed'?' ✓':l.state==='locked'?' 🔒':l.state==='retake'?' ↻':''), l.state==='passed'?'ok':l.state==='retake'?'warn':l.state==='locked'?'':'acc')).join(' ')}</td>
         <td>${x.certUrl ? `<a target="_blank" rel="noopener" href="${exH(safeHttpUrl(x.certUrl))}">${exH(x.certNo)}</a>` : '-'}</td></tr>`).join('') || '<tr><td colspan="9" class="ex-hint">ไม่มีรายการ</td></tr>'}
@@ -14467,7 +14493,7 @@ async function exaSaveGrade(){
 }
 function exaPracPickHtml(d){
   const pk = EXA.pracPick; if(!pk) return '';
-  const rows = d.rows.filter(x=>x.status==='none');
+  const rows = d.rows.filter(x=>x.canOpenPrac);
   return `<div class="panel-block"><b>เลือกผู้เข้าสอบปฏิบัติ</b> <span class="ex-hint">เลือกได้หลายคนพร้อมกัน (เลือกแล้ว <b id="exa-prac-n">${pk.size}</b> / ${rows.length} คน)</span>
     <div class="ex-row" style="gap:6px"><button class="btn btn-ghost btn-sm" data-ex="pracall">☑ เลือกทั้งหมด</button><button class="btn btn-ghost btn-sm" data-ex="pracnone">ล้าง</button></div>
     <div id="exa-prac-list">${rows.map(x=>`<label class="ex-opt ex-el"><input type="checkbox" data-ex="pracsel" value="${exH(x.email)}" ${pk.has(x.email)?'checked':''}><span>${exH(exPerson(x.email,x.name))}<small>${exH(x.email)}</small></span></label>`).join('') || '<div class="ex-hint">ไม่มีผู้ที่ยังไม่มีรายการ</div>'}</div>
@@ -14600,7 +14626,7 @@ function exaRenderCopySet(){
       <label>ประเภทเครื่อง (Category)${exaCatSelect(f.category)}</label>
       <label>รุ่น<span id="exa-s-model-wrap">${exaModelSelect(f.category, f.model)}</span></label>
       <label>Level<select id="exa-s-level">${[1,2,3].map(l=>`<option value="${l}" ${l===f.level?'selected':''}>Level ${l}</option>`).join('')}</select></label>
-      <label>เกณฑ์ผ่านรวม (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${f.pass}"></label>
+      <label>เกณฑ์ผ่าน (%)<input id="exa-s-pass" type="number" min="1" max="100" value="${f.pass}"></label>
       <label>เวลาสอบปรนัย/ข้อเขียนในแอพ (นาที, 0 = ไม่จำกัด)<input id="exa-s-dur" type="number" min="0" max="600" value="${f.dur}"></label>
       ${exaPartFieldsHtml('s', { wPass:f.wPass, pPass:f.pPass, pracMin:f.pracMin })}
       <label>ชื่อหลักสูตรบนใบ Cer (ต้องต่างจากต้นทาง)<input id="exa-s-course" type="text" value="" placeholder="ถ้าว่างใช้ชื่อชุดข้อสอบใหม่"></label>
@@ -14904,7 +14930,7 @@ function exOnEvent(e){
         examApi('adminRoundAction', { roundId:id, op }).then(()=>{ showToast(op==='close'?'✓ ปิดรอบแล้ว':'✓ เปิดรอบแล้ว'); exaGo('summary', id); }).catch(er=>alert(er.message)); return;
       }
       case 'issue': if(exaEmb() && typeof traIssueCerts === 'function'){ traIssueCerts(); return; } exaIssueCerts(id); return;
-      case 'openprac': EXA.pracPick = new Set(((EXA.sumCur||EXA.summary).rows||[]).filter(x=>x.status==='none').map(x=>x.email)); exaSumRerender(); return;
+      case 'openprac': EXA.pracPick = new Set(((EXA.sumCur||EXA.summary).rows||[]).filter(x=>x.canOpenPrac).map(x=>x.email)); exaSumRerender(); return;
       case 'pracall': { const pk = EXA.pracPick; if(pk){ document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ pk.add(x.value); x.checked = true; }); $('exa-prac-n').textContent = pk.size; } return; }
       case 'pracnone': { const pk = EXA.pracPick; if(pk){ pk.clear(); document.querySelectorAll('#exa-prac-list input[data-ex="pracsel"]').forEach(x=>{ x.checked = false; }); $('exa-prac-n').textContent = 0; } return; }
       case 'praccancel': EXA.pracPick = null; exaSumRerender(); return;
@@ -14924,16 +14950,6 @@ function exOnEvent(e){
     if(act==='copysel'){ const u = EXA.copyUI; if(u){ if(t.checked) u.sel.add(t.value); else u.sel.delete(t.value); const nEl = $('exa-copy-n'); if(nEl) nEl.textContent = u.sel.size; const go = document.querySelector('[data-ex="copygo"]'); if(go) go.textContent = '➕ เพิ่ม '+u.sel.size+' ข้อที่เลือกเข้าชุดนี้'; } return; }
     if(act==='scat'){ const w = $('exa-s-model-wrap'); if(w) w.innerHTML = exaModelSelect(t.value, ''); return; }
     if(act==='rset'){ const s = EXA.sets.find(x=>x.setId===t.value); if(s){ if(!EXA.round.roundId) $('exa-r-sup').value = exaDefaultSigner(s.setId); $('exa-r-pass').value = s.passPercent; $('exa-r-dur').value = s.durationMin; $('exa-r-wpass').value = s.wPass||0; $('exa-r-ppass').value = s.pPass||0; $('exa-r-pracmin').value = s.pracMin||0; EXA.round.graceMin = s.graceMin; } return; }
-    if(act==='rstage'){
-      const rid = t.dataset.id, val = t.value;
-      (async()=>{
-        showLoadingOverlay('กำลังบันทึก...');
-        try{ await examApi('adminSetRoundStage', { roundId: rid, stageOrder: val }); hideLoadingOverlay(); showToast('✓ บันทึกลำดับการสอบแล้ว'); }
-        catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
-        await exaSumRefresh();
-      })();
-      return;
-    }
     if(act==='pdscore'){ exaPracDemoSum(); return; }
     if(act==='pracsel'){ const pk = EXA.pracPick; if(pk){ if(t.checked) pk.add(t.value); else pk.delete(t.value); $('exa-prac-n').textContent = pk.size; } return; }
     if(act==='elig'){ if(t.checked) EXA.elig.add(t.value); else EXA.elig.delete(t.value); $('exa-el-count').textContent = EXA.elig.size; return; }
@@ -15950,7 +15966,7 @@ function traExamHtml(g){
     <div class="ex-meta">ข้อสอบเวอร์ชันที่ใช้: ${e.pinnedVersion ? '<b>'+e.pinnedVersion+'</b> (ล็อกไว้ตอนกดเริ่มสอบ)' : 'จะล็อกเป็นเวอร์ชันล่าสุด (v'+e.latestVersion+') ตอนกดเริ่มสอบ'} · ผ่านที่ <b>${e.passPercent}%</b> · ${e.durationMin>0?e.durationMin+' นาที':'ไม่จำกัดเวลา'}<br>มีสิทธิ์สอบ <b>${e.rows.length}</b> คน (= ผู้ที่อนุมัติแล้วและมีบัญชี) · ผ่านแล้ว <b>${e.counts.passed}</b> · รอตรวจข้อเขียน ${e.counts.grading||0}</div>
     <div class="ex-act">${e.state==='auto' && e.isOpen ? '<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="exclose">■ ปิดสอบ</button>' : `<button class="btn btn-primary tr-big" data-tr="exstart">▶ ${e.state==='closed'?'เปิดสอบอีกครั้ง':'เริ่มสอบ'}</button>`}</div>
     <div class="ex-hint">ข้อสอบจะเปิดเฉพาะเมื่อ Sup กด "เริ่มสอบ" · ผู้สอบไม่ผ่านสอบใหม่ได้เรื่อยๆ จนกว่า Sup กด "ปิดสอบ" · ผู้สอบผ่านจะได้ใบ Cer อัตโนมัติ</div></div>`;
-  h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่านรวม %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลาปรนัยในแอพ (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div></div><div class="ex-hint" style="margin-top:8px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ผ่านต่อเมื่อทุกส่วนถึงเกณฑ์ของตัวเอง และคะแนนรวมถึงเกณฑ์รวม · 0 = ไม่แยก</div><div class="tr-3"><div><label class="tr-lb">เกณฑ์ปรนัย %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-wpass" value="${e.wPass||0}" min="0" max="100"></div><div><label class="tr-lb">เกณฑ์ปฏิบัติ %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-ppass" value="${e.pPass||0}" min="0" max="100"></div><div><label class="tr-lb">เวลาปฏิบัติ (นาที, 0=ไม่กำหนด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pracmin" value="${e.pracMin||0}" min="0" max="600"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
+  h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่าน % (ใช้กับส่วนที่ไม่ได้ตั้งแยก)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลาปรนัยในแอพ (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div></div><div class="ex-hint" style="margin-top:8px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ปรนัยกับปฏิบัติสอบแยกกัน คนละเวลา คนละเกณฑ์ — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน · ใส่ 0 = ใช้ "เกณฑ์ผ่าน" ด้านบน</div><div class="tr-3"><div><label class="tr-lb">เกณฑ์ปรนัย %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-wpass" value="${e.wPass||0}" min="0" max="100"></div><div><label class="tr-lb">เกณฑ์ปฏิบัติ %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-ppass" value="${e.pPass||0}" min="0" max="100"></div><div><label class="tr-lb">เวลาปฏิบัติ (นาที, 0=ไม่กำหนด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pracmin" value="${e.pracMin||0}" min="0" max="600"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
   h += `<div id="tra-ex-sum">${e.summary ? exaSummaryBodyHtml(e.summary) : '<div class="ex-note">⏳ กำลังโหลดสรุปผล...</div>'}</div>
     <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่ม "ออกใบ Cer" ไว้กดเมื่อมีใบค้าง · หน้านี้ใช้ส่วนเดียวกับหน้า "จัดการข้อสอบ → รอบสอบ → สรุปผล"</div>`;
   return h;
