@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.42
-  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:41 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.43
+  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:49 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.42</title>
+<title>F1 Service — v10.43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2556,8 +2556,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.42";
-const APP_UPDATED_AT = "16 ตุลาคม 2569 09:41 น. เวลาไทย";
+const APP_VERSION = "10.43";
+const APP_UPDATED_AT = "16 ตุลาคม 2569 09:49 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12735,7 +12735,7 @@ function exPartsHtml(i){
   return `<div class="ex-meta">📝 <b>ส่วนปรนัย/ข้อเขียน:</b> ${wt}<br>🛠 <b>ส่วนปฏิบัติ:</b> ${pt}<br><span class="ex-hint">สอบสองส่วนแยกกัน — ได้ใบ Cer เมื่อผ่านทั้งสองส่วน</span></div>`;
 }
 function exAttLabel(a){ return a.part === 'practical' ? ' · ส่วนปฏิบัติ' : a.part === 'written' ? ' · ส่วนปรนัย/ข้อเขียน' : ''; }
-function exAttResult(a){ return a.pendingReview ? exChip(a.part === 'practical' ? 'รอ Sup ประเมินปฏิบัติ' : 'รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
+function exAttResult(a){ if(a.legacyPrac) return exChip('รอ Sup ประเมินปฏิบัติ','warn'); return a.pendingReview ? exChip(a.part === 'practical' ? 'รอ Sup ประเมินปฏิบัติ' : 'รอ Sup ตรวจข้อเขียน','warn') : a.passed ? exChip('ผ่าน','ok') : exChip('ไม่ผ่าน','bad'); }
 function exAttemptsHtml(i){
   const done = (i.attempts||[]).filter(a=>a.no > 0);
   if(!done.length) return '';
