@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.37
-  อัปเดตล่าสุด   : 16 ตุลาคม 2569 08:41 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.39
+  อัปเดตล่าสุด   : 16 ตุลาคม 2569 09:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.37</title>
+<title>F1 Service — v10.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -896,8 +896,13 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .tr-mt{font-weight:700;margin-bottom:6px;}
 .tr-mo{display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 4px;cursor:pointer;border-top:1px dashed var(--border);margin-top:4px;}
 .tr-mo i{width:8px;height:8px;border-radius:2px;flex:0 0 auto;}
+.tr-spanbar{display:none;}
 @media (min-width:900px){
-  .tr-m1{display:none;}
+  .tr-spanbar{display:flex;align-items:center;gap:10px;margin:6px 0 10px;font-size:13px;color:var(--text-dim);}
+  .tr-spanbar .tr-seg{margin:0;}
+  .tr-span-month .tr-m1{display:block;max-width:760px;}
+  .tr-span-month .tr-m12{display:none;}
+  .tr-span-year .tr-m1{display:none;}
   .tr-m12{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 }
 @media (min-width:1200px){ .tr-m12{grid-template-columns:repeat(4,1fr);} }
@@ -2551,8 +2556,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.37";
-const APP_UPDATED_AT = "16 ตุลาคม 2569 08:41 น. เวลาไทย";
+const APP_VERSION = "10.39";
+const APP_UPDATED_AT = "16 ตุลาคม 2569 09:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12502,7 +12507,42 @@ function exFmtD(ms){
 }
 function exToInput(ms){ const d = new Date(ms); return d.getFullYear()+'-'+exPad(d.getMonth()+1)+'-'+exPad(d.getDate())+'T'+exPad(d.getHours())+':'+exPad(d.getMinutes()); }
 function exFromInput(v){ const t = v ? new Date(v).getTime() : 0; return isFinite(t) ? t : 0; }
-function exImg(url, sz){ const id = driveFileIdFromUrl(url); return id ? `https://drive.google.com/thumbnail?id=${id}&sz=${sz||'w1000'}` : safeHttpUrl(url); }
+function exImg(url, sz){ const id = driveFileIdFromUrl(url); return id ? `https://lh3.googleusercontent.com/d/${id}=${sz||'w1000'}` : safeHttpUrl(url); }
+/* v10.39 — รูปโหลดไม่ขึ้น: ลองช่องทางสำรองตามลำดับ (lh3 → thumbnail → uc) แล้วค่อยแจ้งผู้ใช้ */
+function exImgFallbacks(src){
+  const m = /googleusercontent\.com\/d\/([\w-]+)/.exec(src) || /[?&]id=([\w-]+)/.exec(src); if(!m) return [];
+  const id = m[1], sz = (/=(w\d+)/.exec(src) || [])[1] || 'w1000';
+  return [`https://drive.google.com/thumbnail?id=${id}&sz=${sz}`, `https://drive.google.com/uc?export=view&id=${id}`];
+}
+document.addEventListener('error', e=>{
+  const im = e.target; if(!im || im.tagName !== 'IMG' || !im.classList || !im.classList.contains('ex-qimg')) return;
+  const n = Number(im.dataset.fb || 0);
+  if(!im.dataset.fb0) im.dataset.fb0 = im.getAttribute('src') || '';
+  const list = exImgFallbacks(im.dataset.fb0);
+  if(n < list.length){ im.dataset.fb = String(n + 1); im.src = list[n]; return; }
+  if(!im.dataset.fbmsg){ im.dataset.fbmsg = '1'; const w = document.createElement('div'); w.className = 'ex-hint'; w.style.color = 'var(--red)'; w.textContent = '⚠ รูปประกอบโจทย์โหลดไม่ได้ — แจ้ง Sup (อาจยังไม่ได้ตั้งสิทธิ์ให้ทุกคนดูรูป)'; im.insertAdjacentElement('afterend', w); }
+}, true);
+/* ตั้งสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" ให้รูปประกอบโจทย์ทั้งชุด — Engineer ถึงจะเห็นรูปตอนสอบ */
+async function exShareImages(qs, quiet){
+  const ids = Array.from(new Set((qs||[]).map(q=>driveFileIdFromUrl(q.imageUrl)).filter(Boolean)));
+  if(!ids.length){ if(!quiet) showToast('ชุดนี้ไม่มีข้อที่แนบรูป'); return { ok:0, fail:0 }; }
+  if(!(await exEnsureDrive())) return { ok:0, fail:ids.length, skipped:true };
+  const token = await ensureDriveAccess();
+  let ok = 0, fail = 0;
+  for(const id of ids){
+    try{
+      const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, { method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ role:'reader', type:'anyone' }) });
+      if(r.ok) ok++; else fail++;
+    }catch(e){ fail++; }
+  }
+  return { ok, fail };
+}
+async function exaShareImagesBtn(){
+  showLoadingOverlay('กำลังตั้งสิทธิ์รูป...');
+  let r; try{ r = await exShareImages(EXA.qs, false); } finally { hideLoadingOverlay(); }
+  if(r.skipped) return;
+  alert(r.fail ? `ตั้งสิทธิ์สำเร็จ ${r.ok} รูป · ไม่สำเร็จ ${r.fail} รูป\n(ไม่สำเร็จ = ไฟล์อาจเป็นของบัญชีอื่น หรือองค์กรห้ามแชร์ — ลองอัปโหลดรูปนั้นใหม่ด้วยบัญชีนี้)` : `✓ ตั้งสิทธิ์ให้ทุกคนดูรูปแล้ว ${r.ok} รูป`);
+}
 function exRoot(){ return (EX.cur && EX.cur.practice) ? $('exa-root') : $('ex-root'); } // โหมดทดลองแสดงในหน้า Sup (exa-root) ผู้สอบจริงแสดงใน ex-root
 function exChip(text, cls){ return `<span class="ex-chip ${cls||''}">${exH(text)}</span>`; }
 
@@ -13590,6 +13630,7 @@ function exaRenderSet(){
         <label class="ex-opt"><input type="radio" name="exa-kind" value="major"><span><b>แก้สาระสำคัญ</b> ผู้ที่ผ่านเวอร์ชันก่อนจะมีสถานะ "ต้องสอบใหม่"</span></label>` : ''}
       <div class="ex-row"><button class="btn btn-primary" data-ex="publish" ${EXA.qs.length?'':'disabled'}>🚀 เผยแพร่</button>
         <button class="btn btn-ghost" data-ex="practice" data-id="${exH(EXA.set.setId)}" data-src="draft" ${EXA.qs.length?'':'disabled'}>🧪 ทดลองทำ (ร่างล่าสุด)</button>
+        ${EXA.qs.some(q=>q.imageUrl) ? `<button class="btn btn-ghost" data-ex="shareimg">🔓 ตั้งสิทธิ์รูปให้ผู้สอบเห็น</button>` : ''}
         ${EXA.qs.some(q=>q.type==='practical') ? `<button class="btn btn-ghost" data-ex="pracdemo">🧪 ทดลองประเมินปฏิบัติ</button>` : ''}
         ${EXA.set.latestVersion ? `<button class="btn btn-ghost" data-ex="itemstats" data-id="${exH(EXA.set.setId)}" data-back="">📈 สถิติรายข้อ</button><button class="btn btn-ghost" data-ex="practice" data-id="${exH(EXA.set.setId)}" data-src="published">🧪 ทดลองทำ (v${EXA.set.latestVersion} ที่เผยแพร่)</button>` : ''}</div>
       <div class="ex-hint">ทดลองทำเหมือนผู้สอบจริง (จับเวลา สุ่มข้อ ดูผลและใบ Cer ตัวอย่างเมื่อผ่าน) แต่ไม่บันทึกคะแนนและไม่ออกใบ Cer จริง</div>
@@ -13627,6 +13668,11 @@ async function exaPublish(){
   const kind = kindEl ? kindEl.value : 'major';
   const nextV = EXA.set.latestVersion + 1;
   if(!confirm(`เผยแพร่เป็นเวอร์ชัน v${nextV}${EXA.set.latestVersion ? ' ('+(kind==='major'?'แก้สาระสำคัญ — ผู้ที่ผ่านเวอร์ชันก่อนต้องสอบใหม่':'แก้เล็กน้อย')+')' : ''}?\nเผยแพร่แล้วแก้ไขเวอร์ชันนี้ไม่ได้`)) return;
+  if((EXA.qs||[]).some(q=>q.imageUrl)){
+    showLoadingOverlay('กำลังตั้งสิทธิ์รูปให้ผู้สอบเห็น...');
+    let sh = null; try{ sh = await exShareImages(EXA.qs, true); }catch(e){ sh = null; } finally { hideLoadingOverlay(); }
+    if(sh && sh.fail && !sh.skipped && !confirm(`ตั้งสิทธิ์รูปไม่สำเร็จ ${sh.fail} รูป — ผู้สอบอาจมองไม่เห็นรูปเหล่านั้น\nเผยแพร่ต่อหรือไม่?`)) return;
+  }
   showLoadingOverlay('กำลังเผยแพร่...');
   try{
     const r = await examApi('adminPublish', { setId:EXA.set.setId, kind });
@@ -14145,7 +14191,9 @@ async function exaUploadImage(file){
     const comp = await compressImage(file);
     const exams = await driveFindOrCreateFolder('Exams', DRIVE_ROOT_FOLDER_ID);
     const sub = await driveFindOrCreateFolder(sanitizeFolderName(EXA.set.title || 'ข้อสอบ'), exams);
-    return await driveUploadLargeFile(comp.blob || file, 'q_'+Date.now()+'.jpg', sub);
+    const url = await driveUploadLargeFile(comp.blob || file, 'q_'+Date.now()+'.jpg', sub);
+    try{ const r = await exShareImages([{ imageUrl:url }], true); if(r.fail) showToast('⚠ ตั้งสิทธิ์รูปไม่สำเร็จ — กดปุ่ม "ตั้งสิทธิ์รูปให้ผู้สอบเห็น" ในแท็บเผยแพร่'); }catch(e){}
+    return url;
   } finally { hideLoadingOverlay(); }
 }
 function exaPickImage(cb){
@@ -14773,6 +14821,7 @@ function exOnEvent(e){
       case 'openset': exaGo('set', id); return;
       case 'saveset': exaSaveSet(); return;
       case 'publish': exaPublish(); return;
+      case 'shareimg': exaShareImagesBtn(); return;
       case 'delset': exaDeleteSet(id); return;
       case 'copyset': exaGo('copyset', id); return;
       case 'copysetgo': exaCopySetGo(); return;
@@ -14930,7 +14979,7 @@ const TR_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','�
 const TR_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 const TR_STATUS = { plan:'แผน', open:'เปิดรับลงทะเบียน', closed:'จบ Training แล้ว', cancelled:'ยกเลิก' };
 const TR_CERT = { internal:'Cer ภายใน', manufacturer:'Cer ผู้ผลิต', none:'ไม่มี Cer' };
-const TR = { year:new Date().getFullYear(), month:new Date().getMonth(), view:'cal', cat:'', cert:'', mine:false, data:null, detail:null, loading:false, listFor:0 };
+const TR = { year:new Date().getFullYear(), month:new Date().getMonth(), view:'cal', span:(function(){ try{ return localStorage.getItem('f1_tr_span')==='month'?'month':'year'; }catch(e){ return 'year'; } })(), cat:'', cert:'', mine:false, data:null, detail:null, loading:false, listFor:0 };
 const TRA = { sview:'cal', month:new Date().getMonth(), presetDate:'', view:'queue', year:new Date().getFullYear(), filter:'all', data:null, queue:null, sets:null, owners:[], role:'', g:null, dtab:'info', form:null, day:'', reasons:{}, busy:false, imp:null };
 let _trClock = 0;
 
@@ -15220,7 +15269,7 @@ function trMonthGrid(year, mon, dayMap, big, admin){
 function trCalendarHtml(){
   const list = trVisibleSessions(), dm = trDayMap(list);
   const monthOnly = list.filter(s=>s.dateMode === 'month');
-  let h = '';
+  let h = `<div class="tr-spanbar"><span>มุมมอง</span><div class="subtab-bar tr-seg"><button class="${TR.span==='year'?'active':''}" data-tr="span" data-v="year">🗓 ทั้งปี</button><button class="${TR.span==='month'?'active':''}" data-tr="span" data-v="month">📅 ทีละเดือน</button></div></div><div class="tr-calwrap tr-span-${TR.span}">`;
   // มือถือ: ทีละเดือน
   h += `<div class="tr-m1"><div class="tr-mstrip">${TR_MONTHS.map((m,i)=>{
     const has = list.some(s=>trInMonth(s, TR.year, i));
@@ -15232,7 +15281,7 @@ function trCalendarHtml(){
   h += '<div class="tr-m12">' + TR_MONTHS_FULL.map((mn,i)=>{
     const mo = monthOnly.filter(s=>Number(s.startDate.slice(5,7))-1===i);
     return `<div class="tr-mcard"><div class="tr-mt">${mn}${mo.length?` <small>(แผนรายเดือน ${mo.length})</small>`:''}</div>${trMonthGrid(TR.year, i, dm, false)}${mo.map(s=>`<div class="tr-mo" data-tr="open" data-id="${trH(s.sessionId)}" role="button"><i style="background:${trColor(s.category)}"></i>${trH(s.model||s.title)}${s.status==='closed'?' ✓':''}</div>`).join('')}</div>`;
-  }).join('') + '</div>';
+  }).join('') + '</div></div>';
   return h;
 }
 function trInMonth(s, y, m){
@@ -16561,6 +16610,7 @@ function trOnEvent(e){
     case 'reload': TR.detail = null; trLoad(); return;
     case 'calsub': trCalSubscribe(); return;
     case 'yr': TR.year += num('data-d'); TR.detail = null; trLoad(); return;
+    case 'span': TR.span = v === 'month' ? 'month' : 'year'; try{ localStorage.setItem('f1_tr_span', TR.span); }catch(e){} trRender(); return;
     case 'view': TR.view = v; trRender(); return;
     case 'day': trOpenDay(t.getAttribute('data-d')); return;
     case 'open': trOpen(id); return;
