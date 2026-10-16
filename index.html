@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.36
-  อัปเดตล่าสุด   : 15 ตุลาคม 2569 23:34 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.37
+  อัปเดตล่าสุด   : 16 ตุลาคม 2569 08:41 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.36</title>
+<title>F1 Service — v10.37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2551,8 +2551,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.36";
-const APP_UPDATED_AT = "15 ตุลาคม 2569 23:34 น. เวลาไทย";
+const APP_VERSION = "10.37";
+const APP_UPDATED_AT = "16 ตุลาคม 2569 08:41 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15899,7 +15899,7 @@ function traExamHtml(g){
     <div class="ex-meta">ข้อสอบเวอร์ชันที่ใช้: ${e.pinnedVersion ? '<b>'+e.pinnedVersion+'</b> (ล็อกไว้ตอนกดเริ่มสอบ)' : 'จะล็อกเป็นเวอร์ชันล่าสุด (v'+e.latestVersion+') ตอนกดเริ่มสอบ'} · ผ่านที่ <b>${e.passPercent}%</b> · ${e.durationMin>0?e.durationMin+' นาที':'ไม่จำกัดเวลา'}<br>มีสิทธิ์สอบ <b>${e.rows.length}</b> คน (= ผู้ที่อนุมัติแล้วและมีบัญชี) · ผ่านแล้ว <b>${e.counts.passed}</b> · รอตรวจข้อเขียน ${e.counts.grading||0}</div>
     <div class="ex-act">${e.state==='auto' && e.isOpen ? '<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="exclose">■ ปิดสอบ</button>' : `<button class="btn btn-primary tr-big" data-tr="exstart">▶ ${e.state==='closed'?'เปิดสอบอีกครั้ง':'เริ่มสอบ'}</button>`}</div>
     <div class="ex-hint">ข้อสอบจะเปิดเฉพาะเมื่อ Sup กด "เริ่มสอบ" · ผู้สอบไม่ผ่านสอบใหม่ได้เรื่อยๆ จนกว่า Sup กด "ปิดสอบ" · ผู้สอบผ่านจะได้ใบ Cer อัตโนมัติ</div></div>`;
-  h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่านรวม %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลาปรนัยในแอพ (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div><div><label class="tr-lb">ผ่อนผัน (นาที)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-grace" value="${e.graceMin}" min="0" max="60"></div></div><div class="ex-hint" style="margin-top:8px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ผ่านต่อเมื่อทุกส่วนถึงเกณฑ์ของตัวเอง และคะแนนรวมถึงเกณฑ์รวม · 0 = ไม่แยก</div><div class="tr-3"><div><label class="tr-lb">เกณฑ์ปรนัย %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-wpass" value="${e.wPass||0}" min="0" max="100"></div><div><label class="tr-lb">เกณฑ์ปฏิบัติ %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-ppass" value="${e.pPass||0}" min="0" max="100"></div><div><label class="tr-lb">เวลาปฏิบัติ (นาที, 0=ไม่กำหนด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pracmin" value="${e.pracMin||0}" min="0" max="600"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
+  h += `<details class="tr-sec"><summary><b>ปรับเกณฑ์/เวลาสอบของงานนี้</b></summary><div class="tr-3"><div><label class="tr-lb">เกณฑ์ผ่านรวม %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pass" value="${e.passPercent}" min="1" max="100"></div><div><label class="tr-lb">เวลาปรนัยในแอพ (นาที, 0=ไม่จำกัด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-dur" value="${e.durationMin}" min="0" max="600"></div></div><div class="ex-hint" style="margin-top:8px"><b>แยกเกณฑ์ ปรนัย / ปฏิบัติ</b> (ใช้เมื่อชุดมีข้อปฏิบัติ) · ผ่านต่อเมื่อทุกส่วนถึงเกณฑ์ของตัวเอง และคะแนนรวมถึงเกณฑ์รวม · 0 = ไม่แยก</div><div class="tr-3"><div><label class="tr-lb">เกณฑ์ปรนัย %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-wpass" value="${e.wPass||0}" min="0" max="100"></div><div><label class="tr-lb">เกณฑ์ปฏิบัติ %</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-ppass" value="${e.pPass||0}" min="0" max="100"></div><div><label class="tr-lb">เวลาปฏิบัติ (นาที, 0=ไม่กำหนด)</label><input class="tr-in" type="number" inputmode="numeric" id="tra-ex-pracmin" value="${e.pracMin||0}" min="0" max="600"></div></div><div class="ex-act"><button class="btn btn-ghost" data-tr="exsave">💾 บันทึก</button></div><div class="ex-hint">มีผลกับการสอบที่เริ่มหลังจากนี้ (ผู้ที่กำลังสอบอยู่ใช้ค่าเดิม)</div></details>`;
   h += `<div id="tra-ex-sum">${e.summary ? exaSummaryBodyHtml(e.summary) : '<div class="ex-note">⏳ กำลังโหลดสรุปผล...</div>'}</div>
     <div class="ex-hint">ใบ Cer ออกอัตโนมัติทันทีที่ผู้สอบผ่าน (ระบบตรวจซ้ำทุก 10 นาที) ปุ่ม "ออกใบ Cer" ไว้กดเมื่อมีใบค้าง · หน้านี้ใช้ส่วนเดียวกับหน้า "จัดการข้อสอบ → รอบสอบ → สรุปผล"</div>`;
   return h;
@@ -16619,7 +16619,7 @@ function trOnEvent(e){
     case 'ckxls': traCheckinXls(); return;
     case 'exstart': if(confirm('เริ่มสอบตอนนี้?\nระบบจะล็อกข้อสอบเวอร์ชันล่าสุดที่เผยแพร่ และเปิดให้ผู้ได้รับอนุมัติเข้าสอบได้ทันที')) traExamAct('start'); return;
     case 'exclose': if(confirm('ปิดสอบ? ผู้ที่ยังไม่ผ่านจะสอบเพิ่มไม่ได้ (เปิดสอบอีกครั้งได้)')) traExamAct('close'); return;
-    case 'exsave': traExamAct('settings', { passPercent:Number($('tra-ex-pass').value), durationMin:Number($('tra-ex-dur').value), graceMin:Number($('tra-ex-grace').value), wPass:Number($('tra-ex-wpass').value)||0, pPass:Number($('tra-ex-ppass').value)||0, pracMin:Number($('tra-ex-pracmin').value)||0 }); return;
+    case 'exsave': traExamAct('settings', { passPercent:Number($('tra-ex-pass').value), durationMin:Number($('tra-ex-dur').value), wPass:Number($('tra-ex-wpass').value)||0, pPass:Number($('tra-ex-ppass').value)||0, pracMin:Number($('tra-ex-pracmin').value)||0 }); return;
     case 'exissue': traIssueCerts(); return;
     case 'exgrade': EXA.next = ['grading', TRA.g.exam.roundId]; requestModeSwitch('examadmin'); return;
     case 'photo': { const el = $(t.getAttribute('data-cam') ? 'tr-file-cam' : 'tr-file-photo'); el.value = ''; el.click(); } return;
