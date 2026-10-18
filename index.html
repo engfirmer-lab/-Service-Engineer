@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.58
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 20:41 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.61
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.58</title>
+<title>F1 Service — v10.61</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -859,6 +859,18 @@ body.ex-nosel, body.ex-nosel *{user-select:none !important;-webkit-user-select:n
 .ex-mrow.done .ex-msel{border-color:var(--green);font-weight:600;}
 
 .exa-pracbox{display:flex;gap:8px;flex-wrap:wrap;}.exa-pracbox .ex-opt{margin:0;min-width:130px;}
+
+/* v10.60 โหมดทดลองเต็มจอ + กันดึงหน้าลงเพื่อรีเฟรชในมือถือ */
+.ex-fsbox{position:fixed;inset:0;z-index:200;background:var(--bg,#fff);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 14px 24px;margin:0;}
+.ex-fsbar{display:flex;align-items:center;gap:10px;padding:8px 0;margin-bottom:6px;position:sticky;top:0;z-index:6;background:var(--bg,#fff);border-bottom:1px solid var(--border);}
+.ex-fsinline .ex-fsbar{position:static;}
+html:has(#view-examadmin:not([style*="none"])),html:has(#view-exam:not([style*="none"])){overscroll-behavior-y:contain;}
+
+/* v10.61 จัดการเอกสาร: แสดงเต็มจอ + ปุ่มย่อ */
+.f1-fs-body{position:fixed !important;inset:0;z-index:300;background:var(--bg,#fff);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 14px 28px;margin:0;}
+.f1-fs-body [style*="max-height"]{max-height:none !important;}
+.f1-fs-bar{display:flex;align-items:center;gap:10px;position:sticky;top:0;left:0;z-index:5;background:var(--bg,#fff);padding:10px 0;margin-bottom:6px;border-bottom:1px solid var(--border);}
+html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain;}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2560,8 +2572,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.58";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 20:41 น. เวลาไทย";
+const APP_VERSION = "10.61";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 21:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4830,11 +4842,26 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
   let hidden = defaultHidden!==false;
   try{ const saved = localStorage.getItem(storageKey); if(saved!==null) hidden = saved==='1'; }catch(e){}
   const apply = ()=>{ body.style.display = hidden ? 'none' : ''; btn.textContent = hidden ? '👁 แสดง' : '🙈 ซ่อน'; };
+  let fs = false;
+  const title = ((btn.closest('.panel-block')||document).querySelector('h2,h3')||{}).textContent || 'เอกสาร';
+  let bar = null;
+  const setFs = (on)=>{
+    fs = on; body.classList.toggle('f1-fs-body', on);
+    try{ document.documentElement.classList.toggle('f1-fs-lock', on); }catch(e){}
+    if(on && !bar){
+      bar = document.createElement('div'); bar.className = 'f1-fs-bar';
+      bar.innerHTML = '<button class="btn btn-ghost btn-sm" type="button">🗗 ย่อ</button><b></b>'; bar.querySelector('b').textContent = title;
+      bar.querySelector('button').addEventListener('click', ()=>{ hidden = true; try{ localStorage.setItem(storageKey,'1'); }catch(e){} setFs(false); apply(); });
+      body.insertBefore(bar, body.firstChild);
+    }
+    if(!on && bar){ bar.remove(); bar = null; }
+    if(on){ try{ body.scrollTop = 0; }catch(e){} }
+  };
   apply();
   btn.addEventListener('click', ()=>{
     hidden = !hidden;
     try{ localStorage.setItem(storageKey, hidden?'1':'0'); }catch(e){}
-    apply();
+    apply(); setFs(!hidden);
   });
 }
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
@@ -12941,6 +12968,7 @@ function examRenderAttempt(){
     ${c.practice ? '<div class="ex-nav"><button class="btn btn-ghost btn-sm" data-ex="pxedit">✏️ แก้ข้อนี้ทันที</button><span class="ex-hint">เปิดหน้าแก้ไขข้อนี้ — แก้เสร็จกดกลับมาทดลองต่อได้เลย (คำตอบที่ทำไว้ไม่หาย)</span></div>' : ''}
     <div class="ex-dots" id="ex-dots"></div>
   </div>`;
+  if(c.practice) root.innerHTML = exaFsWrap(root.innerHTML);
   examRenderQuestion();
   examTick();
   try{
@@ -13177,7 +13205,12 @@ function exResultAttemptNote(r, rid){
   }).catch(()=>{});
 }
 /* ---------- โหมดทดลองทำข้อสอบ (Sup/Manager) — หน้าตาเหมือนผู้สอบจริง แต่ไม่บันทึกอะไร ---------- */
-function examRenderPracticeResult(r){
+function exaFsWrap(inner){ // v10.60 — โหมดทดลองของ Sup: เต็มจอเหมือนผู้สอบจริง (เลื่อนในกรอบเดียว ไม่ลากทั้งหน้า) · กด "ย่อ" กลับมาแสดงในหน้าปกติ แล้วกด "เต็มจอ" ใหม่ได้
+  const off = !!EX.fsOff;
+  return `<div class="${off ? 'ex-fsinline' : 'ex-fsbox'}"><div class="ex-fsbar"><button class="btn btn-ghost btn-sm" data-ex="pxfs">${off ? '⛶ เต็มจอ' : '🗗 ย่อ'}</button><span class="ex-hint">${off ? 'แสดงแบบย่อ' : 'โหมดเต็มจอ — กด "ย่อ" เพื่อกลับหน้าปกติ'}</span></div>${inner}</div>`;
+}
+function examRenderPracticeResult(r){ EX.pxLastR = r; examRenderPracticeResult_(r); const root = $('exa-root'); if(root) root.innerHTML = exaFsWrap(root.innerHTML); }
+function examRenderPracticeResult_(r){
   const root = $('exa-root'), L = EX.practiceLast || {};
   const back = `<button class="btn btn-ghost" data-ex="pxback">← กลับไปชุดข้อสอบ</button>`;
   const again = `<button class="btn btn-ghost" data-ex="pxagain">🔁 ทดลองอีกครั้ง</button>`;
@@ -13226,7 +13259,7 @@ async function exaPractice(setId, source, keep){
     if(EX.tick){ clearInterval(EX.tick); EX.tick = 0; }
     const p = { attemptId:'PRACTICE', roundId:'', setId:r.setId, version:r.version, questions:r.questions, answers:{}, lastSyncAt:0,
       deadlineAt: r.durationMin > 0 ? exNow() + r.durationMin*60000 : 0, graceMin:r.graceMin, passPercent:r.passPercent };
-    EX.practiceLast = null;
+    EX.practiceLast = null; EX.fsOff = false;
     p.deadlineLocal = r.durationMin > 0 ? Date.now() + r.durationMin*60000 : 0;
     const saved = keep ? exaPracticeSaved(setId) : null; // กลับมาจากหน้าแก้ไข: คืนคำตอบเดิมและข้อที่ค้างไว้ (ข้อที่เพิ่งแก้ถือว่ายังไม่ตอบ)
     examOpenAttempt(p, { title:r.title, level:r.level, passPercent:r.passPercent }, { setId:r.setId, source:r.source, version:r.version });
@@ -14906,6 +14939,7 @@ function exOnEvent(e){
       case 'draftdiscard': exaDraftDiscard(); return;
       case 'practice': exaPractice(id, t.getAttribute('data-src')); return;
       case 'pxedit': exaPracticeEdit(); return;
+      case 'pxfs': { EX.fsOff = !EX.fsOff; if(EX.cur && EX.cur.active && EX.cur.practice) examRenderAttempt(); else if(EX.pxLastR) examRenderPracticeResult(EX.pxLastR); return; }
       case 'pxreturn': { const R = EXA.pxReturn; EXA.pxReturn = null; if(R) exaPractice(R.setId, R.source, R); return; }
       case 'pxreturnx': EXA.pxReturn = null; exaRenderSet(); return;
       case 'pracdemo': exaPracDemoOpen(id); return;
@@ -19331,8 +19365,8 @@ function cdRender(){
   } else {
     const M = {};
     L.forEach(p=>{ [...new Set([...p.models.map(m=>m.category+'|'+m.model), ...p.certs.map(c=>c.category+'|'+c.model)])].forEach(k=>{ (M[k]=M[k]||[]).push(p); }); });
-    h += `<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 8px;">แตะแถว Cer ภายใน / Cer ผู้ผลิต เพื่อดูรายชื่อคนที่มี (ชื่อเล่น - เขตที่รับผิดชอบ) · ⚠ = มีใบของรุ่นนี้ แต่ไม่ได้ดูแลรุ่นนี้</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">ชนิด Cer</th><th style="${thS}text-align:left;">จำนวนคนที่มี</th></tr></thead><tbody>`;
-    let rows = 0;
+    h += `<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 8px;">แตะตัวเลขจำนวนคน เพื่อดูรายชื่อคนที่มี (ชื่อเล่น - เขตที่รับผิดชอบ) · ⚠ = มีใบของรุ่นนี้ แต่ไม่ได้ดูแลรุ่นนี้</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">รุ่น</th><th style="${thS}text-align:center;">Cer ภายใน (คน)</th><th style="${thS}text-align:center;">Cer ผู้ผลิต (คน)</th></tr></thead><tbody>`;
+    let rows = 0, _lastCat = null;
     Object.keys(M).sort(naturalSort).forEach(k=>{
       const [cat,model] = k.split('|');
       if(q && !(cat+' '+model).toLowerCase().includes(q) && !M[k].some(p=>p.name.toLowerCase().includes(q))) return;
@@ -19341,10 +19375,14 @@ function cdRender(){
         p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const t = c.certType==='internal'?'I':'M'; if(!byT[t].has(p.email)) byT[t].set(p.email,{p, cs:[]}); byT[t].get(p.email).cs.push(c); });
       });
       rows++;
-      [['I','ภายใน'],['M','ผู้ผลิต']].forEach(([t,lbl],ti)=>{
-        const mk = k+'|'+t, isOpen = !!_cdState.openM[mk], arr = [...byT[t].values()].sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),'th'));
-        h += `<tr style="cursor:pointer;" data-k="${escapeHtml(mk)}" onclick="_cdState.openM[this.dataset.k]=!_cdState.openM[this.dataset.k];cdRender()"><td style="${tdS}text-align:left;${ti?'border-top:0;':''}">${ti?'':`<span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b>`}</td><td style="${tdS}text-align:left;white-space:nowrap;">${cdChip('Cer '+lbl, t==='I'?'':'ok')}</td><td style="${tdS}text-align:left;">${arr.length?`<b>${arr.length}</b> <span style="color:var(--text-faint);font-size:11px;">คน</span>`:'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'} <span style="color:var(--text-faint);font-size:11px;">${arr.length?(isOpen?'▾':'▸'):''}</span></td></tr>`;
-        if(isOpen && arr.length){ h += `<tr><td colspan="3" style="padding:8px 14px 12px;background:var(--panel-alt);text-align:left;"><div style="font-size:12px;font-weight:700;margin-bottom:6px;">${escapeHtml(cat)} — ${escapeHtml(model)} · Cer ${lbl} (${arr.length} คน)</div><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr><th style="text-align:left;padding:4px 6px;width:34px;color:var(--text-faint);">#</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ชื่อเล่น - เขตที่รับผิดชอบ</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ไฟล์</th></tr></thead><tbody>${arr.map((x,n)=>{ const own = x.p.models.some(m=>m.category===cat&&m.model===model); return `<tr style="border-top:1px solid var(--border);"><td style="padding:4px 6px;color:var(--text-faint);">${n+1}</td><td style="padding:4px 6px;">${escapeHtml(x.p.name)}${x.p.area&&x.p.area!=='-'?' - '+escapeHtml(x.p.area):''}${own?'':' <span style="color:var(--amber);font-size:11px;" title="ไม่ได้อยู่ในรุ่นที่รับผิดชอบ">⚠</span>'}</td><td style="padding:4px 6px;">${cdFileLinks(x.cs)}</td></tr>`; }).join('')}</tbody></table></td></tr>`; }
+      if(cat!==_lastCat){ _lastCat=cat; h += `<tr><td colspan="3" style="padding:7px 12px;background:var(--panel-alt);font-weight:700;font-size:13px;border-top:2px solid var(--border);text-align:left;">${escapeHtml(cat)}</td></tr>`; }
+      const cell = (t)=>{ const mk = k+'|'+t, arr = [...byT[t].values()]; return { mk, arr, td: `<td data-k="${escapeHtml(mk)}" style="${tdS}text-align:center;cursor:${arr.length?'pointer':'default'};" ${arr.length?`onclick="_cdState.openM[this.dataset.k]=!_cdState.openM[this.dataset.k];cdRender()"`:''}>${arr.length?`<b style="font-size:14px;">${arr.length}</b> <span style="color:var(--text-faint);font-size:11px;">${_cdState.openM[mk]?'▾':'▸'}</span>`:'<span style="color:var(--text-faint);">0</span>'}</td>` }; };
+      const ci = cell('I'), cm = cell('M');
+      h += `<tr><td style="${tdS}text-align:left;padding-left:22px;"><b>${escapeHtml(model)}</b></td>${ci.td}${cm.td}</tr>`;
+      [[ci,'ภายใน'],[cm,'ผู้ผลิต']].forEach(([c,lbl])=>{
+        if(!_cdState.openM[c.mk] || !c.arr.length) return;
+        const arr = c.arr.sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),'th'));
+        h += `<tr><td colspan="3" style="padding:8px 14px 12px 22px;background:var(--panel-alt);text-align:left;"><div style="font-size:12px;font-weight:700;margin-bottom:6px;">${escapeHtml(model)} · Cer ${lbl} (${arr.length} คน)</div><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr><th style="text-align:left;padding:4px 6px;width:34px;color:var(--text-faint);">#</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ชื่อเล่น - เขตที่รับผิดชอบ</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ไฟล์</th></tr></thead><tbody>${arr.map((x,n)=>{ const own = x.p.models.some(m=>m.category===cat&&m.model===model); return `<tr style="border-top:1px solid var(--border);"><td style="padding:4px 6px;color:var(--text-faint);">${n+1}</td><td style="padding:4px 6px;">${escapeHtml(x.p.name)}${x.p.area&&x.p.area!=='-'?' - '+escapeHtml(x.p.area):''}${own?'':' <span style="color:var(--amber);font-size:11px;" title="ไม่ได้อยู่ในรุ่นที่รับผิดชอบ">⚠</span>'}</td><td style="padding:4px 6px;">${cdFileLinks(x.cs)}</td></tr>`; }).join('')}</tbody></table></td></tr>`;
       });
     });
     if(!rows) h += '<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
