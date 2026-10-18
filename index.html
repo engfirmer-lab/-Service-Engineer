@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.62
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:09 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.63
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:14 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.62</title>
+<title>F1 Service — v10.63</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -868,9 +868,13 @@ html:has(#view-examadmin:not([style*="none"])),html:has(#view-exam:not([style*="
 
 /* v10.61 จัดการเอกสาร: แสดงเต็มจอ + ปุ่มย่อ */
 .f1-fs-body{position:fixed !important;inset:0;z-index:300;background:var(--bg,#fff);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 14px 28px;margin:0;}
-.f1-fs-body [style*="max-height"]{max-height:none !important;}
+.f1-fs-body [style*="max-height"]{max-height:calc(100vh - 76px) !important;}
 .f1-fs-bar{display:flex;align-items:center;gap:10px;position:sticky;top:0;left:0;z-index:5;background:var(--bg,#fff);padding:10px 0;margin-bottom:6px;border-bottom:1px solid var(--border);}
 html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain;}
+
+/* v10.63 ล็อกคอลัมน์ Model ของตารางเอกสาร (เลื่อนแนวนอนแล้วยังเห็นชื่อรุ่น) */
+#sup-doc-matrix th:nth-child(2),#sup-doc-matrix td:nth-child(2){position:sticky;left:0;z-index:3;background:var(--panel);box-shadow:1px 0 0 var(--border);}
+#sup-doc-matrix thead th:nth-child(2){z-index:7;}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2572,8 +2576,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.62";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 21:09 น. เวลาไทย";
+const APP_VERSION = "10.63";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 21:14 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
