@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.46
-  อัปเดตล่าสุด   : 16 ตุลาคม 2569 15:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.49
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 18:21 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.46</title>
+<title>F1 Service — v10.49</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2556,8 +2556,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.46";
-const APP_UPDATED_AT = "16 ตุลาคม 2569 15:15 น. เวลาไทย";
+const APP_VERSION = "10.49";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 18:21 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2885,7 +2885,7 @@ function renderDownModalCauses(){
       <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
-        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
@@ -2954,16 +2954,22 @@ function toItemList(val){
   if(typeof val==='string' && val.trim()) return val.split(/[,;]/).map(s=>s.trim()).filter(Boolean);
   return [];
 }
-function renderItemListRows(items, sid, field){
+function partsQtyOf(parts, qtys){ const n = toItemList(parts).length, q = Array.isArray(qtys)?qtys:[], out=[]; for(let i=0;i<n;i++){ const v = parseInt(q[i],10); out.push(v>0 ? v : 1); } return out; }
+function partsText(parts, qtys){ const l = toItemList(parts), q = partsQtyOf(parts, qtys); return l.map((v,i)=> String(v||'').trim() ? (String(v).trim()+' ×'+q[i]) : '').filter(Boolean).join(', '); }
+function renderItemListRows(items, sid, field, qtys){
   const list = (items && items.length) ? items : [''];
+  const isParts = field==='parts';
+  const q = isParts ? partsQtyOf(list, qtys) : [];
   return list.map((v,i)=>`
-    <div style="display:flex;gap:6px;margin-bottom:6px;">
-      <input type="text" data-listfield="${field}" data-sid="${sid}" data-idx="${i}" value="${escapeHtml(v)}" style="flex:1;">
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+      <input type="text" data-listfield="${field}" data-sid="${sid}" data-idx="${i}" value="${escapeHtml(v)}" style="flex:1;min-width:0;">
+      ${isParts ? `<span style="font-size:12px;color:var(--text-faint);">×</span><input type="number" inputmode="numeric" min="1" step="1" data-listqty="${field}" data-sid="${sid}" data-idx="${i}" value="${q[i]}" placeholder="จำนวน" title="จำนวน (ชิ้น)" style="width:64px;flex:none;text-align:center;">` : ''}
       <button type="button" data-listrm="${field}:${sid}:${i}" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px;">✕</button>
     </div>`).join('') + `<button type="button" data-listadd="${field}:${sid}" class="btn btn-ghost btn-sm" style="margin-top:2px;">+ เพิ่มรายการ</button>`;
 }
 // ผูก event ให้แถวเพิ่ม/ลบ/แก้ไขในลิสต์ทำงาน — findSol คืนอ็อบเจกต์ solution ที่ id ตรงกับ sid ที่กด, renderFn คือฟังก์ชัน re-render ฟอร์มนั้นๆ ใหม่หลังเพิ่ม/ลบแถว
 function wireItemListEvents(wrap, findSol, renderFn){
+  const alignQ = sol=>{ if(!Array.isArray(sol.parts)) sol.parts=toItemList(sol.parts); sol.partsQty = partsQtyOf(sol.parts, sol.partsQty); };
   wrap.querySelectorAll('[data-listfield]').forEach(el=>{
     el.addEventListener('input', ()=>{
       const sid = el.getAttribute('data-sid'), field = el.getAttribute('data-listfield'), idx = +el.getAttribute('data-idx');
@@ -2971,18 +2977,26 @@ function wireItemListEvents(wrap, findSol, renderFn){
       if(sol){ if(!Array.isArray(sol[field])) sol[field]=toItemList(sol[field]); sol[field][idx]=el.value; }
     });
   });
+  wrap.querySelectorAll('[data-listqty]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const sid = el.getAttribute('data-sid'), idx = +el.getAttribute('data-idx');
+      const sol = findSol(sid);
+      if(sol){ alignQ(sol); sol.partsQty[idx] = el.value; }
+    });
+    el.addEventListener('blur', ()=>{ if(!(parseInt(el.value,10)>0)) el.value = 1; const sol = findSol(el.getAttribute('data-sid')); if(sol){ alignQ(sol); sol.partsQty[+el.getAttribute('data-idx')] = parseInt(el.value,10)||1; } });
+  });
   wrap.querySelectorAll('[data-listadd]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const [field, sid] = el.getAttribute('data-listadd').split(':');
       const sol = findSol(sid);
-      if(sol){ if(!Array.isArray(sol[field])) sol[field]=toItemList(sol[field]); sol[field].push(''); renderFn(); }
+      if(sol){ if(field==='parts') alignQ(sol); if(!Array.isArray(sol[field])) sol[field]=toItemList(sol[field]); sol[field].push(''); if(field==='parts') sol.partsQty.push(1); renderFn(); }
     });
   });
   wrap.querySelectorAll('[data-listrm]').forEach(el=>{
     el.addEventListener('click', ()=>{
       const parts = el.getAttribute('data-listrm').split(':'); const field=parts[0], sid=parts[1], idx=+parts[2];
       const sol = findSol(sid);
-      if(sol){ sol[field].splice(idx,1); if(sol[field].length===0) sol[field]=['']; renderFn(); }
+      if(sol){ if(field==='parts') alignQ(sol); sol[field].splice(idx,1); if(field==='parts') sol.partsQty.splice(idx,1); if(sol[field].length===0){ sol[field]=['']; if(field==='parts') sol.partsQty=[1]; } renderFn(); }
     });
   });
 }
@@ -2994,10 +3008,13 @@ function renderItemListView(val){
   return '<ul style="margin:0;padding-left:18px;">' + list.map(v=>`<li>${escapeHtml(v)}</li>`).join('') + '</ul>';
 }
 // "อะไหล่ที่ใช้" เฉพาะ — ถ้าไม่มีรายการเลย แสดง "ไม่ต้องใช้" แทน "-" เพราะสื่อความหมายชัดกว่า (ต่างจาก "อุปกรณ์ที่ใช้" ที่ยังใช้ "-" ตามเดิม)
-function renderPartsListView(val){
-  const list = toItemList(val);
+function renderPartsListView(val, qtys){
+  const all = toItemList(val), q = partsQtyOf(all, qtys);
+  const list = all.map((v,i)=>({v:String(v||'').trim(), n:q[i]})).filter(x=>x.v);
   if(list.length===0) return 'ไม่ต้องใช้';
-  return renderItemListView(val);
+  const one = x=>escapeHtml(x.v)+' <b>×'+x.n+'</b>';
+  if(list.length===1) return one(list[0]);
+  return '<ul style="margin:0;padding-left:18px;">' + list.map(x=>`<li>${one(x)}</li>`).join('') + '</ul>';
 }
 // เติมหน่วย "นาที" ให้อัตโนมัติเฉพาะตอนค่าที่กรอกเป็นตัวเลขล้วนๆ (เช่น "30") — ถ้าผู้ใช้พิมพ์มาเองแล้วว่า "30 นาที" หรือ "ครึ่งชม." จะไม่เติมซ้ำ
 function timeDisplay(t){
@@ -7599,7 +7616,7 @@ function renderSolutionCard(err, s, idx){
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
     <div class="meta-grid">
       <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(s.tools)}</div></div>
-      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(s.parts)}</div></div>
+      <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(s.parts, s.partsQty)}</div></div>
       <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${timeDisplay(s.time)}</div></div>
     </div>
     <div class="fb-row">
@@ -7677,7 +7694,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
         uploadedImages = await resolveImagesForUpload(s.images||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
         uploadedVideos = await resolveVideosForUpload(s.videos||[], parentErr.category, parentErr.model, parentErr.errorCode, parentErr.symptom, (parentErr.solutions||[]).length + i);
       }
-      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myClaimantName() };
+      const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myClaimantName() };
       const newId = await fsAddProposal(fields);
       liveUpsert('proposals', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ (ซิงก์สดอาจใส่เข้ามาก่อนแล้ว)
     }
@@ -8196,7 +8213,7 @@ function renderEngSolutionsEditor(){
       <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
-        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
@@ -8409,7 +8426,7 @@ async function exportMyErrorsExcel(){
       rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'' });
     } else {
       e.solutions.forEach((s,idx)=>{
-        rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:toItemList(s.parts).join(', '), เวลาโดยประมาณ:s.time||'' });
+        rows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:partsText(s.parts, s.partsQty), เวลาโดยประมาณ:s.time||'' });
       });
     }
   });
@@ -8456,7 +8473,7 @@ function renderSolutionsEditor(){
       <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
-        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts')}</div>
+        <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
       <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
@@ -8502,7 +8519,7 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
     const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
     s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
-    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
+    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
   }
   // v8.90 — ลบวิธีแก้ที่ถูกเอาออก "หลัง" บันทึก/อัปโหลดของใหม่สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าอัปโหลดพลาดข้อมูลเดิมหายแต่ของใหม่ไม่ถูกบันทึก)
   if(originalSolutionIds){
@@ -8603,7 +8620,7 @@ async function startCopyError(id){
   $('sup-form-sub').textContent = 'คัดลอกจาก Error เดิม (รวมรูป/วิดีโอ — ไฟล์จริงจะถูกคัดลอกใน Drive ตอนกดบันทึกเท่านั้น) — แก้ Error Code หรืออาการให้ต่างจากเดิมก่อนบันทึก';
   $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom||'';
-  editingSolutions = (err.solutions||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', images:(s.images||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), videos:(s.videos||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), tools:toItemList(s.tools), parts:toItemList(s.parts), time:s.time||'' }));
+  editingSolutions = (err.solutions||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', images:(s.images||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), videos:(s.videos||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'' }));
   if(!editingSolutions.length) editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   renderSolutionsEditor();
   showToast('📋 คัดลอกแล้ว — แก้ Error Code/อาการ ให้ต่างจากเดิม แล้วกดบันทึก');
@@ -8774,6 +8791,7 @@ function snapshotProposalEditState(pid){
     time: $('prop-edit-time-'+pid) ? $('prop-edit-time-'+pid).value : '',
     tools: editingProposalDraft.tools,
     parts: editingProposalDraft.parts,
+    partsQty: editingProposalDraft.partsQty,
   };
 }
 function renderProposals(){
@@ -8792,7 +8810,7 @@ function renderProposals(){
         <div class="field-wrap"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea id="prop-edit-desc-${p.id}" rows="3">${escapeHtml(p.desc)}</textarea></div>
         <div class="meta-grid" style="margin-top:8px;">
           <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(editingProposalDraft.tools, 'propedit', 'tools')}</div>
-          <div class="field-wrap"><label>อะไหล่</label>${renderItemListRows(editingProposalDraft.parts, 'propedit', 'parts')}</div>
+          <div class="field-wrap"><label>อะไหล่</label>${renderItemListRows(editingProposalDraft.parts, 'propedit', 'parts', editingProposalDraft.partsQty)}</div>
           <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" id="prop-edit-time-${p.id}" value="${escapeHtml(p.time||'')}"></div>
         </div>
         ${p.images && p.images.length ? `<div class="solution-imgs" style="margin:10px 0;">${p.images.map(img=>`<img src="${escapeHtml(imgSrcOf(img)||'')}">`).join('')}</div>`:''}
@@ -8811,7 +8829,7 @@ function renderProposals(){
       ${p.videos && p.videos.length ? `<div class="solution-imgs" style="flex-direction:column;margin-bottom:10px;">${p.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
       <div class="meta-grid" style="margin-bottom:4px;">
         <div class="meta-item"><div class="k">อุปกรณ์ที่ใช้</div><div class="v">${renderItemListView(p.tools)}</div></div>
-        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(p.parts)}</div></div>
+        <div class="meta-item"><div class="k">อะไหล่</div><div class="v">${renderPartsListView(p.parts, p.partsQty)}</div></div>
         <div class="meta-item"><div class="k">เวลาโดยประมาณ</div><div class="v">${timeDisplay(p.time)}</div></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
@@ -8825,7 +8843,7 @@ function renderProposals(){
   list.querySelectorAll('[data-reject]').forEach(b=>b.addEventListener('click', ()=>rejectProposal(b.getAttribute('data-reject'))));
   list.querySelectorAll('[data-editprop]').forEach(b=>b.addEventListener('click', ()=>{
     const pid = b.getAttribute('data-editprop'); const p = DATA.proposals.find(x=>x.id===pid);
-    editingProposalDraft = { tools: toItemList(p?p.tools:[]).length?[...toItemList(p.tools)]:[''], parts: toItemList(p?p.parts:[]).length?[...toItemList(p.parts)]:[''] };
+    editingProposalDraft = { tools: toItemList(p?p.tools:[]).length?[...toItemList(p.tools)]:[''], parts: toItemList(p?p.parts:[]).length?[...toItemList(p.parts)]:[''], partsQty: toItemList(p?p.parts:[]).length?partsQtyOf(p.parts, p.partsQty):[1] };
     editingProposalId = pid; renderProposals();
   }));
   list.querySelectorAll('[data-cancelpropedit]').forEach(b=>b.addEventListener('click', ()=>{ editingProposalId=null; renderProposals(); }));
@@ -8836,11 +8854,11 @@ function renderProposals(){
     const title = $('prop-edit-title-'+pid).value.trim();
     const desc = $('prop-edit-desc-'+pid).value.trim();
     const tools = toItemList(editingProposalDraft.tools);
-    const parts = toItemList(editingProposalDraft.parts);
+    const parts = toItemList(editingProposalDraft.parts); const partsQty = partsQtyOf(parts, editingProposalDraft.partsQty);
     const time = $('prop-edit-time-'+pid).value.trim();
     if(!title || !desc){ showToast('⚠ กรุณากรอกสาเหตุและขั้นตอนให้ครบ'); return; }
-    try{ await fsUpdateProposal(pid, {title, desc, tools, parts, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
-    p.title=title; p.desc=desc; p.tools=tools; p.parts=parts; p.time=time;
+    try{ await fsUpdateProposal(pid, {title, desc, tools, parts, partsQty, time}); }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    p.title=title; p.desc=desc; p.tools=tools; p.parts=parts; p.partsQty=partsQty; p.time=time;
     editingProposalId = null;
     renderProposals();
     showToast('✓ แก้ไขข้อเสนอแล้ว');
@@ -8863,10 +8881,10 @@ async function acceptProposal(pid){
   const p = DATA.proposals.find(x=>x.id===pid); if(!p) return;
   const err = DATA.errors.find(e=>e.id===p.errorId); if(!err) return;
   if(!canManageErrorOf(err.category, err.model)) return;
-  const newSol = {id:uid('sol'), title:p.title||'', desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), time:p.time||'', feedback:[]};
+  const newSol = {id:uid('sol'), title:p.title||'', desc:p.desc, images:[...(p.images||[])], videos:[...(p.videos||[])], tools:toItemList(p.tools), parts:toItemList(p.parts), partsQty:partsQtyOf(p.parts, p.partsQty), time:p.time||'', feedback:[]};
   try{
     await loadSolutionsFor(err.id);
-    await fsSaveSolution(err.id, newSol.id, {title:newSol.title, desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, time:newSol.time, order:err.solutions.length, feedback:[]});
+    await fsSaveSolution(err.id, newSol.id, {title:newSol.title, desc:newSol.desc, images:newSol.images, videos:newSol.videos, tools:newSol.tools, parts:newSol.parts, partsQty:newSol.partsQty, time:newSol.time, order:err.solutions.length, feedback:[]});
     const newHasImages = err.solutions.concat([newSol]).some(s=>(s.images||[]).length>0);
     const newHasVideos = err.solutions.concat([newSol]).some(s=>(s.videos||[]).length>0);
     const errUpdateFields = {};
@@ -12220,7 +12238,7 @@ function buildBackupWorkbook(data){
       errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:'', คำอธิบาย:'', อุปกรณ์:'', อะไหล่:'', เวลาโดยประมาณ:'', จำนวนรูป:'', จำนวนโหวตวิธีนี้:'' });
     } else {
       e.solutions.forEach((s,idx)=>{
-        errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:toItemList(s.parts).join(', '), เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตวิธีนี้:(s.feedback||[]).filter(f=>f.type==='up').length });
+        errorRows.push({ ประเภท:e.category, รุ่น:e.model, ErrorCode:e.errorCode||'', อาการ:e.symptom, เปิดดู:e.viewCount||0, ยอดโหวตแก้ได้จริง:e.totalUps||0, ลำดับวิธี:idx+1, คำอธิบาย:s.desc, อุปกรณ์:toItemList(s.tools).join(', '), อะไหล่:partsText(s.parts, s.partsQty), เวลาโดยประมาณ:s.time||'', จำนวนรูป:(s.images||[]).length, จำนวนโหวตวิธีนี้:(s.feedback||[]).filter(f=>f.type==='up').length });
       });
     }
   });
@@ -14547,6 +14565,14 @@ async function exaIssueCerts(roundId){
     await exaGo('summary', roundId);
   }catch(e){ hideLoadingOverlay(); alert('ออกใบ Cer ไม่สำเร็จ: '+e.message); }
 }
+async function examApiRetry(action, payload, tries){ // v10.47 — เน็ตมือถือสะดุด: ลองใหม่อัตโนมัติ (ใช้กับงานที่ส่งซ้ำได้ปลอดภัย)
+  let last; tries = tries || 3;
+  for(let i = 0; i < tries; i++){
+    try{ return await examApi(action, payload); }
+    catch(e){ last = e; if(!e || !e.network || i === tries - 1) break; await new Promise(r=>setTimeout(r, 1500 * (i + 1))); }
+  }
+  throw last;
+}
 function exOverlayText(t){ try{ const el = document.getElementById('global-loading-text'); if(el) el.textContent = t; }catch(_){} }
 
 /* ---------- คัดลอกข้อสอบจากชุดอื่น / ทำสำเนาข้อเดิม (ใช้ช้อยส์ซ้ำได้) — เข้าเป็น "ร่างที่ยังไม่บันทึก" แก้ได้ก่อนบันทึก ---------- */
@@ -16093,7 +16119,7 @@ async function traUploadPhotos(files){
       if(i === 0) showLoadingOverlay(`กำลังอัปโหลดรูป ${i+1}/${files.length}...`); else exOverlayText(`กำลังอัปโหลดรูป ${i+1}/${files.length}...`);
       const f = files[i];
       const url = await driveUploadLargeFile(f, 'photo_'+Date.now()+'_'+i+'_'+String(f.name||'photo.jpg').replace(/[^A-Za-z0-9._-]+/g,'_'), folder);
-      await examApi('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
+      await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
       ok++;
     }
     hideLoadingOverlay(); showToast('✓ อัปโหลด '+ok+' รูปแล้ว');
@@ -16109,7 +16135,7 @@ async function traUploadMfr(regId, file){
     const folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
     const nm = sanitizeFolderName(r.name)+'_'+String(file.name||'cert.pdf').replace(/[^A-Za-z0-9ก-๙._-]+/g,'_');
     const url = await driveUploadLargeFile(file, nm, folder);
-    await examApi('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:file.name||nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
+    await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:file.name||nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
     hideLoadingOverlay(); showToast('✓ แนบไฟล์แล้ว');
   }catch(e){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+e.message); }
   await traReload(true);
@@ -16168,8 +16194,10 @@ async function traCloseSession(){
     }
     let note = '';
     if(r.mfrFiles && r.mfrFiles.length){
-      showLoadingOverlay('กำลังส่งใบ Cer เข้าแท็บ Certificate ของแต่ละคน...');
-      const res = await trFinishMfr(s, r.mfrFiles);
+      exOverlayText('กำลังส่งใบ Cer เข้าแท็บ Certificate ของแต่ละคน...'); // ไม่เรียก showLoadingOverlay ซ้ำ — ตัวนับซ้อนทำให้หน้าจอค้าง
+      let res;
+      try{ res = await exWithTimeout(trFinishMfr(s, r.mfrFiles), 90000, 'การส่งใบ Cer เข้า Certificate'); }
+      catch(e){ res = { ok:0, fail:['จบ Training แล้ว แต่ส่งไม่เสร็จ: '+e.message] }; }
       note = '\nส่งใบ Cer ผู้ผลิตเข้าแท็บ Certificate แล้ว '+res.ok+'/'+r.mfrFiles.length+' ไฟล์' + (res.fail.length ? '\nไม่สำเร็จ: '+res.fail.join(', ')+'\n(กด "ส่งเข้า Certificate ใหม่" ได้ภายหลัง)' : '');
     }
     TRA.reasons = {};
