@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.57
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 20:29 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.58
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 20:41 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.57</title>
+<title>F1 Service — v10.58</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2560,8 +2560,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.57";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 20:29 น. เวลาไทย";
+const APP_VERSION = "10.58";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 20:41 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -19331,20 +19331,21 @@ function cdRender(){
   } else {
     const M = {};
     L.forEach(p=>{ [...new Set([...p.models.map(m=>m.category+'|'+m.model), ...p.certs.map(c=>c.category+'|'+c.model)])].forEach(k=>{ (M[k]=M[k]||[]).push(p); }); });
-    h += `<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 8px;">แตะแถวเพื่อดูรายชื่อ · แยกนับ <b>Cer ภายใน</b> (จากระบบสอบ/เทรน) กับ <b>Cer ผู้ผลิต</b> คนละตัวเลข · <b>มีใบ Cer แล้ว</b> = จำนวนคนที่ถือใบชนิดนั้น · <b>ยังขาด</b> = จำนวนคนที่ดูแลรุ่นนี้ แต่ยังไม่มีใบชนิดที่ Sup กำหนดว่าต้องมี · <b>ครบ</b> = ไม่มีใครขาด (รุ่นที่ Sup ยังไม่ได้กำหนดชนิดที่ต้องมี จะขึ้น "ครบ" เสมอ)</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">มีใบ Cer แล้ว</th><th style="${thS}text-align:left;">ยังขาด</th></tr></thead><tbody>`;
+    h += `<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 8px;">แตะแถว Cer ภายใน / Cer ผู้ผลิต เพื่อดูรายชื่อคนที่มี (ชื่อเล่น - เขตที่รับผิดชอบ) · ⚠ = มีใบของรุ่นนี้ แต่ไม่ได้ดูแลรุ่นนี้</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">ชนิด Cer</th><th style="${thS}text-align:left;">จำนวนคนที่มี</th></tr></thead><tbody>`;
     let rows = 0;
     Object.keys(M).sort(naturalSort).forEach(k=>{
       const [cat,model] = k.split('|');
       if(q && !(cat+' '+model).toLowerCase().includes(q) && !M[k].some(p=>p.name.toLowerCase().includes(q))) return;
-      const hasI = [], hasM = [], missI = [], missM = [], hSI = new Set(), hSM = new Set(), mSI = new Set(), mSM = new Set();
+      const byT = { I:new Map(), M:new Map() };
       M[k].forEach(p=>{
-        p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const own = p.models.some(m=>m.category===cat&&m.model===model); const isI = c.certType==='internal'; (isI?hSI:hSM).add(p.email); (isI?hasI:hasM).push(cdChip(escapeHtml(p.name)+(own?'':' ⚠'), own?'ok':'w')+cdFileLinks([c])); });
-        p.miss.filter(x=>x.category===cat && x.model===model).forEach(x=>{ const isI = x.type==='ภายใน'; (isI?mSI:mSM).add(p.email); (isI?missI:missM).push(cdChip(escapeHtml(p.name),'m')); });
+        p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const t = c.certType==='internal'?'I':'M'; if(!byT[t].has(p.email)) byT[t].set(p.email,{p, cs:[]}); byT[t].get(p.email).cs.push(c); });
       });
       rows++;
-      const isOpen = !!_cdState.openM[k];
-      h += `<tr style="cursor:pointer;" data-k="${escapeHtml(k)}" onclick="_cdState.openM[this.dataset.k]=!_cdState.openM[this.dataset.k];cdRender()"><td style="${tdS}text-align:left;"><span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b> <span style="color:var(--text-faint);font-size:11px;">${isOpen?'▾':'▸'}</span></td><td style="${tdS}text-align:left;">${(hSI.size||hSM.size)?`ภายใน <b>${hSI.size}</b> · ผู้ผลิต <b>${hSM.size}</b> <span style="color:var(--text-faint);font-size:11px;">คน</span>`:'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'}</td><td style="${tdS}text-align:left;">${(mSI.size||mSM.size)?`${mSI.size?`ภายใน <b style="color:var(--red);">${mSI.size}</b>`:''}${mSI.size&&mSM.size?' · ':''}${mSM.size?`ผู้ผลิต <b style="color:var(--red);">${mSM.size}</b>`:''} <span style="color:var(--text-faint);font-size:11px;">คน</span>`:cdChip('ครบ','ok')}</td></tr>`;
-      if(isOpen){ const sec = (t,n,arr,empty)=>`<div style="font-size:12px;font-weight:700;margin:8px 0 3px;">${t} (${n} คน)</div>${arr.join('')||`<span style="color:var(--text-faint);font-size:12px;">${empty}</span>`}`; h += `<tr><td colspan="3" style="padding:10px 14px;background:var(--panel-alt);text-align:left;"><div style="font-size:12px;color:var(--text-dim);">✅ มีใบ Cer แล้ว</div>${sec('Cer ภายใน',hSI.size,hasI,'ยังไม่มีใคร')}${sec('Cer ผู้ผลิต',hSM.size,hasM,'ยังไม่มีใคร')}<div style="font-size:12px;color:var(--text-dim);margin-top:12px;">⚠ ยังขาด (ตามที่ Sup กำหนดว่าต้องมี)</div>${sec('Cer ภายใน',mSI.size,missI,'ไม่มีใครขาด')}${sec('Cer ผู้ผลิต',mSM.size,missM,'ไม่มีใครขาด')}</td></tr>`; }
+      [['I','ภายใน'],['M','ผู้ผลิต']].forEach(([t,lbl],ti)=>{
+        const mk = k+'|'+t, isOpen = !!_cdState.openM[mk], arr = [...byT[t].values()].sort((a,b)=>String(a.p.name).localeCompare(String(b.p.name),'th'));
+        h += `<tr style="cursor:pointer;" data-k="${escapeHtml(mk)}" onclick="_cdState.openM[this.dataset.k]=!_cdState.openM[this.dataset.k];cdRender()"><td style="${tdS}text-align:left;${ti?'border-top:0;':''}">${ti?'':`<span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b>`}</td><td style="${tdS}text-align:left;white-space:nowrap;">${cdChip('Cer '+lbl, t==='I'?'':'ok')}</td><td style="${tdS}text-align:left;">${arr.length?`<b>${arr.length}</b> <span style="color:var(--text-faint);font-size:11px;">คน</span>`:'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'} <span style="color:var(--text-faint);font-size:11px;">${arr.length?(isOpen?'▾':'▸'):''}</span></td></tr>`;
+        if(isOpen && arr.length){ h += `<tr><td colspan="3" style="padding:8px 14px 12px;background:var(--panel-alt);text-align:left;"><div style="font-size:12px;font-weight:700;margin-bottom:6px;">${escapeHtml(cat)} — ${escapeHtml(model)} · Cer ${lbl} (${arr.length} คน)</div><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr><th style="text-align:left;padding:4px 6px;width:34px;color:var(--text-faint);">#</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ชื่อเล่น - เขตที่รับผิดชอบ</th><th style="text-align:left;padding:4px 6px;color:var(--text-faint);">ไฟล์</th></tr></thead><tbody>${arr.map((x,n)=>{ const own = x.p.models.some(m=>m.category===cat&&m.model===model); return `<tr style="border-top:1px solid var(--border);"><td style="padding:4px 6px;color:var(--text-faint);">${n+1}</td><td style="padding:4px 6px;">${escapeHtml(x.p.name)}${x.p.area&&x.p.area!=='-'?' - '+escapeHtml(x.p.area):''}${own?'':' <span style="color:var(--amber);font-size:11px;" title="ไม่ได้อยู่ในรุ่นที่รับผิดชอบ">⚠</span>'}</td><td style="padding:4px 6px;">${cdFileLinks(x.cs)}</td></tr>`; }).join('')}</tbody></table></td></tr>`; }
+      });
     });
     if(!rows) h += '<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
     h += '</tbody></table></div>';
