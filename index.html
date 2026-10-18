@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.63
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:14 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.66
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.63</title>
+<title>F1 Service — v10.66</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2350,6 +2350,7 @@ setTimeout(function(){
             <th class="r-full" style="padding:6px 8px;">วันเกิด / อายุ</th>
             <th class="r-full" style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
             <th class="r-full" style="padding:6px 8px;"></th>
+            <th class="r-off" style="padding:6px 8px;"></th>
           </tr></thead>
           <tbody id="roster-tbody"></tbody>
         </table>
@@ -2576,8 +2577,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.63";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 21:14 น. เวลาไทย";
+const APP_VERSION = "10.66";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 21:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6935,6 +6936,7 @@ function renderRoster(){
   const full = isManager(); // Manager เห็น/แก้ไขได้ครบ · คนอื่นเห็นแค่ชื่อ ตำแหน่ง เขต (ดูอย่างเดียว)
   document.querySelectorAll('#roster-table .r-full').forEach(th=>{ th.style.display = full ? '' : 'none'; });
   const opt = $('roster-options-panel'); if(opt) opt.style.display = full ? '' : 'none';
+  const off = isEditor(); document.querySelectorAll('#roster-table .r-off').forEach(th=>{ th.style.display = off ? '' : 'none'; });
   const hint = $('roster-hint'); if(hint) hint.textContent = full ? '📋 รายชื่อ — แก้ไข/ลบที่นี่ (เฉพาะ Manager) · Google Sheet ใช้ดูอย่างเดียว' : '📋 รายชื่อ — ดูอย่างเดียว';
   const sorted = rosterProfiles.slice().sort((a,b)=> orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
   $('roster-count').textContent = `(${sorted.length} คน)`;
@@ -6953,10 +6955,13 @@ function renderRoster(){
         <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
       </td>
 ` : ''}
+    ${off ? `<td class="r-off" style="padding:6px 8px;white-space:nowrap;"><button class="btn btn-ghost btn-sm roster-xfer-btn" data-email="${escapeHtml(p.email)}" title="โอนรุ่นเครื่อง/ชุดข้อสอบ/งานเทรนให้ Sup คนอื่น">🔁 โอนงาน</button> ${String(p.email).toLowerCase()===String(myUserEmail).toLowerCase() ? '' : `<button class="btn btn-ghost btn-sm roster-off-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);" title="ลาออกจากบริษัท — ลบข้อมูลของคนนี้ออกจากระบบ">🚪 ลาออก</button>`}</td>` : ''}
     </tr>`;
-  }).join('') || `<tr><td colspan="${full?7:3}" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
+  }).join('') || `<tr><td colspan="${(full?7:3)+(off?1:0)}" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
   document.querySelectorAll('#roster-tbody .roster-edit-btn').forEach(btn=>btn.addEventListener('click', ()=>openEditOtherProfile(btn.getAttribute('data-email'))));
   document.querySelectorAll('#roster-tbody .roster-delete-btn').forEach(btn=>btn.addEventListener('click', ()=>deleteRosterProfile(btn.getAttribute('data-email'))));
+  document.querySelectorAll('#roster-tbody .roster-off-btn').forEach(btn=>btn.addEventListener('click', ()=>offboardUser(btn.getAttribute('data-email'))));
+  document.querySelectorAll('#roster-tbody .roster-xfer-btn').forEach(btn=>btn.addEventListener('click', ()=>openTransferDialog(btn.getAttribute('data-email'))));
 }
 async function deleteRosterProfile(email){
   if(!isManager()) return;
@@ -6978,6 +6983,148 @@ async function deleteRosterProfile(email){
   }finally{
     hideLoadingOverlay();
   }
+}
+/* v10.66 — โอนงานของคนเดิมให้ Sup คนอื่น: รุ่นเครื่อง/ประเภทที่ดูแล (ชื่อใน รายชื่อ Sup Product) + ชุดข้อสอบ + งานเทรน */
+function xferSupNameFor(p){ const c = String((p&&p.nicknameTh)||'').trim(); if(!c) return ''; return SUP_PRODUCTS.find(n=> n===c || n.includes(c) || c.includes(n.replace(/\s*\(.*\)/,'').trim())) || ''; }
+function xferOwnedCount(name){
+  if(!name) return { cats:0, models:0 };
+  return { cats: Object.keys(DATA.owners.categoryOwners||{}).filter(k=>DATA.owners.categoryOwners[k]===name).length,
+           models: Object.keys(DATA.owners.modelOverrides||{}).filter(k=>DATA.owners.modelOverrides[k]===name).length };
+}
+function openTransferDialog(fromEmail){
+  if(!isEditor()) return;
+  const from = String(fromEmail||'').toLowerCase().trim();
+  const lc = x=>String(x.email||'').toLowerCase();
+  const pf = rosterProfiles.find(x=>lc(x)===from);
+  const fromLabel = pf ? orgChartDisplayName(pf) : from;
+  const others = rosterProfiles.filter(x=>lc(x)!==from).sort((a,b)=>orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
+  const old = $('xfer-dialog'); if(old) old.remove();
+  const ov = document.createElement('div'); ov.id = 'xfer-dialog'; ov.className = 'modal-overlay show';
+  const supOpts = (sel, none)=> (none?`<option value="">${none}</option>`:'') + SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}" ${n===sel?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  ov.innerHTML = `<div class="modal" style="max-width:460px;">
+    <h3 style="margin:0 0 4px;">🔁 โอนงานของ ${escapeHtml(fromLabel)}</h3>
+    <p class="panel-sub" style="margin:0 0 10px;">โอนรุ่นเครื่องที่ดูแล · ชุดข้อสอบ · งานเทรน ให้คนใหม่ — เคลม/Error/เอกสารของรุ่นนั้นจะไปอยู่กับคนใหม่ทันที</p>
+    <div class="field-wrap"><label>โอนให้ (คนรับงาน)</label><select id="xf-to"><option value="">— เลือกคน —</option>${others.map(p=>`<option value="${escapeHtml(lc(p))}">${escapeHtml(orgChartDisplayName(p))}${p.position?' · '+escapeHtml(p.position):''}</option>`).join('')}</select></div>
+    <div class="field-wrap"><label>ชื่อ Sup Product ของคนเดิม (ที่ผูกรุ่นเครื่อง)</label><select id="xf-fromsup">${supOpts(xferSupNameFor(pf),'— ไม่โอนรุ่นเครื่อง —')}</select></div>
+    <div class="field-wrap"><label>ชื่อ Sup Product ของคนรับ</label><select id="xf-tosup">${supOpts('', '— เลือก —')}</select></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;margin:6px 0;"><input type="checkbox" id="xf-del" checked><span>ลบชื่อเก่าออกจากรายชื่อ Sup Product หลังโอน (ถ้าไม่เหลืองานผูกอยู่)</span></label>
+    <div id="xf-info" class="ex-hint" style="margin:8px 0;line-height:1.7;"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;"><button class="btn btn-ghost" id="xf-cancel">ยกเลิก</button><button class="btn btn-primary" id="xf-ok">ยืนยันโอน</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const $x = id=>ov.querySelector('#'+id);
+  let srv = null, seq = 0;
+  const refresh = async ()=>{
+    const to = $x('xf-to').value, fs = $x('xf-fromsup').value, oc = xferOwnedCount(fs);
+    let t = `รุ่นเครื่อง: ประเภทที่ดูแล ${oc.cats} · รุ่นเฉพาะ ${oc.models}`;
+    if(to){
+      const my = ++seq; srv = null; $x('xf-info').innerHTML = t + '<br>⏳ กำลังตรวจชุดข้อสอบ/งานเทรน...';
+      try{ const r = await exWithTimeout(examApi('adminTransferOwner', { from, to, dryRun:true }), 40000, 'ตรวจงาน'); if(my !== seq) return; srv = r;
+        t += `<br>ชุดข้อสอบ ${r.sets} · งานเทรน ${r.sessions}` + ((r.sets||r.sessions) && r.toRole==='user' ? '<br><b style="color:var(--red);">⚠ คนรับยังไม่มีสิทธิ์จัดการข้อสอบ — ให้ Manager ซิงก์รายชื่อสิทธิ์ก่อน</b>' : '');
+      }catch(e){ if(my !== seq) return; t += '<br>⚠ ตรวจชุดข้อสอบ/งานเทรนไม่ได้: '+escapeHtml(e.message); }
+    }
+    $x('xf-info').innerHTML = t;
+  };
+  $x('xf-to').addEventListener('change', ()=>{ const p = rosterProfiles.find(x=>lc(x)===$x('xf-to').value); const n = xferSupNameFor(p); if(n) $x('xf-tosup').value = n; refresh(); });
+  $x('xf-fromsup').addEventListener('change', refresh);
+  $x('xf-cancel').addEventListener('click', ()=>ov.remove());
+  $x('xf-ok').addEventListener('click', async ()=>{
+    const to = $x('xf-to').value, fs = $x('xf-fromsup').value, ts = $x('xf-tosup').value, del = $x('xf-del').checked;
+    if(!to){ alert('เลือกคนรับงานก่อน'); return; }
+    if(fs && !ts){ alert('เลือกชื่อ Sup Product ของคนรับ (หรือเลือก "ไม่โอนรุ่นเครื่อง")'); return; }
+    if(fs && fs === ts){ alert('ชื่อต้นทางกับปลายทางเป็นชื่อเดียวกัน'); return; }
+    const pt = rosterProfiles.find(x=>lc(x)===to), toName = pt ? orgChartDisplayName(pt) : to;
+    const oc = xferOwnedCount(fs);
+    if(!confirm(`ยืนยันโอนงานของ ${fromLabel} ให้ ${toName}?\n\n• รุ่นเครื่อง: ประเภท ${oc.cats} · รุ่นเฉพาะ ${oc.models}${fs?'':' (ไม่โอน)'}\n• ชุดข้อสอบ ${srv?srv.sets:'?'} · งานเทรน ${srv?srv.sessions:'?'}`)) return;
+    ov.remove();
+    showLoadingOverlay('กำลังโอนงาน...');
+    const notes = [];
+    try{
+      const r = await exWithTimeout(examApi('adminTransferOwner', { from, to, toName }), 90000, 'โอนชุดข้อสอบ/งานเทรน');
+      notes.push(`ชุดข้อสอบ ${r.sets} · งานเทรน ${r.sessions}`);
+      if(fs){
+        const prevSup = [...SUP_PRODUCTS], prevCat = {...DATA.owners.categoryOwners}, prevMod = {...DATA.owners.modelOverrides};
+        try{
+          Object.keys(DATA.owners.categoryOwners).forEach(k=>{ if(DATA.owners.categoryOwners[k]===fs) DATA.owners.categoryOwners[k]=ts; });
+          Object.keys(DATA.owners.modelOverrides).forEach(k=>{ if(DATA.owners.modelOverrides[k]===fs) DATA.owners.modelOverrides[k]=ts; });
+          if(del) SUP_PRODUCTS = SUP_PRODUCTS.filter(n=>n!==fs);
+          if(currentSupIdentity===fs) currentSupIdentity = ts;
+          await fsSaveCategoriesDoc();
+          if(del) await fsSaveSupProducts();
+        }catch(e){ SUP_PRODUCTS = prevSup; DATA.owners.categoryOwners = prevCat; DATA.owners.modelOverrides = prevMod; throw new Error('โอนชุดข้อสอบ/งานเทรนแล้ว แต่โอนรุ่นเครื่องไม่สำเร็จ: '+e.message+' (กดโอนซ้ำได้)'); }
+        notes.push(`รุ่นเครื่อง: ประเภท ${oc.cats} · รุ่นเฉพาะ ${oc.models}`);
+      }
+      try{ fsWriteLog(`โอนงานจาก ${from} ให้ ${to}`); }catch(_){}
+      try{ renderSupIdentityOptions(); renderAll(); renderOwnerView(); }catch(_){}
+      hideLoadingOverlay();
+      alert(`โอนงานเรียบร้อย\nจาก ${fromLabel} → ${toName}\n`+notes.join('\n'));
+    }catch(e){ hideLoadingOverlay(); alert('โอนไม่สำเร็จ: '+e.message); }
+  });
+  refresh();
+}
+/* v10.66 — ลบข้อมูลผู้ลาออก: ลบสิทธิ์/โปรไฟล์/ใบ Cer+ไฟล์/ผลสอบ/ประวัติเทรนของคนนั้น (ไฟล์ Drive ไป "ถังขยะ" กู้ได้ ~30 วัน)
+   ไม่ลบ: เคลมอะไหล่ · แจ้งปัญหา · Error ที่ส่งแล้ว · คืนอะไหล่ — ทำที่ Apps Script (adminOffboard) ครั้งเดียว แล้วโหลดไฟล์สำรองให้ผู้กด */
+async function driveTrashFile(fileId){
+  if(!fileId) return 'none';
+  const token = await ensureDriveAccess();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ trashed:true }) });
+  if(res.ok){ driveCacheForgetId(fileId); return 'trashed'; }
+  if(res.status===404) return 'missing';
+  throw new Error(await googleApiErrorMessage(res));
+}
+function offboardDownload(backup, email){
+  try{
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type:'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'backup_ผู้ลาออก_'+String(email).replace(/[^\w.@-]/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); setTimeout(()=>{ try{ URL.revokeObjectURL(a.href); a.remove(); }catch(_){} }, 3000);
+  }catch(e){}
+}
+async function offboardUser(email){
+  if(!isEditor()) return;
+  email = String(email||'').toLowerCase().trim();
+  const p = rosterProfiles.find(x=>String(x.email).toLowerCase()===email);
+  const name = p ? orgChartDisplayName(p) : email;
+  showLoadingOverlay('กำลังตรวจสิ่งที่จะถูกลบ...');
+  let pv; try{ pv = await exWithTimeout(examApi('adminOffboard', { email, dryRun:true }), 60000, 'ตรวจข้อมูลผู้ลาออก'); }
+  catch(e){ hideLoadingOverlay(); alert('ตรวจไม่ได้: '+e.message); return; }
+  hideLoadingOverlay();
+  const c = pv.counts || {};
+  const lines = [
+    `ลบข้อมูลผู้ลาออก: ${name} (${email})`, '',
+    'จะลบถาวร:',
+    `• สิทธิ์เข้าระบบ${pv.roles && pv.roles.length ? ' ('+pv.roles.join(', ')+')' : ''} — กลับมาใช้ต้องขอสิทธิ์ใหม่ทั้งหมด`,
+    `• โปรไฟล์ ${c.profile||0} · ชื่อเล่น ${c.nickname||0} · รุ่นที่ดูแล ${c.responsibility||0} · คำขอสิทธิ์เดิม ${c.accessRequests||0}`,
+    `• ใบ Cer ในระบบ ${c.certificates||0} รายการ + ไฟล์ (ย้ายไปถังขยะ Drive)`,
+    `• ผลสอบ ${c.examAttempts||0} ครั้ง · ใบ Cer ที่ระบบออก ${c.examCerts||0} · ลายเซ็น ${c.signatures||0}`,
+    `• ประวัติเทรน: ลงทะเบียน ${c.trainRegs||0} · เช็คชื่อ ${c.trainAttendance||0} · ไฟล์ ${c.trainFiles||0}`,
+    '', 'ไม่ลบ: เคลมอะไหล่ · แจ้งปัญหา · Error ที่ส่งแล้ว · คืนอะไหล่'
+  ];
+  if(pv.ownedSessions || pv.ownedSets) lines.push('', `⚠ คนนี้ยังเป็นเจ้าของงานเทรน ${pv.ownedSessions||0} งาน / ชุดข้อสอบ ${pv.ownedSets||0} ชุด — ระบบไม่ลบ ควรโอนให้ Sup คนอื่น`);
+  lines.push('', 'ระบบจะดาวน์โหลดไฟล์สำรองของคนนี้ให้ก่อนจบงาน', '', 'พิมพ์อีเมลของคนนี้เพื่อยืนยัน:');
+  const typed = prompt(lines.join('\n'), '');
+  if(typed === null) return;
+  if(typed.toLowerCase().trim() !== email){ alert('อีเมลไม่ตรง ไม่ได้ลบอะไร'); return; }
+  showLoadingOverlay('กำลังลบข้อมูล... (อาจใช้เวลาครู่หนึ่ง)');
+  const notes = [];
+  try{
+    const r = await exWithTimeout(examApi('adminOffboard', { email, dryRun:false }), 170000, 'ลบข้อมูลผู้ลาออก');
+    if(r.backup){ offboardDownload(r.backup, email); r.backup = null; }
+    let n = r.trashed || 0, bad = 0;
+    for(const id of (r.driveFailed||[])){ try{ const st = await driveTrashFile(id); if(st==='trashed') n++; }catch(e){ bad++; } }
+    notes.push('ไฟล์ที่ย้ายไปถังขยะ Drive '+n+(bad?' (ไม่สำเร็จ '+bad+' ไฟล์ — ลบเองใน Drive ได้)':''));
+    // ล้างสถานะในหน้า
+    const lc = x=>String(x.email||x).toLowerCase();
+    rosterProfiles = rosterProfiles.filter(x=>lc(x)!==email); orgChartProfiles = orgChartProfiles.filter(x=>lc(x)!==email);
+    approvedUsers = approvedUsers.filter(e=>e!==email); adminEmails = adminEmails.filter(e=>e!==email); adminServiceEmails = adminServiceEmails.filter(e=>e!==email);
+    managerEmails = managerEmails.filter(e=>e!==email); ceoEmails = ceoEmails.filter(e=>e!==email);
+    _profCache = null; try{ dxInvalidate(); }catch(_){}
+    try{ renderRoster(); }catch(_){}
+    try{ fsWriteLog('ลบข้อมูลผู้ลาออก '+email); }catch(_){}
+    try{ deleteProfileRowFromSheet(email); }catch(_){}
+    hideLoadingOverlay();
+    alert('ลบข้อมูล '+name+' เรียบร้อย\n'+notes.join('\n')+'\n\nไฟล์สำรองถูกดาวน์โหลดแล้ว — เก็บไว้ในที่ปลอดภัย');
+  }catch(e){ hideLoadingOverlay(); alert('ลบไม่สำเร็จ: '+e.message+'\n(ถ้าลบไม่ครบ กดซ้ำได้ ระบบจะลบที่เหลือ)'); }
 }
 $('roster-open-sheet-btn').addEventListener('click', openProfilesSheet);
 $('roster-resync-btn').addEventListener('click', ()=>{ if(confirm('Sync ใหม่ทั้งหมด? จะล้างข้อมูลเดิมในชีตแล้วเขียนใหม่จากระบบทั้งหมด')) resyncAllProfilesSheet(); });
@@ -19365,7 +19512,7 @@ function cdRender(){
       const k = escapeHtml(p.email);
       if(p.glabel!==_lastG){ _lastG = p.glabel; h += `<tr><td colspan="10" style="padding:6px 8px;font-size:12px;font-weight:700;background:var(--panel-alt);">${escapeHtml(p.glabel)}</td></tr>`; }
       const reqModels = Object.keys(p.reqMap).length;
-      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td><td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?p.miss.map(x=>cdChip(escapeHtml(x.model)+' '+x.type,'m')).join(''):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
+      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td><td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?(_cdState.open[p.email]?p.miss.map(x=>cdChip(escapeHtml(x.model)+' '+x.type,'m')).join(''):'<span style="color:var(--text-faint);font-size:12px;">กดแถวเพื่อดูรายการ ▸</span>'):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
       if(_cdState.open[p.email]) h += `<tr><td colspan="10" style="padding:10px 14px;background:var(--panel-alt);">${cdDetailHtml(p)}</td></tr>`;
     });
     if(!L.length) h += '<tr><td colspan="10" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
