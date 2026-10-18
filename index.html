@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.55
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 20:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.57
+  อัปเดตล่าสุด   : 18 ตุลาคม 2569 20:29 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.55</title>
+<title>F1 Service — v10.57</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2560,8 +2560,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.55";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 20:00 น. เวลาไทย";
+const APP_VERSION = "10.57";
+const APP_UPDATED_AT = "18 ตุลาคม 2569 20:29 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -19184,7 +19184,7 @@ async function dxLoadLastActive(){
 })();
 
 /* ===================== v9.22 — Dashboard Certificate (ภาพรวมรายคน/รายรุ่น + % ความครบถ้วน) ===================== */
-let _cdState = { loaded:false, loading:false, certs:[], resps:[], view:'person', open:{}, openP:{} };
+let _cdState = { loaded:false, loading:false, certs:[], resps:[], view:'person', open:{}, openP:{}, openM:{} };
 async function cdLoadData(){
   await initFirebase(); const sdk = window._firebaseSdk;
   const [certs, rsnap, profs] = await Promise.all([ fsListAllCertificates(), sdk.getDocs(sdk.collection(db,'engineerResponsibility')), fetchAllUserProfiles(), fsLoadCertRequirements() ]);
@@ -19331,18 +19331,20 @@ function cdRender(){
   } else {
     const M = {};
     L.forEach(p=>{ [...new Set([...p.models.map(m=>m.category+'|'+m.model), ...p.certs.map(c=>c.category+'|'+c.model)])].forEach(k=>{ (M[k]=M[k]||[]).push(p); }); });
-    h += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">มีใบ Cer แล้ว (ใคร · ชนิด)</th><th style="${thS}text-align:left;">ยังขาด (ใคร · ชนิด)</th></tr></thead><tbody>`;
+    h += `<div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin:0 0 8px;">แตะแถวเพื่อดูรายชื่อ · แยกนับ <b>Cer ภายใน</b> (จากระบบสอบ/เทรน) กับ <b>Cer ผู้ผลิต</b> คนละตัวเลข · <b>มีใบ Cer แล้ว</b> = จำนวนคนที่ถือใบชนิดนั้น · <b>ยังขาด</b> = จำนวนคนที่ดูแลรุ่นนี้ แต่ยังไม่มีใบชนิดที่ Sup กำหนดว่าต้องมี · <b>ครบ</b> = ไม่มีใครขาด (รุ่นที่ Sup ยังไม่ได้กำหนดชนิดที่ต้องมี จะขึ้น "ครบ" เสมอ)</div><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:640px;"><thead><tr><th style="${thS}text-align:left;">Product / รุ่น</th><th style="${thS}text-align:left;">มีใบ Cer แล้ว</th><th style="${thS}text-align:left;">ยังขาด</th></tr></thead><tbody>`;
     let rows = 0;
     Object.keys(M).sort(naturalSort).forEach(k=>{
       const [cat,model] = k.split('|');
       if(q && !(cat+' '+model).toLowerCase().includes(q) && !M[k].some(p=>p.name.toLowerCase().includes(q))) return;
-      const has = [], miss = [];
+      const hasI = [], hasM = [], missI = [], missM = [], hSI = new Set(), hSM = new Set(), mSI = new Set(), mSM = new Set();
       M[k].forEach(p=>{
-        p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const own = p.models.some(m=>m.category===cat&&m.model===model); has.push(cdChip(escapeHtml(p.name)+' · '+certTypeLabel(c.certType)+(own?'':' ⚠'), own?'ok':'w')+cdFileLinks([c])); });
-        miss.push(...p.miss.filter(x=>x.category===cat && x.model===model).map(x=>cdChip(escapeHtml(p.name)+' · '+x.type,'m')));
+        p.certs.filter(c=>c.category===cat && c.model===model).forEach(c=>{ const own = p.models.some(m=>m.category===cat&&m.model===model); const isI = c.certType==='internal'; (isI?hSI:hSM).add(p.email); (isI?hasI:hasM).push(cdChip(escapeHtml(p.name)+(own?'':' ⚠'), own?'ok':'w')+cdFileLinks([c])); });
+        p.miss.filter(x=>x.category===cat && x.model===model).forEach(x=>{ const isI = x.type==='ภายใน'; (isI?mSI:mSM).add(p.email); (isI?missI:missM).push(cdChip(escapeHtml(p.name),'m')); });
       });
       rows++;
-      h += `<tr><td style="${tdS}text-align:left;"><span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b></td><td style="${tdS}text-align:left;">${has.join('')||'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'}</td><td style="${tdS}text-align:left;">${miss.join('')||cdChip('ครบ','ok')}</td></tr>`;
+      const isOpen = !!_cdState.openM[k];
+      h += `<tr style="cursor:pointer;" data-k="${escapeHtml(k)}" onclick="_cdState.openM[this.dataset.k]=!_cdState.openM[this.dataset.k];cdRender()"><td style="${tdS}text-align:left;"><span style="color:var(--text-faint);">${escapeHtml(cat)}</span> — <b>${escapeHtml(model)}</b> <span style="color:var(--text-faint);font-size:11px;">${isOpen?'▾':'▸'}</span></td><td style="${tdS}text-align:left;">${(hSI.size||hSM.size)?`ภายใน <b>${hSI.size}</b> · ผู้ผลิต <b>${hSM.size}</b> <span style="color:var(--text-faint);font-size:11px;">คน</span>`:'<span style="color:var(--text-faint);">ยังไม่มีใคร</span>'}</td><td style="${tdS}text-align:left;">${(mSI.size||mSM.size)?`${mSI.size?`ภายใน <b style="color:var(--red);">${mSI.size}</b>`:''}${mSI.size&&mSM.size?' · ':''}${mSM.size?`ผู้ผลิต <b style="color:var(--red);">${mSM.size}</b>`:''} <span style="color:var(--text-faint);font-size:11px;">คน</span>`:cdChip('ครบ','ok')}</td></tr>`;
+      if(isOpen){ const sec = (t,n,arr,empty)=>`<div style="font-size:12px;font-weight:700;margin:8px 0 3px;">${t} (${n} คน)</div>${arr.join('')||`<span style="color:var(--text-faint);font-size:12px;">${empty}</span>`}`; h += `<tr><td colspan="3" style="padding:10px 14px;background:var(--panel-alt);text-align:left;"><div style="font-size:12px;color:var(--text-dim);">✅ มีใบ Cer แล้ว</div>${sec('Cer ภายใน',hSI.size,hasI,'ยังไม่มีใคร')}${sec('Cer ผู้ผลิต',hSM.size,hasM,'ยังไม่มีใคร')}<div style="font-size:12px;color:var(--text-dim);margin-top:12px;">⚠ ยังขาด (ตามที่ Sup กำหนดว่าต้องมี)</div>${sec('Cer ภายใน',mSI.size,missI,'ไม่มีใครขาด')}${sec('Cer ผู้ผลิต',mSM.size,missM,'ไม่มีใครขาด')}</td></tr>`; }
     });
     if(!rows) h += '<tr><td colspan="3" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
     h += '</tbody></table></div>';
