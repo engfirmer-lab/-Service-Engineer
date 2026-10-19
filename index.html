@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.85
-  อัปเดตล่าสุด   : 19 ตุลาคม 2569 16:44 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.86
+  อัปเดตล่าสุด   : 19 ตุลาคม 2569 17:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -26,6 +26,8 @@
   11. รูปบรรยากาศการเทรนอยู่ที่แท็บ "จบ Training" ที่เดียว
   12. ทุกครั้งที่ส่ง: อัปเดต APP_VERSION + APP_UPDATED_AT + comment นี้ + <title> ให้ตรงกัน และเช็คไฟล์จริงก่อนส่ง
   13. ไฟล์ที่ผู้ใช้อัปโหลดทุกชนิดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด: ห้ามเขียนโค้ดอัปโหลดตรงด้วยโทเคนผู้ใช้ — ให้เรียก driveUploadFile/LargeFile/Image/CopyFileTo/driveFindOrCreateFolder (ผ่าน Apps Script: drvInit/drvDone/drvB64/drvPath/drvCopy) · ปลายทางต้องอยู่ใต้ ROOT_FOLDER_ID เสมอ
+  14. ข้อมูลทุกอย่างของระบบ (รูป เอกสาร วิดีโอ ใบ Cer รายงาน สำรอง ฯลฯ) เก็บเฉพาะใน Google Drive ของ engfirmer@gmail.com ภายใต้โฟลเดอร์ F1 Service เท่านั้น — ห้ามสร้าง/เขียนลง Drive ของผู้ใช้คนอื่น หรือที่หน้าแรก (My Drive) · ห้ามสร้างโฟลเดอร์ถ้าไม่มีโฟลเดอร์แม่ (ต้อง error แทน) · ลบไฟล์ที่ engfirmer เป็นเจ้าของ ให้ผ่าน Apps Script (drvTrash)
+  15. ลำดับชั้นหน้าจอ (z-index) ตายตัว: หน้าเต็มจอ ≤ 300 < bg-jobs 350 < modal-overlay 400 < lightbox 450 < gsi 460 < inapp 480 < loading 500 < toast 600 — หน้าเต็มจอใหม่ห้ามเกิน 300 · ป๊อปอัปใหม่ต้องใช้ class modal-overlay (ห้ามตั้ง z-index เอง) · ต้องผ่านเทสต์ test/t75.js ก่อนส่งทุกครั้ง
   ─── VERIFY CHECKLIST (Claude ต้อง grep ยืนยัน 3 จุดนี้ก่อน SendUserFile ทุกครั้ง) ───
   grep: APP_VERSION = "X.XX"   → ต้องตรงกับเวอร์ชันใหม่
   grep: <title>F1 Service — vX.XX</title>  → ต้องตรงกับเวอร์ชันใหม่
@@ -91,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.85</title>
+<title>F1 Service — v10.86</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -894,10 +896,18 @@ html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain
 #sup-doc-matrix th:nth-child(2),#sup-doc-matrix td:nth-child(2){position:sticky;left:0;z-index:3;background:var(--panel);box-shadow:1px 0 0 var(--border);}
 #sup-doc-matrix thead th:nth-child(2){z-index:7;}
 
-/* v10.84 — หน้าเต็มจอ (จัดการเอกสาร z-index 300) ต้องไม่บังหน้าต่างป๊อปอัป/toast: ยกขึ้นเหนือเต็มจอเมื่ออยู่ในโหมดเต็มจอ */
-html.f1-fs-lock .modal-overlay{z-index:400 !important;}
-html.f1-fs-lock #doclink-modal{z-index:410 !important;}
-html.f1-fs-lock .toast{z-index:600 !important;}
+/* v10.86 — ลำดับชั้นหน้าจอ (z-index) แบบตายตัว กันหน้าต่างป๊อปอัปไปอยู่หลังหน้าเต็มจอ (เคยทำให้กด "เพิ่มเอกสาร" แล้วไม่เห็นอะไร)
+   หน้า/แผงเต็มจอ ≤ 300 < bg-jobs 350 < modal 400 (doclink 410) < lightbox 450 < gsi 460 < inapp 480 < loading 500 < toast 600
+   กฎ: หน้าเต็มจอใหม่ต้อง z-index ≤ 300 · ป๊อปอัปใหม่ใช้ class modal-overlay เสมอ (ห้ามตั้ง z-index เอง) · รันเทสต์ test/t75.js ทุกครั้งก่อนส่ง */
+.modal-overlay{z-index:400 !important;}
+#doclink-modal{z-index:410 !important;}
+#bg-jobs{z-index:350 !important;}
+.lightbox{z-index:450 !important;}
+.lightbox-close,.lightbox-nav,.lightbox-counter{z-index:451 !important;}
+.gsi-overlay{z-index:460 !important;}
+.inapp-warning-panel{z-index:480 !important;}
+.global-loading-overlay{z-index:500 !important;}
+.toast{z-index:600 !important;}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2600,8 +2610,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.85";
-const APP_UPDATED_AT = "19 ตุลาคม 2569 16:44 น. เวลาไทย";
+const APP_VERSION = "10.86";
+const APP_UPDATED_AT = "19 ตุลาคม 2569 17:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4080,6 +4090,7 @@ function driveImgSrc(url){
 const _driveFolderCache = new Map(); // แคชโฟลเดอร์ที่เคยหา/สร้างไปแล้วในเซสชันนี้ — กันการค้นหาซ้ำๆ ทุกครั้งที่บันทึก (สาเหตุหลักที่บันทึกวิดีโอ/รูปช้า)
 const _driveFolderInFlight = new Map(); // เก็บ Promise ที่กำลังทำงานอยู่ — กัน Worker หลายตัวพร้อมกันหาโฟลเดอร์เดียวกันแล้วสร้างซ้ำ (race condition ตอนทำงานแบบ parallel)
 async function driveFindOrCreateFolder(name, parentId){
+  if(!parentId || parentId==='undefined' || parentId==='null') throw new Error('ไม่พบโฟลเดอร์แม่ใน Drive — ไม่สร้างโฟลเดอร์ "'+name+'" (กันหลุดไปหน้าแรก My Drive)');
   const cacheKey = parentId+'::'+name;
   if(_driveFolderCache.has(cacheKey)) return _driveFolderCache.get(cacheKey);
   if(_driveFolderInFlight.has(cacheKey)) return _driveFolderInFlight.get(cacheKey); // มีคนกำลังหา/สร้างโฟลเดอร์นี้อยู่แล้ว รอผลลัพธ์เดียวกันแทนที่จะเริ่มค้นหาใหม่ซ้ำ
