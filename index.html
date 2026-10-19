@@ -3,14 +3,29 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.80
-  อัปเดตล่าสุด   : 19 ตุลาคม 2569 13:32 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.83
+  อัปเดตล่าสุด   : 19 ตุลาคม 2569 15:39 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
   2. อัปเดต APP_VERSION และ APP_UPDATED_AT ใน JS → grep "APP_VERSION = " ยืนยันก่อนส่ง
   3. อัปเดต comment block นี้ (เวอร์ชันปัจจุบัน + อัปเดตล่าสุด) ให้ตรงกัน
   4. อัปเดต <title> → grep "<title>" ยืนยันก่อนส่ง
+  ─── STANDING RULES / กฎถาวรของแอป (แจ็คสั่งไว้ — แชทใหม่ต้องอ่านและทำตามทุกข้อ) ───
+  0. อันดับหนึ่งของทุกระบบ: ความสะดวกในการใช้งาน ต้องมาก่อนเรื่องอื่นทั้งหมด
+  1. ตอบแจ็คเป็นภาษาไทย สั้น กระชับ ใช้ตาราง (ห้ามปนภาษาญี่ปุ่น)
+  2. ส่งไฟล์: index.html ไฟล์เดียว · ถ้า Code.gs เปลี่ยน ส่ง Code-gs-copy.txt เพิ่ม (แจ็ค Deploy เป็นเวอร์ชันใหม่ที่ URL เดิม) · firestore.rules ส่งเป็น .txt เฉพาะตอนมีการแก้
+  3. ห้ามกระทบข้อมูลจริงใน Firestore และ Google Drive (โครงเอกสาร/โฟลเดอร์/ไฟล์) เด็ดขาด
+  4. ไฟล์ที่ระบบสร้างทุกชนิด (Sheet/สำรอง/รายงาน/ไฟล์ชั่วคราว) ต้องอยู่ในโฟลเดอร์ F1 Service ใน Drive เท่านั้น ห้ามหลุดไปที่อื่น
+  5. footer เวอร์ชัน (#app-footer-version) ต้องอยู่ล่างสุดของทุกหน้าเสมอ
+  6. ย้อนกลับ 1 ขั้นเสมอ: หน้าย่อย/popup ทุกอัน บันทึกหรือยกเลิกแล้วกลับหน้าที่เปิดมา ไม่เด้งไปหน้าแรก (ใช้ navOpenFrom ในโค้ด · ตารางเทรนใช้ TRA.from · ระบบสอบใช้ EXA.roundBack) หน้าย่อยใหม่ต้องทำแบบนี้ทุกครั้ง
+  7. มุมมองบทบาท (ดูในมุมมองบทบาทอื่น): ต้องเห็นและทำได้เท่าที่บทบาทนั้นเห็นจริงเท่านั้น ตรวจสิทธิ์ผ่าน isSuperAdmin/isManager/isEditor/isAdminService/isApproved (ตามบทบาทที่กำลังดู) ใช้ *Real() เฉพาะเรื่องตัวตน/ความปลอดภัยจริง
+  8. ตำแหน่งในระบบ: Super Admin (engfirmer@gmail.com), Manager, CEO, Sup Product (Editor), Admin Service, Engineer — ไม่มีตำแหน่ง "Sup admin" · เฉพาะ Manager/Super Admin ทำ ลาออก (🚪) และ โอนงาน (🔁)
+  9. Engineer ห้ามเห็นโจทย์ข้อสอบปฏิบัติ ผลรายข้อ และความเห็นของ Sup
+  10. แผงเต็มจอ/overlay ใหม่ต้องไม่ทำให้ขึ้น confirm "ต้องการรีเฟรชหน้านี้หรือไม่?" ตอนเลื่อนบนมือถือ
+  11. รูปบรรยากาศการเทรนอยู่ที่แท็บ "จบ Training" ที่เดียว
+  12. ทุกครั้งที่ส่ง: อัปเดต APP_VERSION + APP_UPDATED_AT + comment นี้ + <title> ให้ตรงกัน และเช็คไฟล์จริงก่อนส่ง
+  13. ไฟล์ที่ผู้ใช้อัปโหลดทุกชนิดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด: ห้ามเขียนโค้ดอัปโหลดตรงด้วยโทเคนผู้ใช้ — ให้เรียก driveUploadFile/LargeFile/Image/CopyFileTo/driveFindOrCreateFolder (ผ่าน Apps Script: drvInit/drvDone/drvB64/drvPath/drvCopy) · ปลายทางต้องอยู่ใต้ ROOT_FOLDER_ID เสมอ
   ─── VERIFY CHECKLIST (Claude ต้อง grep ยืนยัน 3 จุดนี้ก่อน SendUserFile ทุกครั้ง) ───
   grep: APP_VERSION = "X.XX"   → ต้องตรงกับเวอร์ชันใหม่
   grep: <title>F1 Service — vX.XX</title>  → ต้องตรงกับเวอร์ชันใหม่
@@ -76,7 +91,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.80</title>
+<title>F1 Service — v10.83</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2580,8 +2595,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.80";
-const APP_UPDATED_AT = "19 ตุลาคม 2569 13:32 น. เวลาไทย";
+const APP_VERSION = "10.83";
+const APP_UPDATED_AT = "19 ตุลาคม 2569 15:39 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4066,6 +4081,8 @@ async function driveFindOrCreateFolder(name, parentId){
     if(!res.ok) throw new Error('ค้นหาโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
     const data = await res.json();
     if(data.files && data.files.length>0){ _driveFolderCache.set(cacheKey, data.files[0].id); return data.files[0].id; }
+    try{ const made = await examApiRetry('drvPath', { parentId, names:[sanitizeFolderName(name)] }); _driveFolderCache.set(cacheKey, made.id); return made.id; }
+    catch(e){ if(!drvFallbackOk(e)) throw e; }
     const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
@@ -5330,7 +5347,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
 // fix-hyperlinks-btn ถูกลบออกจาก UI แล้ว (v7.94) — ไม่ต้องผูก event
 
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
-async function driveUploadLargeFile(file, filename, parentId, onProgress){
+async function driveUploadLargeFile_legacy(file, filename, parentId, onProgress){
   const token = await ensureDriveAccess();
   const initRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable`, {
     method: 'POST',
@@ -5440,6 +5457,11 @@ async function downloadClaimImagesAsZip(c){
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+  { const _nm = [ownerFolderName, category, model, 'Troubleshooting', (errorCode ? `${errorCode} - ${symptom}` : symptom), `วิธี ${solutionIndex+1}`].map(sanitizeFolderName);
+    const _ck = 'P::'+_nm.join('/');
+    if(_driveFolderCache.has(_ck)) return _driveFolderCache.get(_ck);
+    try{ const r = await examApiRetry('drvPath', { parentId: DRIVE_ROOT_FOLDER_ID, names:_nm }); _driveFolderCache.set(_ck, r.id); return r.id; }
+    catch(e){ if(!drvFallbackOk(e)) throw e; } }
   const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
   const f2 = await driveFindOrCreateFolder(category, f1);
   const f3 = await driveFindOrCreateFolder(model, f2);
@@ -5449,7 +5471,7 @@ async function ensureImageFolderPath(category, model, errorCode, symptom, soluti
   const f6 = await driveFindOrCreateFolder(`วิธี ${solutionIndex+1}`, f5);
   return f6;
 }
-async function driveUploadImage(blob, filename, parentId){
+async function driveUploadImage_legacy(blob, filename, parentId){
   const token = await ensureDriveAccess();
   const metadata = { name: filename, parents:[parentId] };
   const form = new FormData();
@@ -5470,7 +5492,7 @@ async function driveUploadImage(blob, filename, parentId){
 }
 // อัปโหลดรูปที่ยัง "pending" (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) ขึ้น Drive จริง — รูปที่อัปโหลดไปแล้ว (เป็นลิงก์อยู่แล้ว) จะข้ามไป
 // v10.16 — คัดลอกไฟล์ใน Drive ไปโฟลเดอร์ใหม่ (ใช้ตอนกดบันทึก Error ที่คัดลอกมา) คืน fileId ใหม่ — ตั้งสิทธิ์ดูได้เหมือนไฟล์ปกติ
-async function driveCopyFileTo(srcUrl, parentId, name){
+async function driveCopyFileTo_legacy(srcUrl, parentId, name){
   const srcId = driveFileIdFromUrl(srcUrl); if(!srcId) throw new Error('อ่านลิงก์ไฟล์ต้นฉบับไม่ได้');
   const token = await ensureDriveAccess();
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${srcId}/copy?fields=id`, {
@@ -8582,6 +8604,68 @@ function openAddErrorForModel(category, model){
   $('add-error-modal').classList.add('show');
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
+/* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
+   เซิร์ฟเวอร์ (Apps Script) เปิดช่องอัปโหลดในนามเจ้าของ → มือถืออัปโหลดตรงเข้าช่องนั้น · ถ้า Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่ → ใช้วิธีเดิมชั่วคราว (ไม่ให้ระบบพัง) */
+function drvFallbackOk(e){ return /ไม่รู้จักคำสั่ง|DRV_FALLBACK|ยังไม่ได้ตั้งค่า EXAM_API_URL/.test(String((e && e.message) || '')); }
+function drvPutResumable(file, uploadUrl, mime, onProgress){
+  return new Promise((resolve, reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', uploadUrl, true);
+    xhr.setRequestHeader('Content-Type', mime);
+    xhr.upload.onprogress = (ev)=>{ if(ev.lengthComputable && onProgress) onProgress(Math.round(ev.loaded/ev.total*100)); };
+    xhr.onload = ()=>{
+      if(xhr.status>=200 && xhr.status<300){ try{ resolve(JSON.parse(xhr.responseText).id); }catch(e){ reject(new Error('อ่านผลอัปโหลดไม่สำเร็จ')); } }
+      else reject(new Error('อัปโหลดไม่สำเร็จ ('+xhr.status+')'));
+    };
+    xhr.onerror = ()=>{ const er = new Error('อัปโหลดล้มเหลว (เครือข่ายขัดข้อง) — ลองใหม่อีกครั้ง'); er.netfail = true; reject(er); };
+    xhr.send(file);
+  });
+}
+async function drvUploadBlob(file, name, mime, parentId, share, onProgress){ // คืน fileId (ไฟล์เป็นของ engfirmer)
+  mime = mime || file.type || 'application/octet-stream';
+  const init = await examApiRetry('drvInit', { parentId, name, mime, origin: location.origin });
+  let fileId;
+  try{ fileId = await drvPutResumable(file, init.uploadUrl, mime, onProgress); }
+  catch(e){
+    if(!e.netfail) throw e;
+    if(file.size > 18*1024*1024) throw e;
+    const b64 = await new Promise((res, rej)=>{ const r = new FileReader(); r.onload = ()=>res(String(r.result).split(',')[1] || ''); r.onerror = ()=>rej(new Error('อ่านไฟล์ไม่สำเร็จ')); r.readAsDataURL(file); }); // ทางสำรอง: ส่งผ่านเซิร์ฟเวอร์ (ไฟล์ไม่เกิน ~18 MB)
+    return (await examApiRetry('drvB64', { parentId, name, mime, b64, share: !!share })).id;
+  }
+  await examApiRetry('drvDone', { fileId, share: !!share });
+  return fileId;
+}
+async function driveUploadFile(blob, filename, mimeType, parentId){
+  showLoadingOverlay('กำลังอัปโหลด...');
+  try{
+    try{ return await drvUploadBlob(blob, filename, mimeType, parentId, false); }
+    catch(e){ if(drvFallbackOk(e)) return await driveUploadFile_legacy(blob, filename, mimeType, parentId); throw e; }
+  }finally{ hideLoadingOverlay(); }
+}
+async function driveUploadLargeFile(file, filename, parentId, onProgress){
+  try{ const id = await drvUploadBlob(file, filename, file.type, parentId, true, onProgress); return `https://drive.google.com/file/d/${id}/view`; }
+  catch(e){ if(drvFallbackOk(e)) return await driveUploadLargeFile_legacy(file, filename, parentId, onProgress); throw e; }
+}
+async function driveUploadImage(blob, filename, parentId){
+  try{ const id = await drvUploadBlob(blob, filename, blob.type || 'image/jpeg', parentId, true); return `https://lh3.googleusercontent.com/d/${id}`; }
+  catch(e){ if(drvFallbackOk(e)) return await driveUploadImage_legacy(blob, filename, parentId); throw e; }
+}
+async function driveCopyFileTo(srcUrl, parentId, name){
+  const srcId = driveFileIdFromUrl(srcUrl); if(!srcId) throw new Error('อ่านลิงก์ไฟล์ต้นฉบับไม่ได้');
+  try{ return (await examApiRetry('drvCopy', { srcId, parentId, name })).id; }
+  catch(e){ if(drvFallbackOk(e)) return await driveCopyFileTo_legacy(srcUrl, parentId, name); throw e; }
+}
+async function renameProductServerSync(payload){
+  try{
+    const r = await examApi('adminRenameProduct', payload);
+    const parts = [];
+    if(r.sets) parts.push(r.sets+' ชุดข้อสอบ'); if(r.sessions) parts.push(r.sessions+' งานเทรน'); if(r.certs) parts.push(r.certs+' ใบ Cer');
+    const dr = []; if(r.renamed) dr.push('เปลี่ยนชื่อ '+r.renamed+' โฟลเดอร์'); if(r.merged) dr.push('รวม '+r.merged+' โฟลเดอร์'); if(r.failed) dr.push('พลาด '+r.failed);
+    showToast('✓ ปรับชื่อในระบบสอบ/ตารางเทรน'+(parts.length?' ('+parts.join(' · ')+')':'')+' · Drive: '+(dr.length?dr.join(' · '):'ไม่มีโฟลเดอร์ที่ต้องเปลี่ยน')+(r.partial?' (ยังไม่ครบ ลองสั่งเปลี่ยนชื่อซ้ำอีกครั้ง)':''));
+  }catch(e){
+    showToast(drvFallbackOk(e) ? '⚠ ชุดข้อสอบ/งานเทรน/โฟลเดอร์ Drive ยังใช้ชื่อเดิม — ต้อง Deploy Apps Script เวอร์ชันใหม่ แล้วเปลี่ยนชื่อซ้ำอีกครั้ง' : '⚠ ปรับชื่อฝั่งชุดข้อสอบ/ตารางเทรน/Drive ไม่สำเร็จ: '+e.message+' (ข้อมูลในแอปเปลี่ยนแล้ว)');
+  }
+}
 var NAVR = {};
 var _navObs = null;
 function navOverlayOpenOther(exceptId){ return Array.from(document.querySelectorAll('.modal-overlay.show, #error-detail-panel.show')).find(x=>x.id!==exceptId) || null; }
@@ -11005,6 +11089,9 @@ async function captureElementAndUploadToDrive(el, driveFolderUrl){
     const m = driveFolderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
     if(m) folderId = m[1];
   }
+  { const _fn = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
+    try{ const _id = await drvUploadBlob(blob, _fn, 'image/png', folderId || DRIVE_ROOT_FOLDER_ID, true); return { fileId:_id, url:`https://drive.google.com/file/d/${_id}/view` }; }
+    catch(e){ if(!drvFallbackOk(e)){ console.warn('อัปโหลดรูปสรุปไม่สำเร็จ:', e.message); return {fileId:'',url:''}; } } }
   const token = await ensureDriveAccess();
   const fileName = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
   const boundary = 'f1service_boundary_'+Date.now();
@@ -12148,6 +12235,7 @@ async function renameCategoryEverywhere(oldCat, newCat){
     DATA.documents.forEach(d=>{ if(d.category===oldCat) d.category=newCat; });
     DATA.pendingErrors.forEach(p=>{ if(p.category===oldCat) p.category=newCat; });
 
+    renameProductServerSync({ fromCategory:oldCat, toCategory:newCat });
     editingCatName = null;
     invalidateErrorsCacheForCategory(oldCat); invalidateErrorsCacheForCategory(newCat); fsBumpCategoryVersion(oldCat); fsBumpCategoryVersion(newCat); // Error ย้ายชื่อประเภทแล้ว แคชเก่าใช้ไม่ได้อีก + แจ้งคนอื่นด้วย
     renderAll(); renderOwnerView();
@@ -12180,6 +12268,7 @@ async function renameModelEverywhere(cat, oldModel, newModel){
     DATA.documents.forEach(d=>{ if(d.category===cat && d.model===oldModel) d.model=newModel; });
     DATA.pendingErrors.forEach(p=>{ if(p.category===cat && p.model===oldModel) p.model=newModel; });
 
+    renameProductServerSync({ fromCategory:cat, toCategory:cat, fromModel:oldModel, toModel:newModel });
     editingModelKey = null;
     invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat); // Error ในประเภทนี้เปลี่ยนชื่อรุ่นแล้ว แคชเก่าใช้ไม่ได้อีก + แจ้งคนอื่นด้วย
     renderAll(); renderOwnerView();
@@ -12649,7 +12738,7 @@ async function exportLogToExcel(){
 $('export-log-excel-btn').addEventListener('click', exportLogToExcel);
 
 /* ===================== Backup ทันทีเข้า Google Drive (ไม่ต้องรอรอบอัตโนมัติทุกวัน) ===================== */
-async function driveUploadFile(blob, filename, mimeType, parentId){
+async function driveUploadFile_legacy(blob, filename, mimeType, parentId){
   showLoadingOverlay('กำลังอัปโหลด...');
   try{
     const token = await ensureDriveAccess();
