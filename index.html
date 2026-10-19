@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.72
-  อัปเดตล่าสุด   : 19 ตุลาคม 2569 10:23 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.74
+  อัปเดตล่าสุด   : 19 ตุลาคม 2569 11:01 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.72</title>
+<title>F1 Service — v10.74</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2577,8 +2577,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.72";
-const APP_UPDATED_AT = "19 ตุลาคม 2569 10:23 น. เวลาไทย";
+const APP_VERSION = "10.74";
+const APP_UPDATED_AT = "19 ตุลาคม 2569 11:01 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6984,7 +6984,7 @@ async function deleteRosterProfile(email){
     hideLoadingOverlay();
   }
 }
-/* v10.72 — โอนงานของคนเดิมให้ Sup คนอื่น: รุ่นเครื่อง/ประเภทที่ดูแล (ชื่อใน รายชื่อ Sup Product) + ชุดข้อสอบ + งานเทรน */
+/* v10.74 — โอนงานของคนเดิมให้ Sup คนอื่น: รุ่นเครื่อง/ประเภทที่ดูแล (ชื่อใน รายชื่อ Sup Product) + ชุดข้อสอบ + งานเทรน */
 function xferSupNameFor(p){ const c = String((p&&p.nicknameTh)||'').trim(); if(!c) return ''; return SUP_PRODUCTS.find(n=> n===c || n.includes(c) || c.includes(n.replace(/\s*\(.*\)/,'').trim())) || ''; }
 function xferOwnedCount(name){
   if(!name) return { cats:0, models:0 };
@@ -7062,7 +7062,7 @@ function openTransferDialog(fromEmail){
   });
   refresh();
 }
-/* v10.72 — ลบข้อมูลผู้ลาออก: ลบสิทธิ์/โปรไฟล์/ใบ Cer+ไฟล์/ผลสอบ/ประวัติเทรนของคนนั้น (ไฟล์ Drive ไป "ถังขยะ" กู้ได้ ~30 วัน)
+/* v10.74 — ลบข้อมูลผู้ลาออก: ลบสิทธิ์/โปรไฟล์/ใบ Cer+ไฟล์/ผลสอบ/ประวัติเทรนของคนนั้น (ไฟล์ Drive ไป "ถังขยะ" กู้ได้ ~30 วัน)
    ไม่ลบ: เคลมอะไหล่ · แจ้งปัญหา · Error ที่ส่งแล้ว · คืนอะไหล่ — ทำที่ Apps Script (adminOffboard) ครั้งเดียว แล้วโหลดไฟล์สำรองให้ผู้กด */
 async function driveTrashFile(fileId){
   if(!fileId) return 'none';
@@ -7356,7 +7356,7 @@ function navxRealRole(){
   return 'e';
 }
 
-/* v10.72 — กฎถาวร: เมื่อ Manager เปิด "ดูในมุมมองบทบาทอื่น" ตัวตรวจสิทธิ์ทุกตัวต้องตอบตามบทบาทนั้น
+/* v10.74 — กฎถาวร: เมื่อ Manager เปิด "ดูในมุมมองบทบาทอื่น" ตัวตรวจสิทธิ์ทุกตัวต้องตอบตามบทบาทนั้น
    (เห็นและกดได้เท่าที่บทบาทนั้นเห็นจริง ไม่ใช่สิทธิ์ Manager) — ห้ามเขียน UI ที่เช็กสิทธิ์ข้ามตัวเหล่านี้
    ใช้ xxxReal() เฉพาะที่ต้องรู้ตัวตนจริง (เมนูสลับมุมมอง/กฎความปลอดภัย) */
 function _vaOn(){ return !!_navxViewAs && isSuperAdminReal(); }
@@ -15787,6 +15787,7 @@ function traTabs(){
 async function traGo(view, arg){
   const root = $('tra-root');
   traStopClock();
+  TRA.schedEdit = false; // v10.74 — ออกจากโหมดแก้ตารางเมื่อเปลี่ยนหน้า
   TRA.view = view;
   // queue/sessions: โชว์ของเดิมทันทีแล้วรีเฟรชเบื้องหลัง (ถ้าเปลี่ยนหน้าไปแล้วจะไม่เขียนทับ)
   const warmQ = view === 'queue' && TRA.queue && TRA.queue.items.length > 0, warmS = view === 'sessions' && TRA.data && TRA.dataFor === TRA.year;
@@ -15966,7 +15967,14 @@ function traRenderDetail(){
 }
 function traInfoHtml(g){
   const s = g.session;
-  let h = trInfoGrid(s) + `<div class="tr-sec"><b>ตารางเรียน</b>${trDaysHtml(g)}</div>` + ((s.status !== 'closed' && s.status !== 'cancelled') ? traPhotoHtml(g, null, false) : '') + `<div class="ex-act">`;
+  const canSched = s.dateMode === 'exact' && s.status !== 'closed' && s.status !== 'cancelled';
+  let schedH;
+  if(TRA.schedEdit && TRA.form && canSched){
+    schedH = traScheduleHtml() + `<div class="tr-bar"><button class="btn btn-primary tr-big" data-tr="sch_save">💾 บันทึกตารางเรียน</button><button class="btn btn-ghost tr-big" data-tr="sch_cancel">ยกเลิก</button></div>`;
+  } else {
+    schedH = `<div class="tr-sec"><b>ตารางเรียน</b>${trDaysHtml(g)}${canSched ? `<div class="ex-act"><button class="btn btn-ghost tr-big" data-tr="sch_edit">✏ แก้ไขตารางเรียน</button></div>` : ''}</div>`;
+  }
+  let h = trInfoGrid(s) + schedH + (s.status === 'cancelled' ? '' : traPhotoHtml(g, null, s.status === 'closed')) + `<div class="ex-act">`;
   h += `<button class="btn btn-primary tr-big" data-tr="aedit" data-id="${trH(s.sessionId)}">✏ แก้ไขงานนี้</button>`;
   if(s.status === 'open' && s.dateMode === 'exact'){
     const ri = trRegInfo(s);
@@ -16351,8 +16359,8 @@ function traCloseHtml(g){
   else if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานนี้ถูกยกเลิก</div>';
   else h += '<div class="ex-hint">จบ Training เมื่อเทรนจบ: ตรวจว่ามีรูปบรรยากาศ (แนบที่แท็บ ข้อมูล) และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
   // รูปบรรยากาศ
-  // v10.70 — รูปบรรยากาศแนบที่แท็บ "ข้อมูล" ที่เดียว (ไม่ซ้ำกัน) — ที่นี่แสดงแค่สถานะ
-  h += `<div class="tr-sec"><b>📷 รูปบรรยากาศ</b> ${m.photos.length ? trChip(m.photos.length+' รูป','ok') : trChip('ยังไม่มีรูป','bad')}${closed ? '' : `<div class="ex-hint">แนบ/ลบรูปได้ที่แท็บ "ข้อมูล" (ต้องมีอย่างน้อย 1 รูปก่อนจบ Training)</div><div class="ex-act"><button class="btn btn-ghost tr-sq2" data-tr="dtab" data-v="info">ไปแนบรูปที่แท็บ ข้อมูล</button></div>`}</div>\n`;
+  // v10.73 — ไม่แสดงบล็อกรูปบรรยากาศในแท็บนี้อีก (แนบที่แท็บ "ข้อมูล" ที่เดียว) — เตือนเฉพาะตอนยังไม่มีรูป
+  if(!closed && !m.photos.length) h += `<div class="ex-note ex-bad">⚠ ยังไม่มีรูปบรรยากาศ — ไปแนบที่แท็บ "ข้อมูล" ก่อนจบ Training</div>`;
   // รายคน
   if(m.rows.length){
     const label = s.certType === 'manufacturer' ? 'ใบ Cer ผู้ผลิต' : s.certType === 'internal' ? 'ผลสอบ / ใบ Cer ภายใน' : 'การเข้าเทรน';
@@ -16537,6 +16545,7 @@ function traSetFiltersHtml(F){
     <div><label class="tr-lb">กรองตามรุ่น</label><select class="tr-in" data-tr="f_setflt" data-k="setModel"><option value="">ทุกรุ่น</option>${op(models, F.setModel)}</select></div></div>`;
 }
 function traRenderForm(){
+  if(TRA.schedEdit){ traRenderDetail(); return; } // v10.74 — แก้ตารางในหน้าข้อมูล
   const root = $('tra-root'), F = TRA.form, f = F.f;
   const cats = Object.keys((typeof DATA !== 'undefined' && DATA && DATA.categories) || {}).sort((a,b)=>a.localeCompare(b,'th'));
   const models = (DATA && DATA.categories && DATA.categories[f.category]) || [];
@@ -16679,7 +16688,7 @@ async function traFormSave(confirmed){
     if(r.reconfirmed) msg += ' · ผู้ลงทะเบียน '+r.reconfirmed+' คนต้องขอใหม่';
     showToast(msg);
     if(r.calendar && r.calendar !== 'ok' && r.calendar !== 'skipped') alert('บันทึกงานแล้ว แต่ซิงก์ Google Calendar ไม่สำเร็จ: '+r.calendar);
-    TRA.form = null; TRA.g = null; TRA.data = null; TRA.queue = null; TR.data = null;
+    TRA.schedEdit = false; TRA.form = null; TRA.g = null; TRA.data = null; TRA.queue = null; TR.data = null;
     await traGo('detail', r.sessionId);
   }catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
@@ -16986,6 +16995,16 @@ function trOnEvent(e){
       if(ids.length && confirm('อนุมัติ '+ids.length+' คน?')) traApprove(sid, ids, 'approve'); } return;
     case 'dtab': TRA.dtab = v; traRenderDetail(); window.scrollTo(0,0); return;
     case 'aedit': TRA.form = null; traGo('form', id); return;
+    case 'sch_edit': { const s = TRA.g.session;
+      TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
+        category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:String(s.startDate||'').slice(0,7), location:s.location,
+        trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
+        status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
+        days:JSON.parse(JSON.stringify(TRA.g.days||[])), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
+      if(!TRA.form.days.length) TRA.form.days.push({ date:s.startDate, items:[{ timeFrom:'', timeTo:'', content:'', media:'' }] });
+      TRA.schedEdit = true; traRenderDetail(); } return;
+    case 'sch_cancel': TRA.schedEdit = false; TRA.form = null; traRenderDetail(); return;
+    case 'sch_save': traFormSave(false); return;
     case 'asuser': TR.openId = id; requestModeSwitch('train'); return;
     case 'reopen': if(confirm('เปิดงานกลับ? (แก้รายชื่อ/เช็คชื่อ/ไฟล์ได้อีก)')){ showLoadingOverlay('กำลังเปิดงานกลับ...'); examApi('trReopen', { sessionId:TRA.g.session.sessionId }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; return traReload(false); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
     case 'cancelses': { const n = prompt('ยกเลิกงานเทรนนี้?\n(จะลบออกจากปฏิทิน ผู้ลงทะเบียนยังอยู่ในประวัติ) — พิมพ์เหตุผลสั้นๆ แล้วกดตกลง'); if(n === null) return;
