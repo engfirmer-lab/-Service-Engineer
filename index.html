@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.66
-  อัปเดตล่าสุด   : 18 ตุลาคม 2569 21:55 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.72
+  อัปเดตล่าสุด   : 19 ตุลาคม 2569 10:23 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -76,7 +76,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.66</title>
+<title>F1 Service — v10.72</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2577,8 +2577,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.66";
-const APP_UPDATED_AT = "18 ตุลาคม 2569 21:55 น. เวลาไทย";
+const APP_VERSION = "10.72";
+const APP_UPDATED_AT = "19 ตุลาคม 2569 10:23 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6936,7 +6936,7 @@ function renderRoster(){
   const full = isManager(); // Manager เห็น/แก้ไขได้ครบ · คนอื่นเห็นแค่ชื่อ ตำแหน่ง เขต (ดูอย่างเดียว)
   document.querySelectorAll('#roster-table .r-full').forEach(th=>{ th.style.display = full ? '' : 'none'; });
   const opt = $('roster-options-panel'); if(opt) opt.style.display = full ? '' : 'none';
-  const off = isEditor(); document.querySelectorAll('#roster-table .r-off').forEach(th=>{ th.style.display = off ? '' : 'none'; });
+  const off = isManager(); document.querySelectorAll('#roster-table .r-off').forEach(th=>{ th.style.display = off ? '' : 'none'; });
   const hint = $('roster-hint'); if(hint) hint.textContent = full ? '📋 รายชื่อ — แก้ไข/ลบที่นี่ (เฉพาะ Manager) · Google Sheet ใช้ดูอย่างเดียว' : '📋 รายชื่อ — ดูอย่างเดียว';
   const sorted = rosterProfiles.slice().sort((a,b)=> orgChartDisplayName(a).localeCompare(orgChartDisplayName(b),'th'));
   $('roster-count').textContent = `(${sorted.length} คน)`;
@@ -6984,7 +6984,7 @@ async function deleteRosterProfile(email){
     hideLoadingOverlay();
   }
 }
-/* v10.66 — โอนงานของคนเดิมให้ Sup คนอื่น: รุ่นเครื่อง/ประเภทที่ดูแล (ชื่อใน รายชื่อ Sup Product) + ชุดข้อสอบ + งานเทรน */
+/* v10.72 — โอนงานของคนเดิมให้ Sup คนอื่น: รุ่นเครื่อง/ประเภทที่ดูแล (ชื่อใน รายชื่อ Sup Product) + ชุดข้อสอบ + งานเทรน */
 function xferSupNameFor(p){ const c = String((p&&p.nicknameTh)||'').trim(); if(!c) return ''; return SUP_PRODUCTS.find(n=> n===c || n.includes(c) || c.includes(n.replace(/\s*\(.*\)/,'').trim())) || ''; }
 function xferOwnedCount(name){
   if(!name) return { cats:0, models:0 };
@@ -6992,7 +6992,7 @@ function xferOwnedCount(name){
            models: Object.keys(DATA.owners.modelOverrides||{}).filter(k=>DATA.owners.modelOverrides[k]===name).length };
 }
 function openTransferDialog(fromEmail){
-  if(!isEditor()) return;
+  if(!isManager()) return;
   const from = String(fromEmail||'').toLowerCase().trim();
   const lc = x=>String(x.email||'').toLowerCase();
   const pf = rosterProfiles.find(x=>lc(x)===from);
@@ -7062,7 +7062,7 @@ function openTransferDialog(fromEmail){
   });
   refresh();
 }
-/* v10.66 — ลบข้อมูลผู้ลาออก: ลบสิทธิ์/โปรไฟล์/ใบ Cer+ไฟล์/ผลสอบ/ประวัติเทรนของคนนั้น (ไฟล์ Drive ไป "ถังขยะ" กู้ได้ ~30 วัน)
+/* v10.72 — ลบข้อมูลผู้ลาออก: ลบสิทธิ์/โปรไฟล์/ใบ Cer+ไฟล์/ผลสอบ/ประวัติเทรนของคนนั้น (ไฟล์ Drive ไป "ถังขยะ" กู้ได้ ~30 วัน)
    ไม่ลบ: เคลมอะไหล่ · แจ้งปัญหา · Error ที่ส่งแล้ว · คืนอะไหล่ — ทำที่ Apps Script (adminOffboard) ครั้งเดียว แล้วโหลดไฟล์สำรองให้ผู้กด */
 async function driveTrashFile(fileId){
   if(!fileId) return 'none';
@@ -7081,7 +7081,7 @@ function offboardDownload(backup, email){
   }catch(e){}
 }
 async function offboardUser(email){
-  if(!isEditor()) return;
+  if(!isManager()) return;
   email = String(email||'').toLowerCase().trim();
   const p = rosterProfiles.find(x=>String(x.email).toLowerCase()===email);
   const name = p ? orgChartDisplayName(p) : email;
@@ -7349,11 +7349,29 @@ let _navxLastG = 0;
 let _navxAG = 0;
 const _navxMemo = {};
 function navxRealRole(){
-  if(!isApproved()) return null;
-  if(isSuperAdmin()) return 'm';
-  if(isEditor()) return 's';
-  if(isAdminService()) return 'a';
+  if(!isApprovedReal()) return null;
+  if(isSuperAdminReal()) return 'm';
+  if(isEditorReal()) return 's';
+  if(isAdminServiceReal()) return 'a';
   return 'e';
+}
+
+/* v10.72 — กฎถาวร: เมื่อ Manager เปิด "ดูในมุมมองบทบาทอื่น" ตัวตรวจสิทธิ์ทุกตัวต้องตอบตามบทบาทนั้น
+   (เห็นและกดได้เท่าที่บทบาทนั้นเห็นจริง ไม่ใช่สิทธิ์ Manager) — ห้ามเขียน UI ที่เช็กสิทธิ์ข้ามตัวเหล่านี้
+   ใช้ xxxReal() เฉพาะที่ต้องรู้ตัวตนจริง (เมนูสลับมุมมอง/กฎความปลอดภัย) */
+function _vaOn(){ return !!_navxViewAs && isSuperAdminReal(); }
+function isSuperAdmin(){ return _vaOn() ? false : isSuperAdminReal(); }
+function isManager(){ return isSuperAdmin(); }
+function isCEO(){ return _vaOn() ? false : isCEOReal(); }
+function isAdminService(){ return _vaOn() ? _navxViewAs==='a' : isAdminServiceReal(); }
+function isEditor(){ return _vaOn() ? _navxViewAs==='s' : isEditorReal(); }
+function isApproved(){ return _vaOn() ? true : isApprovedReal(); }
+function navxRefreshContent(){
+  ['renderAll','renderRoster','renderMgrView','renderSupView','renderEngCertTab','renderEngMyWorkTab','renderOrgChart','renderClaimsView'].forEach(f=>{ try{ if(typeof window[f]==='function') window[f](); }catch(e){} });
+  try{ if(typeof dxInvalidate==='function') dxInvalidate(); }catch(e){}
+  try{ if(typeof cdRender==='function') cdRender(); }catch(e){}
+  try{ if(typeof renderSupCertTab==='function' && supActiveTab==='cert') renderSupCertTab(true); }catch(e){}
+  try{ if(typeof _examRefreshAll==='function') _examRefreshAll(); }catch(e){}
 }
 function navxView(){ const r = navxRealRole(); return (r==='m' && _navxViewAs) ? _navxViewAs : r; }
 function navxRoleName(r){
@@ -7490,12 +7508,12 @@ function navxRender(){
     document.addEventListener('click', e=>{ if(!rm.contains(e.target) && e.target!==rb) rm.classList.remove('show'); });
     rm.addEventListener('click', e=>{
       const o=e.target.closest('[data-view]'); if(!o) return;
-      const r=o.getAttribute('data-view'); _navxViewAs = (r==='m') ? null : r; rm.classList.remove('show');
+      const r=o.getAttribute('data-view'); _navxViewAs = (r==='m') ? null : r; rm.classList.remove('show'); navxRefreshContent();
       const vis=navxVisible(); let found=false; vis.forEach(G=>G.items.forEach(X=>X.subs.forEach(sb=>{ if(navxMatch(sb)) found=true; })));
       if(!found && vis.length){ _navxLastG=0; navxGoSub(navxPickSub(vis[0], vis[0].items[0])); } else navxRender();
     });
   }
-  if(bn) bn.addEventListener('click', e=>{ if(e.target.id==='navx-back'){ _navxViewAs=null; navxRender(); } });
+  if(bn) bn.addEventListener('click', e=>{ if(e.target.id==='navx-back'){ _navxViewAs=null; navxRefreshContent(); navxRender(); } });
   if(bn) bn.addEventListener('change', e=>{ if(e.target.id!=='navx-supsel') return; const si=$('sup-identity'); if(!si) return; if(e.target.value===''){ _supAll = true; if(supActiveTab==='claims') renderClaimsView(); navxRender(); return; } _supAll = false; si.value=e.target.value; si.dispatchEvent(new Event('change')); navxRender(); });
   // ตัวเลขแจ้งเตือนบนเมนู ดึงจาก badge เดิม (อัปเดตเองเมื่อ badge เดิมเปลี่ยน)
   try{
@@ -9456,13 +9474,13 @@ function isNameInUse(name){
   const modelOwners = Object.values(DATA.owners.modelOverrides||{});
   return catOwners.includes(name) || modelOwners.includes(name);
 }
-function isSuperAdmin(){ return myUserEmail === SUPER_ADMIN_EMAIL || (myUserEmail && managerEmails.includes(myUserEmail)) || (myUserEmail && ceoEmails.includes(myUserEmail)); }
-function isManager(){ return isSuperAdmin(); } // Manager มีสิทธิ์เหมือน Super Admin
-function isCEO(){ return !!(myUserEmail && ceoEmails.includes(myUserEmail)); } // CEO สิทธิ์เหมือน Manager/Super Admin ทุกอย่าง แต่ไม่บังคับกรอกโปรไฟล์เต็ม (ดู checkUserProfileGate)
-function isAdminService(){ return myUserEmail && adminServiceEmails.includes(myUserEmail); } // ตรวจรับอะไหล่เท่านั้น
+function isSuperAdminReal(){ return myUserEmail === SUPER_ADMIN_EMAIL || (myUserEmail && managerEmails.includes(myUserEmail)) || (myUserEmail && ceoEmails.includes(myUserEmail)); }
+function isManagerReal(){ return isSuperAdminReal(); } // Manager มีสิทธิ์เหมือน Super Admin
+function isCEOReal(){ return !!(myUserEmail && ceoEmails.includes(myUserEmail)); } // CEO สิทธิ์เหมือน Manager/Super Admin ทุกอย่าง แต่ไม่บังคับกรอกโปรไฟล์เต็ม (ดู checkUserProfileGate)
+function isAdminServiceReal(){ return myUserEmail && adminServiceEmails.includes(myUserEmail); } // ตรวจรับอะไหล่เท่านั้น
 // เช็คสิทธิ์ฝั่งหน้าเว็บ (UX เท่านั้น) — การบังคับใช้จริงอยู่ที่ Firestore Rules เสมอ ต่อให้ข้ามจุดนี้ก็เขียนข้อมูลจริงไม่ได้อยู่ดี
-function isEditor(){ return isSuperAdmin() || (myUserEmail && adminEmails.includes(myUserEmail)); }
-function isApproved(){ return isEditor() || isAdminService() || (myUserEmail && approvedUsers.includes(myUserEmail)); }
+function isEditorReal(){ return isSuperAdminReal() || (myUserEmail && adminEmails.includes(myUserEmail)); }
+function isApprovedReal(){ return isEditorReal() || isAdminServiceReal() || (myUserEmail && approvedUsers.includes(myUserEmail)); }
 /* ===================== หน้าจอขอสิทธิ์เข้าถึง (สำหรับคนที่ยังไม่ได้รับอนุมัติ) ===================== */
 async function renderAccessRequestScreen(){
   $('access-request-overlay').classList.add('show');
@@ -13655,7 +13673,7 @@ async function examAdminEnter(){
       if(init.role === 'user' && isSuperAdmin()){ await exaSyncAdmins(); init = await examApi('adminInit'); }
       exCacheSet('arole', init.role);
     }
-    EXA.role = init.role;
+    EXA.role = (typeof _vaOn==='function' && _vaOn()) ? (isSuperAdmin() ? 'manager' : (isEditor() ? 'sup' : 'user')) : init.role; // v10.67 มุมมองบทบาทอื่น
     if(init.role === 'user'){
       root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์จัดการข้อสอบในระบบสอบ<br>ให้ Super Admin เปิดหน้านี้หนึ่งครั้ง ระบบจะซิงก์รายชื่อ Sup/Manager ให้เอง แล้วลองเข้าใหม่</div>';
       return;
@@ -15265,10 +15283,24 @@ function trColor(cat){
   return 'hsl('+hues[h % hues.length]+' 62% 46%)';
 }
 function trChip(text, cls){ return `<span class="ex-chip ${cls||''}">${trH(text)}</span>`; }
+/* v10.72 — สถานะรับลงทะเบียน (ต้องตรงกับ regOpenInfo_ ใน Code.gs · เซิร์ฟเวอร์ตัดสินจริงตอนกดขอ) */
+function trRegInfo(s){
+  const today = trToday();
+  if(s.status !== 'open') return { open:false, reason:'' };
+  if((s.dateMode||'exact') !== 'exact') return { open:false, reason:'' };
+  if(today > s.endDate) return { open:false, reason:'' };
+  const mode = String(s.regMode||'');
+  if(mode === 'open') return { open:true, reason:'', forced:true };
+  if(mode === 'closed') return { open:false, reason:'Sup ปิดรับลงทะเบียน', by:'manual' };
+  if(s.regDeadline && today > s.regDeadline) return { open:false, reason:'เลยกำหนดปิดรับ ('+trFmtDate(s.regDeadline)+')', by:'rule' };
+  if(Number(s.regAutoClose) === 1 && today >= s.startDate) return { open:false, reason:'ถึงวันเริ่มเทรนแล้ว', by:'rule' };
+  return { open:true, reason:'' };
+}
 function trStatusChip(s){
   if(s.status === 'closed') return trChip('จบ Training แล้ว','');
   if(s.status === 'cancelled') return trChip('ยกเลิก','bad');
   if(s.status === 'plan') return trChip(s.dateMode === 'month' ? 'แผนรายเดือน' : 'แผน','');
+  if(s.status === 'open' && s.dateMode === 'exact' && !trRegInfo(s).open && trToday() <= s.endDate) return trChip('ปิดรับลงทะเบียน','warn');
   return trChip('เปิดรับลงทะเบียน','acc');
 }
 function trCertChip(s){
@@ -15294,6 +15326,22 @@ function trSheet(html, opts){
   document.body.appendChild(el);
   document.body.classList.add('tr-noscroll');
 }
+
+/* v10.71 — ช่องเลือกเวลา: ใช้ dropdown ชั่วโมง/นาที แทน <input type="time"> ที่ในโทรศัพท์บางเครื่องแก้ไขไม่ได้
+   (ค่าจริงเก็บใน input hidden id เดิม → โค้ดเดิมอ่าน .value ได้เหมือนเดิม รูปแบบ HH:MM) */
+function trTimeField(id, val){
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(val||'')); const h = m ? Math.min(23,+m[1]) : 9, mi = m ? Math.min(59,+m[2]) : 0;
+  const p2 = n => String(n).padStart(2,'0');
+  const opts = (n, sel) => Array.from({length:n},(_,i)=>`<option value="${p2(i)}"${i===sel?' selected':''}>${p2(i)}</option>`).join('');
+  return `<div class="tr-tf" style="display:flex;align-items:center;gap:8px"><input type="hidden" id="${id}" value="${p2(h)}:${p2(mi)}">`
+    + `<select class="tr-in" data-tf="${id}" aria-label="ชั่วโมง" style="flex:1;font-size:18px;padding:10px">${opts(24,h)}</select><b>:</b>`
+    + `<select class="tr-in" data-tf="${id}" aria-label="นาที" style="flex:1;font-size:18px;padding:10px">${opts(60,mi)}</select></div>`;
+}
+document.addEventListener('change', e=>{
+  const t = e.target, id = t && t.getAttribute && t.getAttribute('data-tf'); if(!id) return;
+  const ss = document.querySelectorAll('select[data-tf="'+id+'"]'), hid = document.getElementById(id);
+  if(hid && ss.length>=2) hid.value = ss[0].value+':'+ss[1].value;
+});
 function trSheetClose(){ const el = $('tr-sheet'); if(el) el.remove(); document.body.classList.remove('tr-noscroll'); }
 
 /* =====================================================================
@@ -15653,8 +15701,12 @@ function trActionBar(g){
   const s = g.session, m = g.my;
   let btns = '';
   if(g.canManage) btns += `<button class="btn btn-ghost tr-big" data-tr="manage" data-id="${trH(s.sessionId)}">🛠 จัดการงานนี้</button>`;
+  const regI = trRegInfo(s);
+  if(s.status === 'open' && s.dateMode === 'exact' && trToday() <= s.endDate && !regI.open && (!m || m.status === 'cancelled' || m.status === 'rejected' || m.status === 'needsReconfirm'))
+    btns = `<div class="ex-note">🔒 ปิดรับลงทะเบียนแล้ว${regI.reason ? ' — '+trH(regI.reason) : ''} · ติดต่อ Sup ถ้ายังต้องการเข้าเทรน</div>` + btns;
   if(s.status === 'open' && s.dateMode === 'exact' && trToday() <= s.endDate){
-    if(!m || m.status === 'cancelled' || m.status === 'rejected' || m.status === 'needsReconfirm')
+    if((!m || m.status === 'cancelled' || m.status === 'rejected' || m.status === 'needsReconfirm') && !regI.open){ /* ปิดรับ — ไม่แสดงปุ่มขอ */ }
+    else if(!m || m.status === 'cancelled' || m.status === 'rejected' || m.status === 'needsReconfirm')
       btns = `<button class="btn btn-primary tr-big" data-tr="request" data-id="${trH(s.sessionId)}">${m && m.status==='needsReconfirm' ? '🔁 ขอเข้าเทรนใหม่' : '🙋 ขอเข้าเทรน'}</button>` + btns;
     else if(m.status === 'requested') btns = `<button class="btn btn-ghost tr-big" data-tr="cancelreq" data-id="${trH(s.sessionId)}">ยกเลิกคำขอ</button>` + btns;
     else if(m.status === 'approved') btns = `<button class="btn btn-ghost tr-big" data-tr="cancelreq" data-id="${trH(s.sessionId)}">ขอยกเลิกการเข้าเทรน</button>` + btns;
@@ -15916,10 +15968,22 @@ function traInfoHtml(g){
   const s = g.session;
   let h = trInfoGrid(s) + `<div class="tr-sec"><b>ตารางเรียน</b>${trDaysHtml(g)}</div>` + ((s.status !== 'closed' && s.status !== 'cancelled') ? traPhotoHtml(g, null, false) : '') + `<div class="ex-act">`;
   h += `<button class="btn btn-primary tr-big" data-tr="aedit" data-id="${trH(s.sessionId)}">✏ แก้ไขงานนี้</button>`;
+  if(s.status === 'open' && s.dateMode === 'exact'){
+    const ri = trRegInfo(s);
+    h += ri.open ? `<button class="btn btn-ghost tr-big" data-tr="regmode" data-v="closed">🔒 ปิดรับลงทะเบียน</button>`
+                 : `<button class="btn btn-ghost tr-big" data-tr="regmode" data-v="open">🔓 เปิดรับลงทะเบียนอีกครั้ง</button>`;
+    if(s.regMode === 'open' && (s.regDeadline || Number(s.regAutoClose))) h += `<button class="btn btn-ghost tr-big" data-tr="regmode" data-v="">↺ ใช้กำหนดปิดรับตามเดิม</button>`;
+  }
   if(s.status === 'closed' || s.status === 'cancelled') h += `<button class="btn btn-ghost tr-big" data-tr="reopen">↩ ${s.status==='closed'?'เปิดงานกลับ':'ยกเลิกการยกเลิก'}</button>`;
   if(s.status !== 'closed' && s.status !== 'cancelled') h += `<button class="btn btn-ghost tr-big" data-tr="cancelses">🚫 ยกเลิกงาน</button>`;
   if(s.status !== 'closed') h += `<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="delses">🗑 ลบงาน</button>`;
   h += `<button class="btn btn-ghost tr-big" data-tr="asuser" data-id="${trH(s.sessionId)}">👁 ดูแบบผู้เข้าเทรน</button></div>`;
+  if(s.status === 'open' && s.dateMode === 'exact'){
+    const ri2 = trRegInfo(s), bits = [];
+    if(s.regDeadline) bits.push('ปิดรับหลัง '+trFmtDate(s.regDeadline));
+    if(Number(s.regAutoClose)) bits.push('ปิดอัตโนมัติเมื่อถึงวันเริ่มเทรน');
+    h += `<div class="ex-hint">${ri2.open ? '🟢 กำลังเปิดรับลงทะเบียน' : '🔒 ปิดรับลงทะเบียนอยู่'+(ri2.reason?' ('+trH(ri2.reason)+')':'')}${bits.length ? ' · '+bits.join(' · ') : ''}${s.regMode==='open' ? ' · เปิดทับกำหนด' : ''}</div>`;
+  }
   if(s.dateVersion > 1) h += `<div class="ex-hint">วันเทรนเคยถูกเปลี่ยน (เวอร์ชันวันที่ ${s.dateVersion}) — ผู้ลงทะเบียนเดิมต้องขอใหม่</div>`;
   h += `<details class="tr-sec"><summary><b>ประวัติการดำเนินการ</b> (${(g.log||[]).length})</summary>${(g.log||[]).map(l=>`<div class="tr-log"><span>${trH(exFmtDT(l.at))}</span> <b>${trH(l.action)}</b> ${trH(l.detail)} <small>— ${trH(l.by)}</small></div>`).join('') || '<div class="ex-hint">-</div>'}</details>`;
   return h;
@@ -16125,7 +16189,7 @@ function traCkTimeSheet(){
       <button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="start">ตรงเวลา ${trH(rd.time)}</button>
       ${isToday?`<button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(5)}">5 นาทีก่อน (${m(5)})</button><button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(15)}">15 นาทีก่อน (${m(15)})</button><button type="button" class="btn btn-ghost" data-tr="cktimeset" data-v="${m(30)}">30 นาทีก่อน (${m(30)})</button>`:''}
     </div>
-    <label class="tr-lb">หรือระบุเวลาเอง (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${cur}">
+    <label class="tr-lb">หรือระบุเวลาเอง (ชั่วโมง:นาที)</label>${trTimeField('tra-ck-time', cur)}
     <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="cktimeset" data-v="custom">ตกลง</button></div>`, { title:'ปรับเวลาเช็คชื่อ' });
 }
 function traCkTimeSet(v){
@@ -16145,7 +16209,7 @@ function traRoundSheet(mode){
   const dflt = add ? '13:00' : rd.time;
   trSheet(`<div class="ex-hint">${trH(trFmtDate(TRA.day))}</div>
     <label class="tr-lb">ชื่อรอบ (เช่น เช้า / บ่าย)</label><input type="text" id="tra-rd-label" class="tr-in" maxlength="40" value="${add?'':trH(rd.label||'')}" placeholder="${add?'เช่น บ่าย':'ไม่บังคับ'}">
-    <label class="tr-lb">เวลาเริ่มของรอบ (ชั่วโมง:นาที) — เช็คหลังเวลานี้นับเป็นสาย</label><input type="time" id="tra-rd-time" class="tr-in" value="${dflt}">
+    <label class="tr-lb">เวลาเริ่มของรอบ (ชั่วโมง:นาที) — เช็คหลังเวลานี้นับเป็นสาย</label>${trTimeField('tra-rd-time', dflt)}
     <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="${add?'ckrsave':'ckrsave'}" data-v="${add?'add':'edit'}">💾 ${add?'เพิ่มรอบ':'บันทึกเวลา'}</button>${add?'':'<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="ckrdel">🗑 ลบรอบนี้</button>'}</div>`, { title: add?'เพิ่มรอบเช็คชื่อ':'แก้ไขรอบเช็คชื่อ' });
 }
 async function traRoundSave(op){
@@ -16178,7 +16242,7 @@ function traCkMenu(regId){
   const hist = (a && a.history || []).map(x=>`<div class="tr-log"><span>${trH(exFmtDT(x.at))}</span> ${({in:'เช็คชื่อ',undo:'ยกเลิก',edit:'แก้เวลา',manual:'ลงเวลาเอง'})[x.op]||x.op} ${x.to?'→ '+trFmtTime(x.to):''} <small>— ${trH(x.by)}${x.note?' · '+trH(x.note):''}</small></div>`).join('');
   const dflt = a ? trFmtTime(a.checkInAt) : (TRA.day === trToday() ? trFmtTime(exNow()) : traRoundOf(g, TRA.day, TRA.slot).time);
   trSheet(`<div class="ex-hint">${trH(exPerson(r.email,r.name))} · ${trH(trFmtDate(TRA.day))}</div>
-    <label class="tr-lb">${a?'แก้เวลาเช็คชื่อ':'ลงเวลาเอง'} (ชั่วโมง:นาที)</label><input type="time" id="tra-ck-time" class="tr-in" value="${dflt}">
+    <label class="tr-lb">${a?'แก้เวลาเช็คชื่อ':'ลงเวลาเอง'} (ชั่วโมง:นาที)</label>${trTimeField('tra-ck-time', dflt)}
     <label class="tr-lb">หมายเหตุ (ไม่บังคับ)</label><input type="text" id="tra-ck-note" class="tr-in" placeholder="เช่น ลืมเช็คชื่อ / มาถึงตรงเวลา">
     <div class="ex-act"><button class="btn btn-primary tr-big" data-tr="ckedit" data-id="${trH(regId)}">💾 บันทึกเวลา</button>${a?`<button class="btn btn-ghost tr-big" style="color:var(--red)" data-tr="ckundo" data-id="${trH(regId)}">ยกเลิกการเช็คชื่อ</button>`:''}</div>
     ${hist?`<div class="tr-sec"><b>ประวัติ</b>${hist}</div>`:''}`, { title: a?'แก้ไขการเช็คชื่อ':'ลงเวลาเอง' });
@@ -16285,9 +16349,10 @@ function traCloseHtml(g){
   let h = '';
   if(closed) h += `<div class="ex-note" style="border-color:var(--green)">✅ จบ Training แล้ว เมื่อ ${trH(exFmtDT(s.closedAt))}${s.closeNote?' — '+trH(s.closeNote):''}</div>`;
   else if(s.status === 'cancelled') return '<div class="ex-note ex-bad">งานนี้ถูกยกเลิก</div>';
-  else h += '<div class="ex-hint">จบ Training เมื่อเทรนจบ: แนบรูปบรรยากาศ และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
+  else h += '<div class="ex-hint">จบ Training เมื่อเทรนจบ: ตรวจว่ามีรูปบรรยากาศ (แนบที่แท็บ ข้อมูล) และตรวจว่าทุกคนที่เข้าเทรนได้รับ Cer หรือมีเหตุผลกำกับ</div>';
   // รูปบรรยากาศ
-  h += traPhotoHtml(g, m.photos, closed);
+  // v10.70 — รูปบรรยากาศแนบที่แท็บ "ข้อมูล" ที่เดียว (ไม่ซ้ำกัน) — ที่นี่แสดงแค่สถานะ
+  h += `<div class="tr-sec"><b>📷 รูปบรรยากาศ</b> ${m.photos.length ? trChip(m.photos.length+' รูป','ok') : trChip('ยังไม่มีรูป','bad')}${closed ? '' : `<div class="ex-hint">แนบ/ลบรูปได้ที่แท็บ "ข้อมูล" (ต้องมีอย่างน้อย 1 รูปก่อนจบ Training)</div><div class="ex-act"><button class="btn btn-ghost tr-sq2" data-tr="dtab" data-v="info">ไปแนบรูปที่แท็บ ข้อมูล</button></div>`}</div>\n`;
   // รายคน
   if(m.rows.length){
     const label = s.certType === 'manufacturer' ? 'ใบ Cer ผู้ผลิต' : s.certType === 'internal' ? 'ผลสอบ / ใบ Cer ภายใน' : 'การเข้าเทรน';
@@ -16431,7 +16496,7 @@ function traBlankForm(){
   const me = (TRA.sets && TRA.sets.owners || []).find(o=>o.email===String(myUserEmail).toLowerCase());
   return { id:'', imported:false, status0:'', f:{
     category:'', model:'', title:'', dateMode:'exact', startDate:'', endDate:'', month:'', location:'', trainer:myClaimantName(), trainerEn:exaMyEnName(), trainerTitle:'',
-    seats:0, certType:'none', certIssuer:'', examSetId:'', status:'plan', ownerEmail:me ? me.email : String(myUserEmail).toLowerCase(), note:''
+    seats:0, regDeadline:'', regAutoClose:0, certType:'none', certIssuer:'', examSetId:'', status:'plan', ownerEmail:me ? me.email : String(myUserEmail).toLowerCase(), note:''
   }, days:[] };
 }
 async function traPrepareForm(id){
@@ -16446,7 +16511,7 @@ async function traPrepareForm(id){
     const s = g.session;
     TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
       category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:s.startDate.slice(0,7), location:s.location,
-      trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
+      trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
       status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
       days:JSON.parse(JSON.stringify(g.days)), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
   } else if(!TRA.form || TRA.form.id) TRA.form = traBlankForm();
@@ -16505,6 +16570,9 @@ function traRenderForm(){
     <div class="tr-fs"><b>สถานะ</b>
       ${closed ? '<div class="ex-note">งานนี้ปิดแล้ว — ใช้ปุ่ม "เปิดงานกลับ" ในหน้าจัดการก่อนถ้าต้องการเปลี่ยนสถานะ</div>' :
       `<div class="subtab-bar tr-seg">${seg('f_status','plan',f.status,'แผน (ยังไม่เปิดรับ)')}${seg('f_status','open',f.status,'เปิดรับลงทะเบียน', f.dateMode==='month')}</div>`}
+      ${f.dateMode==='exact' && !closed ? `<label class="tr-lb">ปิดรับลงทะเบียนหลังวันที่ (ไม่บังคับ)</label><input class="tr-in" type="date" data-tr="f_fld" data-k="regDeadline" value="${trH(f.regDeadline||'')}">
+      <div class="subtab-bar tr-seg">${seg('f_autoclose','1',String(f.regAutoClose?1:0),'ปิดรับอัตโนมัติเมื่อถึงวันเริ่มเทรน')}${seg('f_autoclose','0',String(f.regAutoClose?1:0),'ไม่ปิดอัตโนมัติ')}</div>
+      <div class="ex-hint">ปิดแล้วเปิดกลับได้เสมอ — กด "🔓 เปิดรับลงทะเบียนอีกครั้ง" ในหน้าจัดการงาน</div>` : ''}
       ${TRA.role==='manager' && ((TRA.sets && TRA.sets.owners)||[]).length ? `<label class="tr-lb">เจ้าของงาน (Sup ที่อนุมัติ/เช็คชื่อ)</label><select class="tr-in" data-tr="f_fld" data-k="ownerEmail">${TRA.sets.owners.map(o=>`<option value="${trH(o.email)}" ${f.ownerEmail===o.email?'selected':''}>${trH(o.name)} (${o.role==='manager'?'Manager':'Sup'})</option>`).join('')}</select>` : ''}
       <label class="tr-lb">หมายเหตุ</label><textarea class="tr-in" rows="2" data-tr="f_fld" data-k="note" placeholder="เช่น ไม่เกิน 6 คนต่อรอบ">${trH(f.note)}</textarea></div>`;
   if(f.dateMode === 'exact') h += traScheduleHtml();
@@ -16963,6 +17031,9 @@ function trOnEvent(e){
     case 'f_mode': TRA.form.f.dateMode = v; if(v === 'month'){ TRA.form.f.status = 'plan'; if(!TRA.form.f.month && TRA.form.f.startDate) TRA.form.f.month = TRA.form.f.startDate.slice(0,7); } traRenderForm(); return;
     case 'f_cert': TRA.form.f.certType = v; if(v !== 'internal') TRA.form.f.examSetId = ''; traRenderForm(); return;
     case 'f_status': TRA.form.f.status = v; traRenderForm(); return;
+    case 'f_autoclose': TRA.form.f.regAutoClose = v === '1' ? 1 : 0; traRenderForm(); return;
+    case 'regmode': { const lab = v === 'closed' ? 'ปิดรับลงทะเบียน' : v === 'open' ? 'เปิดรับลงทะเบียนอีกครั้ง' : 'ใช้กำหนดปิดรับตามเดิม'; if(!confirm(lab+'?')) return;
+      showLoadingOverlay('กำลังบันทึก...'); examApi('trSetRegMode', { sessionId:TRA.g.session.sessionId, mode:v }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; showToast('✓ '+lab+'แล้ว'); return traReload(true); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
     case 'f_preset': traAddPreset(num('data-di'), v); traRenderForm(); return;
     case 'f_std_all': traStdAll(); traRenderForm(); return;
     case 'f_day_add': traFormAddDay(); return;
