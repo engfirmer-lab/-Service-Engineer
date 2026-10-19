@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.84
-  อัปเดตล่าสุด   : 19 ตุลาคม 2569 16:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.85
+  อัปเดตล่าสุด   : 19 ตุลาคม 2569 16:44 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -91,7 +91,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.84</title>
+<title>F1 Service — v10.85</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2600,8 +2600,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.84";
-const APP_UPDATED_AT = "19 ตุลาคม 2569 16:10 น. เวลาไทย";
+const APP_VERSION = "10.85";
+const APP_UPDATED_AT = "19 ตุลาคม 2569 16:44 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3807,6 +3807,11 @@ async function driveDeleteFile(fileId){
   if(res.status===404){ driveCacheForgetId(fileId); return 'missing'; }
   const msg = await googleApiErrorMessage(res);
   if(res.status===403){
+    try{
+      const sv = await examApiRetry('drvTrash', { ids:[fileId] });
+      if(sv.failed && sv.failed.length) throw new Error(sv.failed[0].msg);
+      driveCacheForgetId(fileId); return sv.missing ? 'missing' : 'trashed';
+    }catch(se){ if(!drvFallbackOk(se) && !/ไม่ถูกต้อง|นอกโฟลเดอร์|ไม่ได้รับอนุมัติ/.test(String(se.message||''))) throw se; }
     const r2 = await fetch(url, { method:'PATCH', headers:{...auth,'Content-Type':'application/json'}, body: JSON.stringify({trashed:true}) });
     if(r2.ok){ driveCacheForgetId(fileId); return 'trashed'; }
     throw new Error('ไม่มีสิทธิ์ลบไฟล์ใน Drive (เจ้าของไฟล์เป็นอีกบัญชี): '+(await googleApiErrorMessage(r2)));
