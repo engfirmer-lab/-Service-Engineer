@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.98
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 13:56 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.01
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 15:46 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.98</title>
+<title>F1 Service — v11.01</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2389,7 +2389,7 @@ setTimeout(function(){
             <th style="padding:6px 8px;">ชื่อเล่น</th>
             <th style="padding:6px 8px;">ตำแหน่ง</th>
             <th style="padding:6px 8px;">เขตพื้นที่</th>
-            <th class="r-full" style="padding:6px 8px;">เบอร์โทร</th>
+            <th style="padding:6px 8px;">เบอร์โทร</th>
             <th class="r-full" style="padding:6px 8px;">วันเกิด / อายุ</th>
             <th class="r-full" style="padding:6px 8px;">วันที่เริ่มงาน / อายุงาน</th>
             <th class="r-full" style="padding:6px 8px;"></th>
@@ -2620,8 +2620,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.98";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 13:56 น. เวลาไทย";
+const APP_VERSION = "11.01";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 15:46 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2654,8 +2654,12 @@ function waitForFirebaseSdk(){
 }
 /* ===================== หน้าจอโหลดกลางจอ (กันกดซ้ำ) — ใช้ตัวนับ กันปิดก่อนเวลาถ้ามีงานซ้อนกันหลายงาน ===================== */
 let _loadingCount = 0;
+var _loadWatch = null;
 function showLoadingOverlay(text){
   _loadingCount++;
+  if(!_loadWatch){ _loadWatch = setTimeout(()=>{ // v10.99 — โหลดค้างเกิน 40 วินาที → โผล่ปุ่ม "ปิดหน้าจอนี้" กันจอมืดค้างจนต้องรีเฟรช (งานเบื้องหลังอาจยังทำต่อ)
+    try{ const ov = $('global-loading-overlay'); if(ov && ov.classList.contains('show') && !$('loading-escape-btn')){ const b = document.createElement('button'); b.id = 'loading-escape-btn'; b.className = 'btn btn-ghost btn-sm'; b.style.cssText = 'background:#fff;margin-top:6px;'; b.textContent = 'ปิดหน้าจอนี้ (ถ้าค้างนานผิดปกติ)'; b.onclick = ()=>{ _loadingCount = 0; ov.classList.remove('show'); b.remove(); showToast('ปิดหน้าจอโหลดแล้ว — ตรวจว่ารายการถูกบันทึกหรือยังก่อนทำซ้ำ'); }; ov.appendChild(b); } }catch(e){}
+  }, 40000); }
   $('global-loading-text').textContent = text || 'กำลังบันทึก...';
   $('global-loading-overlay').classList.add('show');
 }
@@ -2664,7 +2668,7 @@ function showLoadingOverlay(text){
 function updateLoadingOverlayText(text){ $('global-loading-text').textContent = text; }
 function hideLoadingOverlay(){
   _loadingCount = Math.max(0, _loadingCount-1);
-  if(_loadingCount===0) $('global-loading-overlay').classList.remove('show');
+  if(_loadingCount===0){ $('global-loading-overlay').classList.remove('show'); if(_loadWatch){ clearTimeout(_loadWatch); _loadWatch = null; } const eb = $('loading-escape-btn'); if(eb) eb.remove(); }
 }
 /* ===================== v9.35 — งานตรวจสอบเบื้องหลัง (ทุกงานตรวจ/สแกนใช้ตัวเดียวกัน) =====================
    กดตรวจแล้วทำงานเบื้องหลัง ไม่บังหน้าจอ ไปหน้าอื่นได้ · แถบสถานะลอยมุมล่างซ้ายทุกหน้า (ยกเลิกได้ · เสร็จแล้วกด "ดูผล" · แจ้ง Toast)
@@ -2795,6 +2799,13 @@ async function initFirebase(){
   if(_fbReady) return;
   await waitForFirebaseSdk();
   const sdk = window._firebaseSdk;
+  if(sdk && !sdk._f1wrapped){ // v10.99 — คำสั่งเขียน Firestore ทุกแบบ: ถ้าเซิร์ฟเวอร์ไม่ตอบใน 40 วินาที ให้ error (เดิมรอไม่รู้จบ หน้าจอโหลดค้างมืด)
+    sdk._f1wrapped = true;
+    ['addDoc','setDoc','updateDoc','deleteDoc'].forEach(fn=>{
+      const orig = sdk[fn]; if(typeof orig !== 'function') return;
+      try{ sdk[fn] = function(){ const pr = orig.apply(this, arguments); let t; return Promise.race([pr, new Promise((_, rej)=>{ t = setTimeout(()=>rej(new Error('บันทึกข้อมูลไม่ตอบสนอง (เกิน 40 วินาที) — ตรวจอินเทอร์เน็ต/โควต้า Firestore แล้วลองใหม่ (ถ้าไฟล์ขึ้น Drive แล้ว ให้ตรวจรายการก่อนแนบซ้ำ)')), 40000); })]).finally(()=>clearTimeout(t)); }; }catch(e){}
+    });
+  }
   const app = sdk.initializeApp(FIREBASE_CONFIG);
   auth = sdk.getAuth(app);
   try{ await sdk.setPersistence(auth, sdk.browserLocalPersistence); } // บังคับให้จำ session ไว้ในเครื่อง (ไม่หลุดตอน Refresh) แทนที่จะพึ่งค่าเริ่มต้นของ SDK เฉยๆ
@@ -6183,7 +6194,7 @@ async function checkAccessAndLoad(){
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
   updateNotifBadge();
-  await checkUserProfileGate(); try{ renderSupIdentityOptions(); }catch(_){} // บังคับกรอกโปรไฟล์ครั้งแรก (ยกเว้น Super Admin) — เช็คว่ามี userProfiles/{email} หรือยัง ครอบคลุมทั้งคนใหม่และคนเก่าที่ยังไม่เคยกรอก
+  await checkUserProfileGate(); try{ renderSupIdentityOptions(); }catch(_){} setTimeout(()=>{ try{ checkBirthdayToday(); }catch(_){} }, 1800); // v11.00 — แจ้งวันเกิดเพื่อนร่วมงาน (วันละครั้ง) // บังคับกรอกโปรไฟล์ครั้งแรก (ยกเว้น Super Admin) — เช็คว่ามี userProfiles/{email} หรือยัง ครอบคลุมทั้งคนใหม่และคนเก่าที่ยังไม่เคยกรอก
   // รีเซ็ต mode ทุกครั้งที่ login/สลับบัญชี — กันบั๊ก: currentMode ของบัญชีก่อนหน้า (เช่น 'admin-service') ค้างอยู่
   // ทำให้บัญชีใหม่ที่ไม่ใช่ Admin Service ยังเห็นหน้า admin-service อยู่ แม้ว่า mode button จะแสดงถูกแล้ว
   if(window._pendingModeSwitch){
@@ -6695,6 +6706,119 @@ function orgChartFullNameTh(p){
 
 /* v10.3 — อ่านโปรไฟล์ทุกคนแล้วจำไว้ 5 นาที (หน้า Org Chart / รายชื่อ / สิทธิ์ / ชื่อในตารางเทรน เรียกซ้ำบ่อย — เดิมอ่านใหม่ทุกครั้ง = นับโควตาทุกครั้ง)
    แก้/ลบโปรไฟล์จากเครื่องนี้ → ล้างแคชทันที */
+/* ===================== v11.00 — วันเกิดช่าง: เปิดแอปวันเกิดใคร ขึ้นป๊อปอัปอวยพรให้ทุกคนทราบ (วันละ 1 ครั้งต่อเครื่อง ไม่แสดงซ้ำ) ===================== */
+const BDAY_WISHES = [
+  'ขอให้สุขภาพร่างกายแข็งแรง ปราศจากโรคภัยไข้เจ็บ มีพลังลุยงานทุกวัน',
+  'ขอให้ร่ำรวยเงินทอง โชคลาภไหลมาเทมา มีเงินเหลือใช้เหลือเก็บตลอดปี',
+  'ขอให้สุขภาพแข็งแรง นอนหลับสบาย ตื่นมาสดชื่นทุกเช้า',
+  'ขอให้การงานก้าวหน้า เจ้านายรัก เพื่อนร่วมงานเอ็นดู ได้โบนัสงามๆ',
+  'ขอให้มีความสุขกายสบายใจ ยิ้มได้ทุกวัน เจอแต่เรื่องดีๆ เข้ามา',
+  'ขอให้โชคดีมีชัย ทำอะไรก็สำเร็จ งานซ่อมไหนก็ผ่านฉลุย ไม่มีเครื่องเสียกวนใจ',
+  'ขอให้เงินทองไหลมาเทมา ทรัพย์สินเพิ่มพูน ธุรกิจการเงินราบรื่น',
+  'ขอให้ครอบครัวอบอุ่น สุขภาพดีกันทุกคน มีเวลาพักผ่อนกับคนที่รัก',
+  'ขอให้อายุยืนยาว สุขภาพแข็งแรงเหมือนเครื่องใหม่ป้ายแดง',
+  'ขอให้ร่ำรวย มีโชคลาภทั้งปี เสนอราคาไหนก็ได้งาน',
+  'ขอให้สมหวังในทุกสิ่งที่ตั้งใจ ทุกความฝันเป็นจริง',
+  'ขอให้ไม่มีเรื่องหนักใจ ปัญหาทุกอย่างคลี่คลายเหมือนแก้ Error ได้ในครั้งเดียว',
+  'ขอให้สุขภาพแข็งแรง ไม่ป่วยไม่ไข้ ร่างกายสมบูรณ์ ใจเบิกบาน',
+  'ขอให้การเงินคล่องตัว รายได้เพิ่ม รายจ่ายลด ชีวิตสบายขึ้นทุกวัน',
+  'ขอให้เดินทางปลอดภัยทุกเส้นทาง ไปไหนก็มีแต่คนต้อนรับ ลูกค้าใจดี',
+  'ขอให้มีความสุขมากๆ รอยยิ้มไม่จางหาย หัวเราะได้ทุกวัน',
+  'ขอให้ร่ำรวยมั่งคั่ง ทองเต็มบ้าน เงินเต็มกระเป๋า',
+  'ขอให้งานราบรื่น ทุกโปรเจกต์เสร็จตรงเวลา เครื่องเดินครบทุกเครื่อง',
+  'ขอให้สุขภาพแข็งแรงยิ่งกว่าเดิม กินอร่อย นอนหลับดี ไม่มีอะไรมากวนใจ',
+  'ขอให้เจริญก้าวหน้าในหน้าที่การงาน ได้เลื่อนขั้นเลื่อนตำแหน่งเร็วๆ นี้',
+  'ขอให้มีโชคทุกวัน ซื้ออะไรก็ถูกใจ ลุ้นอะไรก็ได้',
+  'ขอให้มีแต่คนรักคนเมตตา เจอแต่มิตรแท้ ศัตรูหมดไป',
+  'ขอให้สุขภาพดีทั้งกายและใจ มีความสุขกับทุกช่วงเวลาของชีวิต',
+  'ขอให้เงินเดือนขึ้น โบนัสออก ลาภลอยมาเรื่อยๆ',
+  'ขอให้ทุกอย่างลงตัว ชีวิตราบรื่น งานดี เงินดี สุขภาพดี',
+  'ขอให้แข็งแรงเหมือนเหล็ก ใจเย็นเหมือนน้ำ ทำงานได้ทุกสถานการณ์',
+  'ขอให้ร่ำรวยด้วยเงินทอง ร่ำรวยด้วยมิตรภาพ และร่ำรวยด้วยรอยยิ้ม',
+  'ขอให้ปีนี้เป็นปีทองของคุณ งานเข้าเงินเข้า ทุกอย่างสมปรารถนา',
+  'ขอให้ร่างกายแข็งแรง สมองแจ่มใส ทำงานคล่อง แก้ปัญหาได้ทุกเรื่อง',
+  'ขอให้พบแต่ความสุข ความสำเร็จ และโชคดีตลอดไป',
+  'ขอให้สุขภาพดี ไม่ปวดหลังปวดเอวจากการยกเครื่อง มีกำลังวังชาเต็มเปี่ยม',
+  'ขอให้เงินทองงอกเงย ลงทุนอะไรก็กำไร มีทรัพย์ติดตัวไม่ขาดมือ',
+  'ขอให้อายุมั่นขวัญยืน สุขภาพแข็งแรง มีกำลังใจสู้งานทุกวัน',
+  'ขอให้มีความสุขในทุกวัน ได้ทำสิ่งที่รัก อยู่กับคนที่ใช่',
+  'ขอให้โชคดีมีเงินทอง ครอบครัวมีสุข สุขภาพไม่มีโรค',
+  'ขอให้ร่ำรวยโชคลาภ หมดทุกข์หมดโศก มีแต่เรื่องดีๆ เข้ามาในชีวิต'
+];
+function bdayMatch(birth, todayIso){ // birth = 'YYYY-MM-DD' · วันเกิด 29 ก.พ. → ปีที่ไม่ใช่ปีอธิกสุรทิน ฉลองวันที่ 28 ก.พ.
+  if(!/^\d{4}-\d{2}-\d{2}/.test(String(birth||''))) return false;
+  const md = String(birth).slice(5,10), t = String(todayIso).slice(5,10), y = Number(String(todayIso).slice(0,4));
+  if(md === t) return true;
+  const leap = (y%4===0 && y%100!==0) || y%400===0;
+  return md === '02-29' && t === '02-28' && !leap;
+}
+function bdayWishFor(email, year){ let h = 7; const s = String(email||'')+'|'+year; for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return BDAY_WISHES[h % BDAY_WISHES.length]; }
+function bdayCakeSvg(){
+  return '<svg viewBox="0 0 160 150" width="150" height="140" role="img" aria-label="เค้กวันเกิด" style="display:block;margin:0 auto;">'
+    +'<ellipse cx="80" cy="140" rx="64" ry="7" fill="rgba(0,0,0,.14)"/>'
+    +'<rect x="22" y="92" width="116" height="44" rx="9" fill="#c98a5a"/><rect x="22" y="92" width="116" height="14" rx="7" fill="#b3743f"/>'
+    +'<rect x="34" y="62" width="92" height="36" rx="8" fill="#f4a6b8"/>'
+    +'<path d="M34 72 q9 12 18 0 q9 12 18 0 q9 12 18 0 q9 12 18 0 q9 12 20 0 v-6 a8 8 0 0 0 -8 -8 h-76 a8 8 0 0 0 -8 8z" fill="#fff4f6"/>'
+    +'<circle cx="52" cy="108" r="4" fill="#ffd166"/><circle cx="80" cy="112" r="4" fill="#ef476f"/><circle cx="108" cy="108" r="4" fill="#06d6a0"/>'
+    +'<rect x="56" y="38" width="7" height="24" rx="2" fill="#4cc9f0"/><rect x="77" y="34" width="7" height="28" rx="2" fill="#ffd166"/><rect x="98" y="38" width="7" height="24" rx="2" fill="#b388eb"/>'
+    +'<g class="f1-flame"><path d="M59.5 24 q-5 7 0 12 q5 -5 0 -12z" fill="#ff9f1c"/><path d="M80.5 20 q-5 7 0 12 q5 -5 0 -12z" fill="#ff9f1c"/><path d="M101.5 24 q-5 7 0 12 q5 -5 0 -12z" fill="#ff9f1c"/></g>'
+    +'</svg>';
+}
+function bdayEnsureStyle(){
+  if(document.getElementById('f1-bday-style')) return;
+  const st = document.createElement('style'); st.id = 'f1-bday-style';
+  st.textContent = '#f1-bday-modal .modal{max-width:400px;text-align:center;position:relative;overflow:hidden;}'
+    +'#f1-bday-modal .f1-bday-card{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:10px 0;background:var(--panel-alt,rgba(128,128,128,.08));}'
+    +'#f1-bday-modal .f1-bday-name{font-size:19px;font-weight:700;}#f1-bday-modal .f1-bday-wish{font-size:13.5px;line-height:1.7;margin-top:6px;}'
+    +'.f1-flame{transform-origin:80px 30px;animation:f1fl .9s ease-in-out infinite alternate;}@keyframes f1fl{from{transform:scale(1) rotate(-3deg);opacity:1}to{transform:scale(1.08) rotate(3deg);opacity:.85}}'
+    +'.f1-conf{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:.9;animation:f1cf 3.2s linear infinite;pointer-events:none;}@keyframes f1cf{to{transform:translateY(520px) rotate(540deg);opacity:.2}}'
+    +'@media (prefers-reduced-motion:reduce){.f1-flame,.f1-conf{animation:none}}';
+  document.head.appendChild(st);
+}
+async function checkBirthdayToday(opts){
+  opts = opts || {};
+  try{
+    if(!myUserEmail) return;
+    const pm = document.getElementById('profile-modal'); if(pm && pm.classList.contains('show')) return; // ยังกรอกโปรไฟล์บังคับอยู่ — ไว้เปิดแอปครั้งถัดไป (ยังไม่นับว่าแสดงแล้ว)
+    if(document.getElementById('f1-bday-modal')) return;
+    const today = opts.today || new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});
+    const key = 'f1_bday_'+String(myUserEmail).toLowerCase();
+    try{ if(localStorage.getItem(key) === today) return; }catch(e){}
+    if(window._bdayRunning) return; window._bdayRunning = true; // กันเรียกซ้อน — วันละครั้งเท่านั้น
+    try{ localStorage.setItem(key, today); }catch(e){} // ตีตราวันนี้ทันทีก่อนโหลดข้อมูล
+    let people = null;
+    try{
+      if(opts.profiles){ people = opts.profiles.filter(p=> bdayMatch(p.birthDate, today)); }
+      else{
+        try{ const r = await examApi('birthdaysToday', {}); people = (r && r.people) || []; }
+        catch(e1){ const profs = await fetchAllUserProfiles(); people = (profs||[]).filter(p=> bdayMatch(p.birthDate, today)); }
+      }
+    }catch(e){ try{ localStorage.removeItem(key); }catch(_){} window._bdayRunning = false; return; }
+    window._bdayRunning = false;
+    if(!people.length) return;
+    const year = today.slice(0,4), me = String(myUserEmail).toLowerCase();
+    people.sort((a,b)=> (String(a.email).toLowerCase()===me ? -1 : 0) - (String(b.email).toLowerCase()===me ? -1 : 0));
+    const mine = people.some(p=>String(p.email).toLowerCase()===me);
+    bdayEnsureStyle();
+    const ov = document.createElement('div'); ov.className = 'modal-overlay show'; ov.id = 'f1-bday-modal';
+    const cards = people.map(p=>{
+      const isMe = String(p.email).toLowerCase()===me, nm = orgChartDisplayName(p), full = orgChartFullNameTh(p);
+      return '<div class="f1-bday-card"><div class="f1-bday-name">'+(isMe?'🎉 ':'🎂 ')+escapeHtml(nm)+(isMe?' <small style="font-weight:400;">(คุณ)</small>':'')+'</div>'
+        +(full && full!==nm ? '<div style="font-size:12px;color:var(--text-faint);">'+escapeHtml(full)+'</div>' : '')
+        +'<div class="f1-bday-wish">'+(isMe?'สุขสันต์วันเกิดนะ! ':'')+escapeHtml(bdayWishFor(p.email, year))+'</div></div>';
+    }).join('');
+    const confColors = ['#ef476f','#ffd166','#06d6a0','#4cc9f0','#b388eb','#ff9f1c'];
+    const conf = Array.from({length:18}, (_,i)=>'<span class="f1-conf" style="left:'+(Math.round(i*5.6+Math.random()*4))+'%;background:'+confColors[i%6]+';animation-delay:'+(Math.random()*2.5).toFixed(2)+'s;animation-duration:'+(2.6+Math.random()*1.8).toFixed(2)+'s;"></span>').join('');
+    ov.innerHTML = '<div class="modal">'+conf+'<button class="modal-close-x" data-bday-close="1" aria-label="ปิด">✕</button>'
+      +bdayCakeSvg()
+      +'<h3 style="margin:8px 0 2px;font-size:20px;">'+(mine?'สุขสันต์วันเกิด! 🎉':'🎂 วันนี้วันเกิดเพื่อนร่วมงาน')+'</h3>'
+      +'<p style="font-size:12.5px;color:var(--text-faint);margin:0 0 4px;">'+(people.length>1?'ร่วมอวยพรให้ '+people.length+' คนกันนะ':'มาร่วมอวยพรกัน')+'</p>'
+      +cards+'<button class="btn btn-primary" data-bday-close="1" style="width:100%;margin-top:6px;">'+(mine?'ขอบคุณ 💛':'สุขสันต์วันเกิด! 🎉')+'</button></div>';
+    ov.addEventListener('click', e=>{ const t = e.target; if(t===ov || (t.closest && t.closest('[data-bday-close]'))) ov.remove(); });
+    document.body.appendChild(ov);
+  }catch(e){ console.warn('birthday popup', e); }
+}
+
 async function fetchAllUserProfiles(force){
   if(!force && _profCache && Date.now() - _profCache.at < 300000){
     const cp = _profCache.list.map(p=>({ ...p })), keep = _profCache;
@@ -7004,7 +7128,8 @@ function renderRoster(){
       <td style="padding:6px 8px;">${escapeHtml(orgChartDisplayName(p))}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.position||'')}</td>
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
-    ${full ? `      <td style="padding:6px 8px;">${escapeHtml(p.phone||'')}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">${p.phone ? `<a href="tel:${escapeHtml(String(p.phone).replace(/[^0-9+]/g,''))}" style="color:inherit;text-decoration:none;">📞 ${escapeHtml(p.phone)}</a>` : ''}</td>
+    ${full ? `
       <td style="padding:6px 8px;white-space:nowrap;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(age)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(tenure)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
@@ -7014,7 +7139,7 @@ function renderRoster(){
 ` : ''}
     ${off ? `<td class="r-off" style="padding:6px 8px;white-space:nowrap;"><button class="btn btn-ghost btn-sm roster-xfer-btn" data-email="${escapeHtml(p.email)}" title="โอนรุ่นเครื่อง/ชุดข้อสอบ/งานเทรนให้ Sup คนอื่น">🔁 โอนงาน</button> ${String(p.email).toLowerCase()===String(myUserEmail).toLowerCase() ? '' : `<button class="btn btn-ghost btn-sm roster-off-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);" title="ลาออกจากบริษัท — ลบข้อมูลของคนนี้ออกจากระบบ">🚪 ลาออก</button>`}</td>` : ''}
     </tr>`;
-  }).join('') || `<tr><td colspan="${(full?7:3)+(off?1:0)}" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
+  }).join('') || `<tr><td colspan="${(full?7:4)+(off?1:0)}" style="padding:10px;color:var(--text-faint);">ยังไม่มีใครกรอกโปรไฟล์</td></tr>`;
   document.querySelectorAll('#roster-tbody .roster-edit-btn').forEach(btn=>btn.addEventListener('click', ()=>openEditOtherProfile(btn.getAttribute('data-email'))));
   document.querySelectorAll('#roster-tbody .roster-delete-btn').forEach(btn=>btn.addEventListener('click', ()=>deleteRosterProfile(btn.getAttribute('data-email'))));
   document.querySelectorAll('#roster-tbody .roster-off-btn').forEach(btn=>btn.addEventListener('click', ()=>offboardUser(btn.getAttribute('data-email'))));
@@ -8688,6 +8813,7 @@ function drvPutResumable(file, uploadUrl, mime, onProgress){
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', uploadUrl, true);
     xhr.setRequestHeader('Content-Type', mime);
+    xhr.timeout = 20*60*1000; xhr.ontimeout = ()=>{ const er = new Error('อัปโหลดใช้เวลานานเกินไป — ตรวจอินเทอร์เน็ตแล้วลองใหม่'); reject(er); }; // v10.99
     xhr.upload.onprogress = (ev)=>{ if(ev.lengthComputable && onProgress) onProgress(Math.round(ev.loaded/ev.total*100)); };
     xhr.onload = ()=>{
       if(xhr.status>=200 && xhr.status<300){ try{ resolve(JSON.parse(xhr.responseText).id); }catch(e){ reject(new Error('อ่านผลอัปโหลดไม่สำเร็จ')); } }
@@ -13114,8 +13240,12 @@ async function examApi0(action, payload){
   _exToken = idToken;
   const t0 = Date.now();
   let res;
-  try{ res = await fetch(EXAM_API_URL, { method:'POST', body: JSON.stringify(Object.assign({ action, idToken }, payload||{})) }); }
-  catch(e){ const er = new Error('เชื่อมต่อระบบสอบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต'); er.network = true; throw er; }
+  const _ac = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const _lim = /^drv(B64|Init)$/.test(action) ? 180000 : (/^drv|^trAddFile$|^trMarkFile$/.test(action) ? 90000 : 0); // เฉพาะงานอัปโหลด/ไฟล์ (งานยาวอื่นเช่นเปลี่ยนชื่อโฟลเดอร์/สแกน ไม่จำกัด)
+  const _to = (_ac && _lim) ? setTimeout(()=>{ try{ _ac.abort(); }catch(_){} }, _lim) : 0; // v10.99 — กันค้างไม่รู้จบ (เดิมไม่มี timeout ถ้า Apps Script ไม่ตอบ หน้าจอโหลดค้าง)
+  try{ res = await fetch(EXAM_API_URL, { method:'POST', body: JSON.stringify(Object.assign({ action, idToken }, payload||{})), signal: _ac ? _ac.signal : undefined }); }
+  catch(e){ const er = new Error((e && e.name==='AbortError') ? 'ระบบไม่ตอบสนอง (เกินเวลา) กรุณาลองใหม่' : 'เชื่อมต่อระบบสอบไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต'); er.network = true; throw er; }
+  finally{ if(_to) clearTimeout(_to); }
   let j;
   try{ j = await res.json(); }
   catch(e){ const er = new Error('ระบบสอบตอบกลับไม่ถูกต้อง (ตรวจว่า deploy Apps Script เป็น Anyone แล้ว)'); er.network = true; throw er; }
