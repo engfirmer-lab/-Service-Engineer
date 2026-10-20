@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.91
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 12:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.92
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 12:14 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.91</title>
+<title>F1 Service — v10.92</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2611,8 +2611,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.91";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 12:00 น. เวลาไทย";
+const APP_VERSION = "10.92";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 12:14 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4774,11 +4774,7 @@ async function moveDriveFolderForModel(category, model, oldOwnerName, newOwnerNa
     const newOwnerFolderId = await driveFindOrCreateFolder(newOwnerFolderName, DRIVE_ROOT_FOLDER_ID);
     const newCatFolderId = await driveFindOrCreateFolder(category, newOwnerFolderId);
 
-    const token = await ensureDriveAccess();
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${oldModelFolderId}?addParents=${newCatFolderId}&removeParents=${oldCatFolderId}`, {
-      method: 'PATCH', headers: { Authorization: `Bearer ${token}` },
-    });
-    if(!res.ok) throw new Error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ ('+res.status+')');
+    await examApiRetry('drvMove', { fileId: oldModelFolderId, folder: true, parentIds: [newCatFolderId] }); // v10.92 — ย้ายผ่านเซิร์ฟเวอร์ (เจ้าของไฟล์คือ engfirmer)
     _driveFolderCache.clear(); // path เปลี่ยนแล้ว ทิ้งแคชทั้งหมดกันชี้ผิดที่
   }catch(e){ console.error('ย้ายโฟลเดอร์ Drive ไม่สำเร็จ (ข้อมูลหลักย้ายสำเร็จแล้ว ไม่กระทบ):', e); throw e; }
 }
@@ -4833,11 +4829,7 @@ async function moveClaimFolderIfNeeded(oldClaim, newCategory, newModel, claimFol
   const newF3 = await driveFindOrCreateFolder(year, newF2);
   if(oldF3 === newF3) return claimFolderIdFromUrl; // parent เดิม = ใหม่ ไม่ต้องย้าย
   try{
-    const token = await ensureDriveAccess();
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${claimFolderIdFromUrl}?addParents=${newF3}&removeParents=${oldF3}`, {
-      method:'PATCH', headers:{ Authorization:`Bearer ${token}` }
-    });
-    if(!res.ok) throw new Error('ย้ายโฟลเดอร์เคลมไม่สำเร็จ ('+res.status+')');
+    await examApiRetry('drvMove', { fileId: claimFolderIdFromUrl, folder: true, parentIds: [newF3] }); // v10.92 — ย้ายผ่านเซิร์ฟเวอร์
   } catch(e){ console.warn('moveClaimFolderIfNeeded ล้มเหลว (ใช้โฟลเดอร์เดิมต่อ):', e.message); }
   return claimFolderIdFromUrl; // folderId ไม่เปลี่ยน แค่ย้าย parent
 }
@@ -7124,6 +7116,8 @@ function openTransferDialog(fromEmail){
    ไม่ลบ: เคลมอะไหล่ · แจ้งปัญหา · Error ที่ส่งแล้ว · คืนอะไหล่ — ทำที่ Apps Script (adminOffboard) ครั้งเดียว แล้วโหลดไฟล์สำรองให้ผู้กด */
 async function driveTrashFile(fileId){
   if(!fileId) return 'none';
+  try{ const sv = await examApiRetry('drvTrash', { ids:[fileId] }); if(sv.failed && sv.failed.length) throw new Error(sv.failed[0].msg); driveCacheForgetId(fileId); return sv.missing ? 'missing' : 'trashed'; } // v10.92 — ผ่านเซิร์ฟเวอร์ก่อน
+  catch(se){ if(!/ไม่ถูกต้อง|นอกโฟลเดอร์|ไม่ได้รับอนุมัติ/.test(String(se.message||'')) && /ไม่รู้จัก|unknown/i.test(String(se.message||'')) === false) throw se; }
   const token = await ensureDriveAccess();
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?supportsAllDrives=true`, { method:'PATCH', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ trashed:true }) });
   if(res.ok){ driveCacheForgetId(fileId); return 'trashed'; }
@@ -8909,6 +8903,20 @@ function renderSolutionsEditor(){
 }
 $('add-solution-btn').addEventListener('click', ()=>{ editingSolutions.push({id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}); renderSolutionsEditor(); });
 
+
+async function renameErrorDriveFolder(oldF, newF){ // v10.92 — Error เปลี่ยนรหัส/อาการ: เปลี่ยนชื่อโฟลเดอร์ Troubleshooting/[Error] ใน Drive ให้ตรง (ไม่มีโฟลเดอร์เดิม = ไม่ทำอะไร)
+  try{
+    const oldName = sanitizeFolderName(oldF.errorCode ? `${oldF.errorCode} - ${oldF.symptom}` : oldF.symptom);
+    const newName = sanitizeFolderName(newF.errorCode ? `${newF.errorCode} - ${newF.symptom}` : newF.symptom);
+    if(oldName===newName) return;
+    const owner = ownerOf(oldF.category, oldF.model);
+    const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
+    let cur = DRIVE_ROOT_FOLDER_ID;
+    for(const n of [ownerFolderName, oldF.category, oldF.model, 'Troubleshooting', oldName]){ cur = await findDriveFolder(sanitizeFolderName(n), cur); if(!cur) return; }
+    await examApiRetry('drvRename', { id: cur, name: newName });
+    for(const k of Array.from(_driveFolderCache.keys())) if(k.indexOf('P::')===0 || k.indexOf(cur+'::')===0 || k.indexOf('::'+oldName)>0) _driveFolderCache.delete(k);
+  }catch(e){ console.warn('เปลี่ยนชื่อโฟลเดอร์ Error ใน Drive ไม่สำเร็จ', e); showToast('⚠ เปลี่ยนชื่อโฟลเดอร์รูปของ Error ใน Drive ไม่สำเร็จ: '+(e&&e.message||e)+' — รูปเดิมยังอยู่โฟลเดอร์ชื่อเก่า'); }
+}
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
 async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds){
@@ -8971,6 +8979,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
     const newId = pe ? ('e_'+pe.id) : uid('e'); // v8.90 — id คงที่ต่อรายการรออนุมัติ กด/ลองซ้ำไม่สร้าง Error ซ้ำ
     const fields = {category, model, errorCode, symptom, viewCount:0, totalUps:0};
     try{
+      if(pe && pe.category===category && pe.model===model) await renameErrorDriveFolder(pe, fields); // v10.92 — Sup แก้รหัส/อาการตอนอนุมัติ → โฟลเดอร์รูปที่ Engineer อัปโหลดไว้เปลี่ยนชื่อตาม
       await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       if(pe){ await fsUpdatePendingError(pe.id, {status:'approved', reviewedAt:Date.now()}); pe.status='approved'; pe.reviewedAt=Date.now(); }
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
@@ -8986,6 +8995,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
     if(editingErrorId){
       const err = DATA.errors.find(e=>e.id===editingErrorId);
       const fields = {category, model, errorCode, symptom};
+      if(err && err.category===category && err.model===model) await renameErrorDriveFolder(err, fields); // v10.92
       await saveErrorWithSolutions(editingErrorId, fields, validSolutions, _originalSolutionIds); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       Object.assign(err, fields, {solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
     } else {
@@ -12970,6 +12980,8 @@ document.addEventListener('error', e=>{
 async function exShareImages(qs, quiet){
   const ids = Array.from(new Set((qs||[]).map(q=>driveFileIdFromUrl(q.imageUrl)).filter(Boolean)));
   if(!ids.length){ if(!quiet) showToast('ชุดนี้ไม่มีข้อที่แนบรูป'); return { ok:0, fail:0 }; }
+  try{ const r = await examApiRetry('drvShare', { ids }); return { ok: r.ok||0, fail: (r.failed||[]).length }; } // v10.92 — ตั้งสิทธิ์ผ่านเซิร์ฟเวอร์ (ไฟล์เป็นของ engfirmer)
+  catch(e){ if(!/ไม่รู้จัก|unknown|action/i.test(String(e&&e.message||''))) throw e; }
   if(!(await exEnsureDrive())) return { ok:0, fail:ids.length, skipped:true };
   const token = await ensureDriveAccess();
   let ok = 0, fail = 0;
@@ -16644,14 +16656,7 @@ async function trSessionFolder(s, sub){
   return sub ? await driveFindOrCreateFolder(sub, f) : f;
 }
 async function trDriveMove(fileId, newParent){
-  const token = await ensureDriveAccess(); const h = { Authorization:'Bearer '+token };
-  const r0 = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`, { headers:h });
-  if(!r0.ok) throw new Error('อ่านตำแหน่งไฟล์ไม่สำเร็จ ('+r0.status+')');
-  const cur = (await r0.json()).parents || [];
-  if(cur.indexOf(newParent) >= 0) return;
-  const q = 'addParents='+encodeURIComponent(newParent)+(cur.length?'&removeParents='+encodeURIComponent(cur.join(',')):'')+'&fields=id';
-  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?${q}`, { method:'PATCH', headers:Object.assign({ 'Content-Type':'application/json' }, h), body:'{}' });
-  if(!r.ok) throw new Error('ย้ายไฟล์ไม่สำเร็จ ('+r.status+')');
+  await examApiRetry('drvMove', { fileId, parentIds: [newParent] }); // v10.92 — ย้ายผ่านเซิร์ฟเวอร์ (เจ้าของไฟล์คือ engfirmer)
 }
 // ย้ายใบ Cer ผู้ผลิตของแต่ละคนไปโฟลเดอร์ Certificate ของเขา + สร้างรายการในแท็บ Certificate (ทำซ้ำได้ ข้ามไฟล์ที่ทำแล้ว)
 async function trFinishMfr(s, files){
