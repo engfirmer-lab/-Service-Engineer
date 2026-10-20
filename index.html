@@ -4,7 +4,7 @@
   F1 Service — Firmer Service Center Web App
   ===================================================================
   เวอร์ชันปัจจุบัน : 10.88
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:21 น. เวลาไทย
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -2085,6 +2085,7 @@ setTimeout(function(){
         <button class="btn btn-primary btn-sm" id="add-model-btn" style="margin-top:12px;">เพิ่ม</button>
       </div>
 
+      <button class="btn btn-ghost btn-sm" id="stale-folder-scan-btn" style="margin-bottom:8px;">🔍 ตรวจโฟลเดอร์ตกค้างใน Drive</button>
       <input type="text" id="product-table-search" placeholder="ค้นหา Product, รุ่น, หรือผู้ดูแล..." style="width:100%;box-sizing:border-box;margin-bottom:8px;">
       <div class="form-grid two" style="margin-bottom:12px;">
         <select id="product-table-filter-owner"><option value="">กรองตามผู้ดูแล: ทั้งหมด</option></select>
@@ -2611,7 +2612,7 @@ let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
 const APP_VERSION = "10.88";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 11:21 น. เวลาไทย";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 11:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8629,6 +8630,46 @@ function openAddErrorForModel(category, model){
    เซิร์ฟเวอร์ (Apps Script) เปิดช่องอัปโหลดในนามเจ้าของ → มือถืออัปโหลดตรงเข้าช่องนั้น · ถ้า Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่ → ใช้วิธีเดิมชั่วคราว (ไม่ให้ระบบพัง) */
 // v10.87 — ปิดทางสำรอง: ห้ามอัปโหลด/สร้างด้วยโทเคนผู้ใช้เองเด็ดขาด (ไฟล์ต้องเป็นของ engfirmer เท่านั้น) — ถ้า Apps Script ยังไม่พร้อมให้แจ้ง error แทน
 function drvFallbackOk(e){ return false; }
+// v10.88 — สแกนโฟลเดอร์รุ่นใน Drive ที่ชื่อไม่ตรงกับรุ่นใดในแอป → เลือกรุ่นปลายทางแล้วรวมทีเดียว (ใช้ adminRenameProduct เดิม)
+async function openStaleFolderScan(){
+  const cats = {}; Object.keys(DATA.categories||{}).forEach(c=>{ cats[c] = (DATA.categories[c]||[]).slice(); });
+  showLoadingOverlay('กำลังสแกนโฟลเดอร์ใน Drive... (อาจใช้เวลาครู่หนึ่ง)');
+  let r;
+  try{ r = await examApi('adminScanStaleFolders', { categories: cats }); }
+  catch(e){ hideLoadingOverlay(); showToast('⚠ สแกนไม่สำเร็จ: '+e.message); return; }
+  hideLoadingOverlay();
+  const items = (r && r.items) || [];
+  if(!items.length){ showToast('✓ ไม่พบโฟลเดอร์ตกค้าง'+(r && r.partial ? ' (สแกนยังไม่ครบ ลองใหม่อีกครั้ง)' : '')); return; }
+  const guess = (cat, name)=>{ const ms = (cats[cat]||[]).filter(m=>name.indexOf(m)>=0).sort((a,b)=>b.length-a.length); const first = ms.find(m=>name.indexOf(m)===0); return first || ''; };
+  const ov = document.createElement('div'); ov.className = 'modal-overlay show'; ov.id = 'stale-folder-modal';
+  const rows = items.map((it,i)=>{
+    const g = guess(it.category, it.name);
+    return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--border);">'
+      +'<div style="flex:1;min-width:150px;font-size:12.5px;"><b>'+escapeHtml(it.name)+'</b><div style="font-size:11px;color:var(--text-faint);">'+escapeHtml(it.category)+' · '+it.places+' ตำแหน่ง</div></div>'
+      +'<span>→</span><select data-stale-i="'+i+'" style="font-size:12px;max-width:170px;"><option value="">ข้าม (ไม่รวม)</option>'
+      +(cats[it.category]||[]).slice().sort(naturalSort).map(m=>'<option value="'+escapeHtml(m)+'"'+(m===g?' selected':'')+'>'+escapeHtml(m)+'</option>').join('')+'</select></div>';
+  }).join('');
+  ov.innerHTML = '<div class="modal" style="max-width:560px;max-height:85vh;overflow:auto;"><button class="modal-close-x" id="stale-close">✕</button>'
+    +'<h3>โฟลเดอร์ตกค้างใน Drive</h3><p style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">ชื่อโฟลเดอร์เหล่านี้ไม่ตรงกับรุ่นใดในแอป เลือกรุ่นปลายทางที่จะรวมเข้าไป (ไฟล์ไม่ถูกลบ) หรือเลือก "ข้าม"'+(r.partial?' · สแกนยังไม่ครบ':'')+'</p>'
+    +rows+'<div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-primary btn-sm" id="stale-run">รวมที่เลือก</button><button class="btn btn-ghost btn-sm" id="stale-cancel">ปิด</button></div></div>';
+  document.body.appendChild(ov);
+  const close = ()=>ov.remove();
+  ov.querySelector('#stale-close').onclick = close; ov.querySelector('#stale-cancel').onclick = close;
+  ov.querySelector('#stale-run').onclick = async ()=>{
+    const picks = []; ov.querySelectorAll('[data-stale-i]').forEach(s=>{ if(s.value) picks.push({ it: items[+s.getAttribute('data-stale-i')], to: s.value }); });
+    if(!picks.length){ showToast('ยังไม่ได้เลือกรุ่นปลายทาง'); return; }
+    if(!confirm('รวมโฟลเดอร์ '+picks.length+' รายการเข้ากับรุ่นที่เลือก และปรับชีต/ใบ Cer ให้ตรงกัน\n\nดำเนินการหรือไม่?')) return;
+    close(); showLoadingOverlay('กำลังรวมโฟลเดอร์ใน Drive...');
+    let merged=0, renamed=0, failed=0, partial=false, err='';
+    for(const p of picks){
+      try{ const x = await examApi('adminRenameProduct', { fromCategory:p.it.category, toCategory:p.it.category, fromModel:p.it.name, toModel:p.to }); merged += x.merged||0; renamed += x.renamed||0; failed += x.failed||0; if(x.partial) partial = true; }
+      catch(e){ failed++; err = e.message; }
+    }
+    hideLoadingOverlay();
+    showToast('✓ รวมแล้ว: เปลี่ยนชื่อ '+renamed+' · รวม '+merged+(failed?' · พลาด '+failed+(err?' ('+err+')':''):'')+(partial?' · ยังไม่ครบ กดตรวจซ้ำ':''));
+  };
+}
+{ const _sb = document.getElementById('stale-folder-scan-btn'); if(_sb) _sb.addEventListener('click', openStaleFolderScan); }
 function driveOwnerOnlyCreate(what){ if(myUserEmail !== SUPER_ADMIN_EMAIL) throw new Error('ยังไม่มี'+what+' — ต้องให้ engfirmer เป็นคนเปิดใช้งานครั้งแรก (กันไฟล์ไปอยู่ใน Drive ของคนอื่น)'); }
 function drvPutResumable(file, uploadUrl, mime, onProgress){
   return new Promise((resolve, reject)=>{
