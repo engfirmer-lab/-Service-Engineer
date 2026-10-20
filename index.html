@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.92
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 12:14 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.93
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 12:51 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.92</title>
+<title>F1 Service — v10.93</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -908,6 +908,15 @@ html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain
 .inapp-warning-panel{z-index:480 !important;}
 .global-loading-overlay{z-index:500 !important;}
 .toast{z-index:600 !important;}
+
+/* v10.93 — ปุ่ม "ย่อ" ทุกหน้า: หน้าตาเป็นปุ่มกดได้ชัดเจน + แถบปุ่มค้างบนสุดตอนเลื่อน · หัวตารางแนบใบ Cer ล็อกค้าง (ประเภท/รุ่น · ภายใน · ผู้ผลิต) */
+.btn-min{background:rgba(217,119,6,.14) !important;color:var(--amber,#d97706) !important;border:1.5px solid var(--amber,#d97706) !important;font-weight:700 !important;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.28);cursor:pointer;min-height:34px;padding:6px 14px !important;transition:filter .12s,transform .06s;}
+.btn-min:hover{filter:brightness(1.15);}
+.btn-min:active{transform:translateY(1px);box-shadow:none;}
+.f1-fs-bar{height:50px;box-sizing:border-box;margin-bottom:0 !important;padding:0 !important;z-index:20 !important;}
+.ex-fsbar{z-index:20 !important;}
+.ex-wsbar{position:sticky;top:0;z-index:20;background:var(--bg,#fff);}
+#eng-cert-matrix thead th{position:sticky;top:50px;z-index:4;background:var(--panel);box-shadow:0 1px 0 var(--border);}
 
 /* ===== v9.42 ตารางเทรน (.tr-*) — มือถือก่อน ===== */
 #tr-root,#tra-root{max-width:1180px;margin:0 auto;padding-bottom:84px;}
@@ -2611,8 +2620,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.92";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 12:14 น. เวลาไทย";
+const APP_VERSION = "10.93";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 12:51 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4900,7 +4909,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
     try{ document.documentElement.classList.toggle('f1-fs-lock', on); }catch(e){}
     if(on && !bar){
       bar = document.createElement('div'); bar.className = 'f1-fs-bar';
-      bar.innerHTML = '<button class="btn btn-ghost btn-sm" type="button">🗗 ย่อ</button><b></b>'; bar.querySelector('b').textContent = title;
+      bar.innerHTML = '<button class="btn btn-ghost btn-sm btn-min" type="button">🗗 ย่อ</button><b></b>'; bar.querySelector('b').textContent = title;
       bar.querySelector('button').addEventListener('click', ()=>{ hidden = true; try{ localStorage.setItem(storageKey,'1'); }catch(e){} setFs(false); apply(); });
       body.insertBefore(bar, body.firstChild);
     }
@@ -13606,7 +13615,7 @@ function exResultAttemptNote(r, rid){
 /* ---------- โหมดทดลองทำข้อสอบ (Sup/Manager) — หน้าตาเหมือนผู้สอบจริง แต่ไม่บันทึกอะไร ---------- */
 function exaFsWrap(inner){ // v10.60 — โหมดทดลองของ Sup: เต็มจอเหมือนผู้สอบจริง (เลื่อนในกรอบเดียว ไม่ลากทั้งหน้า) · กด "ย่อ" กลับมาแสดงในหน้าปกติ แล้วกด "เต็มจอ" ใหม่ได้
   const off = !!EX.fsOff;
-  return `<div class="${off ? 'ex-fsinline' : 'ex-fsbox'}"><div class="ex-fsbar"><button class="btn btn-ghost btn-sm" data-ex="pxfs">${off ? '⛶ เต็มจอ' : '🗗 ย่อ'}</button><span class="ex-hint">${off ? 'แสดงแบบย่อ' : 'โหมดเต็มจอ — กด "ย่อ" เพื่อกลับหน้าปกติ'}</span></div>${inner}</div>`;
+  return `<div class="${off ? 'ex-fsinline' : 'ex-fsbox'}"><div class="ex-fsbar"><button class="btn btn-ghost btn-sm btn-min" data-ex="pxfs">${off ? '⛶ เต็มจอ' : '🗗 ย่อ'}</button><span class="ex-hint">${off ? 'แสดงแบบย่อ' : 'โหมดเต็มจอ — กด "ย่อ" เพื่อกลับหน้าปกติ'}</span></div>${inner}</div>`;
 }
 function examRenderPracticeResult(r){ EX.pxLastR = r; examRenderPracticeResult_(r); const root = $('exa-root'); if(root) root.innerHTML = exaFsWrap(root.innerHTML); }
 function examRenderPracticeResult_(r){
@@ -14087,7 +14096,7 @@ function exaRenderSet(){
     </div><div class="ex-row"><button class="btn btn-primary" data-ex="saveset">💾 บันทึกการตั้งค่า</button>${isNew ? '' : `<button class="btn btn-ghost" data-ex="copyset" data-id="${exH(s.setId)}" ${EXA.qs.length?'':'disabled'}>📑 คัดลอกทั้งชุด</button><button class="btn btn-ghost" data-ex="delset" data-id="${exH(s.setId)}">🗑 ลบชุดข้อสอบ</button>`}</div>
       ${isNew ? '' : '<div class="ex-hint">ลบได้เฉพาะชุดที่ยังไม่มีใครสอบและยังไม่ออกใบ Cer · ชุดที่มีผู้สอบแล้วให้ตั้งสถานะ "ซ่อน" แทน</div>'}</div></div>`;
   if(!isNew){
-    html += `<div class="ex-tabpane" data-pane="q" ${tabSt('q')}><div class="panel-block ex-forms ex-workspace ${wsFull ? 'full' : ''}">${wsFull ? `<div class="ex-wsbar"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการชุด</button><b>${exH(s.title)}</b>${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}<span class="ex-wsgap"></span><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="settings">⚙️ ตั้งค่า</button><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="pub">🚀 เผยแพร่</button><button class="btn btn-ghost btn-sm" data-ex="wsfull" data-v="0" title="ออกจากโหมดเต็มจอ">⤡ ย่อ</button></div>` : ''}<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button>${wsFull ? '' : '<button class="btn btn-ghost btn-sm" data-ex="wsfull" data-v="1">⤢ เต็มจอ</button>'}<button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
+    html += `<div class="ex-tabpane" data-pane="q" ${tabSt('q')}><div class="panel-block ex-forms ex-workspace ${wsFull ? 'full' : ''}">${wsFull ? `<div class="ex-wsbar"><button class="btn btn-ghost btn-sm" data-ex="atab" data-v="sets">← กลับรายการชุด</button><b>${exH(s.title)}</b>${s.latestVersion ? exChip('เผยแพร่ v'+s.latestVersion,'ok') : exChip('ยังไม่เผยแพร่','warn')}<span class="ex-wsgap"></span><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="settings">⚙️ ตั้งค่า</button><button class="btn btn-ghost btn-sm" data-ex="settab" data-v="pub">🚀 เผยแพร่</button><button class="btn btn-ghost btn-sm btn-min" data-ex="wsfull" data-v="0" title="ออกจากโหมดเต็มจอ">⤡ ย่อ</button></div>` : ''}<div class="ex-row" style="justify-content:space-between"><h2 style="margin:0">รายการข้อ (${EXA.qs.length}${EXA.pending.length ? ' + ยังไม่บันทึก '+EXA.pending.length : ''})</h2><span class="ex-row" style="margin:0;gap:6px"><button class="btn btn-ghost btn-sm" data-ex="copyfrom">📑 คัดลอกจากชุดอื่น</button><button class="btn btn-ghost btn-sm" data-ex="bulk">📋 วางหลายข้อ</button>${wsFull ? '' : '<button class="btn btn-ghost btn-sm" data-ex="wsfull" data-v="1">⤢ เต็มจอ</button>'}<button class="btn btn-primary btn-sm" data-ex="newq">+ เพิ่มข้อ</button></span></div>
       ${exaCopyPanelHtml()}
       ${exaPxBar()}
       ${EXA.pending.length ? `<div class="ex-note ex-pendbar"><b>มี ${EXA.pending.length} ข้อที่ยังไม่บันทึกลงระบบ</b> (อยู่ในเครื่องนี้เท่านั้น ถ้ารีเฟรชหน้าจะหาย)<div class="ex-act"><button class="btn btn-primary" data-ex="saveall">💾 บันทึกทั้งหมด ${EXA.pending.length} ข้อ ในครั้งเดียว</button></div></div>` : ''}
@@ -18937,7 +18946,7 @@ async function renderEngCertTab(forceReload){
   });
   wrap.innerHTML = !anyModel
     ? `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นเครื่องในระบบ</div>`
-    : `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;"><table id="eng-cert-matrix"><thead><tr><th style="text-align:left;">ประเภท / รุ่น</th><th>ภายใน</th><th>ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    : `<div style="border:1px solid var(--border);border-radius:8px;overflow:clip;"><table id="eng-cert-matrix"><thead><tr><th style="text-align:left;">ประเภท / รุ่น</th><th>ภายใน</th><th>ผู้ผลิต</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   wrap.querySelectorAll('.eng-cert-grp').forEach(tr=>tr.addEventListener('click', ()=>{
     const g = tr.getAttribute('data-grp');
     if(_engCertHiddenCats.has(g)) _engCertHiddenCats.delete(g); else _engCertHiddenCats.add(g);
