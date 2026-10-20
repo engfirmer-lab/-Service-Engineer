@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.86
-  อัปเดตล่าสุด   : 19 ตุลาคม 2569 17:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.87
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 07:41 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -26,7 +26,7 @@
   11. รูปบรรยากาศการเทรนอยู่ที่แท็บ "จบ Training" ที่เดียว
   12. ทุกครั้งที่ส่ง: อัปเดต APP_VERSION + APP_UPDATED_AT + comment นี้ + <title> ให้ตรงกัน และเช็คไฟล์จริงก่อนส่ง
   13. ไฟล์ที่ผู้ใช้อัปโหลดทุกชนิดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด: ห้ามเขียนโค้ดอัปโหลดตรงด้วยโทเคนผู้ใช้ — ให้เรียก driveUploadFile/LargeFile/Image/CopyFileTo/driveFindOrCreateFolder (ผ่าน Apps Script: drvInit/drvDone/drvB64/drvPath/drvCopy) · ปลายทางต้องอยู่ใต้ ROOT_FOLDER_ID เสมอ
-  14. ข้อมูลทุกอย่างของระบบ (รูป เอกสาร วิดีโอ ใบ Cer รายงาน สำรอง ฯลฯ) เก็บเฉพาะใน Google Drive ของ engfirmer@gmail.com ภายใต้โฟลเดอร์ F1 Service เท่านั้น — ห้ามสร้าง/เขียนลง Drive ของผู้ใช้คนอื่น หรือที่หน้าแรก (My Drive) · ห้ามสร้างโฟลเดอร์ถ้าไม่มีโฟลเดอร์แม่ (ต้อง error แทน) · ลบไฟล์ที่ engfirmer เป็นเจ้าของ ให้ผ่าน Apps Script (drvTrash)
+  14. ข้อมูลทุกอย่างของระบบ (รูป เอกสาร วิดีโอ ใบ Cer รายงาน สำรอง ฯลฯ) เก็บเฉพาะใน Google Drive ของ engfirmer@gmail.com ภายใต้โฟลเดอร์ F1 Service เท่านั้น — ห้ามสร้าง/เขียนลง Drive ของผู้ใช้คนอื่น หรือที่หน้าแรก (My Drive) · ห้ามสร้างโฟลเดอร์ถ้าไม่มีโฟลเดอร์แม่ (ต้อง error แทน) · ไม่มีทางสำรองที่อัปโหลดด้วยโทเคนผู้ใช้ (drvFallbackOk คืน false เสมอ) · ชีตกลางสร้างใหม่ได้เฉพาะ engfirmer (driveOwnerOnlyCreate) · ลบไฟล์ที่ engfirmer เป็นเจ้าของ ให้ผ่าน Apps Script (drvTrash)
   15. ลำดับชั้นหน้าจอ (z-index) ตายตัว: หน้าเต็มจอ ≤ 300 < bg-jobs 350 < modal-overlay 400 < lightbox 450 < gsi 460 < inapp 480 < loading 500 < toast 600 — หน้าเต็มจอใหม่ห้ามเกิน 300 · ป๊อปอัปใหม่ต้องใช้ class modal-overlay (ห้ามตั้ง z-index เอง) · ต้องผ่านเทสต์ test/t75.js ก่อนส่งทุกครั้ง
   ─── VERIFY CHECKLIST (Claude ต้อง grep ยืนยัน 3 จุดนี้ก่อน SendUserFile ทุกครั้ง) ───
   grep: APP_VERSION = "X.XX"   → ต้องตรงกับเวอร์ชันใหม่
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.86</title>
+<title>F1 Service — v10.87</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2610,8 +2610,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.86";
-const APP_UPDATED_AT = "19 ตุลาคม 2569 17:10 น. เวลาไทย";
+const APP_VERSION = "10.87";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 07:41 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4163,7 +4163,7 @@ async function ensureClaimsLogSpreadsheet(){
     // หมายเหตุสำคัญ: ต้องเปิดใช้งาน "Google Sheets API" ในโปรเจกต์ Google Cloud เดียวกับที่ใช้ Drive API ด้วย (คนละสวิตช์กับ Drive API — ถ้าไม่เปิด จะเจอ error "Google Sheets API has not been used ... or it is disabled" ตรงนี้)
     // แท็บแรกที่สร้างมากับสเปรดชีตตั้งชื่อตรงกับ sentinel ที่ ownerOf() คืนมาให้ Product ที่ยังไม่มีคนตั้งผู้ดูแล (เดิมเคยตั้งชื่อแท็บกับ key ที่แคชไว้ไม่ตรงกัน แก้ให้ตรงกันแล้ว)
     const DEFAULT_TAB_TITLE = 'ยังไม่มีผู้ดูแล';
-    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    driveOwnerOnlyCreate('ชีตกลาง'); const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ properties:{ title: CLAIMS_SHEET_NAME }, sheets:[{ properties:{ title:DEFAULT_TAB_TITLE } }] })
     });
@@ -4537,7 +4537,7 @@ async function ensureProfilesSpreadsheet(){
       fsSaveProfilesSheetMeta();
       return _profilesSheetIdCache;
     }
-    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    driveOwnerOnlyCreate('ชีตกลาง'); const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ properties:{ title: PROFILES_SHEET_NAME }, sheets:[{ properties:{ title: PROFILES_SHEET_TAB_TITLE } }] })
     });
@@ -8627,7 +8627,9 @@ function openAddErrorForModel(category, model){
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
    เซิร์ฟเวอร์ (Apps Script) เปิดช่องอัปโหลดในนามเจ้าของ → มือถืออัปโหลดตรงเข้าช่องนั้น · ถ้า Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่ → ใช้วิธีเดิมชั่วคราว (ไม่ให้ระบบพัง) */
-function drvFallbackOk(e){ return /ไม่รู้จักคำสั่ง|DRV_FALLBACK|ยังไม่ได้ตั้งค่า EXAM_API_URL/.test(String((e && e.message) || '')); }
+// v10.87 — ปิดทางสำรอง: ห้ามอัปโหลด/สร้างด้วยโทเคนผู้ใช้เองเด็ดขาด (ไฟล์ต้องเป็นของ engfirmer เท่านั้น) — ถ้า Apps Script ยังไม่พร้อมให้แจ้ง error แทน
+function drvFallbackOk(e){ return false; }
+function driveOwnerOnlyCreate(what){ if(myUserEmail !== SUPER_ADMIN_EMAIL) throw new Error('ยังไม่มี'+what+' — ต้องให้ engfirmer เป็นคนเปิดใช้งานครั้งแรก (กันไฟล์ไปอยู่ใน Drive ของคนอื่น)'); }
 function drvPutResumable(file, uploadUrl, mime, onProgress){
   return new Promise((resolve, reject)=>{
     const xhr = new XMLHttpRequest();
@@ -17482,7 +17484,7 @@ async function ensureReturnPartsSheet(){
     // ยังไม่มี — สร้างใหม่ (แท็บแรก = รอรับ{ปีปัจจุบัน})
     const currentYear = new Date().getFullYear().toString();
     const waitingTab = rpWaitingTabName(currentYear);
-    const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    driveOwnerOnlyCreate('ชีตกลาง'); const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ properties:{ title: RP_SHEET_NAME }, sheets:[
         { properties:{ title: waitingTab, index:0 } }
