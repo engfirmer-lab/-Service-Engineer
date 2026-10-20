@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.93
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 12:51 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.96
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 13:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.93</title>
+<title>F1 Service — v10.96</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2620,8 +2620,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.93";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 12:51 น. เวลาไทย";
+const APP_VERSION = "10.96";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 13:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4802,11 +4802,7 @@ async function deleteDriveFolderForModel(category, model, ownerName){
 async function ensureDocumentFolderPath(category, model, docTypeFolderName){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
-  const f1 = await driveFindOrCreateFolder(ownerFolderName, DRIVE_ROOT_FOLDER_ID);
-  const f2 = await driveFindOrCreateFolder(category, f1);
-  const f3 = await driveFindOrCreateFolder(model, f2);
-  const f4 = await driveFindOrCreateFolder(docTypeFolderName, f3);
-  return f4;
+  return driveEnsurePath([ownerFolderName, category, model, docTypeFolderName]); // v10.94 — คำขอเดียวทั้งสาย
 }
 // โฟลเดอร์เคลมอะไหล่ — จัดตามผู้ดูแล (Sup Product) ของ Product/รุ่นนั้นๆ เหมือนโครงสร้างเอกสาร ให้ Sup Product แต่ละคนเห็นเคลมของตัวเองรวมอยู่ที่เดียว
 // โครงสร้าง: Service Center/[ชื่อ Sup Product]/Claim/[DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ]/ — โฟลเดอร์แยกต่างหากทุกเคลม 1 รายการ
@@ -5295,6 +5291,7 @@ function runOrphanScan(scope){
       let sheetRefs = null;
       try{ sheetRefs = await orphanGatherSheetRefs(setStatus); }catch(e){ sheetRefs = null; problems.push('Google Sheet: '+e.message); }
       ctx.check();
+      const trFileIdSet = new Set(); try{ ((await examApi('trAllFileIds', {})).ids||[]).forEach(x=>trFileIdSet.add(x)); }catch(e){ console.warn('อ่านรายการไฟล์งานเทรนไม่ได้ (ยังไม่ Deploy Code.gs ใหม่?)', e.message); }
       const tree = await orphanListTree(setStatus, ctx.stopped);
       ctx.check();
       const now = Date.now(), known = KNOWN_APP_SHEETS();
@@ -5303,7 +5300,8 @@ function runOrphanScan(scope){
       for(const f of tree.files){
         if(f.path==='Backups' || f.path.indexOf('Backups/')===0){ backupCount++; continue; }
         if(f.mimeType==='application/vnd.google-apps.spreadsheet'){ if(!known.has(f.name)) sheets.push(f); continue; }
-        if(refs.has(f.id)) continue;
+        if(['Exams','Training','Reports','Signatures','tmp'].indexOf((f.path||'').split('/')[0])>=0) continue; // v10.95 — อ้างอิงอยู่ใน Sheet ระบบสอบ/เทรน ไม่ใช่ไฟล์ตกค้าง
+        if(refs.has(f.id) || trFileIdSet.has(f.id)) continue;
         if(sheetRefs && (sheetRefs.has(f.id) || sheetRefs.has(f.parentId))) continue; // v9.33 — ยังมีลิงก์อยู่ใน Sheet (เคลมจบเคส/ประวัติ RP)
         if(sheetRefs && (f.path||'').split('/')[1]==='Claim'){ if(now - new Date(f.createdTime).getTime() < ORPHAN_MIN_AGE_MS){ tooNew++; continue; } orphans.push(f); continue; }
         // v8.90 — ไฟล์ใน <ผู้ดูแล>/Claim/… ที่ไม่มี Firestore อ้างอิง มักเป็นเคลมที่จบเคสแล้วย้ายไป Sheet (Sheet อ้างอิงแค่โฟลเดอร์) — ไม่เสนอให้ลบ
@@ -16650,11 +16648,19 @@ async function traUploadMfr(regId, file){
   if(!(await exEnsureDrive())) return;
   showLoadingOverlay('กำลังอัปโหลดใบ Cer...');
   try{
-    const folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
+    // v10.95 — ใบ Cer ผู้ผลิตลงโฟลเดอร์ของช่างทันที: Certificate/[ชื่อช่าง]/ผู้ผลิต/[ประเภท]/[รุ่น] (ไม่ต้องรอย้ายตอนจบ Training) · ไม่มีบัญชีในแอป = เก็บในโฟลเดอร์งานเทรนก่อน
+    let folder;
+    if(r.email){ try{ folder = await ensureCertificateFolderPath('manufacturer', r.name, s.category, trPickModel(s)); }catch(e){ console.warn('สร้างโฟลเดอร์ Cer ของช่างไม่สำเร็จ ใช้โฟลเดอร์งานเทรนแทน', e); } }
+    if(!folder) folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
     const nm = sanitizeFolderName(r.name)+'_'+String(file.name||'cert.pdf').replace(/[^A-Za-z0-9ก-๙._-]+/g,'_');
     const url = await driveUploadLargeFile(file, nm, folder);
-    await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:file.name||nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
-    hideLoadingOverlay(); showToast('✓ แนบไฟล์แล้ว');
+    const added = await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:file.name||nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
+    let counted = false;
+    if(r.email && added && added.fileId){ // v10.96 — อัปเดตจำนวนใบ Cer ของช่างทันที (ไม่ต้องรอจบ Training)
+      try{ exOverlayText('กำลังอัปเดตจำนวนใบ Cer ของช่าง...'); await trCreateMfrCert(s, trPickModel(s), { fileId:added.fileId, driveFileId:driveFileIdFromUrl(url), driveUrl:url, fileName:file.name||nm, name:r.name, email:String(r.email).toLowerCase() }); counted = true; }
+      catch(e){ console.warn('สร้างรายการ Cer ทันทีไม่สำเร็จ (จะสร้างตอนจบ Training)', e); }
+    }
+    hideLoadingOverlay(); showToast(counted ? '✓ แนบไฟล์แล้ว · อัปเดตจำนวนใบ Cer ของ '+(r.name||'ช่าง')+' แล้ว' : '✓ แนบไฟล์แล้ว'+(r.email?' (จำนวนใบ Cer จะอัปเดตตอนจบ Training)':''));
   }catch(e){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ: '+e.message); }
   await traReload(true);
 }
@@ -16675,15 +16681,7 @@ async function trFinishMfr(s, files){
     if(f.certDocId){ ok++; continue; }
     if(!f.email){ fail.push((f.name||'?')+' (ไม่มีบัญชีในแอป)'); continue; }
     try{
-      const folderId = await ensureCertificateFolderPath('manufacturer', f.name, s.category, model);
-      await trDriveMove(f.driveFileId, folderId);
-      const cid = certDocId(f.email, 'manufacturer', s.category, model) + '__' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-      await sdk.setDoc(sdk.doc(db,'certificates', cid), {
-        ownerEmail:f.email, ownerName:f.name, role:'engineer', certType:'manufacturer', category:s.category, model,
-        fileUrl:f.driveUrl, fileName:f.fileName, uploadedAt:Date.now(), score:null, status:'pending', reviewedBy:'', reviewedAt:null, reviewNote:'',
-        source:'training', trainingSessionId:s.sessionId
-      });
-      await examApi('trMarkFile', { fileId:f.fileId, certDocId:cid });
+      await trCreateMfrCert(s, model, f);
       ok++;
     }catch(e){ fail.push((f.name||'?')+' ('+e.message+')'); }
   }
@@ -18618,14 +18616,15 @@ function certDocId(ownerEmail, certType, category, model){
 function certTypeLabel(t){ return t==='internal' ? 'ภายใน' : 'ผู้ผลิต'; }
 
 // โฟลเดอร์: Service Center/Certificate/[ภายใน|ผู้ผลิต]/[ชื่อผู้อัปโหลด]/[Category]/[Model]/
+async function driveEnsurePath(names){ // v10.94 — หา/สร้างโฟลเดอร์ซ้อนกันทั้งสายในคำขอเดียว (ฝั่งเซิร์ฟเวอร์ล็อกกันซ้ำ) + แคชผลไว้
+  const nm = names.map(sanitizeFolderName), ck = 'P::'+nm.join('/');
+  if(_driveFolderCache.has(ck)) return _driveFolderCache.get(ck);
+  const r = await examApiRetry('drvPath', { parentId: DRIVE_ROOT_FOLDER_ID, names: nm });
+  _driveFolderCache.set(ck, r.id); return r.id;
+}
 async function ensureCertificateFolderPath(certType, ownerName, category, model){
-  const f1 = await driveFindOrCreateFolder('Certificate', DRIVE_ROOT_FOLDER_ID);
-  // v8.89 — โครงสร้างใหม่: Certificate / ชื่อผู้อัปโหลด (ชื่อเล่น - เขต) / ภายใน|ผู้ผลิต / ประเภทเครื่อง / รุ่น / ไฟล์
-  const f2 = await driveFindOrCreateFolder(sanitizeFolderName(ownerName || 'ไม่ระบุชื่อ'), f1);
-  const f3 = await driveFindOrCreateFolder(certTypeLabel(certType), f2);
-  const f4 = await driveFindOrCreateFolder(category, f3);
-  const f5 = await driveFindOrCreateFolder(model, f4);
-  return f5;
+  // โครงสร้าง: Certificate / ชื่อผู้อัปโหลด / ภายใน|ผู้ผลิต / ประเภท / รุ่น
+  return driveEnsurePath(['Certificate', ownerName || 'ไม่ระบุชื่อ', certTypeLabel(certType), category, model]);
 }
 
 // ---- พื้นที่รับผิดชอบของ Engineer (collection: engineerResponsibility, doc id = email) ----
