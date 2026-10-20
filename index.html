@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 10.88
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 10.89
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:42 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v10.88</title>
+<title>F1 Service — v10.89</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2611,8 +2611,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "10.88";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 11:25 น. เวลาไทย";
+const APP_VERSION = "10.89";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 11:42 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8630,7 +8630,7 @@ function openAddErrorForModel(category, model){
    เซิร์ฟเวอร์ (Apps Script) เปิดช่องอัปโหลดในนามเจ้าของ → มือถืออัปโหลดตรงเข้าช่องนั้น · ถ้า Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่ → ใช้วิธีเดิมชั่วคราว (ไม่ให้ระบบพัง) */
 // v10.87 — ปิดทางสำรอง: ห้ามอัปโหลด/สร้างด้วยโทเคนผู้ใช้เองเด็ดขาด (ไฟล์ต้องเป็นของ engfirmer เท่านั้น) — ถ้า Apps Script ยังไม่พร้อมให้แจ้ง error แทน
 function drvFallbackOk(e){ return false; }
-// v10.88 — สแกนโฟลเดอร์รุ่นใน Drive ที่ชื่อไม่ตรงกับรุ่นใดในแอป → เลือกรุ่นปลายทางแล้วรวมทีเดียว (ใช้ adminRenameProduct เดิม)
+// v10.89 — สแกนโฟลเดอร์รุ่นใน Drive ที่ชื่อไม่ตรงกับรุ่นใดในแอป → เลือกรุ่นปลายทางแล้วรวมทีเดียว (ใช้ adminRenameProduct เดิม)
 async function openStaleFolderScan(){
   const cats = {}; Object.keys(DATA.categories||{}).forEach(c=>{ cats[c] = (DATA.categories[c]||[]).slice(); });
   showLoadingOverlay('กำลังสแกนโฟลเดอร์ใน Drive... (อาจใช้เวลาครู่หนึ่ง)');
@@ -8905,6 +8905,11 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
   await fsSaveError(errorId, fields);
+  { // v10.89 — สร้างโฟลเดอร์ Troubleshooting ของ Error นี้ใน Drive (F1 Service/[Sup]/[Product]/[รุ่น]/Troubleshooting/[Error]/วิธี N) ทันที
+    // ไม่ต้องรอแนบรูป/วิดีโอ — ถ้าสร้างไม่ได้ให้บอกสาเหตุจริง (ข้อมูลข้อความยังบันทึกต่อ ส่วนรูป/วิดีโอจะบอกซ้ำถ้าอัปโหลดไม่ได้)
+    try{ for(let i=0;i<validSolutions.length;i++) await ensureImageFolderPath(fields.category, fields.model, fields.errorCode, fields.symptom, i); }
+    catch(e){ console.warn('สร้างโฟลเดอร์ Drive ไม่สำเร็จ', e); showToast('⚠ สร้างโฟลเดอร์ใน Google Drive ไม่สำเร็จ: '+(e&&e.message||e)+' — ข้อความบันทึกแล้ว แต่ยังไม่มีโฟลเดอร์/ไฟล์ใน Drive'); }
+  }
   const keepIds = new Set(validSolutions.map(s=>s.id));
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
