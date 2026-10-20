@@ -4,7 +4,7 @@
   F1 Service — Firmer Service Center Web App
   ===================================================================
   เวอร์ชันปัจจุบัน : 10.90
-  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:45 น. เวลาไทย
+  อัปเดตล่าสุด   : 20 ตุลาคม 2569 11:56 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -2612,7 +2612,7 @@ let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
 const APP_VERSION = "10.90";
-const APP_UPDATED_AT = "20 ตุลาคม 2569 11:45 น. เวลาไทย";
+const APP_UPDATED_AT = "20 ตุลาคม 2569 11:56 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3223,6 +3223,17 @@ async function execGroupDelete(idsToDelete, driveFileId){
     // v8.88 — ลบไฟล์ใน Drive ก่อน (ถ้าลบไม่ได้ จะยังไม่แตะรายการในแอป กันไฟล์ค้างโดยไม่มีรายการอ้างอิง)
     if(driveFileId){
       const stillReferenced = DATA.documents.some(x=>!idsToDelete.includes(x.id) && x.url && extractDriveFileId(x.url)===driveFileId);
+      if(stillReferenced){
+        try{ // v10.90 — ไฟล์ยังมีรุ่นอื่นใช้อยู่ → ย้ายไปโฟลเดอร์ของรุ่นที่เหลือ (ถ้ายังไม่อยู่ในโฟลเดอร์ของรุ่นที่เหลือ)
+          const rem = DATA.documents.filter(x=>!idsToDelete.includes(x.id) && x.url && extractDriveFileId(x.url)===driveFileId);
+          const pids = [];
+          for(const d of rem.slice(0,6)){
+            const tl = docTypeHasSubtypes(d.docType) ? subtypeLabel(d.docType, d.videoSubtype) : docTypeLabel(d.docType);
+            pids.push(await ensureDocumentFolderPath(d.category, d.model, tl));
+          }
+          if(pids.length) await examApiRetry('drvMove', { fileId: driveFileId, parentIds: pids });
+        }catch(e){ console.warn('ย้ายไฟล์ไม่สำเร็จ', e); showToast('⚠ ลบรุ่นที่เลือกแล้ว แต่ย้ายไฟล์ใน Drive ไปรุ่นที่เหลือไม่สำเร็จ: '+(e&&e.message||e)); }
+      }
       if(!stillReferenced){
         try{ await driveDeleteFile(driveFileId); }
         catch(e){
