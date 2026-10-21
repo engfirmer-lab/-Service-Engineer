@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.03
-  อัปเดตล่าสุด   : 21 ตุลาคม 2569 11:49 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.07
+  อัปเดตล่าสุด   : 21 ตุลาคม 2569 21:21 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.03</title>
+<title>F1 Service — v11.07</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2620,8 +2620,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.03";
-const APP_UPDATED_AT = "21 ตุลาคม 2569 11:49 น. เวลาไทย";
+const APP_VERSION = "11.07";
+const APP_UPDATED_AT = "21 ตุลาคม 2569 21:21 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6297,7 +6297,11 @@ async function userProfileExists(email){
     await initFirebase();
     const sdk = window._firebaseSdk;
     const docSnap = await sdk.getDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
-    if(docSnap.exists()){ myUserProfile = docSnap.data(); setProfileLabel(email, myUserProfile); return true; }
+    if(docSnap.exists()){
+      const _d = docSnap.data() || {};
+      if(!(String(_d.nicknameTh||'').trim() || String(_d.firstNameTh||'').trim() || String(_d.phone||'').trim())) return false; // เอกสารว่าง/มีแค่ตำแหน่ง-เขต → ยังไม่ได้กรอกจริง
+      myUserProfile = _d; setProfileLabel(email, myUserProfile); return true;
+    }
     return false;
   }catch(e){
     console.warn('ตรวจสอบ userProfiles ไม่สำเร็จ:', e);
@@ -6601,6 +6605,7 @@ async function saveUserProfile(){
       payload.nameHistory = [ ...((existing.nameHistory)||[]), { at:Date.now(), by:myUserEmail||'', from, to } ].slice(-20);
     }
     await sdk.setDoc(sdk.doc(db,'userProfiles', docId), payload, { merge:true });
+    if(!isEditingOther){ try{ setTimeout(()=>{ try{ checkBirthdayToday({force:true}); }catch(_){} }, 1800); }catch(_){} } // เพิ่งแก้โปรไฟล์ตัวเอง → ตรวจวันเกิดใหม่ทันที (ข้ามตัวหน่วง 30 นาที)
     const merged = { ...(existing||{}), ...payload };
     if(isEditingOther){
       setProfileLabel(docId, merged); if(docId===myUserEmail){ myUserProfile = merged; showSignedInPill(); }
@@ -6745,6 +6750,7 @@ const BDAY_WISHES = [
   'ขอให้โชคดีมีเงินทอง ครอบครัวมีสุข สุขภาพไม่มีโรค',
   'ขอให้ร่ำรวยโชคลาภ หมดทุกข์หมดโศก มีแต่เรื่องดีๆ เข้ามาในชีวิต'
 ];
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTimeout(()=>{ try{ checkBirthdayToday(); }catch(_){} }, 600); }); // กลับมาเปิดแอปที่ค้างไว้ → ตรวจวันเกิดอีกครั้ง (จำกัดทุก 30 นาที)
 function bdayMatch(birth, todayIso){ // birth = 'YYYY-MM-DD' · วันเกิด 29 ก.พ. → ปีที่ไม่ใช่ปีอธิกสุรทิน ฉลองวันที่ 28 ก.พ.
   if(!/^\d{4}-\d{2}-\d{2}/.test(String(birth||''))) return false;
   const md = String(birth).slice(5,10), t = String(todayIso).slice(5,10), y = Number(String(todayIso).slice(0,4));
@@ -6782,20 +6788,22 @@ async function checkBirthdayToday(opts){
     const pm = document.getElementById('profile-modal'); if(pm && pm.classList.contains('show')) return; // ยังกรอกโปรไฟล์บังคับอยู่ — ไว้เปิดแอปครั้งถัดไป (ยังไม่นับว่าแสดงแล้ว)
     if(document.getElementById('f1-bday-modal')) return;
     const today = opts.today || new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});
-    const key = 'f1_bday_'+String(myUserEmail).toLowerCase();
-    try{ if(localStorage.getItem(key) === today) return; }catch(e){}
-    if(window._bdayRunning) return; window._bdayRunning = true; // กันเรียกซ้อน — วันละครั้งเท่านั้น
-    try{ localStorage.setItem(key, today); }catch(e){} // ตีตราวันนี้ทันทีก่อนโหลดข้อมูล
+    const em = String(myUserEmail).toLowerCase(), key = 'f1_bdayshown_'+em, chk = 'f1_bdaychk_'+em;
+    try{ if(localStorage.getItem(key) === today) return; }catch(e){}                       // วันนี้ขึ้นป๊อปอัปให้เครื่องนี้แล้ว → ไม่ขึ้นซ้ำ
+    if(!opts.profiles && !opts.force){ try{ if(Date.now() - Number(localStorage.getItem(chk)||0) < 1800000) return; }catch(e){} } // ไม่มีใครวันเกิด → ตรวจใหม่ได้ทุก 30 นาที (เซิร์ฟเวอร์แคชไว้ ไม่อ่าน Firestore)
+    if(window._bdayRunning) return; window._bdayRunning = true;                            // กันเรียกซ้อน
+    try{ localStorage.setItem(chk, String(Date.now())); }catch(e){}
     let people = null;
     try{
       if(opts.profiles){ people = opts.profiles.filter(p=> bdayMatch(p.birthDate, today)); }
       else{
-        try{ const r = await examApi('birthdaysToday', {}); people = (r && r.people) || []; }
+        try{ const r = await examApi('birthdaysToday', opts.force ? { refresh:true } : {}); people = (r && r.people) || []; }
         catch(e1){ const profs = await fetchAllUserProfiles(); people = (profs||[]).filter(p=> bdayMatch(p.birthDate, today)); }
       }
-    }catch(e){ try{ localStorage.removeItem(key); }catch(_){} window._bdayRunning = false; return; }
+    }catch(e){ try{ localStorage.removeItem(chk); }catch(_){} window._bdayRunning = false; return; }
+    if(!people.length){ window._bdayRunning = false; return; }
+    try{ localStorage.setItem(key, today); }catch(e){} // ตีตรา "แสดงแล้ว" เมื่อจะขึ้นป๊อปอัปจริงเท่านั้น
     window._bdayRunning = false;
-    if(!people.length) return;
     const year = today.slice(0,4), me = String(myUserEmail).toLowerCase();
     people.sort((a,b)=> (String(a.email).toLowerCase()===me ? -1 : 0) - (String(b.email).toLowerCase()===me ? -1 : 0));
     const mine = people.some(p=>String(p.email).toLowerCase()===me);
@@ -6818,6 +6826,196 @@ async function checkBirthdayToday(opts){
     document.body.appendChild(ov);
   }catch(e){ console.warn('birthday popup', e); }
 }
+
+/* ===================== v11.06 — ตัวเลือกวันที่ของแอป (รูปแบบเดียวทั้งแอป) · เลือกปีแสดงเป็น พ.ศ. หรือ ค.ศ. ได้ (จำไว้ในเครื่อง) · ค่าที่เก็บเป็น ค.ศ. (ISO) เสมอ ===================== */
+const F1DP = (function(){
+  const MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const MONF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const WD = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  function getFmt(){ try{ return localStorage.getItem('f1_dateFmt') === 'ce' ? 'ce' : 'be'; }catch(e){ return 'be'; } }
+  function setFmt(v){ try{ localStorage.setItem('f1_dateFmt', v === 'ce' ? 'ce' : 'be'); }catch(e){} syncAll(); if(ov && ov.classList.contains('show')) render(); }
+  function yl(y){ return getFmt() === 'be' ? y + 543 : y; }
+  function suffix(){ return getFmt() === 'be' ? 'พ.ศ.' : 'ค.ศ.'; }
+  function parse(iso){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso||'')); return m ? { y:+m[1], m:+m[2], d:+m[3] } : null; }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function toIso(y,m,d){ return y+'-'+pad(m)+'-'+pad(d); }
+  function todayIso(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'}); }
+  function show(iso){ const p = parse(iso); return p ? p.d+' '+MON[p.m-1]+' '+yl(p.y)+' ('+suffix()+')' : ''; }   // 13 ธ.ค. 2527 (พ.ศ.)
+  function dateTh(iso){ const p = parse(iso); return p ? pad(p.d)+'/'+pad(p.m)+'/'+yl(p.y) : ''; }                  // 13/12/2527
+  function limit(v){ if(!v) return null; if(v === 'today') return todayIso(); return parse(v) ? String(v).slice(0,10) : null; }
+
+  let ov = null, st = null;
+  function build(){
+    if(ov) return;
+    ov = document.createElement('div'); ov.className = 'modal-overlay'; ov.id = 'f1-dp';
+    ov.innerHTML = '<div class="modal" style="max-width:360px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;">'
+      +'<h3 id="f1-dp-title" style="margin:0;font-size:16px;">เลือกวันที่</h3><button type="button" class="modal-close-x" data-dp="close" aria-label="ปิด" style="position:static;">✕</button></div>'
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12.5px;color:var(--text-faint);">ปีที่แสดง'
+      +'<span class="subtab-bar" style="display:inline-flex;gap:4px;margin:0;"><button type="button" class="subtab" data-dp="fmt-be" style="padding:4px 12px;">พ.ศ.</button><button type="button" class="subtab" data-dp="fmt-ce" style="padding:4px 12px;">ค.ศ.</button></span></div>'
+      +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">'
+      +'<button type="button" class="btn btn-ghost btn-sm" data-dp="prev" aria-label="เดือนก่อน">‹</button>'
+      +'<select id="f1-dp-m" style="flex:1;min-width:0;min-height:40px;font-size:15px;"></select>'
+      +'<select id="f1-dp-y" style="width:110px;min-height:40px;font-size:15px;"></select>'
+      +'<button type="button" class="btn btn-ghost btn-sm" data-dp="next" aria-label="เดือนถัดไป">›</button></div>'
+      +'<div id="f1-dp-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;"></div>'
+      +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" data-dp="clear">ล้างค่า</button><button type="button" class="btn btn-ghost btn-sm" data-dp="today">วันนี้</button><span style="flex:1;"></span><button type="button" class="btn btn-ghost btn-sm" data-dp="close">ปิด</button></div></div>';
+    document.body.appendChild(ov);
+    const css = document.createElement('style'); css.id = 'f1-dp-css';
+    css.textContent = '#f1-dp .dpd{min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:15px;cursor:pointer;}'
+      +'#f1-dp .dpd:hover{background:var(--panel-alt);}#f1-dp .dpd.sel{background:var(--amber);color:#fff;font-weight:700;}#f1-dp .dpd.tod{outline:1px solid var(--amber);}'
+      +'#f1-dp .dpd[disabled]{opacity:.3;cursor:not-allowed;}#f1-dp .dpw{font-size:12px;color:var(--text-faint);padding:4px 0;}'
+      +'#f1-dp .subtab.on{background:var(--amber);color:#fff;}'
+      +'.f1-dp-btn{display:block;width:100%;box-sizing:border-box;min-height:44px;text-align:left;font:inherit;font-size:16px;border:1px solid var(--border);border-radius:8px;background:var(--panel-alt);color:var(--text);padding:8px 10px;cursor:pointer;}'
+      +'.f1-dp-btn.empty{color:var(--text-faint);}.f1-dp-btn[disabled]{opacity:.5;cursor:not-allowed;}';
+    document.head.appendChild(css);
+    ov.addEventListener('click', e=>{
+      const t = e.target; if(t === ov){ close(); return; }
+      const b = t.closest && t.closest('[data-dp]'); if(!b) return;
+      const a = b.getAttribute('data-dp');
+      if(a === 'close') close();
+      else if(a === 'fmt-be') setFmt('be'); else if(a === 'fmt-ce') setFmt('ce');
+      else if(a === 'prev') move(-1); else if(a === 'next') move(1);
+      else if(a === 'today'){ const p = parse(todayIso()); if(inRange(todayIso())) pick(todayIso()); }
+      else if(a === 'clear'){ pick(''); }
+      else if(a === 'day'){ pick(b.getAttribute('data-iso')); }
+    });
+    ov.querySelector('#f1-dp-m').addEventListener('change', e=>{ st.vm = +e.target.value; render(); });
+    ov.querySelector('#f1-dp-y').addEventListener('change', e=>{ st.vy = +e.target.value; render(); });
+  }
+  function inRange(iso){ return !((st.min && iso < st.min) || (st.max && iso > st.max)); }
+  function move(dm){ let m = st.vm + dm, y = st.vy; if(m < 1){ m = 12; y--; } if(m > 12){ m = 1; y++; } st.vm = m; st.vy = y; render(); }
+  function render(){
+    if(!ov || !st) return;
+    const mn = st.min ? parse(st.min).y : 1930, mx = st.max ? parse(st.max).y : (parse(todayIso()).y + 10);
+    if(st.vy < mn) st.vy = mn; if(st.vy > mx) st.vy = mx;
+    const ys = ov.querySelector('#f1-dp-y'), ms = ov.querySelector('#f1-dp-m');
+    let yh = ''; for(let y = mx; y >= mn; y--) yh += '<option value="'+y+'"'+(y === st.vy ? ' selected' : '')+'>'+yl(y)+'</option>';
+    ys.innerHTML = yh;
+    ms.innerHTML = MONF.map((n,i)=>'<option value="'+(i+1)+'"'+((i+1) === st.vm ? ' selected' : '')+'>'+n+'</option>').join('');
+    ov.querySelectorAll('[data-dp="fmt-be"],[data-dp="fmt-ce"]').forEach(b=> b.classList.toggle('on', b.getAttribute('data-dp') === 'fmt-'+getFmt()));
+    ov.querySelector('#f1-dp-title').textContent = st.title || 'เลือกวันที่';
+    const first = new Date(Date.UTC(st.vy, st.vm - 1, 1)).getUTCDay(), days = new Date(Date.UTC(st.vy, st.vm, 0)).getUTCDate(), tod = todayIso();
+    let h = WD.map(w=>'<div class="dpw">'+w+'</div>').join('');
+    for(let i = 0; i < first; i++) h += '<div></div>';
+    for(let d = 1; d <= days; d++){
+      const iso = toIso(st.vy, st.vm, d), dis = !inRange(iso);
+      h += '<button type="button" class="dpd'+(iso === st.sel ? ' sel' : '')+(iso === tod ? ' tod' : '')+'" data-dp="day" data-iso="'+iso+'"'+(dis ? ' disabled' : '')+'>'+d+'</button>';
+    }
+    ov.querySelector('#f1-dp-grid').innerHTML = h;
+  }
+  function open(o){
+    build();
+    const v = parse(o.value), t = parse(todayIso());
+    const mn = limit(o.min), mx = limit(o.max);
+    let vy = v ? v.y : (o.defaultYear || t.y), vm = v ? v.m : (o.defaultYear ? 1 : t.m);
+    st = { sel: v ? toIso(v.y,v.m,v.d) : '', vy, vm, min: mn, max: mx, title: o.title, onPick: o.onPick };
+    if(!v && mx && toIso(vy, vm, 1) > mx){ const p = parse(mx); st.vy = p.y; st.vm = p.m; }
+    render(); ov.classList.add('show');
+  }
+  function close(){ if(ov) ov.classList.remove('show'); }
+  function pick(iso){ const cb = st && st.onPick; close(); if(cb) cb(iso); }
+
+
+  // ----- ตัวเลือกเวลาแบบเลื่อน (เหมือนตั้งปลุกนาฬิกา): คอลัมน์ ชั่วโมง / นาที เลื่อนแล้วหยุดที่ค่ากลาง -----
+  const IH = 48; let tov = null, tst = null;
+  function p2(n){ return String(n).padStart(2,'0'); }
+  function buildTime(){
+    if(tov) return;
+    tov = document.createElement('div'); tov.className = 'modal-overlay'; tov.id = 'f1-tp';
+    const col = (id, n)=> '<div class="tpcol" id="'+id+'" tabindex="0">'+Array.from({length:n},(_,i)=>'<div class="tpi" data-v="'+i+'">'+p2(i)+'</div>').join('')+'</div>';
+    tov.innerHTML = '<div class="modal" style="max-width:320px;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">'
+      +'<h3 id="f1-tp-title" style="margin:0;font-size:16px;">เลือกเวลา</h3><button type="button" class="modal-close-x" data-tp="close" aria-label="ปิด" style="position:static;">✕</button></div>'
+      +'<div class="tpwrap"><div class="tpband"></div>'+col('f1-tp-h',24)+'<div class="tpcolon">:</div>'+col('f1-tp-m',60)+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:10px;"><button type="button" class="btn btn-ghost" data-tp="close" style="flex:1;">ยกเลิก</button><button type="button" class="btn btn-primary" data-tp="ok" style="flex:1;">ตกลง</button></div></div>';
+    document.body.appendChild(tov);
+    const css = document.createElement('style');
+    css.textContent = '#f1-tp .tpwrap{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:'+(IH*5)+'px;}'
+      +'#f1-tp .tpband{position:absolute;left:8px;right:8px;top:'+(IH*2)+'px;height:'+IH+'px;border-radius:10px;background:var(--panel-alt);pointer-events:none;}'
+      +'#f1-tp .tpcol{position:relative;width:96px;height:'+(IH*5)+'px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;padding:'+(IH*2)+'px 0;box-sizing:border-box;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}'
+      +'#f1-tp .tpcol::-webkit-scrollbar{display:none;}'
+      +'#f1-tp .tpi{height:'+IH+'px;line-height:'+IH+'px;text-align:center;font-size:28px;scroll-snap-align:center;color:var(--text-faint);cursor:pointer;user-select:none;}'
+      +'#f1-tp .tpi.cur{color:var(--text);font-weight:700;}#f1-tp .tpcolon{font-size:28px;font-weight:700;position:relative;}';
+    document.head.appendChild(css);
+    ['f1-tp-h','f1-tp-m'].forEach(id=>{
+      const c = tov.querySelector('#'+id); let t = 0;
+      c.addEventListener('scroll', ()=>{ markCur(c); clearTimeout(t); t = setTimeout(()=>{ const i = idxOf(c); c.scrollTo({top:i*IH}); }, 120); });
+      c.addEventListener('click', e=>{ const it = e.target.closest && e.target.closest('.tpi'); if(it) c.scrollTo({top:(+it.getAttribute('data-v'))*IH, behavior:'smooth'}); });
+    });
+    tov.addEventListener('click', e=>{
+      if(e.target === tov){ closeTime(); return; }
+      const b = e.target.closest && e.target.closest('[data-tp]'); if(!b) return;
+      if(b.getAttribute('data-tp') === 'close') closeTime();
+      else if(b.getAttribute('data-tp') === 'ok'){
+        const h = idxOf(tov.querySelector('#f1-tp-h')), m = idxOf(tov.querySelector('#f1-tp-m')), cb = tst && tst.onPick; closeTime(); if(cb) cb(p2(h)+':'+p2(m));
+      }
+    });
+  }
+  function idxOf(c){ const n = c.querySelectorAll('.tpi').length; return Math.max(0, Math.min(n-1, Math.round(c.scrollTop / IH))); }
+  function markCur(c){ const i = idxOf(c); c.querySelectorAll('.tpi').forEach((el,k)=> el.classList.toggle('cur', k === i)); }
+  function openTime(o){
+    buildTime();
+    const m = /^(\d{1,2}):(\d{2})/.exec(String(o.value||'')); const h = m ? Math.min(23,+m[1]) : (o.defH != null ? o.defH : 9), mi = m ? Math.min(59,+m[2]) : 0;
+    tst = { onPick: o.onPick };
+    tov.querySelector('#f1-tp-title').textContent = o.title || 'เลือกเวลา';
+    tov.classList.add('show');
+    const hc = tov.querySelector('#f1-tp-h'), mc = tov.querySelector('#f1-tp-m');
+    const go = ()=>{ hc.scrollTop = h*IH; mc.scrollTop = mi*IH; markCur(hc); markCur(mc); };
+    go(); requestAnimationFrame(go); setTimeout(go, 60);
+  }
+  function closeTime(){ if(tov) tov.classList.remove('show'); }
+
+  // ----- ผูกกับ <input type="date"> เดิมทั้งแอป: ซ่อนช่องของเบราว์เซอร์ แล้วใช้ปุ่มที่เปิดตัวเลือกวันที่ของแอปแทน (ค่า .value ยังเป็น ISO เหมือนเดิม โค้ดเดิมไม่ต้องแก้) -----
+  function labelOf(el){ const w = el.closest && el.closest('label,.field-wrap,div'); const l = w && w.querySelector && w.querySelector('label,.tr-lb'); return l ? (l.textContent||'').replace(/\*/g,'').trim().slice(0,40) : ''; }
+  function enhance(el){
+    if(el._f1dp || (el.type !== 'date' && el.type !== 'datetime-local')) return;
+    el._f1dp = 1;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'f1-dp-btn' + (el.classList.contains('tr-in') ? ' tr-in' : '');
+    const fire = ()=>{ sync(el); el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); };
+    b.addEventListener('click', ()=>{
+      if(el.disabled) return;
+      const dt = el.type === 'datetime-local', cur = String(el.value||''), curD = cur.slice(0,10), curT = cur.slice(11,16);
+      open({ value: curD, min: el.min, max: el.max, title: labelOf(el), defaultYear: el.id === 'profile-birthDate' ? parse(todayIso()).y - 30 : 0,
+        onPick: iso=>{
+          if(!dt || !iso){ el.value = iso; fire(); return; }
+          openTime({ value: curT, title: (labelOf(el) || 'เลือกวันที่') + ' — เวลา', onPick: tm=>{ el.value = iso + 'T' + tm; fire(); } });
+        } });
+    });
+    el._f1btn = b; el.style.display = 'none'; el.insertAdjacentElement('afterend', b); sync(el);
+  }
+  function sync(el){
+    const b = el._f1btn; if(!b) return;
+    const t = el.value ? '📅 ' + show(el.value) + (el.type === 'datetime-local' ? '  🕐 ' + String(el.value).slice(11,16) : '') : (el.type === 'datetime-local' ? '📅 เลือกวันที่และเวลา' : '📅 เลือกวันที่');
+    if(b.textContent !== t){ b.textContent = t; b.classList.toggle('empty', !el.value); }
+    if(b.disabled !== !!el.disabled) b.disabled = !!el.disabled;
+  }
+  function syncAll(){ document.querySelectorAll('input[type="date"],input[type="datetime-local"]').forEach(el=>{ if(!el._f1dp) enhance(el); else sync(el); }); }
+  function attachText(sel, o){ // ช่องข้อความอ่านอย่างเดียว (ฟอร์มเคลม) — คืน {setDate, clear} หน้าตาเหมือน flatpickr ที่โค้ดเดิมเรียกใช้
+    const el = typeof sel === 'string' ? document.querySelector(sel) : sel; if(!el) return null;
+    const api = {
+      setDate(iso){ el.dataset.iso = iso || ''; el.value = iso ? show(iso) : ''; },
+      clear(){ el.dataset.iso = ''; el.value = ''; }
+    };
+    el.readOnly = true; el.style.cursor = 'pointer'; el.classList.add('flatpickr-input');
+    el.addEventListener('click', ()=>{
+      open({ value: el.dataset.iso || '', max: o && o.max, min: o && o.min, title: (o && o.title) || labelOf(el),
+        onPick: iso=>{ api.setDate(iso); if(o && o.onChange) o.onChange(iso); } });
+    });
+    return api;
+  }
+  document.addEventListener('change', e=>{ if(e.target && (e.target.type === 'date' || e.target.type === 'datetime-local')){ if(!e.target._f1dp) enhance(e.target); else sync(e.target); } }, true);
+  let _t = 0; const mo = new MutationObserver(()=>{ if(_t) return; _t = setTimeout(()=>{ _t = 0; syncAll(); }, 60); });
+  const start = ()=>{ build(); buildTime(); syncAll(); mo.observe(document.body, { childList:true, subtree:true }); setInterval(syncAll, 1000); };
+  if(document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+  return { getFmt, setFmt, show, dateTh, attachText, open, openTime, enhance, syncAll };
+})();
+function dateTh(iso){ return F1DP.dateTh(iso); }
+// th-TH ของระบบ = ปี พ.ศ. เสมอ → ถ้าผู้ใช้เลือก ค.ศ. ให้ทุกจุดที่แสดงวันที่ของแอปเปลี่ยนตาม
+(function(){
+  const _d = Date.prototype.toLocaleDateString, _s = Date.prototype.toLocaleString;
+  const fix = loc => (loc === 'th-TH' && F1DP.getFmt() === 'ce') ? 'th-TH-u-ca-gregory' : loc;
+  Date.prototype.toLocaleDateString = function(loc, o){ return _d.call(this, fix(loc), o); };
+  Date.prototype.toLocaleString = function(loc, o){ return _s.call(this, fix(loc), o); };
+})();
 
 async function fetchAllUserProfiles(force){
   if(!force && _profCache && Date.now() - _profCache.at < 300000){
@@ -7130,8 +7328,8 @@ function renderRoster(){
       <td style="padding:6px 8px;">${escapeHtml(p.area||'')}</td>
       <td style="padding:6px 8px;white-space:nowrap;">${p.phone ? `<a href="tel:${escapeHtml(String(p.phone).replace(/[^0-9+]/g,''))}" style="color:inherit;text-decoration:none;">📞 ${escapeHtml(p.phone)}</a>` : ''}</td>
     ${full ? `
-      <td style="padding:6px 8px;white-space:nowrap;">${p.birthDate?escapeHtml(isoToDDMMYYYY(p.birthDate)):''}${age?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(age)}</span>`:''}</td>
-      <td style="padding:6px 8px;white-space:nowrap;">${p.startDate?escapeHtml(isoToDDMMYYYY(p.startDate)):''}${tenure?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(tenure)}</span>`:''}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">${p.birthDate?escapeHtml(dateTh(p.birthDate)):''}${age?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(age)}</span>`:''}</td>
+      <td style="padding:6px 8px;white-space:nowrap;">${p.startDate?escapeHtml(dateTh(p.startDate)):''}${tenure?`<br><span style="color:var(--text-faint);font-size:11.5px;">${escapeHtml(tenure)}</span>`:''}</td>
       <td style="padding:6px 8px;white-space:nowrap;">
         <button class="btn btn-ghost btn-sm roster-edit-btn" data-email="${escapeHtml(p.email)}">แก้ไข</button>
         <button class="btn btn-ghost btn-sm roster-delete-btn" data-email="${escapeHtml(p.email)}" style="color:var(--red);">ลบ</button>
@@ -10612,15 +10810,9 @@ function applyClaimModalTypeUI(type){
 // ตัวเลือกวันที่ในฟอร์มเคลม — บังคับแสดงเป็นปี ค.ศ. (Gregorian) เสมอ ไม่แปลงเป็น พ.ศ. ตามภาษาเครื่อง (ปัญหาที่ input type=date ของเบราว์เซอร์บางตัวบนมือถือไทยทำ)
 let claimProblemDatePicker = null, claimFixDatePicker = null;
 function initClaimDatePickers(){
-  if(typeof flatpickr==='undefined') return;
-  if(!claimProblemDatePicker){
-    claimProblemDatePicker = flatpickr('#claim-f-problemdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false, maxDate:'today',
-      onChange:(selectedDates, dateStr)=>{ claimDraft.problemDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); if(claimDirtyGuard) claimDirtyGuard.refresh(); } });
-  }
-  if(!claimFixDatePicker){
-    claimFixDatePicker = flatpickr('#claim-f-fixdate', { dateFormat:'d/m/Y', locale:{ ...flatpickr.l10ns.default }, allowInput:false,
-      onChange:(selectedDates, dateStr)=>{ claimDraft.fixDate = selectedDates[0] ? bangkokISOFromDate(selectedDates[0]) : ''; if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); if(claimDirtyGuard) claimDirtyGuard.refresh(); } });
-  }
+  const _chg = ()=>{ if(typeof scheduleClaimDraftAutosave==='function') scheduleClaimDraftAutosave(); if(claimDirtyGuard) claimDirtyGuard.refresh(); };
+  if(!claimProblemDatePicker){ claimProblemDatePicker = F1DP.attachText('#claim-f-problemdate', { max:'today', title:'วันที่พบปัญหา', onChange:iso=>{ claimDraft.problemDate = iso || ''; _chg(); } }); }
+  if(!claimFixDatePicker){ claimFixDatePicker = F1DP.attachText('#claim-f-fixdate', { title:'วันที่แก้ไข', onChange:iso=>{ claimDraft.fixDate = iso || ''; _chg(); } }); }
 }
 function bangkokISOFromDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
 function isoToDDMMYYYY(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
@@ -11282,8 +11474,8 @@ function showClaimSuccessSummary(fields){
     <div class="meta-item"><div class="k">Product / รุ่น</div><div class="v">${escapeHtml(fields.category)} / ${escapeHtml(fields.model)}</div></div>
     <div class="meta-item"><div class="k">S/N</div><div class="v">${escapeHtml(fields.serialNumber)}</div></div>
     <div class="meta-item"><div class="k">Error message / อาการเสีย</div><div class="v">${escapeHtml(fields.problem)}</div></div>
-    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.problemDate)||'-')}</div></div>
-    ${fields.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(fields.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(dateTh(fields.problemDate)||'-')}</div></div>
+    ${fields.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(dateTh(fields.fixDate))}</div></div>` : ''}
     <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(fields.problemDetail||'-')}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(fields.solution||'-')}</div></div>
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
@@ -11307,8 +11499,8 @@ function buildClaimSummaryHTML(c){
     <div class="meta-item"><div class="k">Product / รุ่น</div><div class="v">${escapeHtml(c.category||'-')} / ${escapeHtml(c.model||'-')}</div></div>
     <div class="meta-item"><div class="k">S/N</div><div class="v">${escapeHtml(c.serialNumber||'-')}</div></div>
     <div class="meta-item"><div class="k">Error message / อาการเสีย</div><div class="v">${escapeHtml(c.problem||'-')}</div></div>
-    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</div></div>
-    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(dateTh(c.problemDate)||'-')}</div></div>
+    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(dateTh(c.fixDate))}</div></div>` : ''}
     <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problemDetail||'-')}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
@@ -11794,7 +11986,7 @@ function renderClaimsSheetHistoryLink(){
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
   { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
-  { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>isoToDDMMYYYY(c.problemDate)||'-' },
+  { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
   { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
   { key:'siteName', label:'ชื่อ รพ.', getValue:c=>c.siteName||'-' },
   { key:'model', label:'รุ่น', getValue:c=>c.model||'-' },
@@ -11803,7 +11995,7 @@ const CLAIMS_COLUMNS = [
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
   { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
-  { key:'fixDate', label:'วันที่เคลม', getValue:c=>isoToDDMMYYYY(c.fixDate)||'-' },
+  { key:'fixDate', label:'วันที่เคลม', getValue:c=>dateTh(c.fixDate)||'-' },
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
   { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label },
 ];
@@ -11902,7 +12094,7 @@ function renderClaimsView(){
     const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
     return `<tr data-claimrow="${c.id}">
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
-      <td class="frac" style="white-space:nowrap;">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.siteName||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.model||'-')}</td>
@@ -11911,7 +12103,7 @@ function renderClaimsView(){
       <td class="frac" style="white-space:nowrap;">${partNumbers}</td>
       <td style="white-space:nowrap;">${partNames}</td>
       <td class="chk" style="white-space:nowrap;">${partCounts}</td>
-      <td class="frac" style="white-space:nowrap;">${escapeHtml(isoToDDMMYYYY(c.fixDate)||'-')}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.fixDate)||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
       <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
     </tr>`;
@@ -11971,8 +12163,8 @@ function openClaimDetail(id){
     <p style="font-size:12px;color:var(--text-faint);margin-bottom:12px;">${escapeHtml(c.category)}${c.serialNumber?' · S/N '+escapeHtml(c.serialNumber):''}</p>
     <div class="meta-item"><div class="k">${c.type==='report'?'ผู้แจ้ง':'ผู้เคลม'}</div><div class="v">${escapeHtml(c.claimant)}</div></div>
     <div class="meta-item"><div class="k">Error message / อาการเสีย</div><div class="v">${escapeHtml(c.problem||'-')}</div></div>
-    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.problemDate)||'-')}</div></div>
-    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(isoToDDMMYYYY(c.fixDate))}</div></div>` : ''}
+    <div class="meta-item"><div class="k">วันที่พบปัญหา</div><div class="v">${escapeHtml(dateTh(c.problemDate)||'-')}</div></div>
+    ${c.fixDate ? `<div class="meta-item"><div class="k">วันที่แก้ไข</div><div class="v">${escapeHtml(dateTh(c.fixDate))}</div></div>` : ''}
     <div class="meta-item"><div class="k">อธิบายปัญหาที่พบ</div><div class="v">${escapeHtml(c.problemDetail||'-')}</div></div>
     <div class="meta-item"><div class="k">วิธีการแก้ไข</div><div class="v">${escapeHtml(c.solution||'-')}</div></div>
     <table style="width:100%;font-size:12.5px;margin:10px 0;"><thead><tr><th style="text-align:left;">Part number</th><th style="text-align:left;">Part name</th><th style="text-align:left;">จำนวน (ชิ้น)</th><th style="text-align:left;">Count</th></tr></thead><tbody>${partsRows}</tbody></table>
@@ -15713,15 +15905,13 @@ function trSheet(html, opts){
 function trTimeField(id, val){
   const m = /^(\d{1,2}):(\d{2})/.exec(String(val||'')); const h = m ? Math.min(23,+m[1]) : 9, mi = m ? Math.min(59,+m[2]) : 0;
   const p2 = n => String(n).padStart(2,'0');
-  const opts = (n, sel) => Array.from({length:n},(_,i)=>`<option value="${p2(i)}"${i===sel?' selected':''}>${p2(i)}</option>`).join('');
-  return `<div class="tr-tf" style="display:flex;align-items:center;gap:8px"><input type="hidden" id="${id}" value="${p2(h)}:${p2(mi)}">`
-    + `<select class="tr-in" data-tf="${id}" aria-label="ชั่วโมง" style="flex:1;font-size:18px;padding:10px">${opts(24,h)}</select><b>:</b>`
-    + `<select class="tr-in" data-tf="${id}" aria-label="นาที" style="flex:1;font-size:18px;padding:10px">${opts(60,mi)}</select></div>`;
+  return `<div class="tr-tf"><input type="hidden" id="${id}" value="${p2(h)}:${p2(mi)}"><button type="button" class="f1-dp-btn tr-in" data-tfb="${id}" style="font-size:20px;text-align:center;">🕐 ${p2(h)}:${p2(mi)}</button></div>`;
 }
-document.addEventListener('change', e=>{
-  const t = e.target, id = t && t.getAttribute && t.getAttribute('data-tf'); if(!id) return;
-  const ss = document.querySelectorAll('select[data-tf="'+id+'"]'), hid = document.getElementById(id);
-  if(hid && ss.length>=2) hid.value = ss[0].value+':'+ss[1].value;
+/* v11.07 — เลือกเวลาแบบเลื่อน (วงล้อ ชั่วโมง/นาที เหมือนตั้งปลุก) แทน dropdown — ค่าจริงยังเก็บใน input hidden id เดิม (HH:MM) */
+document.addEventListener('click', e=>{
+  const b = e.target && e.target.closest && e.target.closest('button[data-tfb]'); if(!b) return;
+  const id = b.getAttribute('data-tfb'), hid = document.getElementById(id); if(!hid || typeof F1DP === 'undefined') return;
+  F1DP.openTime({ value: hid.value, title: 'เลือกเวลา', onPick: v=>{ hid.value = v; b.textContent = '🕐 ' + v; hid.dispatchEvent(new Event('change',{bubbles:true})); } });
 });
 function trSheetClose(){ const el = $('tr-sheet'); if(el) el.remove(); document.body.classList.remove('tr-noscroll'); }
 
