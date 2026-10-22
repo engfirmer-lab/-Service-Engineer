@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.11
-  อัปเดตล่าสุด   : 22 ตุลาคม 2569 13:41 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.12
+  อัปเดตล่าสุด   : 22 ตุลาคม 2569 17:13 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.11</title>
+<title>F1 Service — v11.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2625,8 +2625,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.11";
-const APP_UPDATED_AT = "22 ตุลาคม 2569 13:41 น. เวลาไทย";
+const APP_VERSION = "11.12";
+const APP_UPDATED_AT = "22 ตุลาคม 2569 17:13 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -17216,6 +17216,47 @@ async function trSessionFolder(s, sub){
 async function trDriveMove(fileId, newParent){
   await examApiRetry('drvMove', { fileId, parentIds: [newParent] }); // v10.92 — ย้ายผ่านเซิร์ฟเวอร์ (เจ้าของไฟล์คือ engfirmer)
 }
+// v10.96 — สร้างรายการใบ Cer ผู้ผลิตในแท็บ Certificate ของช่าง (ย้ายไฟล์เข้าโฟลเดอร์ช่าง ถ้ายังไม่อยู่) แล้วผูก certDocId กลับที่ไฟล์งานเทรน — ใช้ทั้งตอนแนบ (จำนวนใบ Cer ของช่างขึ้นทันที) และตอนจบ Training (ซ่อมที่ค้าง)
+async function trCreateMfrCert(s, model, f, opts){
+  opts = opts || {};
+  await initFirebase(); const sdk = window._firebaseSdk;
+  if(!opts.noMove){ const folderId = await ensureCertificateFolderPath('manufacturer', f.name, s.category, model); await trDriveMove(f.driveFileId, folderId); } // อยู่โฟลเดอร์ปลายทางแล้ว = ไม่ย้ายซ้ำ
+  const cid = certDocId(f.email, 'manufacturer', s.category, model) + '__' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  await sdk.setDoc(sdk.doc(db,'certificates', cid), {
+    ownerEmail:f.email, ownerName:f.name, role:'engineer', certType:'manufacturer', category:s.category, model,
+    fileUrl:f.driveUrl, fileName:f.fileName, uploadedAt:Date.now(), score:null, status:'pending', reviewedBy:'', reviewedAt:null, reviewNote:'',
+    source:'training', trainingSessionId:s.sessionId
+  });
+  if(!opts.noMark){
+    try{ await examApi('trMarkFile', { fileId:f.fileId, certDocId:cid }); }
+    catch(e){ try{ await sdk.deleteDoc(sdk.doc(db,'certificates', cid)); }catch(_){} throw e; } // ผูกไม่สำเร็จ → ลบรายการที่เพิ่งสร้าง กันซ้ำตอนลองใหม่
+  }
+  try{ _engCertDataCache = null; _supCertDataCache = null; dxInvalidate(); }catch(e){}
+  return cid;
+}
+// v10.97 — งานเทรนมีหลายรุ่น: รุ่นที่ตรงกับรายชื่อรุ่นของ Product ทั้งหมด (ไม่ซ้ำ) ให้ผู้แนบเลือกว่าใบ Cer นี้ให้รุ่นไหน
+function trModelCandidates(s){
+  const known = (function(){ try{ return (DATA.categories[s.category]||[]).map(String); }catch(e){ return []; } })();
+  const out = [];
+  String(s.model||'').split(/\s*[\/,&]\s*/).filter(Boolean).forEach(t=>{ const hit = known.find(k=>k.toLowerCase()===t.toLowerCase()); if(hit && out.indexOf(hit)<0) out.push(hit); });
+  return out;
+}
+function trPickMfrModels(cands, personName){ // → Promise<string[]|null> (null = ยกเลิก) · ติ๊กได้หลายรุ่น อย่างน้อย 1
+  return new Promise(resolve=>{
+    const ov = document.createElement('div'); ov.className = 'modal-overlay show'; ov.id = 'tr-mfr-model-modal';
+    ov.innerHTML = '<div class="modal" style="max-width:420px;"><button class="modal-close-x" data-x="cancel">✕</button>'
+      +'<h3>ใบ Cer ผู้ผลิตนี้ใช้กับรุ่นไหน</h3><p style="font-size:12px;color:var(--text-faint);margin-bottom:8px;">ของ '+trH(personName||'ช่าง')+' — ติ๊กได้หลายรุ่น (จะสร้างรายการใบ Cer ให้ทุกรุ่นที่เลือก ใช้ไฟล์เดียวกัน)</p>'
+      +cands.map((m,i)=>'<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13.5px;cursor:pointer;"><input type="checkbox" data-m="'+i+'" checked> '+trH(m)+'</label>').join('')
+      +'<div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-primary btn-sm" data-x="ok">ตกลง ส่งต่อ</button><button class="btn btn-ghost btn-sm" data-x="cancel">ยกเลิก</button></div></div>';
+    document.body.appendChild(ov);
+    const done = v=>{ ov.remove(); resolve(v); };
+    ov.addEventListener('click', e=>{
+      const x = e.target && e.target.getAttribute && e.target.getAttribute('data-x');
+      if(x==='cancel') done(null);
+      else if(x==='ok'){ const sel = cands.filter((m,i)=>ov.querySelector('[data-m="'+i+'"]').checked); if(!sel.length){ showToast('เลือกอย่างน้อย 1 รุ่น'); return; } done(sel); }
+    });
+  });
+}
 // ย้ายใบ Cer ผู้ผลิตของแต่ละคนไปโฟลเดอร์ Certificate ของเขา + สร้างรายการในแท็บ Certificate (ทำซ้ำได้ ข้ามไฟล์ที่ทำแล้ว)
 async function trFinishMfr(s, files){
   await initFirebase(); const sdk = window._firebaseSdk;
@@ -19399,7 +19440,7 @@ async function renderEngCertTab(forceReload){
     try{
       await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
       const myCerts = await fsListCertificatesByOwner(myUserEmail);
-      const certMap = groupCertsByCell(myCerts.filter(c=>c.role!=='supproduct'), true);
+      const certMap = groupCertsByCell(myCerts, true);
       const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
       _engCertDataCache = { certMap, myModelSet };
     }catch(err){
@@ -19534,7 +19575,7 @@ function renderCertDetailList(){
   wrap.querySelectorAll('[data-delcert]').forEach(b=> b.addEventListener('click', ()=> deleteCertFromModal(b.getAttribute('data-delcert'))));
 }
 async function refreshCertCaches(role){
-  if(role==='engineer') await renderEngCertTab(true); else await renderSupCertTab(true);
+  _engCertDataCache = null; _supCertDataCache = null; // v11.12 — 2 หน้าใช้ใบชุดเดียวกัน ล้างทั้งคู่\n  if(role==='engineer') await renderEngCertTab(true); else await renderSupCertTab(true);
 }
 function openCertDetailModal(role, certType, category, model){
   _certDetailCtx = { role, certType, category, model };
@@ -19605,7 +19646,7 @@ async function renderSupCertTab(forceReload){
     wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
     try{
       const myCerts = await fsListCertificatesByOwner(myUserEmail);
-      _supCertDataCache = groupCertsByCell(myCerts.filter(c=>c.role==='supproduct'), false);
+      _supCertDataCache = groupCertsByCell(myCerts.filter(c=>c.certType==='manufacturer'), false);
     }catch(err){
       wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
       console.error('renderSupCertTab error:', err);
