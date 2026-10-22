@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.07
-  อัปเดตล่าสุด   : 21 ตุลาคม 2569 21:21 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.09
+  อัปเดตล่าสุด   : 22 ตุลาคม 2569 12:01 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.07</title>
+<title>F1 Service — v11.09</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2620,8 +2620,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.07";
-const APP_UPDATED_AT = "21 ตุลาคม 2569 21:21 น. เวลาไทย";
+const APP_VERSION = "11.09";
+const APP_UPDATED_AT = "22 ตุลาคม 2569 12:01 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6781,49 +6781,173 @@ function bdayEnsureStyle(){
     +'@media (prefers-reduced-motion:reduce){.f1-flame,.f1-conf{animation:none}}';
   document.head.appendChild(st);
 }
+/* ===================== v11.08 — วันเกิดช่าง: อวยพรกันได้ (เลือกจากคำที่เตรียมไว้/พิมพ์เอง) · เฉพาะภายในวันเกิดนั้น · เจ้าของวันเกิดเห็นชื่อผู้อวยพร เก็บไว้ 3 วัน ===================== */
+function bdayKeyOf(email){ return String(email||'').toLowerCase().replace(/\./g,'_'); }
+function bdayDocId(owner, date){ return String(owner||'').toLowerCase()+'_'+date; }
+function bdayTodayIso(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'}); }
+function bdayShiftIso(iso, days){ const d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+days); return d.toISOString().slice(0,10); }
+function bdayMyName(){ try{ return orgChartDisplayName(Object.assign({ email:myUserEmail }, myUserProfile||{})); }catch(e){ return String(myUserEmail||'').split('@')[0]; } }
+
+// ส่ง/แก้คำอวยพรของตัวเอง (1 คนต่อ 1 เจ้าของวันเกิดต่อวัน — ส่งซ้ำ = แก้ข้อความเดิม) · อวยพรได้เฉพาะ "วันเกิดของเขาวันนั้น" (กติกาเดียวกันตรวจซ้ำที่ Firestore rules)
+async function bdaySendWish(owner, date, text){
+  text = String(text||'').trim().slice(0,100);
+  if(!text) throw new Error('พิมพ์หรือเลือกคำอวยพรก่อน');
+  if(date !== bdayTodayIso()) throw new Error('อวยพรได้เฉพาะภายในวันเกิดของเขาเท่านั้น');
+  const me = String(myUserEmail||'').toLowerCase(); if(!me) throw new Error('ยังไม่ได้เข้าสู่ระบบ');
+  if(String(owner).toLowerCase() === me) throw new Error('อวยพรให้ตัวเองไม่ได้');
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const expireAt = new Date(Date.parse(bdayShiftIso(date,3)+'T00:00:00+07:00')); // เก็บ 3 วัน (วันเกิด + อีก 2 วัน) แล้ว Firestore TTL ลบให้
+  const w = { text, name: bdayMyName(), email: me, at: Date.now() };
+  await sdk.setDoc(sdk.doc(db,'bdayWishes', bdayDocId(owner,date)), { owner:String(owner).toLowerCase(), date, expireAt, wishes:{ [bdayKeyOf(me)]: w } }, { merge:true });
+  return w;
+}
+async function bdayGetMyWish(owner, date){
+  try{ await initFirebase(); const sdk = window._firebaseSdk;
+    const sn = await sdk.getDoc(sdk.doc(db,'bdayWishes', bdayDocId(owner,date)));
+    if(!sn.exists()) return null; const w = (sn.data().wishes||{})[bdayKeyOf(myUserEmail)]; return w || null;
+  }catch(e){ return null; }
+}
+// คำอวยพรที่ "ฉัน" ได้รับ ภายใน 3 วัน (เช็คเฉพาะตอนวันเกิดของฉันอยู่ในช่วง 3 วันนี้ → ไม่อ่าน Firestore ในวันอื่น)
+async function bdayLoadMyWishes(today){
+  const bd = myUserProfile && myUserProfile.birthDate; if(!bd) return [];
+  const days = [0,1,2].map(i=>bdayShiftIso(today,-i)).filter(d=>bdayMatch(bd, d));
+  if(!days.length) return [];
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'bdayWishes'), sdk.where('owner','==',String(myUserEmail).toLowerCase())));
+  const out = [];
+  snap.forEach(d=>{ const x = d.data()||{}; if(days.indexOf(x.date) < 0) return;
+    out.push({ date:x.date, wishes:Object.keys(x.wishes||{}).map(k=>x.wishes[k]).filter(Boolean).sort((a,b)=>(a.at||0)-(b.at||0)) }); });
+  return out.sort((a,b)=> a.date < b.date ? 1 : -1);
+}
+
+// สถานะวันเกิดของวันนี้ (แคชในเครื่อง 30 นาที · ฝั่งเซิร์ฟเวอร์แคชอีกชั้น → แทบไม่อ่าน Firestore)
+async function bdayRefresh(opts){
+  opts = opts || {};
+  const today = opts.today || bdayTodayIso(), em = String(myUserEmail||'').toLowerCase(), ck = 'f1_bdaystate_'+em;
+  if(!opts.profiles && !opts.force){
+    try{ const c = JSON.parse(localStorage.getItem(ck)||'null'); if(c && c.today === today && Date.now() - c.at < 1800000) return c; }catch(e){}
+  }
+  let people = null;
+  if(opts.profiles){ people = opts.profiles.filter(p=> bdayMatch(p.birthDate, today)); }
+  else{
+    try{ const r = await examApi('birthdaysToday', opts.force ? { refresh:true } : {}); people = (r && r.people) || []; }
+    catch(e1){ const profs = await fetchAllUserProfiles(); people = (profs||[]).filter(p=> bdayMatch(p.birthDate, today)); }
+  }
+  let myWishes = [];
+  if(opts.myWishes){ myWishes = opts.myWishes; } else if(!opts.profiles){ try{ myWishes = await bdayLoadMyWishes(today); }catch(e){ console.warn('อ่านคำอวยพรไม่สำเร็จ', e); } }
+  const st = { today, at: Date.now(), people, myWishes };
+  if(!opts.profiles){ try{ localStorage.setItem(ck, JSON.stringify(st)); }catch(e){} }
+  return st;
+}
+
+function bdayEnsureStyle2(){
+  if(document.getElementById('f1-bday-style2')) return;
+  const st = document.createElement('style'); st.id = 'f1-bday-style2';
+  st.textContent = '#f1-bday-modal .modal{max-height:92vh;overflow-y:auto;}'
+    +'#f1-bday-modal .f1-bw-form{margin-top:8px;text-align:left;}#f1-bday-modal .f1-bw-form select,#f1-bday-modal .f1-bw-form textarea{width:100%;box-sizing:border-box;font:inherit;font-size:14px;margin-top:6px;border:1px solid var(--border);border-radius:8px;padding:8px;background:var(--panel);color:var(--text);}'
+    +'#f1-bday-modal .f1-bw-form textarea{min-height:64px;resize:vertical;}#f1-bday-modal .f1-bw-row{display:flex;gap:6px;margin-top:6px;}#f1-bday-modal .f1-bw-row .btn{flex:1;}'
+    +'#f1-bday-modal .f1-bw-ok{font-size:12.5px;color:var(--green);margin-top:6px;}#f1-bday-modal .f1-bw-err{font-size:12.5px;color:var(--red);margin-top:6px;}'
+    +'#f1-bday-modal .f1-bw-got{text-align:left;margin-top:8px;}#f1-bday-modal .f1-bw-item{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-top:6px;font-size:13.5px;line-height:1.6;}'
+    +'#f1-bday-modal .f1-bw-item b{display:block;font-size:12.5px;color:var(--amber);}#f1-bday-modal h4{margin:12px 0 0;font-size:14px;text-align:left;}'
+    +'#f1-bday-chip{background:var(--amber);color:#fff;border:none;border-radius:999px;font-size:12px;padding:2px 8px;cursor:pointer;font-weight:700;}';
+  document.head.appendChild(st);
+}
+function bdayWishesHtml(list){
+  if(!list || !list.length) return '<div style="font-size:12.5px;color:var(--text-faint);margin-top:6px;">ยังไม่มีคำอวยพร — เปิดแอปมาดูใหม่ได้ตลอดวันนะ</div>';
+  return '<div class="f1-bw-got">'+list.map(w=>'<div class="f1-bw-item"><b>'+escapeHtml(w.name||w.email||'')+'</b>'+escapeHtml(w.text||'')+'</div>').join('')+'</div>';
+}
+
+function bdayOpenModal(st){
+  if(document.getElementById('f1-bday-modal')) return false;
+  const today = st.today, people = (st.people||[]).slice(), me = String(myUserEmail||'').toLowerCase(), year = today.slice(0,4);
+  const pastWishes = (st.myWishes||[]).filter(x=>x.date !== today && x.wishes && x.wishes.length);
+  if(!people.length && !pastWishes.length) return false;
+  people.sort((a,b)=> (String(a.email).toLowerCase()===me ? -1 : 0) - (String(b.email).toLowerCase()===me ? -1 : 0));
+  const mine = people.some(p=>String(p.email).toLowerCase()===me);
+  bdayEnsureStyle(); bdayEnsureStyle2();
+  const ov = document.createElement('div'); ov.className = 'modal-overlay show'; ov.id = 'f1-bday-modal';
+  const todayWishes = (((st.myWishes||[]).filter(x=>x.date === today)[0])||{}).wishes || [];
+  const opts = BDAY_WISHES.map((w,i)=>'<option value="'+i+'">'+escapeHtml(w.length > 46 ? w.slice(0,44)+'…' : w)+'</option>').join('');
+  const cards = people.map(p=>{
+    const isMe = String(p.email).toLowerCase()===me, nm = orgChartDisplayName(p), full = orgChartFullNameTh(p);
+    let body;
+    if(isMe) body = '<div style="font-size:13px;margin-top:4px;">สุขสันต์วันเกิดนะ! 🎉 <b>คำอวยพรที่คุณได้รับ</b></div>'+bdayWishesHtml(todayWishes);
+    else body = '<div class="f1-bw-form" data-owner="'+escapeHtml(String(p.email).toLowerCase())+'">'
+      +'<select data-bw="pick"><option value="">— เลือกคำอวยพรจากรายการ —</option>'+opts+'</select>'
+      +'<textarea data-bw="text" maxlength="100" placeholder="หรือพิมพ์คำอวยพรเอง (ไม่เกิน 100 ตัวอักษร)">'+escapeHtml(bdayWishFor(p.email, year))+'</textarea>'
+      +'<div class="f1-bw-row"><button type="button" class="btn btn-ghost btn-sm" data-bw="rand">🎲 สุ่มคำอวยพร</button><button type="button" class="btn btn-primary btn-sm" data-bw="send">💌 ส่งคำอวยพร</button></div>'
+      +'<div data-bw="msg"></div></div>';
+    return '<div class="f1-bday-card"><div class="f1-bday-name">'+(isMe?'🎉 ':'🎂 ')+escapeHtml(nm)+(isMe?' <small style="font-weight:400;">(คุณ)</small>':'')+'</div>'
+      +(full && full!==nm ? '<div style="font-size:12px;color:var(--text-faint);">'+escapeHtml(full)+'</div>' : '')+body+'</div>';
+  }).join('');
+  const past = pastWishes.map(x=>'<h4>🎂 คำอวยพรวันเกิดของคุณ ('+escapeHtml(dateTh(x.date))+')</h4>'+bdayWishesHtml(x.wishes)).join('');
+  const confColors = ['#ef476f','#ffd166','#06d6a0','#4cc9f0','#b388eb','#ff9f1c'];
+  const conf = Array.from({length:18}, (_,i)=>'<span class="f1-conf" style="left:'+(Math.round(i*5.6+Math.random()*4))+'%;background:'+confColors[i%6]+';animation-delay:'+(Math.random()*2.5).toFixed(2)+'s;animation-duration:'+(2.6+Math.random()*1.8).toFixed(2)+'s;"></span>').join('');
+  ov.innerHTML = '<div class="modal">'+conf+'<button class="modal-close-x" data-bday-close="1" aria-label="ปิด">✕</button>'+bdayCakeSvg()
+    +'<h3 style="margin:8px 0 2px;font-size:20px;">'+(people.length ? (mine?'สุขสันต์วันเกิด! 🎉':'🎂 วันนี้วันเกิดเพื่อนร่วมงาน') : '🎂 คำอวยพรที่คุณได้รับ')+'</h3>'
+    +(people.length ? '<p style="font-size:12.5px;color:var(--text-faint);margin:0 0 4px;">'+(mine && people.length===1 ? 'ขอให้เป็นวันที่ดีนะ' : 'ส่งคำอวยพรให้เพื่อนได้ภายในวันนี้เท่านั้น')+'</p>' : '')
+    +cards+past+'<button class="btn btn-primary" data-bday-close="1" style="width:100%;margin-top:10px;">ปิด</button></div>';
+  ov.addEventListener('click', async e=>{
+    const t = e.target; if(t === ov){ ov.remove(); return; }
+    if(t.closest && t.closest('[data-bday-close]')){ ov.remove(); return; }
+    const b = t.closest && t.closest('[data-bw]'); if(!b) return;
+    const form = b.closest('.f1-bw-form'); if(!form) return; const a = b.getAttribute('data-bw');
+    const ta = form.querySelector('[data-bw="text"]'), msg = form.querySelector('[data-bw="msg"]');
+    if(a === 'rand'){ ta.value = BDAY_WISHES[Math.floor(Math.random()*BDAY_WISHES.length)]; msg.innerHTML = ''; }
+    else if(a === 'send'){
+      b.disabled = true; msg.innerHTML = '<div class="f1-bw-ok" style="color:var(--text-faint);">กำลังส่ง…</div>';
+      try{ await bdaySendWish(form.getAttribute('data-owner'), today, ta.value); msg.innerHTML = '<div class="f1-bw-ok">✓ ส่งคำอวยพรแล้ว — แก้แล้วกดส่งใหม่ได้ภายในวันนี้</div>'; }
+      catch(err){ msg.innerHTML = '<div class="f1-bw-err">⚠ ส่งไม่สำเร็จ: '+escapeHtml(err && err.message || String(err))+'</div>'; }
+      b.disabled = false;
+    }
+  });
+  ov.addEventListener('change', e=>{
+    const s = e.target; if(!s || s.getAttribute('data-bw') !== 'pick') return;
+    const form = s.closest('.f1-bw-form'), i = parseInt(s.value,10); if(form && !isNaN(i)) form.querySelector('[data-bw="text"]').value = BDAY_WISHES[i];
+  });
+  document.body.appendChild(ov);
+  // เติมข้อความที่เคยส่งไว้แล้ว (ถ้ามี) ให้แก้ต่อได้
+  ov.querySelectorAll('.f1-bw-form').forEach(async f=>{ const w = await bdayGetMyWish(f.getAttribute('data-owner'), today); if(w && w.text){ const ta = f.querySelector('[data-bw="text"]'); if(ta && document.body.contains(ta)){ ta.value = w.text; f.querySelector('[data-bw="msg"]').innerHTML = '<div class="f1-bw-ok">✓ คุณส่งคำอวยพรนี้ไปแล้ว — แก้แล้วกดส่งใหม่ได้</div>'; } } });
+  return true;
+}
+
+// ปุ่ม 🎂 บนแถบบน: ขึ้นเมื่อวันนี้มีคนวันเกิด หรือมีคำอวยพรของฉันในช่วง 3 วัน — กดเปิดหน้าอวยพรได้ตลอด (ป๊อปอัปอัตโนมัติขึ้นแค่วันละครั้ง)
+window._bdayState = null;
+function bdayUpdateChip(st){
+  window._bdayState = st;
+  let c = document.getElementById('f1-bday-chip');
+  const show = !!(st && ((st.people||[]).length || (st.myWishes||[]).some(x=>x.wishes && x.wishes.length)));
+  if(!c){
+    if(!show) return;
+    bdayEnsureStyle2();
+    const host = document.getElementById('edit-profile-btn'); if(!host || !host.parentNode) return;
+    c = document.createElement('button'); c.type = 'button'; c.id = 'f1-bday-chip'; c.title = 'วันเกิดเพื่อนร่วมงาน / คำอวยพร';
+    c.addEventListener('click', async ()=>{ try{ const s = window._bdayState; if(!s) return;
+      try{ if(s.myWishes && s.myWishes.length || (s.people||[]).some(p=>String(p.email).toLowerCase()===String(myUserEmail).toLowerCase())){ s.myWishes = await bdayLoadMyWishes(s.today); } }catch(e){} // เจ้าของวันเกิด: โหลดคำอวยพรล่าสุดก่อนเปิด
+      bdayOpenModal(s); }catch(e){ console.warn(e); } });
+    host.parentNode.insertBefore(c, host);
+  }
+  c.style.display = show ? '' : 'none';
+  if(show){ const n = (st.people||[]).length + ((st.myWishes||[]).reduce((s,x)=>s+((x.wishes||[]).length),0)); c.textContent = '🎂 ' + (st.people.length ? st.people.length : '') + ((st.myWishes||[]).some(x=>x.wishes&&x.wishes.length) ? ' 💌' : ''); }
+}
+
 async function checkBirthdayToday(opts){
   opts = opts || {};
   try{
     if(!myUserEmail) return;
-    const pm = document.getElementById('profile-modal'); if(pm && pm.classList.contains('show')) return; // ยังกรอกโปรไฟล์บังคับอยู่ — ไว้เปิดแอปครั้งถัดไป (ยังไม่นับว่าแสดงแล้ว)
+    if(window._bdayRunning) return; window._bdayRunning = true;
+    let st;
+    try{ st = await bdayRefresh(opts); }catch(e){ return; } finally{ window._bdayRunning = false; }
+    if(!st) return;
+    bdayUpdateChip(st);
+    const em = String(myUserEmail).toLowerCase(), key = 'f1_bdayshown_'+em;
+    const pm = document.getElementById('profile-modal'); if(pm && pm.classList.contains('show')) return; // ยังกรอกโปรไฟล์บังคับอยู่ — ไว้เปิดแอปครั้งหน้า
     if(document.getElementById('f1-bday-modal')) return;
-    const today = opts.today || new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'});
-    const em = String(myUserEmail).toLowerCase(), key = 'f1_bdayshown_'+em, chk = 'f1_bdaychk_'+em;
-    try{ if(localStorage.getItem(key) === today) return; }catch(e){}                       // วันนี้ขึ้นป๊อปอัปให้เครื่องนี้แล้ว → ไม่ขึ้นซ้ำ
-    if(!opts.profiles && !opts.force){ try{ if(Date.now() - Number(localStorage.getItem(chk)||0) < 1800000) return; }catch(e){} } // ไม่มีใครวันเกิด → ตรวจใหม่ได้ทุก 30 นาที (เซิร์ฟเวอร์แคชไว้ ไม่อ่าน Firestore)
-    if(window._bdayRunning) return; window._bdayRunning = true;                            // กันเรียกซ้อน
-    try{ localStorage.setItem(chk, String(Date.now())); }catch(e){}
-    let people = null;
-    try{
-      if(opts.profiles){ people = opts.profiles.filter(p=> bdayMatch(p.birthDate, today)); }
-      else{
-        try{ const r = await examApi('birthdaysToday', opts.force ? { refresh:true } : {}); people = (r && r.people) || []; }
-        catch(e1){ const profs = await fetchAllUserProfiles(); people = (profs||[]).filter(p=> bdayMatch(p.birthDate, today)); }
-      }
-    }catch(e){ try{ localStorage.removeItem(chk); }catch(_){} window._bdayRunning = false; return; }
-    if(!people.length){ window._bdayRunning = false; return; }
-    try{ localStorage.setItem(key, today); }catch(e){} // ตีตรา "แสดงแล้ว" เมื่อจะขึ้นป๊อปอัปจริงเท่านั้น
-    window._bdayRunning = false;
-    const year = today.slice(0,4), me = String(myUserEmail).toLowerCase();
-    people.sort((a,b)=> (String(a.email).toLowerCase()===me ? -1 : 0) - (String(b.email).toLowerCase()===me ? -1 : 0));
-    const mine = people.some(p=>String(p.email).toLowerCase()===me);
-    bdayEnsureStyle();
-    const ov = document.createElement('div'); ov.className = 'modal-overlay show'; ov.id = 'f1-bday-modal';
-    const cards = people.map(p=>{
-      const isMe = String(p.email).toLowerCase()===me, nm = orgChartDisplayName(p), full = orgChartFullNameTh(p);
-      return '<div class="f1-bday-card"><div class="f1-bday-name">'+(isMe?'🎉 ':'🎂 ')+escapeHtml(nm)+(isMe?' <small style="font-weight:400;">(คุณ)</small>':'')+'</div>'
-        +(full && full!==nm ? '<div style="font-size:12px;color:var(--text-faint);">'+escapeHtml(full)+'</div>' : '')
-        +'<div class="f1-bday-wish">'+(isMe?'สุขสันต์วันเกิดนะ! ':'')+escapeHtml(bdayWishFor(p.email, year))+'</div></div>';
-    }).join('');
-    const confColors = ['#ef476f','#ffd166','#06d6a0','#4cc9f0','#b388eb','#ff9f1c'];
-    const conf = Array.from({length:18}, (_,i)=>'<span class="f1-conf" style="left:'+(Math.round(i*5.6+Math.random()*4))+'%;background:'+confColors[i%6]+';animation-delay:'+(Math.random()*2.5).toFixed(2)+'s;animation-duration:'+(2.6+Math.random()*1.8).toFixed(2)+'s;"></span>').join('');
-    ov.innerHTML = '<div class="modal">'+conf+'<button class="modal-close-x" data-bday-close="1" aria-label="ปิด">✕</button>'
-      +bdayCakeSvg()
-      +'<h3 style="margin:8px 0 2px;font-size:20px;">'+(mine?'สุขสันต์วันเกิด! 🎉':'🎂 วันนี้วันเกิดเพื่อนร่วมงาน')+'</h3>'
-      +'<p style="font-size:12.5px;color:var(--text-faint);margin:0 0 4px;">'+(people.length>1?'ร่วมอวยพรให้ '+people.length+' คนกันนะ':'มาร่วมอวยพรกัน')+'</p>'
-      +cards+'<button class="btn btn-primary" data-bday-close="1" style="width:100%;margin-top:6px;">'+(mine?'ขอบคุณ 💛':'สุขสันต์วันเกิด! 🎉')+'</button></div>';
-    ov.addEventListener('click', e=>{ const t = e.target; if(t===ov || (t.closest && t.closest('[data-bday-close]'))) ov.remove(); });
-    document.body.appendChild(ov);
+    try{ if(localStorage.getItem(key) === st.today) return; }catch(e){}                                  // วันนี้ขึ้นป๊อปอัปให้เครื่องนี้แล้ว → ไม่ขึ้นซ้ำ (ใช้ปุ่ม 🎂 แทน)
+    const has = (st.people||[]).length || (st.myWishes||[]).some(x=>x.date !== st.today && x.wishes && x.wishes.length);
+    if(!has) return;
+    try{ localStorage.setItem(key, st.today); }catch(e){}                                                // ตีตราเมื่อจะขึ้นจริงเท่านั้น
+    bdayOpenModal(st);
   }catch(e){ console.warn('birthday popup', e); }
 }
 
@@ -18649,13 +18773,8 @@ window.rpClearEvidence = function(){
 
 /* ---- Drive folder: Service Center / Return / [year] / [date]_[sender] ---- */
 async function ensureReturnPartsFolderPath(senderName){
-  const year = currentYearAD();
-  const date = bangkokDateFolder(); // YYYY-MM-DD
-  const folderName = sanitizeFolderName(`${date}_${senderName}`);
-  const f1 = await driveFindOrCreateFolder('Return', DRIVE_ROOT_FOLDER_ID);
-  const f2 = await driveFindOrCreateFolder(year, f1);
-  const f3 = await driveFindOrCreateFolder(folderName, f2);
-  return f3;
+  // v11.09 — โครงสร้าง: Return / ปี / วันที่อัปโหลด / ชื่อผู้ส่ง (สร้างทั้งสายในคำขอเดียว) · โฟลเดอร์เดิมที่เป็น "วันที่_ชื่อ" ไม่ย้าย
+  return driveEnsurePath(['Return', String(currentYearAD()), bangkokDateFolder(), senderName || 'ไม่ระบุชื่อ']);
 }
 
 /* ---- fsAddReturnPart → v8.50: บันทึกลง Firestore returnParts collection (pending) แทน Google Sheet ---- */
@@ -20311,15 +20430,7 @@ async function rpConfirmReceive(d, evalResults, score){
   await sdk.deleteDoc(sdk.doc(db,'returnParts', d.id));
   fsBumpRpActivity(); dxInvalidate();
 
-  // 4) ลบ Drive files ทีละไฟล์
-  const fileIds = d.driveFileIds || [];
-  // backward compat: เพิ่ม evidenceFileId และ withdrawal fileIds ถ้า driveFileIds ว่าง
-  if(fileIds.length===0){
-    if(d.evidenceFileId) fileIds.push(d.evidenceFileId);
-    (d.withdrawals||[]).forEach(w=>{ if(w.driveFileId) fileIds.push(w.driveFileId); });
-  }
-  const rpRes = await driveDeleteMany(fileIds);
-  if(rpRes.failed.length) showToast('⚠ ลบไฟล์ RP ใน Drive ไม่สำเร็จ '+driveFailSummary(rpRes)+' — ตรวจได้ที่ปุ่ม "ตรวจไฟล์ตกค้าง"');
+  // 4) v11.09 — ไม่ลบรูปใน Drive แล้ว (เก็บไว้จนกว่าจะกดลบเองที่ "จัดการประวัติ RP") · ไฟล์ยังถูกอ้างอิงโดยลิงก์ในแท็บประวัติ RP ตัวตรวจไฟล์ตกค้างจึงไม่นับเป็นไฟล์ตกค้าง
 
   fsWriteLog(`Admin Service ยืนยันรับอะไหล่จาก ${d.senderName||d.senderEmail} ผลประเมิน: ${evalStr} (${scoreVal}/5 คะแนน)`);
 }
