@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.12
-  อัปเดตล่าสุด   : 22 ตุลาคม 2569 17:13 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.16
+  อัปเดตล่าสุด   : 23 ตุลาคม 2569 19:59 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.12</title>
+<title>F1 Service — v11.16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1418,6 +1418,7 @@ setTimeout(function(){
         <div id="eng-cert-toolbar" style="display:flex;gap:6px;margin:8px 0;">
           <button class="btn btn-ghost btn-sm" id="eng-cert-collapse-all">ซ่อนทุกประเภท</button>
           <button class="btn btn-ghost btn-sm" id="eng-cert-expand-all">แสดงทุกประเภท</button>
+          <button class="btn btn-primary btn-sm" id="eng-cert-multi-btn" style="margin-left:auto;">📎 แนบหลายรุ่นทีเดียว</button>
         </div>
         <div id="eng-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
         </div>
@@ -1528,6 +1529,7 @@ setTimeout(function(){
       <div class="panel-block">
         <h2>Certificate ผู้ผลิตของฉัน</h2>
         <p class="panel-sub">เฉพาะรุ่นที่ดูแล</p>
+        <div style="margin:6px 0 10px;"><button class="btn btn-primary btn-sm" id="sup-cert-multi-btn">📎 แนบหลายรุ่นทีเดียว</button></div>
         <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
     </div>
@@ -2459,6 +2461,23 @@ setTimeout(function(){
     </div>
   </div>
 
+  <!-- v11.16 — แนบใบ Cer หลายรุ่น/หลายไฟล์ทีเดียว -->
+  <div class="modal-overlay" id="cert-multi-modal">
+    <div class="modal" style="max-width:520px;max-height:88vh;overflow:auto;">
+      <button class="modal-close-x" id="cert-multi-close">✕</button>
+      <h3>📎 แนบใบ Cer หลายรุ่นทีเดียว</h3>
+      <p class="panel-sub">เลือกไฟล์ แล้วติ๊กรุ่นที่ใบนั้นใช้ · 1 ไฟล์ใช้ได้หลายรุ่น (อัปโหลดไฟล์เดียว) · เลือกหลายไฟล์ได้</p>
+      <div id="cert-multi-type-wrap"></div>
+      <div id="cert-multi-files"></div>
+      <div id="cert-multi-err" style="font-size:12.5px;color:var(--red,#dc2626);white-space:pre-wrap;margin:6px 0;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" id="cert-multi-cancel">ปิด</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;margin:0;">📁 เลือกไฟล์<input type="file" id="cert-multi-input" multiple style="display:none;" accept=".pdf,.jpg,.jpeg,.png"></label>
+        <button class="btn btn-primary btn-sm" id="cert-multi-go" disabled>⬆ อัปโหลด</button>
+      </div>
+    </div>
+  </div>
+
   <!-- v8.86 — modal รายการใบ Certificate ใน 1 ช่อง (แนบได้หลายใบ · ดูไฟล์ · ลบ) -->
   <div class="modal-overlay" id="cert-detail-modal">
     <div class="modal" style="max-width:460px;max-height:85vh;overflow:auto;">
@@ -2625,8 +2644,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.12";
-const APP_UPDATED_AT = "22 ตุลาคม 2569 17:13 น. เวลาไทย";
+const APP_VERSION = "11.16";
+const APP_UPDATED_AT = "23 ตุลาคม 2569 19:59 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5559,15 +5578,13 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
   showLoadingOverlay('กำลังอัปโหลดรูป...');
   try{
     const folderId = await ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex);
-    const resolved = [];
-    for(let i=0;i<images.length;i++){
-      const img = images[i];
-      if(typeof img==='string'){ resolved.push(img); continue; }
-      if(img.copyFrom){ const nid = await driveCopyFileTo(img.copyFrom, folderId, `img-${Date.now()}-${i}.jpg`); resolved.push(`https://lh3.googleusercontent.com/d/${nid}`); continue; }
-      const filename = `img-${Date.now()}-${i}.jpg`;
-      const url = await driveUploadImage(img.blob, filename, folderId);
-      resolved.push(url);
-    }
+    // v11.13 — พร้อมกันครั้งละ 3 รูป ลำดับผลตรงตามเดิม
+    const stamp = Date.now();
+    const resolved = await f1Pool(images, async (img, i)=>{
+      if(typeof img==='string') return img;
+      if(img.copyFrom){ const nid = await driveCopyFileTo(img.copyFrom, folderId, `img-${stamp}-${i}.jpg`); return `https://lh3.googleusercontent.com/d/${nid}`; }
+      return await driveUploadImage(img.blob, `img-${stamp}-${i}.jpg`, folderId);
+    }, 3);
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
@@ -7207,6 +7224,134 @@ async function certRenameAll(){
   alert('เปลี่ยนชื่อไฟล์ใบ Cer สำเร็จ '+ok+' ไฟล์'+(failed.length ? '\nไม่สำเร็จ '+failed.length+' ไฟล์:\n'+failed.slice(0,8).join('\n')+(failed.length>8?'\n...':'')+'\n\n(ไฟล์เก่าที่เจ้าของเป็นบัญชีอื่นอาจเปลี่ยนชื่อไม่ได้)' : ''));
 }
 (function(){ const b = document.getElementById('maint-cert-rename-btn'); if(b) b.addEventListener('click', ()=>{ certRenameAll().catch(e=>{ try{ hideLoadingOverlay(); }catch(_){} alert('ผิดพลาด: '+(e.message||e)); }); }); })();
+
+/* ===================== v11.16 — แนบใบ Cer หลายรุ่น/หลายไฟล์ทีเดียว ===================== */
+// 1 ไฟล์ใช้ได้หลายรุ่น (อัปโหลดไฟล์เดียว สร้างรายการให้ทุกรุ่นที่ติ๊ก) · เลือกหลายไฟล์ได้ แต่ละไฟล์เลือกรุ่นของตัวเอง
+const CM = { role:'engineer', files:[], busy:false, mine:new Set() };
+const CM_MAX_FILES = 20, CM_MAX_MB = 30;
+async function fsUploadCertificateMulti(ownerEmail, ownerName, role, certType, targets, file){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  const first = targets[0];
+  const uploaderFolder = (ownerEmail===myUserEmail) ? myClaimantName() : (ownerName || ownerEmail);
+  const folderId = await ensureCertificateFolderPath(certType, uploaderFolder, first.category, first.model);
+  const modelsLabel = Array.from(new Set(targets.map(t=>t.model))).sort(naturalSort).join('+');
+  const driveName = await certFileNameFor(ownerEmail, modelsLabel, file.name, ownerName);
+  const fileUrl = await driveUploadLargeFile(file, driveName, folderId);
+  const ids = [], failed = [];
+  for(const t of targets){
+    const cid = certDocId(ownerEmail, certType, t.category, t.model) + '__' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    try{
+      await sdk.setDoc(sdk.doc(db,'certificates', cid), { ownerEmail, ownerName, role, certType, category:t.category, model:t.model, fileUrl, fileName:driveName, uploadedAt:Date.now(), score:null, status:'pending', reviewedBy:'', reviewedAt:null, reviewNote:'' });
+      ids.push(cid);
+    }catch(e){ failed.push(t.model+': '+(e.message||e)); }
+  }
+  if(!ids.length){ try{ await driveDeleteFile(driveFileIdFromUrl(fileUrl)); }catch(_){} throw new Error('บันทึกรายการไม่สำเร็จ ('+failed[0]+')'); } // ไม่มีรายการเลย → เก็บกวาดไฟล์ที่เพิ่งอัปโหลด
+  try{ fsWriteLog(`อัปโหลด Certificate (${certTypeLabel(certType)}) ${targets.map(t=>t.category+'/'+t.model).join(', ')} — ${ownerName}`); }catch(_){}
+  return { ids, failed };
+}
+function cmModelsOf(){ // {category -> [model,...]} ที่เลือกแนบได้
+  const out = {};
+  Object.keys(DATA.categories||{}).sort(naturalSort).forEach(cat=>{
+    let ms = (DATA.categories[cat]||[]).slice().sort(naturalSort);
+    if(CM.role==='supproduct') ms = ms.filter(m=>ownerOf(cat,m)===currentSupIdentity);
+    if(ms.length) out[cat] = ms;
+  });
+  return out;
+}
+function cmSize(n){ return n>=1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1,Math.round(n/1024))+' KB'; }
+function cmRender(){
+  const wrap = $('cert-multi-files'); if(!wrap) return;
+  const cats = cmModelsOf(), catNames = Object.keys(cats);
+  if(!CM.files.length){ wrap.innerHTML = '<p style="font-size:12.5px;color:var(--text-faint);margin:10px 0;">ยังไม่ได้เลือกไฟล์ — กด "📁 เลือกไฟล์" (เลือกได้หลายไฟล์พร้อมกัน)</p>'; cmUpdateGo(); return; }
+  wrap.innerHTML = CM.files.map((it,i)=>{
+    const chips = Array.from(it.models).map(k=>{ const [c,m] = k.split('|'); return `<span style="display:inline-block;background:rgba(34,197,94,.15);border:1px solid var(--green);border-radius:999px;padding:1px 8px;margin:2px 4px 2px 0;font-size:11.5px;">${escapeHtml(m)}<span style="color:var(--text-faint);"> · ${escapeHtml(c)}</span></span>`; }).join('');
+    const curCat = it.cat && cats[it.cat] ? it.cat : (catNames[0]||'');
+    const panel = it.open && curCat ? `<div style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:8px;">
+        <select data-cmcat="${i}" style="width:100%;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;">${catNames.map(c=>`<option value="${escapeHtml(c)}" ${c===curCat?'selected':''}>${escapeHtml(c)}${Array.from(it.models).filter(k=>k.split('|')[0]===c).length?' ✓':''}</option>`).join('')}</select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">${cats[curCat].map(m=>{ const k = curCat+'|'+m; return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0;"><input type="checkbox" data-cmmodel="${i}" data-k="${escapeHtml(k)}" ${it.models.has(k)?'checked':''}> <span>${escapeHtml(m)}${(CM.role==='engineer'&&CM.mine.has(k))?' <b style="color:var(--green);font-size:10.5px;">ดูแล</b>':''}</span></label>`; }).join('')}</div></div>` : '';
+    const bad = it.err ? `border-color:var(--red,#dc2626);` : 'border-color:var(--border);';
+    return `<div style="border:1px solid;${bad}border-radius:10px;padding:10px;margin:8px 0;">
+      <div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;word-break:break-all;">${escapeHtml(it.file.name)}</div><div style="font-size:11.5px;color:var(--text-faint);">${cmSize(it.file.size)}${it.err?` · <b style="color:var(--red,#dc2626);">${escapeHtml(it.err)}</b>`:''}</div></div>
+        <button class="icon-btn danger btn-sm" data-cmrm="${i}" style="flex-shrink:0;" title="เอาไฟล์นี้ออก">✕</button></div>
+      <div style="margin-top:6px;">${chips || '<span style="font-size:12px;color:var(--text-faint);">ยังไม่ได้เลือกรุ่น</span>'}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;"><button class="btn btn-ghost btn-sm" data-cmopen="${i}">${it.open?'▲ ซ่อนรายการรุ่น':'▼ เลือกรุ่น'}</button>${i>0?`<button class="btn btn-ghost btn-sm" data-cmsame="${i}">ใช้รุ่นเดียวกับไฟล์ก่อนหน้า</button>`:''}</div>${panel}</div>`;
+  }).join('');
+  cmUpdateGo();
+}
+function cmUpdateGo(){
+  const go = $('cert-multi-go'); if(!go) return;
+  const nF = CM.files.length, nR = CM.files.reduce((a,it)=>a+it.models.size, 0);
+  go.disabled = CM.busy || !nF; go.textContent = nF ? `⬆ อัปโหลด ${nF} ไฟล์ (${nR} รายการ)` : '⬆ อัปโหลด';
+}
+async function openCertMultiModal(role){
+  CM.role = role; CM.files = []; CM.busy = false; CM.mine = new Set();
+  const tw = $('cert-multi-type-wrap');
+  tw.innerHTML = role==='supproduct' ? '<p class="panel-sub" style="margin:4px 0 8px;">ประเภท: <b>ผู้ผลิต</b> · เฉพาะรุ่นที่ดูแล</p>'
+    : '<label style="font-size:12.5px;display:block;margin-bottom:6px;">ประเภทใบ Cer <select id="cert-multi-type" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);"><option value="manufacturer">ผู้ผลิต</option><option value="internal">ภายใน</option></select></label>';
+  $('cert-multi-err').textContent = '';
+  cmRender();
+  $('cert-multi-modal').classList.add('show');
+  if(role==='engineer'){ try{ await fsLoadMyResponsibility(); CM.mine = new Set((myResponsibility||[]).map(m=>m.category+'|'+m.model)); cmRender(); }catch(_){} }
+}
+function closeCertMultiModal(){ if(CM.busy) return; $('cert-multi-modal').classList.remove('show'); }
+async function cmUpload(){
+  if(CM.busy) return;
+  const certType = CM.role==='supproduct' ? 'manufacturer' : (($('cert-multi-type')||{}).value || 'manufacturer');
+  let bad = 0;
+  CM.files.forEach(it=>{ it.err = ''; if(!it.models.size){ it.err = 'ยังไม่ได้เลือกรุ่น'; it.open = true; bad++; } else if(it.file.size > CM_MAX_MB*1048576){ it.err = 'ไฟล์ใหญ่เกิน '+CM_MAX_MB+' MB'; bad++; } });
+  if(bad){ cmRender(); $('cert-multi-err').textContent = 'กรุณาแก้ '+bad+' ไฟล์ที่มีกรอบแดงก่อน'; return; }
+  $('cert-multi-err').textContent = '';
+  if(!(await exEnsureDrive())) return;
+  CM.busy = true; cmUpdateGo();
+  const ownerName = myClaimantName(); const total = CM.files.length;
+  let done = 0, okFiles = 0, okRows = 0; const errs = [], doneItems = new Set();
+  showLoadingOverlay(`กำลังอัปโหลด 0/${total} ไฟล์...`);
+  const one = async it=>{
+    try{
+      const targets = Array.from(it.models).map(k=>{ const p = k.split('|'); return { category:p[0], model:p.slice(1).join('|') }; });
+      const r = await fsUploadCertificateMulti(myUserEmail, ownerName, CM.role, certType, targets, it.file);
+      okFiles++; okRows += r.ids.length; doneItems.add(it);
+      if(r.failed.length) errs.push(it.file.name+': บันทึกไม่ครบ ('+r.failed.join('; ')+')');
+    }catch(e){ errs.push(it.file.name+': '+(e.message||e)); }
+    done++; updateLoadingOverlayText(`กำลังอัปโหลด ${done}/${total} ไฟล์...`);
+  };
+  try{
+    const list = CM.files.slice();
+    await one(list[0]); await f1Pool(list.slice(1), one, 3); // ไฟล์แรกก่อน (สร้างโฟลเดอร์/แคช) ที่เหลือพร้อมกันครั้งละ 3 · แต่ละไฟล์พลาดแยกกัน
+    try{ await refreshCertCaches(CM.role); }catch(e){ console.warn('refresh Cer ไม่สำเร็จ:', e.message); }
+  }finally{ hideLoadingOverlay(); CM.busy = false; }
+  CM.files = CM.files.filter(it=>!doneItems.has(it));
+  if(okFiles) showToast(`✓ อัปโหลด ${okFiles} ไฟล์ · สร้าง ${okRows} รายการแล้ว`);
+  if(errs.length){ $('cert-multi-err').textContent = 'ไม่สำเร็จ '+errs.length+' ไฟล์ (ยังอยู่ในรายการ กดอัปโหลดซ้ำได้):\n'+errs.join('\n'); cmRender(); }
+  else { closeCertMultiModal(); }
+}
+(function(){
+  const g = id=>document.getElementById(id); if(!g('cert-multi-modal')) return;
+  g('cert-multi-close').addEventListener('click', closeCertMultiModal);
+  g('cert-multi-cancel').addEventListener('click', closeCertMultiModal);
+  g('cert-multi-modal').addEventListener('click', e=>{ if(e.target===g('cert-multi-modal')) closeCertMultiModal(); });
+  g('cert-multi-input').addEventListener('change', e=>{
+    const fl = Array.from(e.target.files||[]); e.target.value = '';
+    fl.forEach(f=>{ if(CM.files.length < CM_MAX_FILES) CM.files.push({ file:f, models:new Set(), open:false, cat:'', err:'' }); });
+    if(CM.files.length >= CM_MAX_FILES && fl.length) $('cert-multi-err').textContent = 'เลือกได้ครั้งละไม่เกิน '+CM_MAX_FILES+' ไฟล์';
+    if(CM.files.length && CM.files.every(it=>!it.models.size)) CM.files[0].open = true; // เปิดช่องเลือกรุ่นให้ไฟล์แรกเลย
+    cmRender();
+  });
+  g('cert-multi-go').addEventListener('click', ()=>{ cmUpload().catch(e=>{ CM.busy = false; try{ hideLoadingOverlay(); }catch(_){} alert('ผิดพลาด: '+(e.message||e)); cmUpdateGo(); }); });
+  g('cert-multi-files').addEventListener('click', e=>{
+    const t = e.target.closest('[data-cmopen],[data-cmrm],[data-cmsame]'); if(!t || CM.busy) return;
+    if(t.hasAttribute('data-cmopen')){ const it = CM.files[+t.getAttribute('data-cmopen')]; if(it){ it.open = !it.open; cmRender(); } }
+    else if(t.hasAttribute('data-cmrm')){ CM.files.splice(+t.getAttribute('data-cmrm'), 1); cmRender(); }
+    else { const i = +t.getAttribute('data-cmsame'); if(CM.files[i] && CM.files[i-1]){ CM.files[i].models = new Set(CM.files[i-1].models); CM.files[i].err = ''; cmRender(); } }
+  });
+  g('cert-multi-files').addEventListener('change', e=>{
+    const el = e.target; if(CM.busy) return;
+    if(el.hasAttribute('data-cmcat')){ const it = CM.files[+el.getAttribute('data-cmcat')]; if(it){ it.cat = el.value; cmRender(); } }
+    else if(el.hasAttribute('data-cmmodel')){ const it = CM.files[+el.getAttribute('data-cmmodel')]; if(it){ const k = el.getAttribute('data-k'); if(el.checked) it.models.add(k); else it.models.delete(k); it.err = ''; cmRender(); } }
+  });
+  const eb = g('eng-cert-multi-btn'); if(eb) eb.addEventListener('click', ()=>openCertMultiModal('engineer'));
+  const sb = g('sup-cert-multi-btn'); if(sb) sb.addEventListener('click', ()=>openCertMultiModal('supproduct'));
+})();
 
 async function fetchAllUserProfiles(force){
   if(!force && _profCache && Date.now() - _profCache.at < 300000){
@@ -9224,6 +9369,27 @@ function wakeLockRelease(){
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && _wakeUsers>0){ try{ if(navigator.wakeLock && !_wakeLock) navigator.wakeLock.request('screen').then(l=>{ _wakeLock = l; l.addEventListener('release', ()=>{ _wakeLock = null; }); }).catch(()=>{}); }catch(e){} } });
 setTimeout(()=>{ try{ const j = localStorage.getItem('f1_up_pending'); if(j){ localStorage.removeItem('f1_up_pending'); showToast('⚠ การอัปโหลดครั้งก่อนอาจไม่เสร็จ (จอดับ/แอปปิดกลางทาง) — ถ้าไม่เห็นเอกสารที่แนบ ให้แนบใหม่ และใช้ "ตรวจไฟล์ตกค้าง" เก็บไฟล์ที่ค้างใน Drive'); } }catch(e){} }, 5000);
+// v11.13 — ย่อรูป JPEG ที่ใหญ่เกิน 1.2 MB (ด้านยาว ≤ 2000px, คุณภาพ 0.85) · ไม่ใช่ JPEG/ย่อแล้วไม่เล็กลงพอ/พลาดตรงไหน → ใช้ไฟล์เดิม (ไม่เปลี่ยนชื่อ/นามสกุล)
+async function f1ShrinkImage(file){
+  try{
+    if(!file || file.type !== 'image/jpeg' || !(file.size > 1.2*1024*1024) || !window.createImageBitmap) return file;
+    const bmp = await createImageBitmap(file);
+    const sc = Math.min(1, 2000/Math.max(bmp.width, bmp.height)), w = Math.max(1, Math.round(bmp.width*sc)), h = Math.max(1, Math.round(bmp.height*sc));
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(bmp, 0, 0, w, h); try{ bmp.close(); }catch(_){}
+    const blob = await new Promise(r=>cv.toBlob(r, 'image/jpeg', 0.85));
+    if(!blob || blob.size >= file.size*0.9) return file;
+    return new File([blob], file.name, { type:'image/jpeg', lastModified:Date.now() });
+  }catch(e){ return file; }
+}
+// v11.13 — ทำงานพร้อมกันไม่เกิน limit (ค่าเริ่มต้น 3) · ผลคืนตามลำดับเดิม · พลาดงานใด → ไม่เริ่มงานใหม่ รองานที่ค้างอยู่ให้จบ แล้ว throw (err.partial = ผลที่สำเร็จแล้ว ไว้เก็บกวาด)
+async function f1Pool(items, worker, limit){
+  const res = new Array(items.length); let next = 0, err = null;
+  const run = async ()=>{ while(!err){ const i = next++; if(i >= items.length) return; try{ res[i] = await worker(items[i], i); }catch(e){ if(!err) err = e || new Error('ผิดพลาด'); } } };
+  await Promise.all(Array.from({ length: Math.min(limit||3, items.length) }, run));
+  if(err){ try{ err.partial = res; }catch(_){} throw err; }
+  return res;
+}
 async function drvUploadBlob(file, name, mime, parentId, share, onProgress){
   await wakeLockAcquire();
   try{ return await drvUploadBlob_(file, name, mime, parentId, share, onProgress); }
@@ -17159,13 +17325,15 @@ async function traUploadPhotos(files){
   let ok = 0;
   try{
     const folder = await trSessionFolder(s);
-    for(let i = 0; i < files.length; i++){
-      if(i === 0) showLoadingOverlay(`กำลังอัปโหลดรูป ${i+1}/${files.length}...`); else exOverlayText(`กำลังอัปโหลดรูป ${i+1}/${files.length}...`);
-      const f = files[i];
-      const url = await driveUploadLargeFile(f, 'photo_'+Date.now()+'_'+i+'_'+String(f.name||'photo.jpg').replace(/[^A-Za-z0-9._-]+/g,'_'), folder);
-      await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
-      ok++;
-    }
+    // v11.13 — พร้อมกันครั้งละ 3 รูป (ย่อรูป JPEG ใหญ่ก่อนส่ง) · พลาดแล้วหยุดเริ่มรูปใหม่ แจ้งจำนวนที่สำเร็จ
+    showLoadingOverlay(`กำลังอัปโหลดรูป 0/${files.length}...`);
+    const _stamp = Date.now();
+    await f1Pool(files, async (f0, i)=>{
+      const f = await f1ShrinkImage(f0);
+      const url = await driveUploadLargeFile(f, 'photo_'+_stamp+'_'+i+'_'+String(f0.name||'photo.jpg').replace(/[^A-Za-z0-9._-]+/g,'_'), folder);
+      await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f0.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
+      ok++; exOverlayText(`กำลังอัปโหลดรูป ${ok}/${files.length}...`);
+    }, 3);
     hideLoadingOverlay(); showToast('✓ อัปโหลด '+ok+' รูปแล้ว');
   }catch(e){ hideLoadingOverlay(); alert('อัปโหลดไม่สำเร็จ'+(ok?' (สำเร็จแล้ว '+ok+' รูป)':'')+': '+e.message); }
   await traReload(true);
@@ -18975,28 +19143,21 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
     const folderId = await ensureReturnPartsFolderPath(senderName);
     updateLoadingOverlayText('กำลังอัปโหลดไฟล์ใบเบิก...');
 
-    // Upload each withdrawal slip
-    const withdrawalData = [];
-    for(let i=0;i<rpWithdrawals.length;i++){
-      const w = rpWithdrawals[i];
-      updateLoadingOverlayText(`กำลังอัปโหลดใบเบิก ${i+1}/${rpWithdrawals.length}...`);
-      const safeNum = sanitizeFolderName(w.num||`withdrawal-${i+1}`);
-      const ext = w.file.name.split('.').pop();
-      const fname = `ใบเบิก_${safeNum}.${ext}`;
-      const fileId = await driveUploadFile(w.file, fname, w.file.type||'application/octet-stream', folderId);
-      const url = `https://drive.google.com/file/d/${fileId}/view`;
-      withdrawalData.push({ num: w.num.trim(), driveFileId: fileId, driveUrl: url, fileName: fname });
-    }
-
-    // Upload evidence (optional)
-    let evidenceData = null;
-    if(rpEvidenceFile){
-      updateLoadingOverlayText('กำลังอัปโหลดหลักฐานการส่ง...');
-      const ext2 = rpEvidenceFile.name.split('.').pop();
-      const fname2 = `หลักฐาน_${bangkokDateFolder()}.${ext2}`;
-      const fileId2 = await driveUploadFile(rpEvidenceFile, fname2, rpEvidenceFile.type||'application/octet-stream', folderId);
-      evidenceData = { driveFileId: fileId2, driveUrl:`https://drive.google.com/file/d/${fileId2}/view`, fileName:fname2 };
-    }
+    // v11.13 — ใบเบิก + หลักฐาน อัปโหลดพร้อมกันครั้งละ 3 ไฟล์ (ย่อรูป JPEG ใหญ่ก่อน) · พลาดไฟล์ไหน → ลบไฟล์ที่ขึ้นไปแล้ว ไม่ทิ้งขยะ
+    const _jobs = rpWithdrawals.map((w,i)=>({ kind:'w', i, file:w.file, fname:`ใบเบิก_${sanitizeFolderName(w.num||`withdrawal-${i+1}`)}.${w.file.name.split('.').pop()}` }));
+    if(rpEvidenceFile) _jobs.push({ kind:'e', file:rpEvidenceFile, fname:`หลักฐาน_${bangkokDateFolder()}.${rpEvidenceFile.name.split('.').pop()}` });
+    let _done = 0; updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ 0/${_jobs.length}...`);
+    let _ids;
+    try{
+      _ids = await f1Pool(_jobs, async j=>{ const f = await f1ShrinkImage(j.file); const id = await driveUploadFile(f, j.fname, f.type||'application/octet-stream', folderId); _done++; updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${_done}/${_jobs.length}...`); return id; }, 3);
+    }catch(upErr){ try{ await driveDeleteMany((upErr.partial||[]).filter(Boolean)); }catch(_){} throw upErr; }
+    window._rpUpIds = _ids.slice();
+    const withdrawalData = []; let evidenceData = null;
+    _jobs.forEach((j,k)=>{
+      const fid = _ids[k], url = `https://drive.google.com/file/d/${fid}/view`;
+      if(j.kind==='w') withdrawalData.push({ num: rpWithdrawals[j.i].num.trim(), driveFileId: fid, driveUrl: url, fileName: j.fname });
+      else evidenceData = { driveFileId: fid, driveUrl: url, fileName: j.fname };
+    });
 
     updateLoadingOverlayText('กำลังบันทึกข้อมูล...');
     const methodLabel = {self:'ด้วยตนเอง ที่ Office',parcel:'ส่งพัสดุ',truck:'คืนกลับรถ Office'}[method]||method;
@@ -19010,6 +19171,7 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
       createdAt: Date.now()
     });
 
+    window._rpUpIds = null;
     hideLoadingOverlay();
     rpClearDraft(); // ลบ draft หลัง submit สำเร็จ
     closeReturnPartsModal();
@@ -19019,6 +19181,7 @@ $('rp-submit-btn').addEventListener('click', async ()=>{
   }catch(e){
     hideLoadingOverlay();
     console.error('rpSubmit error',e);
+    if(window._rpUpIds){ const _x = window._rpUpIds; window._rpUpIds = null; try{ await driveDeleteMany(_x.filter(Boolean)); }catch(_){} } // v11.13 — บันทึกไม่สำเร็จ → เก็บกวาดไฟล์ที่เพิ่งอัปโหลด
     alert('เกิดข้อผิดพลาด: '+(e.message||e));
   }
 });
@@ -19575,7 +19738,9 @@ function renderCertDetailList(){
   wrap.querySelectorAll('[data-delcert]').forEach(b=> b.addEventListener('click', ()=> deleteCertFromModal(b.getAttribute('data-delcert'))));
 }
 async function refreshCertCaches(role){
-  _engCertDataCache = null; _supCertDataCache = null; // v11.12 — 2 หน้าใช้ใบชุดเดียวกัน ล้างทั้งคู่\n  if(role==='engineer') await renderEngCertTab(true); else await renderSupCertTab(true);
+  // v11.12 — 2 หน้าใช้ใบชุดเดียวกัน ล้างทั้งคู่
+  _engCertDataCache = null; _supCertDataCache = null;
+  if(role==='engineer') await renderEngCertTab(true); else await renderSupCertTab(true);
 }
 function openCertDetailModal(role, certType, category, model){
   _certDetailCtx = { role, certType, category, model };
@@ -19617,11 +19782,10 @@ $('cert-detail-upload-input').addEventListener('change', async e=>{
   const ownerName = myClaimantName();
   let ok = 0; const errs = [];
   showLoadingOverlay(`กำลังอัปโหลด Certificate 1/${files.length}...`); // v8.90 — เรียกครั้งเดียว (ตัวนับ overlay) แล้วอัปเดตแค่ข้อความ
-  for(let i=0;i<files.length;i++){
-    updateLoadingOverlayText(`กำลังอัปโหลด Certificate ${i+1}/${files.length}...`);
-    try{ await fsUploadCertificate(myUserEmail, ownerName, role, certType, category, model, files[i]); ok++; }
-    catch(err){ errs.push(files[i].name+': '+err.message); }
-  }
+  // v11.13 — ไฟล์แรกทำก่อน (สร้างโฟลเดอร์/แคช) ที่เหลือพร้อมกันครั้งละ 3 · แต่ละไฟล์พลาดแยกกัน ไม่กระทบไฟล์อื่น
+  let _cd = 0;
+  const _one = async f=>{ try{ await fsUploadCertificate(myUserEmail, ownerName, role, certType, category, model, f); ok++; }catch(err){ errs.push(f.name+': '+err.message); } _cd++; updateLoadingOverlayText(`กำลังอัปโหลด Certificate ${_cd}/${files.length}...`); };
+  if(files.length){ await _one(files[0]); await f1Pool(files.slice(1), _one, 3); }
   e.target.value = '';
   try{ await refreshCertCaches(role); }catch(err){ console.warn('refresh Cer ไม่สำเร็จ:', err.message); }
   hideLoadingOverlay();
@@ -20823,6 +20987,18 @@ async function rpEditSave(){
     const needUpload = rpEditWithdrawals.some(w=>w.file) || !!rpEditEvidenceFile;
     if(!folderId && needUpload) folderId = await ensureReturnPartsFolderPath(d.senderName||d.senderEmail||'');
 
+    // v11.13 — ไฟล์ใหม่ทั้งหมดอัปโหลดพร้อมกันครั้งละ 3 ไฟล์ก่อน (พลาด → ลบที่ขึ้นไปแล้ว ข้อมูลเดิมไม่แตะ)
+    const _pre = {}, _jobsE = [];
+    rpEditWithdrawals.forEach((w,i)=>{ if(w.file) _jobsE.push({ key:'w'+i, file:w.file, fname:`ใบเบิก_${sanitizeFolderName(w.num||`withdrawal-${i+1}`)}.${w.file.name.split('.').pop()}` }); });
+    if(rpEditEvidenceFile) _jobsE.push({ key:'e', file:rpEditEvidenceFile, fname:`หลักฐาน_${bangkokDateFolder()}.${rpEditEvidenceFile.name.split('.').pop()}` });
+    if(_jobsE.length){
+      let _d2 = 0; updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ 0/${_jobsE.length}...`);
+      try{
+        const ids = await f1Pool(_jobsE, async j=>{ const f = await f1ShrinkImage(j.file); const id = await driveUploadFile(f, j.fname, f.type||'application/octet-stream', folderId); _d2++; updateLoadingOverlayText(`กำลังอัปโหลดไฟล์ ${_d2}/${_jobsE.length}...`); return id; }, 3);
+        _jobsE.forEach((j,k)=>{ _pre[j.key] = ids[k]; });
+      }catch(upErr){ try{ await driveDeleteMany((upErr.partial||[]).filter(Boolean)); }catch(_){} throw upErr; }
+      window._rpEditUpIds = Object.values(_pre);
+    }
     const newWithdrawals = [];
     for(let i=0;i<rpEditWithdrawals.length;i++){
       const w = rpEditWithdrawals[i];
@@ -20831,7 +21007,7 @@ async function rpEditSave(){
         const safeNum = sanitizeFolderName(w.num||`withdrawal-${i+1}`);
         const ext = w.file.name.split('.').pop();
         const fname = `ใบเบิก_${safeNum}.${ext}`;
-        const fileId = await driveUploadFile(w.file, fname, w.file.type||'application/octet-stream', folderId);
+        const fileId = _pre['w'+i];
         newWithdrawals.push({ num: w.num.trim(), driveFileId: fileId, driveUrl: `https://drive.google.com/file/d/${fileId}/view`, fileName: fname });
       } else if(w.existingUrl){
         const existingW = (d.withdrawals||[]).find(x=>x.driveUrl===w.existingUrl) || (d.withdrawals||[])[i] || {};
@@ -20846,7 +21022,7 @@ async function rpEditSave(){
       updateLoadingOverlayText('กำลังอัปโหลดหลักฐาน...');
       const ext2 = rpEditEvidenceFile.name.split('.').pop();
       const fname2 = `หลักฐาน_${bangkokDateFolder()}.${ext2}`;
-      const fileId2 = await driveUploadFile(rpEditEvidenceFile, fname2, rpEditEvidenceFile.type||'application/octet-stream', folderId);
+      const fileId2 = _pre.e;
       newEvid = { id:fileId2, url:`https://drive.google.com/file/d/${fileId2}/view`, name:fname2 };
     } else if(!rpEditEvidenceExistingUrl){
       newEvid = { id:'', url:'', name:'' };
@@ -20860,7 +21036,7 @@ async function rpEditSave(){
     updateLoadingOverlayText('กำลังบันทึก...');
     const patch = { returnMethod: method, returnMethodLabel: methodLabel, withdrawals: newWithdrawals,
       evidenceFileId: newEvid.id, evidenceUrl: newEvid.url, evidenceName: newEvid.name, driveFileIds: newDriveFileIds, editedAt: Date.now() };
-    await sdk.updateDoc(sdk.doc(db,'returnParts', d.id), patch);
+    await sdk.updateDoc(sdk.doc(db,'returnParts', d.id), patch); window._rpEditUpIds = null;
     Object.assign(d, patch);
     fsBumpRpActivity();
 
@@ -20877,6 +21053,7 @@ async function rpEditSave(){
   }catch(e){
     hideLoadingOverlay();
     console.error('rpEditSave error',e);
+    if(window._rpEditUpIds){ const _x = window._rpEditUpIds; window._rpEditUpIds = null; try{ await driveDeleteMany(_x.filter(Boolean)); }catch(_){} } // v11.13
     alert('บันทึกไม่สำเร็จ: '+(e.message||e));
   }
 }
