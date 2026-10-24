@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.18
-  อัปเดตล่าสุด   : 23 ตุลาคม 2569 20:36 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.20
+  อัปเดตล่าสุด   : 24 ตุลาคม 2569 11:07 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.18</title>
+<title>F1 Service — v11.20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2645,8 +2645,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.18";
-const APP_UPDATED_AT = "23 ตุลาคม 2569 20:36 น. เวลาไทย";
+const APP_VERSION = "11.20";
+const APP_UPDATED_AT = "24 ตุลาคม 2569 11:07 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7292,7 +7292,7 @@ function cmRender(){
     const curCat = it.cat && cats[it.cat] ? it.cat : ''; // v11.18 — ไม่เลือกประเภทเครื่องให้ล่วงหน้า
     const panel = it.open && catNames.length ? `<div style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:8px;">
         <select data-cmcat="${i}" style="width:100%;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;"><option value="">— เลือกประเภทเครื่อง —</option>${catNames.map(c=>`<option value="${escapeHtml(c)}" ${c===curCat?'selected':''}>${escapeHtml(c)}${cats[c].filter(m=>HV[c+'|'+m]).length?' · มีแล้ว '+cats[c].filter(m=>HV[c+'|'+m]).length+'/'+cats[c].length:''}${Array.from(it.models).filter(k=>k.split('|')[0]===c).length?' ✓':''}</option>`).join('')}</select>
-        ${curCat ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">${cats[curCat].map(m=>{ const k = curCat+'|'+m; return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0;"><input type="checkbox" data-cmmodel="${i}" data-k="${escapeHtml(k)}" ${it.models.has(k)?'checked':''}> <span>${escapeHtml(m)}${(CM.role==='engineer'&&CM.mine.has(k))?' <b style="color:var(--green);font-size:10.5px;">ดูแล</b>':''}${HV[k]?` <span style="color:var(--green);font-size:10.5px;font-weight:600;">✓ มีแล้ว${HV[k]>1?' '+HV[k]:''}</span>`:''}</span></label>`; }).join('')}</div>` : '<div style="font-size:12px;color:var(--text-faint);">เลือกประเภทเครื่องก่อน แล้วจะแสดงรุ่นให้ติ๊ก</div>'}</div>` : '';
+        ${curCat ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">${cats[curCat].map(m=>{ const k = curCat+'|'+m; return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0;"><input type="checkbox" data-cmmodel="${i}" data-k="${escapeHtml(k)}" ${it.models.has(k)?'checked':''}> <span>${escapeHtml(m)}${(CM.role==='engineer'&&CM.mine.has(k))?' <span style="display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--green);border-radius:999px;padding:0 7px;vertical-align:middle;">ดูแล</span>':''}${HV[k]?` <span style="color:#2563eb;border:1px solid #2563eb;border-radius:6px;font-size:10.5px;font-weight:600;padding:0 5px;vertical-align:middle;white-space:nowrap;">✓ มีแล้ว${HV[k]>1?' ×'+HV[k]:''}</span>`:''}</span></label>`; }).join('')}</div>` : '<div style="font-size:12px;color:var(--text-faint);">เลือกประเภทเครื่องก่อน แล้วจะแสดงรุ่นให้ติ๊ก</div>'}</div>` : '';
     const bad = it.err ? `border-color:var(--red,#dc2626);` : 'border-color:var(--border);';
     return `<div style="border:1px solid;${bad}border-radius:10px;padding:10px;margin:8px 0;">
       <div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;word-break:break-all;">${escapeHtml(it.file.name)}</div><div style="font-size:11.5px;color:var(--text-faint);">${cmSize(it.file.size)}${it.err?` · <b style="color:var(--red,#dc2626);">${escapeHtml(it.err)}</b>`:''}</div></div>
@@ -7316,7 +7316,10 @@ async function openCertMultiModal(role){
   CM.have = null; cmRender();
   $('cert-multi-modal').classList.add('show');
   cmLoadHave();
-  if(role==='engineer'){ try{ await fsLoadMyResponsibility(); CM.mine = new Set((myResponsibility||[]).map(m=>m.category+'|'+m.model)); cmRender(); }catch(_){} }
+  if(role==='engineer'){ try{ await fsLoadMyResponsibility(); CM.mine = new Set((myResponsibility||[]).map(m=>m.category+'|'+m.model));
+    // v11.20 — Sup: รุ่นที่เป็นเจ้าของถือเป็น "ดูแล" เหมือนหน้าตาราง
+    try{ if(isEditor() && !isSuperAdmin() && currentSupIdentity && SUP_PRODUCTS.includes(currentSupIdentity) && currentSupIdentity!==NAVX_NOSUP) Object.keys(DATA.categories||{}).forEach(cat=>{ (DATA.categories[cat]||[]).forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) CM.mine.add(cat+'|'+m); }); }); }catch(_){}
+    cmRender(); }catch(_){} }
 }
 function closeCertMultiModal(){ if(CM.busy) return; $('cert-multi-modal').classList.remove('show'); }
 async function cmUpload(){
@@ -19633,6 +19636,11 @@ async function renderEngCertTab(forceReload){
       const myCerts = await fsListCertificatesByOwner(myUserEmail);
       const certMap = groupCertsByCell(myCerts, true);
       const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
+      try{ // v11.19 — Sup Product (Editor ที่ไม่ใช่ Super Admin, ล็อกชื่อเป็นของตัวเอง) → รุ่นที่ตัวเองเป็นเจ้าของถือเป็น "ดูแล" ด้วย
+        if(isEditor() && !isSuperAdmin() && currentSupIdentity && SUP_PRODUCTS.includes(currentSupIdentity) && currentSupIdentity!==NAVX_NOSUP){
+          Object.keys(DATA.categories||{}).forEach(cat=>{ (DATA.categories[cat]||[]).forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) myModelSet.add(cat+'|'+m); }); });
+        }
+      }catch(_){}
       _engCertDataCache = { certMap, myModelSet };
     }catch(err){
       wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
