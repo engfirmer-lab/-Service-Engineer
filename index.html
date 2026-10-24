@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.17
-  อัปเดตล่าสุด   : 23 ตุลาคม 2569 20:11 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.18
+  อัปเดตล่าสุด   : 23 ตุลาคม 2569 20:36 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,7 +93,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.17</title>
+<title>F1 Service — v11.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2645,8 +2645,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.17";
-const APP_UPDATED_AT = "23 ตุลาคม 2569 20:11 น. เวลาไทย";
+const APP_VERSION = "11.18";
+const APP_UPDATED_AT = "23 ตุลาคม 2569 20:36 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -7259,8 +7259,9 @@ function cmModelsOf(){ // {category -> [model,...]} ที่เลือกแ�
   });
   return out;
 }
-function cmType(){ return CM.role==='supproduct' ? 'manufacturer' : (($('cert-multi-type')||{}).value || 'manufacturer'); }
+function cmType(){ return CM.role==='supproduct' ? 'manufacturer' : (($('cert-multi-type')||{}).value || ''); } // v11.18 — ไม่มีค่าเริ่มต้น: ต้องกดเลือกเอง
 async function cmLoadHave(){ // v11.17 — รุ่นที่มีใบแล้ว (ตามประเภทที่เลือก) ไว้โชว์ในหน้าต่างเลือกรุ่น
+  const ct0 = cmType(); if(!ct0){ CM.have = {}; cmRender(); return; }
   CM.have = null; cmRender();
   try{
     const ct = cmType(), all = await fsListCertificatesByOwner(myUserEmail), m = {};
@@ -7270,6 +7271,7 @@ async function cmLoadHave(){ // v11.17 — รุ่นที่มีใบแ�
   cmRender();
 }
 function cmHaveHtml(){
+  if(!cmType()) return '<div style="font-size:12px;color:var(--text-faint);margin:6px 0;">เลือกประเภทใบ Cer ก่อน จะแสดงรุ่นที่มีใบแล้ว</div>';
   if(CM.have === null) return '<div style="font-size:12px;color:var(--text-faint);margin:6px 0;">กำลังโหลดรุ่นที่มีใบแล้ว...</div>';
   const cats = cmModelsOf(), rows = [];
   Object.keys(cats).forEach(cat=>{
@@ -7287,10 +7289,10 @@ function cmRender(){
   if(!CM.files.length){ wrap.innerHTML = '<p style="font-size:12.5px;color:var(--text-faint);margin:10px 0;">ยังไม่ได้เลือกไฟล์ — กด "📁 เลือกไฟล์" (เลือกได้หลายไฟล์พร้อมกัน)</p>'; cmUpdateGo(); return; }
   wrap.innerHTML = CM.files.map((it,i)=>{
     const chips = Array.from(it.models).map(k=>{ const [c,m] = k.split('|'); return `<span style="display:inline-block;background:rgba(34,197,94,.15);border:1px solid var(--green);border-radius:999px;padding:1px 8px;margin:2px 4px 2px 0;font-size:11.5px;">${escapeHtml(m)}<span style="color:var(--text-faint);"> · ${escapeHtml(c)}</span></span>`; }).join('');
-    const curCat = it.cat && cats[it.cat] ? it.cat : (catNames[0]||'');
-    const panel = it.open && curCat ? `<div style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:8px;">
-        <select data-cmcat="${i}" style="width:100%;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;">${catNames.map(c=>`<option value="${escapeHtml(c)}" ${c===curCat?'selected':''}>${escapeHtml(c)}${cats[c].filter(m=>HV[c+'|'+m]).length?' · มีแล้ว '+cats[c].filter(m=>HV[c+'|'+m]).length+'/'+cats[c].length:''}${Array.from(it.models).filter(k=>k.split('|')[0]===c).length?' ✓':''}</option>`).join('')}</select>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">${cats[curCat].map(m=>{ const k = curCat+'|'+m; return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0;"><input type="checkbox" data-cmmodel="${i}" data-k="${escapeHtml(k)}" ${it.models.has(k)?'checked':''}> <span>${escapeHtml(m)}${(CM.role==='engineer'&&CM.mine.has(k))?' <b style="color:var(--green);font-size:10.5px;">ดูแล</b>':''}${HV[k]?` <span style="color:var(--green);font-size:10.5px;font-weight:600;">✓ มีแล้ว${HV[k]>1?' '+HV[k]:''}</span>`:''}</span></label>`; }).join('')}</div></div>` : '';
+    const curCat = it.cat && cats[it.cat] ? it.cat : ''; // v11.18 — ไม่เลือกประเภทเครื่องให้ล่วงหน้า
+    const panel = it.open && catNames.length ? `<div style="margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:8px;">
+        <select data-cmcat="${i}" style="width:100%;font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:6px;"><option value="">— เลือกประเภทเครื่อง —</option>${catNames.map(c=>`<option value="${escapeHtml(c)}" ${c===curCat?'selected':''}>${escapeHtml(c)}${cats[c].filter(m=>HV[c+'|'+m]).length?' · มีแล้ว '+cats[c].filter(m=>HV[c+'|'+m]).length+'/'+cats[c].length:''}${Array.from(it.models).filter(k=>k.split('|')[0]===c).length?' ✓':''}</option>`).join('')}</select>
+        ${curCat ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;">${cats[curCat].map(m=>{ const k = curCat+'|'+m; return `<label style="display:flex;align-items:center;gap:6px;font-size:13px;padding:3px 0;"><input type="checkbox" data-cmmodel="${i}" data-k="${escapeHtml(k)}" ${it.models.has(k)?'checked':''}> <span>${escapeHtml(m)}${(CM.role==='engineer'&&CM.mine.has(k))?' <b style="color:var(--green);font-size:10.5px;">ดูแล</b>':''}${HV[k]?` <span style="color:var(--green);font-size:10.5px;font-weight:600;">✓ มีแล้ว${HV[k]>1?' '+HV[k]:''}</span>`:''}</span></label>`; }).join('')}</div>` : '<div style="font-size:12px;color:var(--text-faint);">เลือกประเภทเครื่องก่อน แล้วจะแสดงรุ่นให้ติ๊ก</div>'}</div>` : '';
     const bad = it.err ? `border-color:var(--red,#dc2626);` : 'border-color:var(--border);';
     return `<div style="border:1px solid;${bad}border-radius:10px;padding:10px;margin:8px 0;">
       <div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;word-break:break-all;">${escapeHtml(it.file.name)}</div><div style="font-size:11.5px;color:var(--text-faint);">${cmSize(it.file.size)}${it.err?` · <b style="color:var(--red,#dc2626);">${escapeHtml(it.err)}</b>`:''}</div></div>
@@ -7309,7 +7311,7 @@ async function openCertMultiModal(role){
   CM.role = role; CM.files = []; CM.busy = false; CM.mine = new Set();
   const tw = $('cert-multi-type-wrap');
   tw.innerHTML = role==='supproduct' ? '<p class="panel-sub" style="margin:4px 0 8px;">ประเภท: <b>ผู้ผลิต</b> · เฉพาะรุ่นที่ดูแล</p>'
-    : '<label style="font-size:12.5px;display:block;margin-bottom:6px;">ประเภทใบ Cer <select id="cert-multi-type" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);"><option value="manufacturer">ผู้ผลิต</option><option value="internal">ภายใน</option></select></label>';
+    : '<label style="font-size:12.5px;display:block;margin-bottom:6px;">ประเภทใบ Cer <select id="cert-multi-type" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);"><option value="">— เลือกประเภทใบ Cer —</option><option value="manufacturer">ผู้ผลิต</option><option value="internal">ภายใน</option></select></label>';
   $('cert-multi-err').textContent = '';
   CM.have = null; cmRender();
   $('cert-multi-modal').classList.add('show');
@@ -7319,7 +7321,8 @@ async function openCertMultiModal(role){
 function closeCertMultiModal(){ if(CM.busy) return; $('cert-multi-modal').classList.remove('show'); }
 async function cmUpload(){
   if(CM.busy) return;
-  const certType = CM.role==='supproduct' ? 'manufacturer' : (($('cert-multi-type')||{}).value || 'manufacturer');
+  const certType = cmType();
+  if(!certType){ $('cert-multi-err').textContent = 'กรุณาเลือกประเภทใบ Cer (ผู้ผลิต/ภายใน) ก่อน'; return; }
   let bad = 0;
   CM.files.forEach(it=>{ it.err = ''; if(!it.models.size){ it.err = 'ยังไม่ได้เลือกรุ่น'; it.open = true; bad++; } else if(it.file.size > CM_MAX_MB*1048576){ it.err = 'ไฟล์ใหญ่เกิน '+CM_MAX_MB+' MB'; bad++; } });
   if(bad){ cmRender(); $('cert-multi-err').textContent = 'กรุณาแก้ '+bad+' ไฟล์ที่มีกรอบแดงก่อน'; return; }
