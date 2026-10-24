@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.20
-  อัปเดตล่าสุด   : 24 ตุลาคม 2569 11:07 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.22
+  อัปเดตล่าสุด   : 24 ตุลาคม 2569 12:40 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -28,6 +28,7 @@
   13. ไฟล์ที่ผู้ใช้อัปโหลดทุกชนิดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด: ห้ามเขียนโค้ดอัปโหลดตรงด้วยโทเคนผู้ใช้ — ให้เรียก driveUploadFile/LargeFile/Image/CopyFileTo/driveFindOrCreateFolder (ผ่าน Apps Script: drvInit/drvDone/drvB64/drvPath/drvCopy) · ปลายทางต้องอยู่ใต้ ROOT_FOLDER_ID เสมอ
   14. ข้อมูลทุกอย่างของระบบ (รูป เอกสาร วิดีโอ ใบ Cer รายงาน สำรอง ฯลฯ) เก็บเฉพาะใน Google Drive ของ engfirmer@gmail.com ภายใต้โฟลเดอร์ F1 Service เท่านั้น — ห้ามสร้าง/เขียนลง Drive ของผู้ใช้คนอื่น หรือที่หน้าแรก (My Drive) · ห้ามสร้างโฟลเดอร์ถ้าไม่มีโฟลเดอร์แม่ (ต้อง error แทน) · ไม่มีทางสำรองที่อัปโหลดด้วยโทเคนผู้ใช้ (drvFallbackOk คืน false เสมอ) · ชีตกลางสร้างใหม่ได้เฉพาะ engfirmer (driveOwnerOnlyCreate) · ลบไฟล์ที่ engfirmer เป็นเจ้าของ ให้ผ่าน Apps Script (drvTrash)
   15. ลำดับชั้นหน้าจอ (z-index) ตายตัว: หน้าเต็มจอ ≤ 300 < bg-jobs 350 < modal-overlay 400 < lightbox 450 < gsi 460 < inapp 480 < loading 500 < toast 600 — หน้าเต็มจอใหม่ห้ามเกิน 300 · ป๊อปอัปใหม่ต้องใช้ class modal-overlay (ห้ามตั้ง z-index เอง) · ต้องผ่านเทสต์ test/t75.js ก่อนส่งทุกครั้ง
+  16. ห้ามตั้งค่าเริ่มต้นเป็นตัวเลือกใดตัวเลือกหนึ่งในตัวเลือกหลายอัน (dropdown/radio/picker) — ต้องมี "— เลือก… —" ให้กดเลือกเสมอ ทุกหัวข้อ (ตัวกรอง "ทั้งหมด" ยกเว้น) · ใบ Cer ห้ามย่อรูป · เคลมอะไหล่จำกัด 5MB เท่านั้น
   ─── VERIFY CHECKLIST (Claude ต้อง grep ยืนยัน 3 จุดนี้ก่อน SendUserFile ทุกครั้ง) ───
   grep: APP_VERSION = "X.XX"   → ต้องตรงกับเวอร์ชันใหม่
   grep: <title>F1 Service — vX.XX</title>  → ต้องตรงกับเวอร์ชันใหม่
@@ -93,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.20</title>
+<title>F1 Service — v11.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2036,6 +2037,7 @@ setTimeout(function(){
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;">
         <input type="email" id="new-perm-email-input" placeholder="อีเมล Google เช่น somchai@gmail.com" style="flex:1;min-width:220px;">
         <select id="new-perm-role-select">
+          <option value="">— เลือกสิทธิ์ —</option>
           <option value="approved">Engineer (ผู้ใช้ทั่วไป)</option>
           <option value="editor">แก้ไขข้อมูล / Sup Product</option>
         </select>
@@ -2233,18 +2235,6 @@ setTimeout(function(){
           <div id="rp-manager-list-wrap">
             <div id="rp-manager-list"></div>
           </div>
-        </div>
-      </div>
-
-      <!-- v8.58 — Certificate รอตรวจให้คะแนน — collapsible -->
-      <div class="panel-block" style="border:1.5px solid var(--amber);display:none;"><!-- v9.22 — ซ่อนรายการรอตรวจให้คะแนน (ไม่ใช้แล้ว) ใช้ Dashboard Certificate แทน -->
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;" id="mgr-cert-collapse-header">
-          <h2 style="margin:0;font-size:14px;">🎓 Certificate รอตรวจให้คะแนน <span class="badge-count" id="cert-manager-badge" style="display:none;margin-left:4px;">0</span></h2>
-          <span id="mgr-cert-collapse-icon" style="font-size:13px;color:var(--text-faint);">▼ แสดง</span>
-        </div>
-        <p class="panel-sub" style="margin:4px 0 0;font-size:11.5px;">Cer ที่อัปโหลดเข้ามา รอ Manager ให้คะแนน</p>
-        <div id="mgr-cert-collapse-body" style="display:none;margin-top:10px;">
-          <div id="mgr-cert-list"></div>
         </div>
       </div>
 
@@ -2507,33 +2497,6 @@ setTimeout(function(){
     </div>
   </div>
 
-  <!-- v8.58 — modal ให้คะแนน Certificate (Manager) -->
-  <div class="modal-overlay" id="cert-score-modal">
-    <div class="modal" style="max-width:420px;">
-      <button class="modal-close-x" id="cert-score-modal-close">✕</button>
-      <h3>ให้คะแนน Certificate</h3>
-      <div id="cert-score-info" style="font-size:13px;margin-bottom:14px;color:var(--text-dim);line-height:1.7;"></div>
-      <div class="field-wrap" style="margin-bottom:14px;">
-        <label>คะแนน (0-5)</label>
-        <select id="cert-score-select">
-          <option value="5">5 — ดีเยี่ยม</option>
-          <option value="4">4</option>
-          <option value="3">3</option>
-          <option value="2">2</option>
-          <option value="1">1</option>
-          <option value="0">0 — ไม่ผ่าน</option>
-        </select>
-      </div>
-      <div class="field-wrap" style="margin-bottom:14px;">
-        <label>หมายเหตุ (ถ้ามี)</label>
-        <textarea id="cert-score-note" style="width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:transparent;color:inherit;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;">
-        <button class="btn btn-ghost btn-sm" id="cert-score-cancel-btn">ยกเลิก</button>
-        <button class="btn btn-primary btn-sm" id="cert-score-save-btn">บันทึกคะแนน</button>
-      </div>
-    </div>
-  </div>
 </main>
 
 <!-- คำแนะนำเมื่อเปิดผ่านเบราว์เซอร์ในแอป (LINE/Facebook/Instagram ฯลฯ) — Google Sign-in ใช้ไม่ได้ในนั้น -->
@@ -2645,8 +2608,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.20";
-const APP_UPDATED_AT = "24 ตุลาคม 2569 11:07 น. เวลาไทย";
+const APP_VERSION = "11.22";
+const APP_UPDATED_AT = "24 ตุลาคม 2569 12:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2951,7 +2914,6 @@ function seedData(){
 
 let DATA = null;
 let myResponsibility = []; // [{category, model}] รุ่นเครื่องที่ดูแลของ Engineer ที่ login อยู่ (v8.58) — ใช้แค่แสดงผล ไม่ใช้กั้นการอัปโหลด Cer (v8.60)
-let _certScoreDoc = null; // เก็บ Cer ที่ Manager กำลังจะให้คะแนนอยู่ (v8.58)
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
 let _engCertHiddenCats = new Set(); // ประเภทที่ซ่อนไว้ (v9.01)
 let _engCertSummaryHidden = false;
@@ -9135,10 +9097,10 @@ function renderEngDocResults(){
 /* ===================== ENGINEER: ADD NEW ERROR (goes to pending queue) ===================== */
 function populateEngErrorFormSelectors(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
-  $('eng-f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  $('eng-f-category').innerHTML = '<option value="">— เลือก Product —</option>' + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   updateEngModelSelect();
 }
-function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=(DATA.categories[cat]||[]).slice().sort(naturalSort); $('eng-f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
+function updateEngModelSelect(){ const cat=$('eng-f-category').value; const models=(DATA.categories[cat]||[]).slice().sort(naturalSort); $('eng-f-model').innerHTML = '<option value="">— เลือก Model —</option>' + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join(''); }
 $('eng-f-category').addEventListener('change', updateEngModelSelect);
 
 $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
@@ -9573,10 +9535,10 @@ async function exportMyErrorsExcel(){
 $('export-my-errors-btn').addEventListener('click', exportMyErrorsExcel);
 function populateSupSelectors(){
   const cats = myOwnedCategories();
-  $('f-category').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') || `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
+  $('f-category').innerHTML = cats.length ? ('<option value="">— เลือก Product —</option>' + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')) : `<option value="">— ไม่มีประเภทที่คุณดูแล —</option>`;
   updateModelSelect();
 }
-function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
+function updateModelSelect(){ const cat=$('f-category').value; const models=(DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort); $('f-model').innerHTML = (models.length ? '<option value="">— เลือก Model —</option>' : '') + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('') || `<option value="">— ไม่มีรุ่นที่คุณดูแล —</option>`; }
 $('f-category').addEventListener('change', updateModelSelect);
 $('sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; try{ localStorage.setItem('f1supid:' + String(myUserEmail||'').toLowerCase(), currentSupIdentity); }catch(_){} if($('claims-sup-identity')) $('claims-sup-identity').value=currentSupIdentity; renderSupView(); updateNotifBadge(); if(supActiveTab==='claims') renderClaimsView(); if(supActiveTab==='cert') renderSupCertTab(true); });
 $('claims-sup-identity').addEventListener('change', e=>{ currentSupIdentity=e.target.value; $('sup-identity').value=currentSupIdentity; renderClaimsView(); updateNotifBadge(); });
@@ -10472,7 +10434,8 @@ async function renderAccessRequestsPanel(){
     <div class="admin-row-main"><span style="font-size:13px;">${escapeHtml(r.name||r.email)}</span><span class="mono" style="font-size:10.5px;color:var(--text-faint);">${escapeHtml(r.email)} · ${new Date(r.requestedAt).toLocaleString('th-TH', {timeZone:'Asia/Bangkok'})}</span></div>
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
       <select class="access-req-role-select" data-reqrole="${r.id}" style="font-size:12px;padding:3px 5px;">
-        <option value="approved" selected>Engineer (ผู้ใช้ทั่วไป)</option>
+        <option value="" selected>— เลือกสิทธิ์ —</option>
+        <option value="approved">Engineer (ผู้ใช้ทั่วไป)</option>
         <option value="editor">แก้ไขข้อมูล / Sup Product</option>
         <option value="adminService">ตรวจรับอะไหล่ (Admin Service)</option>
         <option value="manager">Manager (สิทธิ์เหมือน Super Admin)</option>
@@ -10485,7 +10448,9 @@ async function renderAccessRequestsPanel(){
   list.querySelectorAll('[data-approvereq]').forEach(b=>b.addEventListener('click', async ()=>{
     const id = b.getAttribute('data-approvereq'); const email = b.getAttribute('data-email');
     const roleSel = list.querySelector(`.access-req-role-select[data-reqrole="${id}"]`);
-    const role = roleSel ? roleSel.value : 'approved'; // สิทธิ์ที่เลือกไว้ก่อนกดอนุมัติ — ไม่ต้องอนุมัติเป็น Engineer แล้วมาโยกย้ายทีหลังอีกขั้นตอน
+    const role = roleSel ? roleSel.value : '';
+    if(!role){ showToast('⚠ กรุณาเลือกสิทธิ์ก่อนกดอนุมัติ'); return; }
+    //  // สิทธิ์ที่เลือกไว้ก่อนกดอนุมัติ — ไม่ต้องอนุมัติเป็น Engineer แล้วมาโยกย้ายทีหลังอีกขั้นตอน
     const alreadyInSomeList = approvedUsers.includes(email) || adminEmails.includes(email) || adminServiceEmails.includes(email) || managerEmails.includes(email) || ceoEmails.includes(email);
     if(!alreadyInSomeList){
       const prevApproved=[...approvedUsers], prevAdmin=[...adminEmails], prevAdminSvc=[...adminServiceEmails], prevManager=[...managerEmails], prevCeo=[...ceoEmails];
@@ -10728,6 +10693,7 @@ $('add-perm-email-btn').addEventListener('click', async ()=>{
   if(!isSuperAdmin()){ showToast('⚠ เฉพาะ Super Admin เท่านั้นที่เพิ่มได้'); return; }
   const raw = $('new-perm-email-input').value.trim().toLowerCase();
   const role = $('new-perm-role-select').value;
+  if(!role){ showToast('⚠ กรุณาเลือกสิทธิ์ก่อน'); return; }
   if(!raw || !raw.includes('@')){ showToast('⚠ กรุณากรอกอีเมลให้ถูกต้อง'); return; }
   if(raw===SUPER_ADMIN_EMAIL || managerEmails.includes(raw) || adminEmails.includes(raw) || adminServiceEmails.includes(raw) || ceoEmails.includes(raw) || approvedUsers.includes(raw)){ showToast('⚠ มีอีเมลนี้อยู่แล้ว'); return; }
   const prevAdmin = [...adminEmails]; const prevApproved = [...approvedUsers];
@@ -12712,7 +12678,7 @@ async function renderOwnerView(){
 function populateOwnerFormSelectors(){
   const cats = Object.keys(DATA.categories).sort(naturalSort);
   $('new-model-cat').innerHTML = cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('') + `<option value="__new__">+ ประเภทใหม่ (พิมพ์ชื่อเอง)</option>`;
-  $('new-model-owner').innerHTML = ownerSelectOptions(SUP_PRODUCTS[0], false);
+  $('new-model-owner').innerHTML = '<option value="">— เลือกผู้ดูแล —</option>' + ownerSelectOptions('', false);
   toggleNewCatInput();
 }
 function toggleNewCatInput(){
@@ -13116,6 +13082,7 @@ $('add-model-btn').addEventListener('click', async ()=>{
   const catSelectVal = $('new-model-cat').value;
   const modelName = $('new-model-input').value.trim();
   const owner = $('new-model-owner').value;
+  if(!owner){ showToast('⚠ กรุณาเลือกผู้ดูแลรุ่นก่อน'); return; }
   let category;
   let createdNewCategory = false;
 
@@ -14496,7 +14463,7 @@ function exPdfUrl(b64){
 }
 function exaSampleTitle(){ // ตำแหน่งผู้ออกบนใบ (หน้าออกใบเอง/ตัวอย่าง)
   const sel = $('exa-sample-title'); if(!sel) return 'Supervisor';
-  if(sel.value !== '__other') return sel.value;
+  if(sel.value !== '__other') return sel.value || 'Supervisor';
   return (($('exa-sample-title-o')||{}).value||'').trim() || 'Supervisor';
 }
 async function exaCertSample(name){
@@ -14544,7 +14511,7 @@ async function exaRenderSign(){
       <label style="display:block;margin:6px 0">หลักสูตร<input id="exa-sample-course" type="text" maxlength="100" placeholder="เช่น Maglumi 800 Advance"></label>
       <div class="ex-form" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label>วันที่เริ่มเทรน<input id="exa-sample-date" type="date"></label><label>ถึงวันที่ (วันจบ — ว่าง = วันเดียว)<input id="exa-sample-end" type="date"></label></div>
       <label style="display:block;margin:6px 0">ตำแหน่งผู้ออกบนใบ
-        <select id="exa-sample-title" onchange="document.getElementById('exa-sample-title-o').style.display=this.value==='__other'?'':'none'"><option value="Supervisor" selected>Supervisor</option><option value="Engineer Supervisor">Engineer Supervisor</option><option value="Engineer Product">Engineer Product</option><option value="Engineer Manager">Engineer Manager</option><option value="__other">อื่นๆ (กรอกเอง)</option></select>
+        <select id="exa-sample-title" onchange="document.getElementById('exa-sample-title-o').style.display=this.value==='__other'?'':'none'"><option value="">— เลือกตำแหน่ง —</option><option value="Supervisor">Supervisor</option><option value="Engineer Supervisor">Engineer Supervisor</option><option value="Engineer Product">Engineer Product</option><option value="Engineer Manager">Engineer Manager</option><option value="__other">อื่นๆ (กรอกเอง)</option></select>
         <input id="exa-sample-title-o" type="text" maxlength="60" placeholder="ระบุตำแหน่ง" style="display:none;margin-top:6px;"></label>
       <label style="display:block;margin:6px 0">Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1" style="max-width:120px"></label>
       <div class="ex-act"><button class="btn btn-primary btn-sm" data-ex="certsample">📄 สร้างใบ Cer (PDF)</button></div>
@@ -19379,7 +19346,7 @@ $('mgr-rp-collapse-header').addEventListener('click', ()=>{
 });
 let _mgrRpListLoaded = false;
 
-/* ===================== v8.58: CERTIFICATE (Engineer/Sup Product อัปโหลด, Manager ให้คะแนน) ===================== */
+/* ===================== v8.58: CERTIFICATE (Engineer/Sup Product แนบไฟล์ — v11.22 ตัดการตรวจ/ให้คะแนนออกแล้ว ใช้คะแนนจาก Dashboard) ===================== */
 
 // ---- helpers ----
 function certSlug(str){ return String(str||'').replace(/[^a-zA-Z0-9ก-๙]+/g,'_').replace(/^_+|_+$/g,'') || 'x'; }
@@ -19427,7 +19394,7 @@ async function fsUploadCertificate(ownerEmail, ownerName, role, certType, catego
   const payload = {
     ownerEmail, ownerName, role, certType, category, model,
     fileUrl, fileName: driveName, uploadedAt: Date.now(),
-    score: null, status: 'pending', reviewedBy: '', reviewedAt: null, reviewNote: '',
+    score: null, status: 'pending', reviewedBy: '', reviewedAt: null, reviewNote: '', /* ฟิลด์เดิมคงไว้เพื่อให้ผ่าน firestore.rules (create ต้อง status=pending, score=null) — ไม่ใช้งานแล้ว */
   };
   try{ await sdk.setDoc(sdk.doc(db,'certificates', cid), payload); }
   catch(e){ try{ await driveDeleteFile(driveFileIdFromUrl(fileUrl)); }catch(_){} throw e; } // v8.90 — บันทึกรายการไม่สำเร็จ → เก็บกวาดไฟล์ที่เพิ่งอัปโหลด
@@ -19492,13 +19459,6 @@ async function deleteCertificatesForModel(category, model){
   for(const pf of parents){ try{ await driveDeleteEmptyFolderChain(pf, 4); }catch(e){ console.warn('เก็บกวาดโฟลเดอร์ Cer ว่างไม่สำเร็จ:', e.message); } }
   if(list.length) fsWriteLog(`ลบ Certificate ทั้งหมดของรุ่น ${category}/${model} (${list.length} ใบ)`);
   return out;
-}
-async function fsScoreCertificate(certIdVal, score, note){
-  await initFirebase(); const sdk = window._firebaseSdk;
-  await sdk.updateDoc(sdk.doc(db,'certificates', certIdVal), {
-    score, reviewNote: note||'', reviewedBy: myUserEmail, reviewedAt: Date.now(), status: 'reviewed'
-  });
-  fsWriteLog(`ให้คะแนน Certificate: ${score}/5${note ? ' — '+note : ''}`);
 }
 async function fsListCertificatesByOwner(ownerEmail){
   await initFirebase(); const sdk = window._firebaseSdk;
@@ -19581,7 +19541,6 @@ $('eng-resp-save-btn').addEventListener('click', async ()=>{
 function certStatusBadge(cert){
   if(!cert) return `<span style="color:var(--text-faint);font-size:12px;">— ยังไม่อัปโหลด —</span>`;
   if(cert.source==='exam') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ผ่านการสอบ ${escapeHtml(String(cert.examScore==null?'':cert.examScore))}%</span>`;
-  if(cert.status==='reviewed') return `<span style="color:var(--green);font-size:12px;font-weight:600;">✓ ให้คะแนนแล้ว: ${escapeHtml(String(cert.score))}/5</span>`;
   return `<span style="color:var(--green);font-size:12px;">✓ อัปโหลดแล้ว</span>`;
 }
 function certReqBadgeHtml(category, model){
@@ -19908,81 +19867,6 @@ async function renderSupCertReqList(){
     });
   });
 }
-
-// ---- UI: Manager — ตรวจ/ให้คะแนน Certificate ----
-async function renderMgrCertList(){
-  const wrap = $('mgr-cert-list');
-  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-  let all;
-  try{ all = await fsListAllCertificates(); }
-  catch(e){ wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(e.message)}</div>`; throw e; }
-  const pending = all.filter(c=>c.status!=='reviewed').sort((a,b)=>(a.uploadedAt||0)-(b.uploadedAt||0));
-  const badge = $('cert-manager-badge');
-  if(pending.length>0){ badge.style.display='inline-block'; badge.textContent = pending.length; } else { badge.style.display='none'; }
-  if(pending.length===0){
-    wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">✓ ไม่มี Certificate ค้างตรวจ</div>`;
-    return;
-  }
-  wrap.innerHTML = pending.map(c=>{
-    const roleLabel = c.role==='engineer' ? 'Engineer' : 'Sup Product';
-    return `<div class="panel-block" style="padding:12px;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:13px;">
-          <div style="font-weight:600;">${escapeHtml(c.ownerName||c.ownerEmail)} <span style="font-weight:400;color:var(--text-faint);">(${roleLabel})</span></div>
-          <div style="color:var(--text-dim);margin-top:2px;">${escapeHtml(c.category)} / ${escapeHtml(c.model)} — ${certTypeLabel(c.certType)}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <a href="${escapeHtml(safeHttpUrl(c.fileUrl))}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">👁 ดูไฟล์</a>
-          <button class="btn btn-primary btn-sm cert-score-btn" data-id="${escapeHtml(c.id)}">✅ ให้คะแนน</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  document.querySelectorAll('.cert-score-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const cert = pending.find(c=>c.id===btn.getAttribute('data-id'));
-      if(!cert) return;
-      _certScoreDoc = cert;
-      const roleLabel = cert.role==='engineer' ? 'Engineer' : 'Sup Product';
-      $('cert-score-info').innerHTML = `<b>${escapeHtml(cert.ownerName||cert.ownerEmail)}</b> (${roleLabel})<br>${escapeHtml(cert.category)} / ${escapeHtml(cert.model)} — Cer${certTypeLabel(cert.certType)}`;
-      $('cert-score-select').value = '5';
-      $('cert-score-note').value = '';
-      $('cert-score-modal').classList.add('show');
-    });
-  });
-}
-function closeCertScoreModal(){ $('cert-score-modal').classList.remove('show'); _certScoreDoc=null; }
-$('cert-score-modal-close').addEventListener('click', closeCertScoreModal);
-$('cert-score-cancel-btn').addEventListener('click', closeCertScoreModal);
-$('cert-score-modal').addEventListener('click', e=>{ if(e.target===$('cert-score-modal')) closeCertScoreModal(); });
-$('cert-score-save-btn').addEventListener('click', async ()=>{
-  if(!_certScoreDoc) return;
-  const score = parseInt($('cert-score-select').value, 10);
-  const note = $('cert-score-note').value.trim();
-  const cid = _certScoreDoc.id;
-  closeCertScoreModal();
-  showLoadingOverlay('กำลังบันทึกคะแนน...');
-  try{
-    await fsScoreCertificate(cid, score, note);
-    hideLoadingOverlay();
-    showToast('✓ บันทึกคะแนนแล้ว');
-    renderMgrCertList().catch(e=>showToast('⚠ โหลดรายการ Cer ไม่สำเร็จ: '+e.message));
-  }catch(e){ hideLoadingOverlay(); alert('บันทึกคะแนนไม่สำเร็จ: '+e.message); }
-});
-
-// Dashboard — collapsible รายการ Certificate รอตรวจให้คะแนน
-let _mgrCertOpen = false;
-let _mgrCertListLoaded = false;
-$('mgr-cert-collapse-header').addEventListener('click', ()=>{
-  _mgrCertOpen = !_mgrCertOpen;
-  $('mgr-cert-collapse-body').style.display = _mgrCertOpen ? 'block' : 'none';
-  $('mgr-cert-collapse-icon').textContent = _mgrCertOpen ? '▲ ซ่อน' : '▼ แสดง';
-  if(_mgrCertOpen && !_mgrCertListLoaded){
-    // v8.90 — ตั้งธง "โหลดแล้ว" เฉพาะเมื่อสำเร็จ และจับ error (เดิมพลาดแล้วค้าง "กำลังโหลด..." ถาวร)
-    renderMgrCertList().then(()=>{ _mgrCertListLoaded = true; }).catch(e=>{ showToast('⚠ โหลดรายการ Cer ไม่สำเร็จ: '+e.message); });
-  }
-});
-
 
 /* ===================== v9.33 — จัดการประวัติใน Google Sheet (ลบแถว + ไฟล์ใน Drive พร้อมกัน) =====================
    ใช้กับ: ประวัติเคลมที่จบเคสแล้ว (Sheet "บันทึกเคลม") และอะไหล่ส่งคืนที่รับแล้ว (แท็บ "ประวัติRP")
