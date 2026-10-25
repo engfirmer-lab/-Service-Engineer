@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.23
-  อัปเดตล่าสุด   : 25 ตุลาคม 2569 16:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.27
+  อัปเดตล่าสุด   : 25 ตุลาคม 2569 19:15 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.23</title>
+<title>F1 Service — v11.27</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2598,8 +2598,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.23";
-const APP_UPDATED_AT = "25 ตุลาคม 2569 16:20 น. เวลาไทย";
+const APP_VERSION = "11.27";
+const APP_UPDATED_AT = "25 ตุลาคม 2569 19:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3008,13 +3008,217 @@ function toItemList(val){
 }
 function partsQtyOf(parts, qtys){ const n = toItemList(parts).length, q = Array.isArray(qtys)?qtys:[], out=[]; for(let i=0;i<n;i++){ const v = parseInt(q[i],10); out.push(v>0 ? v : 1); } return out; }
 function partsText(parts, qtys){ const l = toItemList(parts), q = partsQtyOf(parts, qtys); return l.map((v,i)=> String(v||'').trim() ? (String(v).trim()+' ×'+q[i]) : '').filter(Boolean).join(', '); }
+/* v11.24 - ช่อง "อุปกรณ์ที่ใช้": แนะนำเครื่องมือตอนพิมพ์ (ไทย/อังกฤษ ค้นแบบเผื่อพิมพ์ผิด) พิมพ์ชื่อเองได้เสมอ */
+const TOOL_SUGGEST = [
+  ['ไขควงแฉก','phillips screwdriver cross ไขควงสี่แฉก'],
+  ['ไขควงปากแบน','flat slotted screwdriver ไขควงแบน'],
+  ['ไขควงวัดไฟ','voltage tester test screwdriver'],
+  ['ไขควงทอร์ก','torque screwdriver ไขควงปอนด์'],
+  ['ชุดไขควงเล็ก','precision screwdriver set ไขควงนาฬิกา'],
+  ['ชุดประแจหกเหลี่ยม (มม.)','hex key allen metric ประแจ 6 เหลี่ยม แอลเลน มิลลิเมตร'],
+  ['ชุดประแจหกเหลี่ยม (นิ้ว)','hex key allen inch imperial ประแจ 6 เหลี่ยม'],
+  ['ชุดประแจดาว','torx key star ประแจท็อกซ์'],
+  ['ประแจเบอร์ ','wrench spanner ประแจเบอร์','พิมพ์เบอร์เอง'],
+  ['หกเหลี่ยมเบอร์ ','hex allen key หกเหลี่ยม เบอร์','พิมพ์เบอร์เอง'],
+  ['ประแจเลื่อน','adjustable wrench crescent'],
+  ['ประแจแหวนข้างปากตาย','combination spanner ring open end ประแจแหวน ประแจปากตาย'],
+  ['ชุดบ็อกซ์','socket set บล็อก บ๊อกซ์'],
+  ['ด้ามขันบ็อกซ์','ratchet ด้ามฟรี ด้ามขัน'],
+  ['ประแจปอนด์','torque wrench ประแจทอร์ก'],
+  ['คีมตัด','cutting pliers side cutter diagonal cutter'],
+  ['คีมปากจิ้งจก','needle nose pliers long nose คีมปากแหลม'],
+  ['คีมปากนกแก้ว','slip joint pliers adjustable pliers คีมปรับ'],
+  ['คีมล็อก','locking pliers vise grip'],
+  ['คีมปอกสายไฟ','wire stripper'],
+  ['คีมย้ำหัวสาย','crimping tool crimper'],
+  ['แหนบ','tweezers forceps แหนบคีบ'],
+  ['ค้อน','hammer'],
+  ['ค้อนยาง','rubber mallet'],
+  ['คัตเตอร์','cutter knife มีดคัตเตอร์'],
+  ['กรรไกร','scissors'],
+  ['ตะไบ','file'],
+  ['กระดาษทราย','sandpaper'],
+  ['ไม้บรรทัด','ruler'],
+  ['ตลับเมตร','tape measure'],
+  ['เวอร์เนียร์','vernier caliper เวอร์เนีย คาลิปเปอร์'],
+  ['ไมโครมิเตอร์','micrometer'],
+  ['ระดับน้ำ','spirit level'],
+  ['ไฟฉาย','flashlight torch ไฟฉายคาดหัว headlamp'],
+  ['แว่นขยาย','magnifier'],
+  ['กระจกส่องดู','inspection mirror'],
+  ['เทปพันสายไฟ','electrical tape'],
+  ['เทปกาว','tape'],
+  ['สายรัด (Cable tie)','cable tie zip tie เคเบิลไทร์'],
+  ['ปากกาเมจิก','marker'],
+  ['ผ้าก๊อซ (Gauze)','gauze ผ้าก๊อช ผ้าก็อซ ผ้าก็อช'],
+  ['แอลกอฮอล์ (Alcohol)','alcohol isopropyl IPA แอลกอลฮอล์ แอลกอฮอ'],
+  ['ไฮเตอร์ (Haiter)','haiter hyter น้ำยาทำความสะอาด น้ำยาฟอกขาว'],
+  ['น้ำยาทำความสะอาด','cleaning solution cleaner'],
+  ['น้ำยาล้างระบบ (Wash solution)','wash solution washing'],
+  ['น้ำกลั่น (DI water)','distilled water deionized DI'],
+  ['Syringe','ไซริงค์ ไซริ้ง กระบอกฉีดยา'],
+  ['ก้านสำลี','cotton swab สำลีก้าน'],
+  ['สำลี','cotton'],
+  ['กระดาษเช็ดเลนส์','lens tissue'],
+  ['ผ้าไม่เป็นขุย (Lint-free wipes)','lint free wipes kimwipe'],
+  ['ถุงมือ','gloves nitrile'],
+  ['แปรงเล็ก','brush'],
+  ['ไขมันซิลิโคน','silicone grease จาระบี grease'],
+  ['สเปรย์หล่อลื่น (WD-40)','lubricant wd40 wd-40'],
+  ['สเปรย์ล้างหน้าสัมผัส','contact cleaner'],
+  ['สเปรย์ลมอัด','compressed air air duster'],
+  ['Digital Multimeter','มัลติมิเตอร์ multimiter DMM มิเตอร์'],
+  ['Clamp meter','แคลมป์มิเตอร์ แคล้มป์'],
+  ['Temperature meter','เครื่องวัดอุณหภูมิ thermometer tempareture temperature meter เทอร์โมมิเตอร์'],
+  ['เครื่องวัดความเร็วรอบ (Tachometer)','tachometer rpm ตัววัดความเร็วรอบ'],
+  ['Oscilloscope','ออสซิลโลสโคป สโคป'],
+  ['DC power supply','พาวเวอร์ซัพพลาย แหล่งจ่ายไฟ'],
+  ['LCR meter','lcr'],
+  ['Insulation tester (Megger)','เมกเกอร์ วัดฉนวน'],
+  ['Electrical safety analyzer','ตรวจสอบความปลอดภัยทางไฟฟ้า leakage current'],
+  ['Ground / Earth tester','วัดกราวด์ earth resistance'],
+  ['หัวแร้ง','soldering iron หัวแร้งบัดกรี'],
+  ['ตะกั่วบัดกรี','solder ตะกั่ว'],
+  ['ที่ดูดตะกั่ว','desoldering pump solder sucker'],
+  ['ลวดซับตะกั่ว','solder wick braid'],
+  ['ฟลักซ์ (Flux)','flux น้ำยาประสาน'],
+  ['สถานีเป่าลมร้อน (Hot air station)','hot air station rework'],
+  ['ไดร์เป่าลมร้อน (Heat gun)','heat gun hair dryer ไดร์เป่าลม ไดเป่าลม ปืนเป่าลมร้อน'],
+  ['สว่านไฟฟ้า','electric drill drill สว่าน'],
+  ['สายรัดข้อมือกันไฟฟ้าสถิต (ESD)','esd wrist strap'],
+  ['แผ่นรองกันไฟฟ้าสถิต (ESD mat)','esd mat'],
+  ['Laptop / Service software','โน้ตบุ๊ก คอมพิวเตอร์ โปรแกรม service software'],
+  ['สาย USB-Serial','usb serial rs232 converter'],
+  ['ไมโครปิเปต (Micropipette)','micropipette pipette ปิเปต พิเพ็ต'],
+  ['Pipette tip','ทิป หัวปิเปต'],
+  ['Pressure gauge / Manometer','เกจวัดความดัน แมนอมิเตอร์'],
+  ['Flow meter','วัดอัตราการไหล'],
+  ['Vacuum gauge','เกจสุญญากาศ'],
+  ['Leak tester','ตรวจรอยรั่ว'],
+  ['นาฬิกาจับเวลา','stopwatch timer'],
+  ['pH meter','ph เมตร'],
+  ['Calibrated thermometer','เทอร์โมมิเตอร์สอบเทียบ'],
+  ['Cuvette','คิวเวทท์ คิวเวต'],
+  ['Calibrator','สอบเทียบ'],
+  ['Control','ควบคุม QC'],
+  ['Reagent','น้ำยา รีเอเจนต์'],
+  ['เครื่องตัดท่อ (Tubing cutter)','tubing cutter tube cutter']
+];
+const TOOL_SUGGEST_IDX = TOOL_SUGGEST.map(function(t){
+  var custom = !!t[2];
+  var keys = [toolNorm(t[0])];
+  String(t[1]||'').split(/\s+/).forEach(function(w){ var n = toolNorm(w); if(n && n.length>=2) keys.push(n); });
+  String(t[0]).split(/[\s()\/]+/).forEach(function(w){ var n = toolNorm(w); if(n && n.length>=2 && keys.indexOf(n)<0) keys.push(n); });
+  return { value:t[0], label: custom ? (t[0].trim()+' … ('+t[2]+')') : t[0], custom:custom, keys:keys, full:toolNorm(t[0]) };
+});
+function toolNorm(s){
+  return String(s||'').toLowerCase().replace(/[\s\-_.,\/()]/g,'').replace(/[็-์]/g,'').replace(/ๆ/g,'');
+}
+function toolEditDist(a,b){
+  var m=a.length, n=b.length; if(!m) return n; if(!n) return m;
+  var prev=[], cur=[], i, j;
+  for(j=0;j<=n;j++) prev[j]=j;
+  for(i=1;i<=m;i++){
+    cur[0]=i;
+    for(j=1;j<=n;j++){
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1));
+    }
+    var t=prev; prev=cur; cur=t;
+  }
+  return prev[n];
+}
+function toolSuggestFind(q){
+  var raw = String(q||''), nq = toolNorm(raw), out = [], i;
+  if(!nq){
+    for(i=0;i<TOOL_SUGGEST_IDX.length && out.length<8;i++) out.push(TOOL_SUGGEST_IDX[i]);
+    return out;
+  }
+  var scored = [];
+  TOOL_SUGGEST_IDX.forEach(function(it, idx){
+    if(it.custom && raw.indexOf(it.value.trim())===0 && raw.length>it.value.trim().length) return;
+    if(nq===it.full) return;
+    var best = 99, k, key, d, lim;
+    for(k=0;k<it.keys.length;k++){
+      key = it.keys[k];
+      if(key.indexOf(nq)===0){ best = Math.min(best, 0); }
+      else if(key.indexOf(nq)>0){ best = Math.min(best, 1); }
+      else if(nq.length>=4){
+        lim = nq.length>=8 ? 2 : 1;
+        d = toolEditDist(nq, key.slice(0, nq.length));
+        if(d<=lim) best = Math.min(best, 2+d);
+      }
+    }
+    if(best<99) scored.push({ it:it, s:best, i:idx });
+  });
+  scored.sort(function(a,b){ return a.s-b.s || a.i-b.i; });
+  return scored.slice(0,8).map(function(x){ return x.it; });
+}
+var _toolSugEl = null, _toolSugInp = null, _toolSugItems = [], _toolSugActive = -1;
+function toolSugHide(){ if(_toolSugEl) _toolSugEl.style.display='none'; _toolSugInp=null; _toolSugItems=[]; _toolSugActive=-1; }
+function toolSugPosition(){
+  if(!_toolSugEl || !_toolSugInp || _toolSugEl.style.display==='none') return;
+  var r = _toolSugInp.getBoundingClientRect(), vh = window.innerHeight || document.documentElement.clientHeight;
+  var h = Math.min(_toolSugEl.scrollHeight, 240);
+  var below = vh - r.bottom, top = (below < h+8 && r.top > below) ? Math.max(4, r.top - h - 2) : r.bottom + 2;
+  _toolSugEl.style.left = Math.max(4, r.left)+'px';
+  _toolSugEl.style.top = top+'px';
+  _toolSugEl.style.width = Math.max(180, r.width)+'px';
+  _toolSugEl.style.maxHeight = '240px';
+}
+function toolSugRender(){
+  if(!_toolSugEl){
+    _toolSugEl = document.createElement('div');
+    _toolSugEl.id = 'tool-suggest-pop';
+    _toolSugEl.style.cssText = 'position:fixed;z-index:420;overflow-y:auto;background:var(--surface,#fff);color:var(--text-main,inherit);border:1px solid var(--border,#ccc);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.18);display:none;font-size:13.5px;';
+    _toolSugEl.addEventListener('pointerdown', function(e){
+      e.preventDefault();
+      var el = e.target.closest ? e.target.closest('[data-tsi]') : null;
+      if(el) toolSugPick(parseInt(el.getAttribute('data-tsi'),10));
+    });
+    document.body.appendChild(_toolSugEl);
+  }
+  if(!_toolSugItems.length){ _toolSugEl.style.display='none'; return; }
+  _toolSugEl.innerHTML = _toolSugItems.map(function(it,i){
+    return '<div data-tsi="'+i+'" style="padding:9px 12px;cursor:pointer;border-top:'+(i?'1px solid var(--border,#eee)':'none')+';'+(i===_toolSugActive?'background:rgba(34,197,94,.15);':'')+'">'+escapeHtml(it.label)+'</div>';
+  }).join('');
+  _toolSugEl.style.display='block';
+  toolSugPosition();
+}
+function toolSugPick(i){
+  var it = _toolSugItems[i], inp = _toolSugInp;
+  if(!it || !inp) return;
+  inp.value = it.value;
+  inp.dispatchEvent(new Event('input', { bubbles:true }));
+  toolSugHide();
+  try{ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }catch(e){}
+}
+function toolSugUpdate(inp){
+  _toolSugInp = inp;
+  _toolSugItems = toolSuggestFind(inp.value);
+  _toolSugActive = -1;
+  toolSugRender();
+}
+function toolSugIsInput(el){ return !!(el && el.matches && el.matches('input[data-listfield="tools"]')); }
+document.addEventListener('input', function(e){ if(toolSugIsInput(e.target) && e.isTrusted) toolSugUpdate(e.target); });
+document.addEventListener('focusin', function(e){ if(toolSugIsInput(e.target)) toolSugUpdate(e.target); });
+document.addEventListener('focusout', function(e){ if(toolSugIsInput(e.target)) toolSugHide(); });
+document.addEventListener('keydown', function(e){
+  if(!toolSugIsInput(e.target) || !_toolSugItems.length || !_toolSugEl || _toolSugEl.style.display==='none') return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); _toolSugActive = (_toolSugActive+1)%_toolSugItems.length; toolSugRender(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _toolSugActive = (_toolSugActive-1+_toolSugItems.length)%_toolSugItems.length; toolSugRender(); }
+  else if(e.key==='Enter' && _toolSugActive>=0){ e.preventDefault(); toolSugPick(_toolSugActive); }
+  else if(e.key==='Escape'){ toolSugHide(); }
+});
+window.addEventListener('scroll', toolSugPosition, true);
+window.addEventListener('resize', toolSugPosition);
+
 function renderItemListRows(items, sid, field, qtys){
   const list = (items && items.length) ? items : [''];
   const isParts = field==='parts';
   const q = isParts ? partsQtyOf(list, qtys) : [];
   return list.map((v,i)=>`
     <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
-      <input type="text" data-listfield="${field}" data-sid="${sid}" data-idx="${i}" value="${escapeHtml(v)}" style="flex:1;min-width:0;">
+      <input type="text" data-listfield="${field}" data-sid="${sid}" data-idx="${i}" value="${escapeHtml(v)}"${field==='tools'?' placeholder="พิมพ์ค้นหา หรือพิมพ์ชื่อเองได้" autocomplete="off"':''} style="flex:1;min-width:0;">
       ${isParts ? `<span style="font-size:12px;color:var(--text-faint);">×</span><input type="number" inputmode="numeric" min="1" step="1" data-listqty="${field}" data-sid="${sid}" data-idx="${i}" value="${q[i]}" placeholder="จำนวน" title="จำนวน (ชิ้น)" style="width:64px;flex:none;text-align:center;">` : ''}
       <button type="button" data-listrm="${field}:${sid}:${i}" style="background:none;border:none;color:var(--text-faint);font-size:16px;cursor:pointer;padding:2px 6px;">✕</button>
     </div>`).join('') + `<button type="button" data-listadd="${field}:${sid}" class="btn btn-ghost btn-sm" style="margin-top:2px;">+ เพิ่มรายการ</button>`;
@@ -8594,6 +8798,7 @@ $('down-modal-submit').addEventListener('click', async ()=>{
   const parentErr = DATA.errors.find(e=>e.id===downModalErrorId);
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
   DATA.proposals = DATA.proposals || [];
+  f1TrackStart();
   try{
     for(let i=0;i<validCauses.length;i++){
       const s = validCauses[i];
@@ -8604,9 +8809,11 @@ $('down-modal-submit').addEventListener('click', async ()=>{
       }
       const fields = { errorId:downModalErrorId, title:s.title, desc:s.desc, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', images:uploadedImages, videos:uploadedVideos, status:'pending', createdAt:Date.now(), submitterName: myClaimantName() };
       const newId = await fsAddProposal(fields);
+      _f1Created = [];
       liveUpsert('proposals', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ (ซิงก์สดอาจใส่เข้ามาก่อนแล้ว)
     }
-  }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  }catch(e){ f1TrackStop(); const n = await f1RollbackCreated(); showToast('⚠ ส่งไม่สำเร็จ: '+e.message+(n>0?' (ยกเลิกไฟล์ที่สร้างไว้แล้ว '+n+' ไฟล์)':'')); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  f1TrackStop();
   myVotes['down:'+downModalErrorId] = true;
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('down-modal').classList.remove('show'); renderTechResults(); if(currentMode==='sup') renderErrorCountSummary();
@@ -9161,15 +9368,31 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   const validSolutions = engValidation.validSolutions;
   DATA.pendingErrors = DATA.pendingErrors || [];
   btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed';
-  try{
-    for(let i=0;i<validSolutions.length;i++){
-      validSolutions[i].images = await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i);
-      validSolutions[i].videos = await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i);
+  {
+    const dupKey = errDupKey(category, model, errorCode, symptom);
+    const dupPending = DATA.pendingErrors.find(p=>p.status==='pending' && errDupKey(p.category, p.model, p.errorCode, p.symptom)===dupKey);
+    const dup = dupPending ? null : await findDuplicateError(category, model, errorCode, symptom, null);
+    if(dupPending || dup){
+      showToast(dupPending ? '⚠ มี Error นี้ส่งให้ Sup ตรวจสอบอยู่แล้ว — ไม่ต้องส่งซ้ำ หรือแก้ Error Code/อาการให้ต่างจากเดิม' : dupErrorMsg(dup));
+      btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return;
     }
-  }catch(e){ showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  }
+  const origMedia = validSolutions.map(s=>({ images:s.images, videos:s.videos }));
+  const restoreMedia = ()=>{ validSolutions.forEach((s,i)=>{ s.images = origMedia[i].images; s.videos = origMedia[i].videos; }); };
+  f1TrackStart();
+  try{
+    const staged = [];
+    for(let i=0;i<validSolutions.length;i++){
+      staged.push({ images: await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i),
+                    videos: await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i) });
+    }
+    staged.forEach((st,i)=>{ validSolutions[i].images = st.images; validSolutions[i].videos = st.videos; });
+  }catch(e){ f1TrackStop(); restoreMedia(); const n = await f1RollbackCreated(); showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message+(n>0?' (ยกเลิกไฟล์ที่สร้างไว้แล้ว '+n+' ไฟล์)':'')); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  f1TrackStop();
   const fields = { category, model, errorCode, symptom, solutions: validSolutions, submitterName: myClaimantName(), status:'pending', createdAt: Date.now() };
   let newId;
-  try{ newId = await fsAddPendingError(fields); }catch(e){ showToast('⚠ ส่งไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  try{ newId = await fsAddPendingError(fields); }catch(e){ restoreMedia(); const n = await f1RollbackCreated(); showToast('⚠ ส่งไม่สำเร็จ: '+e.message+(n>0?' (ยกเลิกไฟล์ที่สร้างไว้แล้ว '+n+' ไฟล์)':'')); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
+  _f1Created = [];
   liveUpsert('pendingErrors', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
@@ -9365,6 +9588,21 @@ async function f1ShrinkImage(file){
   }catch(e){ return file; }
 }
 // v11.13 — ทำงานพร้อมกันไม่เกิน limit (ค่าเริ่มต้น 3) · ผลคืนตามลำดับเดิม · พลาดงานใด → ไม่เริ่มงานใหม่ รองานที่ค้างอยู่ให้จบ แล้ว throw (err.partial = ผลที่สำเร็จแล้ว ไว้เก็บกวาด)
+var _f1Created = [], _f1TrackOn = false;
+function f1TrackStart(){ _f1Created = []; _f1TrackOn = true; }
+function f1TrackStop(){ _f1TrackOn = false; }
+function f1TrackCreated(x){
+  if(!_f1TrackOn) return x;
+  var s = String(x||''), m = s.match(/\/d\/([\w-]{10,})/), id = m ? m[1] : s;
+  if(/^[\w-]{10,}$/.test(id)) _f1Created.push(id);
+  return x;
+}
+async function f1RollbackCreated(){
+  var ids = _f1Created.splice(0);
+  if(!ids.length) return 0;
+  try{ await examApiRetry('drvTrash', { ids: ids }); return ids.length; }
+  catch(e){ console.warn('ย้อนไฟล์ที่สร้างไว้ไม่สำเร็จ', e); showToast('⚠ ลบไฟล์ที่สร้างค้างไว้ไม่สำเร็จ '+ids.length+' ไฟล์ — ตรวจในโฟลเดอร์ Drive'); return -1; }
+}
 async function f1Pool(items, worker, limit){
   const res = new Array(items.length); let next = 0, err = null;
   const run = async ()=>{ while(!err){ const i = next++; if(i >= items.length) return; try{ res[i] = await worker(items[i], i); }catch(e){ if(!err) err = e || new Error('ผิดพลาด'); } } };
@@ -9381,12 +9619,12 @@ async function drvUploadBlob_(file, name, mime, parentId, share, onProgress){ //
   mime = mime || file.type || 'application/octet-stream';
   const init = await examApiRetry('drvInit', { parentId, name, mime, origin: location.origin });
   let fileId;
-  try{ fileId = await drvPutResumable(file, init.uploadUrl, mime, onProgress); }
+  try{ fileId = await drvPutResumable(file, init.uploadUrl, mime, onProgress); f1TrackCreated(fileId); }
   catch(e){
     if(!e.netfail) throw e;
     if(file.size > 18*1024*1024) throw e;
     const b64 = await new Promise((res, rej)=>{ const r = new FileReader(); r.onload = ()=>res(String(r.result).split(',')[1] || ''); r.onerror = ()=>rej(new Error('อ่านไฟล์ไม่สำเร็จ')); r.readAsDataURL(file); }); // ทางสำรอง: ส่งผ่านเซิร์ฟเวอร์ (ไฟล์ไม่เกิน ~18 MB)
-    return (await examApiRetry('drvB64', { parentId, name, mime, b64, share: !!share })).id;
+    return f1TrackCreated((await examApiRetry('drvB64', { parentId, name, mime, b64, share: !!share })).id);
   }
   await examApiRetry('drvDone', { fileId, share: !!share });
   return fileId;
@@ -9408,7 +9646,7 @@ async function driveUploadImage(blob, filename, parentId){
 }
 async function driveCopyFileTo(srcUrl, parentId, name){
   const srcId = driveFileIdFromUrl(srcUrl); if(!srcId) throw new Error('อ่านลิงก์ไฟล์ต้นฉบับไม่ได้');
-  try{ return (await examApiRetry('drvCopy', { srcId, parentId, name })).id; }
+  try{ return f1TrackCreated((await examApiRetry('drvCopy', { srcId, parentId, name })).id); }
   catch(e){ if(drvFallbackOk(e)) return await driveCopyFileTo_legacy(srcUrl, parentId, name); throw e; }
 }
 async function renameProductServerSync(payload){
@@ -9610,7 +9848,23 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   if(fields.category) { invalidateErrorsCacheForCategory(fields.category); fsBumpCategoryVersion(fields.category); } // ข้อมูลเปลี่ยนแล้ว แคชเก่าใช้ไม่ได้อีกต่อไป + แจ้งคนอื่นด้วย
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
-  await fsSaveError(errorId, fields);
+  const staged = [], counts = [];
+  f1TrackStart();
+  try{
+    for(let i=0;i<validSolutions.length;i++){
+      const s0 = validSolutions[i], before = _f1Created.length;
+      staged.push({ images: await resolveImagesForUpload(s0.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i),
+                    videos: await resolveVideosForUpload(s0.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i) });
+      counts.push(_f1Created.length - before);
+    }
+    await fsSaveError(errorId, fields);
+  }catch(e){
+    f1TrackStop();
+    const n = await f1RollbackCreated();
+    if(e && typeof e.message==='string' && n>0) e.message += ' (ยกเลิกไฟล์ที่สร้างไว้แล้ว '+n+' ไฟล์ ยังไม่มีข้อมูลถูกบันทึก)';
+    throw e;
+  }
+  f1TrackStop();
   { // v10.89 — สร้างโฟลเดอร์ Troubleshooting ของ Error นี้ใน Drive (F1 Service/[Sup]/[Product]/[รุ่น]/Troubleshooting/[Error]/วิธี N) ทันที
     // ไม่ต้องรอแนบรูป/วิดีโอ — ถ้าสร้างไม่ได้ให้บอกสาเหตุจริง (ข้อมูลข้อความยังบันทึกต่อ ส่วนรูป/วิดีโอจะบอกซ้ำถ้าอัปโหลดไม่ได้)
     try{ for(let i=0;i<validSolutions.length;i++) await ensureImageFolderPath(fields.category, fields.model, fields.errorCode, fields.symptom, i); }
@@ -9619,10 +9873,12 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   const keepIds = new Set(validSolutions.map(s=>s.id));
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
-    const uploadedImages = await resolveImagesForUpload(s.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
-    const uploadedVideos = await resolveVideosForUpload(s.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i);
+    const uploadedImages = staged[i].images, uploadedVideos = staged[i].videos, prevImages = s.images, prevVideos = s.videos;
     s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
+    try{
     await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
+    _f1Created.splice(0, counts[i]);
+    }catch(e){ s.images = prevImages; s.videos = prevVideos; const n = await f1RollbackCreated(); if(e && typeof e.message==='string' && n>0) e.message += ' (ยกเลิกไฟล์ที่ยังไม่ได้บันทึกแล้ว '+n+' ไฟล์)'; throw e; }
   }
   // v8.90 — ลบวิธีแก้ที่ถูกเอาออก "หลัง" บันทึก/อัปโหลดของใหม่สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าอัปโหลดพลาดข้อมูลเดิมหายแต่ของใหม่ไม่ถูกบันทึก)
   if(originalSolutionIds){
@@ -9631,7 +9887,7 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
 }
 
 function resetErrorForm(){
-  editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = [];
+  editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
   editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
@@ -9656,7 +9912,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
     const cur = editingErrorId ? DATA.errors.find(e=>e.id===editingErrorId) : null;
     const changed = !cur || errDupKey(cur.category, cur.model, cur.errorCode, cur.symptom) !== errDupKey(category, model, errorCode, symptom);
     if(changed){
-      const dup = await findDuplicateError(category, model, errorCode, symptom, editingErrorId || (reviewingPendingErrorId ? 'e_'+reviewingPendingErrorId : null));
+      const dup = await findDuplicateError(category, model, errorCode, symptom, editingErrorId || (reviewingPendingErrorId ? 'e_'+reviewingPendingErrorId : null) || _newErrorDraftId);
       if(dup){ showToast(dupErrorMsg(dup)); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
     }
   }
@@ -9686,10 +9942,11 @@ $('save-error-btn').addEventListener('click', async ()=>{
       await saveErrorWithSolutions(editingErrorId, fields, validSolutions, _originalSolutionIds); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       Object.assign(err, fields, {solutions: validSolutions.map(s=>({...s, feedback:(err.solutions.find(os=>os.id===s.id)||{}).feedback||[]}))});
     } else {
-      const newId = uid('e');
+      const newId = _newErrorDraftId || (_newErrorDraftId = uid('e'));
       const fields = {category, model, errorCode, symptom, viewCount:0, totalUps:0};
       await saveErrorWithSolutions(newId, fields, validSolutions, []); // fields จะได้ hasImages เพิ่มมาอัตโนมัติหลังบรรทัดนี้
       DATA.errors.push({id:newId, ...fields, solutions: validSolutions.map(s=>({...s, feedback:[]})), _solutionsLoaded:true});
+      _newErrorDraftId = null;
     }
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
@@ -9711,8 +9968,18 @@ const errDupKey = (c,m,code,sym)=>[c,m,errNorm(code),errNorm(sym)].join('\u0001'
 async function findDuplicateError(category, model, code, symptom, excludeId){
   try{ await ensureErrorsLoadedForCategory(category); }catch(e){ console.warn('โหลด Error เพื่อเช็คซ้ำไม่สำเร็จ:', e.message); }
   const k = errDupKey(category, model, code, symptom);
-  return (DATA.errors||[]).find(e=>e.id!==excludeId && errDupKey(e.category, e.model, e.errorCode, e.symptom)===k) || null;
+  const local = (DATA.errors||[]).find(e=>e.id!==excludeId && errDupKey(e.category, e.model, e.errorCode, e.symptom)===k);
+  if(local) return local;
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const snap = await sdk.getDocs(sdk.query(sdk.collection(db,'errors'), sdk.where('category','==',category), sdk.where('model','==',model)));
+    let hit = null;
+    snap.forEach(d=>{ if(hit || d.id===excludeId) return; const x = d.data(); if(errDupKey(x.category, x.model, x.errorCode, x.symptom)===k) hit = Object.assign({ id:d.id }, x); });
+    if(hit) return hit;
+  }catch(e){ console.warn('เช็ค Error ซ้ำกับเซิร์ฟเวอร์ไม่สำเร็จ:', e.message); }
+  return null;
 }
+let _newErrorDraftId = null;
 function dupErrorMsg(d){ return `⚠ มี Error นี้อยู่แล้ว (${d.model}${d.errorCode?' · '+d.errorCode:''} · ${String(d.symptom||'').slice(0,40)}) — แก้ Error Code หรืออาการให้ต่างจากเดิมก่อนบันทึก`; }
 async function startCopyError(id){
   const err = DATA.errors.find(e=>e.id===id); if(!err) return;
@@ -10257,6 +10524,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
   saveBtn.disabled = true; saveBtn.style.opacity = '.5'; saveBtn.style.cursor = 'not-allowed';
 
   let url;
+  f1TrackStart();
   if(doclinkMode==='link'){
     const rawUrl = $('doclink-url-input').value.trim();
     url = normalizeDriveLink(rawUrl);
@@ -10273,7 +10541,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
         $('doclink-upload-progress-bar').style.width = pct+'%';
         $('doclink-upload-progress-text').textContent = `กำลังอัปโหลด... ${pct}%`;
       });
-    }catch(e){ showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
+    }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
   try{
@@ -10314,7 +10582,8 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
         DATA.documents.push({ id:tid, ...f });
       }
     }
-  }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
+  }catch(e){ f1TrackStop(); const _rb = await f1RollbackCreated(); showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rb>0?' (ยกเลิกไฟล์ที่อัปโหลดไว้แล้ว '+_rb+' ไฟล์)':'')); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
+  _f1Created = []; f1TrackStop();
   saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = '';
   closeDocLinkModal();
   if(doclinkListContext) renderDocLinkListItems();
@@ -11724,6 +11993,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
       // เคลมใหม่: สร้างโฟลเดอร์ปกติ
       folderId = await ensureClaimFolderPath(claimDraft.category, claimDraft.model, claimFolderName);
     }
+    f1TrackStart();
     const uploadedAttachments = emptyClaimAttachments();
     // นับไฟล์ที่ต้องอัปโหลดจริง (ไม่รวมไฟล์เดิมที่แนบไว้แล้วตอนแก้ไขเคลม) เพื่อโชว์ "ไฟล์ที่ n จาก m" ระหว่างอัปโหลด
     const pendingFiles = [];
@@ -11779,6 +12049,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
         orphanIdsAfterSave = oldAtts.map(a=>a.driveFileId || extractDriveFileId(a.url||'')).filter(f=>f && !newFileIds.has(f));
       }
       await fsUpdateClaim(claimEditingId, fields);
+      _f1Created = []; f1TrackStop();
       // v8.90 — ลบไฟล์เก่าใน Drive "หลัง" บันทึก Firestore สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าบันทึกพลาดไฟล์หายแต่รายการยังอ้างอิง)
       if(orphanIdsAfterSave.length){
         const orphanRes = await driveDeleteMany(orphanIdsAfterSave);
@@ -11790,6 +12061,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     } else {
       fields.status = 'pending'; fields.createdAt = Date.now(); fields.serviceOrderNo = '';
       const newId = await fsAddClaim(fields);
+      _f1Created = []; f1TrackStop();
       liveUpsert('claims', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
       // สร้างรูปสรุปครั้งแรกทันทีหลังบันทึกเคลมใหม่ — ⚠ +1 Firestore write
       try{ await updateSummaryImageForClaim({ id:newId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (เคลมใหม่) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
@@ -11800,8 +12072,9 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     renderEngMyClaimsList();
     showClaimSuccessSummary(fields);
   }catch(e){
+    f1TrackStop(); let _rbN = 0; try{ _rbN = await f1RollbackCreated(); }catch(_){}
     // บันทึกไม่สำเร็จ (เช่นเน็ตหลุดระหว่างอัปโหลด) — จงใจไม่ลบร่างที่ autosave ไว้ ผู้ใช้เปิดฟอร์มนี้ใหม่แล้วกู้คืนข้อมูลมากรอกซ้ำ/ลองบันทึกใหม่ได้ทันที ไม่ต้องพิมพ์ใหม่ทั้งหมด
-    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)');
+    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rbN>0?' · ยกเลิกไฟล์ที่อัปโหลดค้างไว้แล้ว '+_rbN+' ไฟล์':'')+' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)');
   } finally {
     btn.disabled=false; btn.style.opacity='';
     hideLoadingOverlay();
@@ -15354,6 +15627,7 @@ async function exaUploadImage(file){
     const url = await driveUploadLargeFile(comp.blob || file, 'q_'+Date.now()+'.jpg', sub);
     let sh = { fail:1 };
     for(let i = 0; i < 3 && sh.fail; i++){ try{ sh = await exShareImages([{ imageUrl:url }], true); }catch(e){ sh = { fail:1 }; } if(sh.fail) await new Promise(r=>setTimeout(r, 600*(i+1))); }
+    if(sh.fail){ try{ await driveDeleteFile(driveFileIdFromUrl(url)); }catch(_){} }
     if(sh.fail) throw new Error('ตั้งสิทธิ์ให้ผู้สอบเห็นรูปไม่สำเร็จ (ลอง 3 ครั้ง) — ตรวจอินเทอร์เน็ต/สิทธิ์ Drive แล้วอัปโหลดใหม่');
     return url;
   } finally { hideLoadingOverlay(); }
@@ -17318,7 +17592,7 @@ async function traUploadPhotos(files){
     await f1Pool(files, async (f0, i)=>{
       const f = await f1ShrinkImage(f0);
       const url = await driveUploadLargeFile(f, 'photo_'+_stamp+'_'+i+'_'+String(f0.name||'photo.jpg').replace(/[^A-Za-z0-9._-]+/g,'_'), folder);
-      await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f0.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 });
+      try{ await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'photo', fileName:f0.name||'photo.jpg', driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:f.type||'', size:f.size||0 }); }catch(e0){ try{ await driveDeleteFile(driveFileIdFromUrl(url)); }catch(_){} throw e0; }
       ok++; exOverlayText(`กำลังอัปโหลดรูป ${ok}/${files.length}...`);
     }, 3);
     hideLoadingOverlay(); showToast('✓ อัปโหลด '+ok+' รูปแล้ว');
@@ -17340,7 +17614,7 @@ async function traUploadMfr(regId, file){
     if(!folder) folder = await trSessionFolder(s, 'ใบ Cer ผู้ผลิต');
     const nm = r.email ? await certFileNameFor(r.email, models.join('+'), file.name, r.name) : (sanitizeFolderName(r.name)+'_'+String(file.name||'cert.pdf').replace(/[^A-Za-z0-9ก-๙._-]+/g,'_')); // v11.10 — ชื่อไฟล์ = รุ่น_ชื่อจริงEN_ชื่อเล่นEN
     const url = await driveUploadLargeFile(file, nm, folder);
-    const added = await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 });
+    let added; try{ added = await examApiRetry('trAddFile', { sessionId:s.sessionId, kind:'mfrCert', regId, fileName:nm, driveFileId:driveFileIdFromUrl(url), driveUrl:url, mimeType:file.type||'', size:file.size||0 }); }catch(e0){ try{ await driveDeleteFile(driveFileIdFromUrl(url)); }catch(_){} throw e0; }
     let counted = 0;
     if(r.email && added && added.fileId){ // v10.96 — อัปเดตจำนวนใบ Cer ของช่างทันที (ไม่ต้องรอจบ Training) · v10.97 — ทุกรุ่นที่เลือก ใช้ไฟล์เดียวกัน
       exOverlayText('กำลังอัปเดตจำนวนใบ Cer ของช่าง...');
