@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.22
-  อัปเดตล่าสุด   : 24 ตุลาคม 2569 12:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.23
+  อัปเดตล่าสุด   : 25 ตุลาคม 2569 16:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.22</title>
+<title>F1 Service — v11.23</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1476,16 +1476,6 @@ setTimeout(function(){
           <div style="overflow:auto;max-height:65vh;border:1px solid var(--border);border-radius:8px;"><table id="sup-doc-matrix"></table></div>
         </div>
       </div>
-      <div class="panel-block">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-          <h2 style="margin:0;">กำหนดรุ่นที่ต้องมี Certificate</h2>
-          <button class="btn btn-ghost btn-sm" id="sup-cert-req-hide-btn">🙈 ซ่อน</button>
-        </div>
-        <div id="sup-cert-req-body">
-          <p class="panel-sub">กำหนดว่ารุ่นไหนต้องมี Cer ภายใน / ผู้ผลิต / ทั้งคู่</p>
-          <div id="sup-cert-req-list"></div>
-        </div>
-      </div>
     </div>
 
     <div id="sup-tab-claims" style="display:none;">
@@ -1528,8 +1518,8 @@ setTimeout(function(){
     <!-- v8.58 — แท็บ Certificate ของ Sup Product (เฉพาะรุ่นที่ตัวเองดูแล, เฉพาะ Cer ผู้ผลิต) -->
     <div id="sup-tab-cert" style="display:none;">
       <div class="panel-block">
-        <h2>Certificate ผู้ผลิตของฉัน</h2>
-        <p class="panel-sub">เฉพาะรุ่นที่ดูแล</p>
+        <h2>จัดการผู้ผลิตที่ดูแล</h2>
+        <p class="panel-sub">เฉพาะรุ่นที่ดูแล · ติ๊ก "ต้องมี" เพื่อกำหนดว่ารุ่นนี้ต้องมี Cer ภายใน / ผู้ผลิต</p>
         <div style="margin:6px 0 10px;"><button class="btn btn-primary btn-sm" id="sup-cert-multi-btn">📎 แนบหลายรุ่นทีเดียว</button></div>
         <div id="sup-cert-list"><div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div></div>
       </div>
@@ -2608,8 +2598,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.22";
-const APP_UPDATED_AT = "24 ตุลาคม 2569 12:40 น. เวลาไทย";
+const APP_VERSION = "11.23";
+const APP_UPDATED_AT = "25 ตุลาคม 2569 16:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4919,7 +4909,6 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
 }
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
-wirePanelHideToggle('sup-cert-req-hide-btn', 'sup-cert-req-body', 'hide_sup_cert_req');
 
 // v8.64 — ตรวจสอบไฟล์ซ้ำ: ดึง md5Checksum ของไฟล์ Drive ที่ทุกเอกสาร (ทุกรุ่นที่ดูแล) ชี้ไปหา แล้วจัดกลุ่มไฟล์ที่ md5 ตรงกัน (=ไบต์เหมือนกันเป๊ะ)
 // แต่คนละไฟล์จริงใน Drive (คนละ fileId) — เสนอให้รวมเป็นเอกสารเดียว (ผูก groupId เดียวกัน + ลบไฟล์ซ้ำออก เหลือไฟล์เดียว)
@@ -5766,7 +5755,7 @@ const MAINTENANCE_MODE_LIST = [
     { key:'sup:trbl',   label:'จัดการ Error' },
     { key:'sup:docs',   label:'จัดการเอกสาร' },
     { key:'sup:claims', label:'เคลม/แจ้งปัญหา' },
-    { key:'sup:cert',   label:'Certificate › ผู้ผลิตที่ดูแล' },
+    { key:'sup:cert',   label:'Certificate › จัดการผู้ผลิตที่ดูแล' },
   ]},
   { key:'admin-service', label:'🔧 ตรวจรับอะไหล่ (Admin Service)' },
   { key:'orgchart',      label:'👥 ทีมงาน (ผังองค์กร / รายชื่อ)' },
@@ -8015,7 +8004,7 @@ const NAVX = [
       { t:'รายการของฉัน',   m:'eng', tab:'my_work', badge:'eng-mywork-badge', k:'f_mywork', cap:'es' } ] },
     { t:'🎓 Certificate', subs:[
       { t:'ของฉัน',          m:'eng', tab:'cert', k:'f_cert', cap:'es' },
-      { t:'ผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
+      { t:'จัดการผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
     { t:'📝 ข้อสอบ', subs:[
       { t:'ข้อสอบของฉัน', m:'exam', k:'f_exam', cap:'es' } ] },
     { t:'📅 ตารางเทรน', subs:[
@@ -9200,7 +9189,7 @@ document.querySelectorAll('#sup-subtabs button').forEach(btn=>{
     $('sup-tab-docs').style.display = supActiveTab==='docs' ? 'block':'none';
     $('sup-tab-claims').style.display = supActiveTab==='claims' ? 'block':'none';
     $('sup-tab-cert').style.display = supActiveTab==='cert' ? 'block':'none';
-    if(supActiveTab==='docs'){ renderSupDocMatrix(); renderSupCertReqList(); }
+    if(supActiveTab==='docs'){ renderSupDocMatrix(); }
     if(supActiveTab==='claims') renderClaimsView();
     if(supActiveTab==='cert') renderSupCertTab(true);
     try{ navxRender(); }catch(e){}
@@ -10366,7 +10355,7 @@ async function renderSupView(){
     renderSupStats();
   }
   renderProposals(); renderErrorCountSummary();
-  if(supActiveTab==='docs'){ renderSupDocMatrix(); renderSupCertReqList(); }
+  if(supActiveTab==='docs'){ renderSupDocMatrix(); }
   if(supActiveTab==='claims') renderClaimsView();
 }
 
@@ -19806,6 +19795,7 @@ async function renderSupCertTab(forceReload){
     try{
       const myCerts = await fsListCertificatesByOwner(myUserEmail);
       _supCertDataCache = groupCertsByCell(myCerts.filter(c=>c.certType==='manufacturer'), false);
+      try{ await fsLoadCertRequirements(); }catch(e2){ console.warn('โหลดข้อกำหนด Cer ไม่สำเร็จ:', e2.message); }
     }catch(err){
       wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
       console.error('renderSupCertTab error:', err);
@@ -19815,11 +19805,31 @@ async function renderSupCertTab(forceReload){
   const certMap = _supCertDataCache;
   wrap.innerHTML = `<div class="panel-block" style="padding:0;overflow:hidden;">` + certColHeaderHtml(['ผู้ผลิต']) + myModels.map(({category,model})=>{
     const list = certMap[category+'|'+model] || [];
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-top:1px solid var(--border);border-left:4px solid var(--green);background:rgba(34,197,94,.06);">
-      <div style="font-size:13px;min-width:0;flex:1;">${CERT_MINE_PILL}<span style="color:var(--text-faint);">${escapeHtml(category)}</span> — <span style="font-weight:600;">${escapeHtml(model)}</span></div>
+    const reqCur = certRequirements[category+'|'+model] || '';
+    const reqChk = (k, lb)=>`<label style="display:inline-flex;align-items:center;gap:4px;font-size:12.5px;cursor:pointer;white-space:nowrap;"><input type="checkbox" class="sup-certreq-chk" data-k="${k}" ${(reqCur==='both'||reqCur===k)?'checked':''} style="width:17px;height:17px;"> ${lb}</label>`;
+    return `<div class="sup-certreq-row" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;padding:9px 12px;border-top:1px solid var(--border);border-left:4px solid var(--green);background:rgba(34,197,94,.06);">
+      <div style="font-size:13px;min-width:0;flex:1 1 160px;">${CERT_MINE_PILL}<span style="color:var(--text-faint);">${escapeHtml(category)}</span> — <span style="font-weight:600;">${escapeHtml(model)}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><span style="font-size:11.5px;color:var(--text-faint);">ต้องมี:</span>${reqChk('internal','ภายใน')}${reqChk('manufacturer','ผู้ผลิต')}</div>
       ${certCountBtn(`data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}"`, list.length)}
     </div>`;
   }).join('') + `</div>`;
+  wrap.querySelectorAll('.sup-certreq-chk').forEach(chk=>{
+    chk.addEventListener('change', async ()=>{
+      const row = chk.closest('.sup-certreq-row');
+      const boxes = Array.from(row.querySelectorAll('.sup-certreq-chk'));
+      const has = k=>{ const b = boxes.find(x=>x.getAttribute('data-k')===k); return !!(b && b.checked); };
+      const value = has('internal') && has('manufacturer') ? 'both' : has('internal') ? 'internal' : has('manufacturer') ? 'manufacturer' : '';
+      boxes.forEach(b=>{ b.disabled = true; });
+      try{
+        await fsSaveCertRequirement(row.getAttribute('data-cat'), row.getAttribute('data-model'), value);
+        showToast('✓ บันทึกแล้ว');
+      }catch(err){
+        chk.checked = !chk.checked;
+        alert('บันทึกไม่สำเร็จ: '+err.message);
+      }
+      finally{ boxes.forEach(b=>{ b.disabled = false; }); }
+    });
+  });
   wrap.querySelectorAll('.eng-certmx-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       openCertDetailModal('supproduct', 'manufacturer', btn.getAttribute('data-cat'), btn.getAttribute('data-model'));
@@ -19827,46 +19837,6 @@ async function renderSupCertTab(forceReload){
   });
 }
 
-// v8.60 — UI: Sup Product กำหนดว่ารุ่นไหนต้องมีใบ Cer แบบไหนบ้าง
-async function renderSupCertReqList(){
-  const wrap = $('sup-cert-req-list');
-  if(!wrap) return;
-  wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
-  await fsLoadCertRequirements();
-  const myModels = [];
-  Object.keys(DATA.categories||{}).sort(naturalSort).forEach(cat=>{
-    (DATA.categories[cat]||[]).filter(m=>ownerOf(cat,m)===currentSupIdentity).sort(naturalSort).forEach(m=> myModels.push({category:cat, model:m}));
-  });
-  if(myModels.length===0){
-    wrap.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">ยังไม่มีรุ่นที่คุณดูแล</div>`;
-    return;
-  }
-  wrap.innerHTML = myModels.map(({category,model})=>{
-    const cur = certRequirements[category+'|'+model] || '';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--border);">
-      <div style="font-size:13.5px;"><b>${escapeHtml(category)}</b> — ${escapeHtml(model)}</div>
-      <select class="sup-cert-req-select" data-cat="${escapeHtml(category)}" data-model="${escapeHtml(model)}" style="font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);">
-        <option value="" ${cur===''?'selected':''}>ไม่บังคับ</option>
-        <option value="internal" ${cur==='internal'?'selected':''}>ต้องมี Cer ภายใน</option>
-        <option value="manufacturer" ${cur==='manufacturer'?'selected':''}>ต้องมี Cer ผู้ผลิต</option>
-        <option value="both" ${cur==='both'?'selected':''}>ต้องมีทั้งภายใน+ผู้ผลิต</option>
-      </select>
-    </div>`;
-  }).join('');
-  wrap.querySelectorAll('.sup-cert-req-select').forEach(sel=>{
-    sel.addEventListener('change', async e=>{
-      const category = sel.getAttribute('data-cat');
-      const model = sel.getAttribute('data-model');
-      const value = e.target.value;
-      sel.disabled = true;
-      try{
-        await fsSaveCertRequirement(category, model, value);
-        showToast('✓ บันทึกแล้ว');
-      }catch(err){ alert('บันทึกไม่สำเร็จ: '+err.message); }
-      finally{ sel.disabled = false; }
-    });
-  });
-}
 
 /* ===================== v9.33 — จัดการประวัติใน Google Sheet (ลบแถว + ไฟล์ใน Drive พร้อมกัน) =====================
    ใช้กับ: ประวัติเคลมที่จบเคสแล้ว (Sheet "บันทึกเคลม") และอะไหล่ส่งคืนที่รับแล้ว (แท็บ "ประวัติRP")
