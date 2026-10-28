@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.27
-  อัปเดตล่าสุด   : 25 ตุลาคม 2569 19:15 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.29
+  อัปเดตล่าสุด   : 28 ตุลาคม 2569 12:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.27</title>
+<title>F1 Service — v11.29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1369,6 +1369,7 @@ setTimeout(function(){
         <button data-doctype="service_manual" class="active">📘 Service Manual</button>
         <button data-doctype="spare_part">🔧 Spare Part</button>
         <button data-doctype="install_checklist">📋 Install</button>
+        <button data-doctype="refurbish_checklist">♻️ Refurbish</button>
         <button data-doctype="pm_checklist">🗓️ PM</button>
         <button data-doctype="protocol">📜 Protocol</button>
         <button data-doctype="diagram">📐 Diagram</button>
@@ -2186,8 +2187,11 @@ setTimeout(function(){
           <select id="cd-prod" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ทุกพื้นที่</option></select>
           <select id="cd-stat" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ทุกสถานะ</option><option value="miss">เฉพาะที่ยังขาด</option><option value="full">เฉพาะที่ครบ</option></select>
           <button class="btn btn-ghost btn-sm mgr-refresh-btn">🔄 รีเฟรช</button>
+          <select id="cd-year" style="width:auto;border:1px solid var(--border);border-radius:8px;padding:7px;font:inherit;background:var(--panel);color:inherit;"><option value="">ปีนี้</option></select>
+          <button class="btn btn-ghost btn-sm" id="cd-kpi-btn" style="display:none;">⚙ ตั้งเกณฑ์ KPI</button>
           <button class="btn btn-ghost btn-sm" id="cd-export">📥 Export Excel</button>
         </div>
+        <div id="cd-kpi-panel" style="display:none;"></div>
         <div id="cd-body"></div>
         <p class="panel-sub" style="margin-top:8px;">แตะแถวเพื่อดูรายละเอียดและไฟล์</p>
       </div>
@@ -2598,8 +2602,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.27";
-const APP_UPDATED_AT = "25 ตุลาคม 2569 19:15 น. เวลาไทย";
+const APP_VERSION = "11.29";
+const APP_UPDATED_AT = "28 ตุลาคม 2569 12:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2839,6 +2843,7 @@ const DOC_TYPES = [
   {key:'service_manual', label:'Service Manual', icon:'📘'},
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
+  {key:'refurbish_checklist', label:'Refurbish Checklist', icon:'♻️'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
   {key:'protocol', label:'Protocol', icon:'📜'},
   {key:'diagram', label:'Diagram', icon:'📐'},
@@ -19854,7 +19859,7 @@ async function renderEngCertTab(forceReload){
   if(forceReload || !_engCertDataCache){
     wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>`;
     try{
-      await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements() ]);
+      await Promise.all([ fsLoadMyResponsibility(), fsLoadCertRequirements(), fsLoadCertKpi() ]);
       const myCerts = await fsListCertificatesByOwner(myUserEmail);
       const certMap = groupCertsByCell(myCerts, true);
       const myModelSet = new Set(myResponsibility.map(m=>m.category+'|'+m.model));
@@ -19894,6 +19899,19 @@ async function renderEngCertTab(forceReload){
   Object.keys(certMap).forEach(k=>{ if(k.endsWith('|internal')) allInt+=certMap[k].length; else if(k.endsWith('|manufacturer')) allMan+=certMap[k].length; });
   const st = calcStats(_engCertSumMode==='mine');
   const stMine = calcStats(true), stOther = calcStats(false);
+  let kpiHtml = '';
+  try{
+    const meIsSup = isEditor() && !isSuperAdmin() && currentSupIdentity && SUP_PRODUCTS.includes(currentSupIdentity) && currentSupIdentity!==NAVX_NOSUP;
+    let rI=0, rM=0, hI=0, hM=0;
+    myModelSet.forEach(k=>{
+      const req = certRequirements[k]; if(!req) return;
+      const parts = k.split('|'); if(!(DATA.categories[parts[0]]||[]).includes(parts[1])) return;
+      if(!meIsSup && (req==='internal'||req==='both')){ rI++; if((certMap[k+'|internal']||[]).length) hI++; }
+      if(req==='manufacturer'||req==='both'){ rM++; if((certMap[k+'|manufacturer']||[]).length) hM++; }
+    });
+    const kp = certKpiPct(rI,rM,hI,hM), ksc = certKpiScore(kp);
+    if(kp!==null) kpiHtml = `<div style="margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--panel-alt);font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;"><span>🎯 คะแนน KPI Cer <span style="color:var(--text-faint);font-size:11.5px;">(ครบ ${kp}% ถ่วงน้ำหนัก · ภายใน ${hI}/${rI} · ผู้ผลิต ${hM}/${rM})</span></span><b style="font-size:20px;color:${certKpiScoreColor(ksc)};">${ksc}</b></div>`;
+  }catch(_){ kpiHtml = ''; }
   const sumEl = $('eng-cert-summary');
   if(sumEl){
     const red = 'var(--red,#dc2626)';
@@ -19923,7 +19941,7 @@ async function renderEngCertTab(forceReload){
         <h2 style="margin:0;">📊 สรุปใบ Cer</h2>
         <button class="btn btn-ghost btn-sm" id="eng-cert-sum-toggle">${_engCertSummaryHidden?'👁 แสดง':'🙈 ซ่อน'}</button>
       </div>
-      ${_engCertSummaryHidden?'':`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${modeBtn('mine','ที่ดูแล',stMine.models)}${modeBtn('other','นอกดูแล',stOther.models)}</div>${body}`}`;
+      ${_engCertSummaryHidden?'':`${kpiHtml}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">${modeBtn('mine','ที่ดูแล',stMine.models)}${modeBtn('other','นอกดูแล',stOther.models)}</div>${body}`}`;
     $('eng-cert-sum-toggle').addEventListener('click', ()=>{ _engCertSummaryHidden = !_engCertSummaryHidden; renderEngCertTab(); });
     sumEl.querySelectorAll('[data-summode]').forEach(b=>b.addEventListener('click', ()=>{ _engCertSumMode = b.getAttribute('data-summode'); renderEngCertTab(); }));
   }
@@ -20505,11 +20523,143 @@ async function dxLoadLastActive(){
   });
 })();
 
+/* ===================== v11.28 — KPI Certificate (Manager ตั้งเกณฑ์เองได้ · เก็บที่ meta/certKpi) ===================== */
+const CERT_KPI_DEFAULT = { wInt:40, wMan:60, bands:[ {min:90,max:100,score:5}, {min:80,max:89,score:4}, {min:70,max:79,score:3}, {min:60,max:69,score:2}, {min:50,max:59,score:1}, {min:0,max:49,score:0} ] };
+let certKpiCfg = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT));
+function certKpiCheck(cfg){
+  if(!cfg || !Array.isArray(cfg.bands) || !cfg.bands.length) return 'ยังไม่มีช่วงคะแนน';
+  const okN = v=> typeof v==='number' && isFinite(v);
+  if(!okN(cfg.wInt) || !okN(cfg.wMan) || cfg.wInt<0 || cfg.wMan<0) return 'น้ำหนักต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป';
+  if(Math.round((cfg.wInt+cfg.wMan)*1000)!==100000) return 'น้ำหนักรวมต้องเท่ากับ 100% (ตอนนี้ '+(Math.round((cfg.wInt+cfg.wMan)*100)/100)+'%)';
+  const b = cfg.bands.slice().sort((x,y)=>x.min-y.min);
+  for(let i=0;i<b.length;i++){
+    const r = b[i];
+    if(!okN(r.min) || !okN(r.max) || !okN(r.score)) return 'ช่วงคะแนนมีช่องที่ยังไม่กรอก หรือไม่ใช่ตัวเลข';
+    if(!Number.isInteger(r.min) || !Number.isInteger(r.max)) return 'ช่วง % ต้องเป็นจำนวนเต็ม';
+    if(r.min<0 || r.max>100 || r.min>r.max) return 'ช่วง '+r.min+'–'+r.max+'% ไม่ถูกต้อง (ต้องอยู่ใน 0–100 และ "ตั้งแต่" ต้องไม่เกิน "ถึง")';
+    if(r.score<0) return 'คะแนนต้องไม่ติดลบ';
+    if(i===0 && r.min!==0) return 'ช่วงแรกต้องเริ่มที่ 0% (ขาด 0–'+(r.min-1)+'%)';
+    if(i>0){
+      const need = b[i-1].max+1;
+      if(r.min<need) return 'ช่วง '+b[i-1].min+'–'+b[i-1].max+'% ซ้อนกับ '+r.min+'–'+r.max+'%';
+      if(r.min>need) return 'ช่วงไม่ต่อเนื่อง ขาด '+need+'–'+(r.min-1)+'%';
+    }
+  }
+  if(b[b.length-1].max!==100) return 'ช่วงสุดท้ายต้องถึง 100% (ขาด '+(b[b.length-1].max+1)+'–100%)';
+  return '';
+}
+async function fsLoadCertKpi(){
+  try{
+    const snap = await Promise.race([
+      (async()=>{ await initFirebase(); const sdk = window._firebaseSdk; return await sdk.getDoc(sdk.doc(db,'meta','certKpi')); })(),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('หมดเวลาโหลดเกณฑ์')),4000))
+    ]);
+    if(snap.exists()){
+      const d = snap.data();
+      const c = { wInt:Number(d.wInt), wMan:Number(d.wMan), bands:(d.bands||[]).map(r=>({ min:Number(r.min), max:Number(r.max), score:Number(r.score) })) };
+      if(!certKpiCheck(c)){ certKpiCfg = c; return; }
+    }
+  }catch(e){ console.warn('โหลดเกณฑ์ KPI ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
+  certKpiCfg = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT));
+}
+async function fsSaveCertKpi(cfg){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { wInt:cfg.wInt, wMan:cfg.wMan, bands:cfg.bands, updatedBy:myUserEmail||'', updatedAt:Date.now() });
+  certKpiCfg = cfg;
+}
+function certKpiPct(rI, rM, hI, hM, cfg){
+  cfg = cfg || certKpiCfg;
+  if(!rI && !rM) return null;
+  const pI = rI ? hI/rI : null, pM = rM ? hM/rM : null;
+  let v;
+  if(pI!==null && pM!==null){ v = (cfg.wInt*pI + cfg.wMan*pM) / (cfg.wInt + cfg.wMan); }
+  else { v = (pI!==null) ? pI : pM; }
+  return Math.round(v*100);
+}
+function certKpiScore(pct, cfg){
+  if(pct===null || pct===undefined) return null;
+  cfg = cfg || certKpiCfg;
+  const b = cfg.bands.find(r=> pct>=r.min && pct<=r.max);
+  return b ? b.score : 0;
+}
+function certKpiScoreColor(sc){
+  if(sc===null) return 'var(--text-faint)';
+  const mx = Math.max.apply(null, certKpiCfg.bands.map(r=>r.score));
+  const f = mx>0 ? sc/mx : 0;
+  return f>=0.8 ? 'var(--green)' : f>=0.4 ? 'var(--amber)' : 'var(--red)';
+}
+function cdKpiPanel(){
+  const box = $('cd-kpi-panel'); if(!box) return;
+  if(!isManager() || !_cdState.kpiOpen){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  const c = _cdState.kpiDraft || (_cdState.kpiDraft = JSON.parse(JSON.stringify(certKpiCfg)));
+  const inp = 'width:70px;border:1px solid var(--border);border-radius:6px;padding:5px 6px;font:inherit;background:var(--panel);color:inherit;text-align:center;';
+  const val = v=> (typeof v==='number' && isFinite(v)) ? v : '';
+  const rowsH = c.bands.map((r,i)=>`<tr data-i="${i}"><td style="padding:4px 6px;white-space:nowrap;">ตั้งแต่ <input class="kpi-b" data-f="min" type="number" min="0" max="100" step="1" value="${val(r.min)}" style="${inp}"> %</td><td style="padding:4px 6px;white-space:nowrap;">ถึง <input class="kpi-b" data-f="max" type="number" min="0" max="100" step="1" value="${val(r.max)}" style="${inp}"> %</td><td style="padding:4px 6px;white-space:nowrap;">→ คะแนน <input class="kpi-b" data-f="score" type="number" min="0" step="any" value="${val(r.score)}" style="${inp}"></td><td style="padding:4px 6px;"><button class="btn btn-ghost btn-sm kpi-del" data-i="${i}" title="ลบช่วงนี้">🗑</button></td></tr>`).join('');
+  box.style.display = '';
+  box.innerHTML = `<div style="border:1px solid var(--amber);border-radius:10px;padding:12px;margin:8px 0;background:var(--panel-alt);">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><b>⚙ ตั้งเกณฑ์ KPI Certificate</b><button class="btn btn-ghost btn-sm" id="kpi-close">✕ ปิด</button></div>
+    <div style="font-size:12px;color:var(--text-dim);margin:6px 0 10px;line-height:1.6;">คะแนนคิดจาก % ครบ (ถ่วงน้ำหนัก ภายใน/ผู้ผลิต) ณ สิ้นปีที่เลือก · Sup Product นับเฉพาะ Cer ผู้ผลิต · รุ่นที่ Sup ยังไม่กำหนดว่าต้องมี Cer ไม่นับ · คนที่ไม่มีรุ่นที่กำหนดจะไม่มีคะแนน</div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:4px;">น้ำหนักคะแนน</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px;">
+      <span>Cer ภายใน <input id="kpi-wi" type="number" min="0" max="100" step="any" value="${val(c.wInt)}" style="${inp}"> %</span>
+      <span>Cer ผู้ผลิต <input id="kpi-wm" type="number" min="0" max="100" step="any" value="${val(c.wMan)}" style="${inp}"> %</span>
+      <span id="kpi-wsum" style="font-size:12px;"></span>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin:12px 0 4px;">ช่วง % ครบ → คะแนน</div>
+    <table style="border-collapse:collapse;font-size:13px;"><tbody>${rowsH}</tbody></table>
+    <div style="margin-top:6px;"><button class="btn btn-ghost btn-sm" id="kpi-add">+ เพิ่มช่วง</button></div>
+    <div id="kpi-err" style="color:var(--red);font-size:12.5px;margin-top:8px;min-height:1em;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;"><button class="btn btn-primary btn-sm" id="kpi-save">💾 บันทึกเกณฑ์</button><button class="btn btn-ghost btn-sm" id="kpi-reset">↺ ใช้ค่าเริ่มต้น</button></div>
+  </div>`;
+  cdKpiSumHint();
+}
+function cdKpiSumHint(){
+  const c = _cdState.kpiDraft; const el = $('kpi-wsum'); if(!c || !el) return;
+  const sum = Math.round(((c.wInt||0)+(c.wMan||0))*100)/100;
+  el.innerHTML = sum===100 ? '<b style="color:var(--green);">รวม 100% ✓</b>' : '<b style="color:var(--red);">รวม '+sum+'% (ต้องเป็น 100%)</b>';
+}
+async function cdKpiSave(){
+  const c = _cdState.kpiDraft; const err = $('kpi-err'); if(!c) return;
+  const cfg = { wInt:c.wInt, wMan:c.wMan, bands:c.bands.map(r=>({ min:r.min, max:r.max, score:r.score })).sort((a,b)=>a.min-b.min) };
+  const msg = certKpiCheck(cfg);
+  if(msg){ if(err) err.textContent = '⚠ '+msg; return; }
+  const btn = $('kpi-save'); if(btn){ btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
+  try{
+    await fsSaveCertKpi(cfg);
+    _cdState.kpiDraft = null; _cdState.kpiOpen = false;
+    showToast('✓ บันทึกเกณฑ์ KPI แล้ว');
+    cdRender();
+  }catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = '💾 บันทึกเกณฑ์'; }
+    if(err) err.textContent = '⚠ บันทึกไม่สำเร็จ: '+(e.message||e)+' (ถ้าเพิ่งอัปเดตแอป ต้องวาง firestore.rules ใหม่ก่อน)';
+  }
+}
+(function cdKpiBind(){
+  const box = $('cd-kpi-panel'); if(!box) return;
+  box.addEventListener('input', e=>{
+    const c = _cdState.kpiDraft; if(!c) return;
+    const t = e.target, num = t.value==='' ? NaN : Number(t.value);
+    if(t.id==='kpi-wi'){ c.wInt = num; cdKpiSumHint(); }
+    else if(t.id==='kpi-wm'){ c.wMan = num; cdKpiSumHint(); }
+    else if(t.classList.contains('kpi-b')){ const tr = t.closest('tr'); const i = Number(tr.getAttribute('data-i')); if(c.bands[i]) c.bands[i][t.getAttribute('data-f')] = num; }
+  });
+  box.addEventListener('click', e=>{
+    const c = _cdState.kpiDraft; const t = e.target.closest('button'); if(!t || !c) return;
+    if(t.id==='kpi-close'){ _cdState.kpiOpen = false; _cdState.kpiDraft = null; cdKpiPanel(); }
+    else if(t.id==='kpi-add'){ c.bands.push({ min:NaN, max:NaN, score:NaN }); cdKpiPanel(); }
+    else if(t.id==='kpi-reset'){ _cdState.kpiDraft = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT)); cdKpiPanel(); }
+    else if(t.id==='kpi-save'){ cdKpiSave(); }
+    else if(t.classList.contains('kpi-del')){ c.bands.splice(Number(t.getAttribute('data-i')),1); cdKpiPanel(); }
+  });
+  const kb = $('cd-kpi-btn');
+  if(kb) kb.addEventListener('click', ()=>{ _cdState.kpiOpen = !_cdState.kpiOpen; _cdState.kpiDraft = null; cdKpiPanel(); });
+})();
+
 /* ===================== v9.22 — Dashboard Certificate (ภาพรวมรายคน/รายรุ่น + % ความครบถ้วน) ===================== */
 let _cdState = { loaded:false, loading:false, certs:[], resps:[], view:'person', open:{}, openP:{}, openM:{} };
 async function cdLoadData(){
   await initFirebase(); const sdk = window._firebaseSdk;
-  const [certs, rsnap, profs] = await Promise.all([ fsListAllCertificates(), sdk.getDocs(sdk.collection(db,'engineerResponsibility')), fetchAllUserProfiles(), fsLoadCertRequirements() ]);
+  const [certs, rsnap, profs] = await Promise.all([ fsListAllCertificates(), sdk.getDocs(sdk.collection(db,'engineerResponsibility')), fetchAllUserProfiles(), fsLoadCertRequirements(), fsLoadCertKpi() ]);
   _cdState.certs = certs; _cdState.profiles = profs;
   _cdState.resps = []; rsnap.forEach(d=>_cdState.resps.push({ id:d.id, ...d.data() }));
   _cdState.loaded = true;
@@ -20549,7 +20699,9 @@ function cdGroupOf(p){
   return { ord: 2 + (i<0 ? 99 : i), label: 'เขต ' + p.area };
 }
 function cdCompute(){
-  const certs = _cdState.certs, cats = DATA.categories||{};
+  const yv = ($('cd-year')||{}).value||'';
+  const yEnd = yv ? Date.UTC(Number(yv)-543,11,31,16,59,59,999) : Infinity;
+  const certs = _cdState.certs.filter(c=> (c.uploadedAt||0) <= yEnd), cats = DATA.categories||{};
   const lc = x=>String(x||'').toLowerCase();
   const out = []; const unsetKeys = new Set();
   (_cdState.profiles||[]).forEach(pf=>{
@@ -20578,7 +20730,7 @@ function cdCompute(){
     });
     const other = mine.filter(c=>!respSet.has(c.category+'|'+c.model)).length;
     const g = cdGroupOf(pf);
-    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, certs: mine, reqI, reqM, hasI, hasM, miss, other });
+    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, certs: mine, reqI, reqM, hasI, hasM, miss, other, kpiPct: certKpiPct(reqI,reqM,hasI,hasM) });
   });
   const posRank = pos => { const i = ORGCHART_POSITIONS.indexOf(pos); return i<0 ? 99 : i; };
   out.sort((a,b)=>{
@@ -20625,6 +20777,11 @@ function cdDetailHtml(p){
 }
 function cdRender(){
   const body = $('cd-body'); if(!body || !_cdState.loaded) return;
+  const showKpi = isManager(), NC = showKpi ? 12 : 10;
+  const fy = $('cd-year');
+  if(fy && !fy.dataset.f){ const be = new Date().getFullYear()+543; fy.innerHTML = `<option value="">ปีนี้ (${be})</option>` + [1,2,3].map(n=>`<option value="${be-n}">ณ สิ้นปี ${be-n}</option>`).join(''); fy.dataset.f='1'; }
+  const kbtn = $('cd-kpi-btn'); if(kbtn) kbtn.style.display = showKpi ? '' : 'none';
+  cdKpiPanel();
   const data = cdCompute();
   // เติมตัวเลือก Product
   const fr0 = $('cd-role'); if(fr0 && !fr0.dataset.f){ fr0.innerHTML = '<option value="">ทุกตำแหน่ง</option>'+['Sup Product','Engineer Product','Sup Area','Engineer Area','Technician (ช่าง)','Engineer Office'].map(c=>`<option>${escapeHtml(c)}</option>`).join(''); fr0.dataset.f='1'; }
@@ -20633,22 +20790,25 @@ function cdRender(){
   const sum = L.reduce((a,p)=>({ri:a.ri+p.reqI, rm:a.rm+p.reqM, hi:a.hi+p.hasI, hm:a.hm+p.hasM}), {ri:0,rm:0,hi:0,hm:0});
   const R = sum.ri+sum.rm, H = sum.hi+sum.hm;
   const kp = (lab,h,r)=>{ const v = r?Math.round(h*100/r):null; const c = v===null?'var(--text-faint)':v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)'; return `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">${lab}</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${c};">${v===null?'—':v+'%'}</div><div style="font-size:11px;color:var(--text-faint);">${r?`มี ${h} / ต้องมี ${r} · ขาด ${r-h} ใบ`:'ยังไม่มีรุ่นที่กำหนด'}</div>${r?`<div style="height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:${v}%;background:${c};"></i></div>`:''}</div>`; };
-  let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0;">${kp('ครบรวม',H,R)}${kp('ภายใน',sum.hi,sum.ri)}${kp('ผู้ผลิต',sum.hm,sum.rm)}</div>`;
+  const kScores = showKpi ? L.map(p=>certKpiScore(p.kpiPct)).filter(v=>v!==null) : [];
+  const kAvg = kScores.length ? kScores.reduce((x,y)=>x+y,0)/kScores.length : null;
+  const kTile = showKpi ? `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">คะแนน KPI เฉลี่ย</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${certKpiScoreColor(kAvg)};">${kAvg===null?'—':(Math.round(kAvg*100)/100)}</div><div style="font-size:11px;color:var(--text-faint);">${kScores.length} คนที่มีคะแนน · ไม่มีคะแนน ${L.length-kScores.length} คน</div></div>` : '';
+  let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0;">${kp('ครบรวม',H,R)}${kp('ภายใน',sum.hi,sum.ri)}${kp('ผู้ผลิต',sum.hm,sum.rm)}${kTile}</div>`;
   if(data.unset>0) h += `<div style="background:rgba(245,158,11,.12);border:1px solid var(--amber);border-radius:8px;padding:7px 10px;font-size:12px;margin-bottom:8px;">⚠ มี <b>${data.unset}</b> รุ่น (ที่มีคนรับผิดชอบ) ที่ Sup ยังไม่ได้กำหนดว่าต้องมี Cer — ไม่นับใน %</div>`;
   const thS = 'padding:8px 6px;font-size:11px;color:var(--text-faint);font-weight:600;background:var(--panel-alt);text-align:center;';
   const tdS = 'padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;';
   const q = (($('cd-q')||{}).value||'').trim().toLowerCase();
   if(_cdState.view==='person'){
-    h += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:900px;"><thead><tr><th style="${thS}text-align:left;">ชื่อเล่น</th><th style="${thS}">ตำแหน่ง</th><th style="${thS}">พื้นที่</th><th style="${thS}">รุ่นที่ต้องมี</th><th style="${thS}">ภายใน</th><th style="${thS}">ผู้ผลิต</th><th style="${thS}min-width:110px;">ครบรวม</th><th style="${thS}">ขาด (ใบ)</th><th style="${thS}text-align:left;">ที่ยังขาด</th><th style="${thS}">รุ่นอื่น</th></tr></thead><tbody>`;
+    h += `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:900px;"><thead><tr><th style="${thS}text-align:left;">ชื่อเล่น</th><th style="${thS}">ตำแหน่ง</th><th style="${thS}">พื้นที่</th><th style="${thS}">รุ่นที่ต้องมี</th><th style="${thS}">ภายใน</th><th style="${thS}">ผู้ผลิต</th><th style="${thS}min-width:110px;">ครบรวม</th>${showKpi?`<th style="${thS}">% ถ่วงน้ำหนัก</th><th style="${thS}">คะแนน KPI</th>`:''}<th style="${thS}">ขาด (ใบ)</th><th style="${thS}text-align:left;">ที่ยังขาด</th><th style="${thS}">รุ่นอื่น</th></tr></thead><tbody>`;
     let _lastG = null;
     L.forEach(p=>{
       const k = escapeHtml(p.email);
-      if(p.glabel!==_lastG){ _lastG = p.glabel; h += `<tr><td colspan="10" style="padding:6px 8px;font-size:12px;font-weight:700;background:var(--panel-alt);">${escapeHtml(p.glabel)}</td></tr>`; }
+      if(p.glabel!==_lastG){ _lastG = p.glabel; h += `<tr><td colspan="${NC}" style="padding:6px 8px;font-size:12px;font-weight:700;background:var(--panel-alt);">${escapeHtml(p.glabel)}</td></tr>`; }
       const reqModels = Object.keys(p.reqMap).length;
-      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td><td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?(_cdState.open[p.email]?'':'<span style="color:var(--text-faint);font-size:12px;">กดแถวเพื่อดูรายการ ▸</span>'):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
-      if(_cdState.open[p.email]) h += `<tr><td colspan="10" style="padding:10px 14px;background:var(--panel-alt);">${cdDetailHtml(p)}</td></tr>`;
+      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td>${showKpi?(()=>{ const sc = certKpiScore(p.kpiPct); return `<td style="${tdS}">${p.kpiPct===null?'<span style="color:var(--text-faint);">—</span>':'<b>'+p.kpiPct+'%</b>'}</td><td style="${tdS}">${sc===null?'<span style="color:var(--text-faint);">—</span>':`<b style="font-size:17px;color:${certKpiScoreColor(sc)};">${sc}</b>`}</td>`; })():''}<td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?(_cdState.open[p.email]?'':'<span style="color:var(--text-faint);font-size:12px;">กดแถวเพื่อดูรายการ ▸</span>'):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
+      if(_cdState.open[p.email]) h += `<tr><td colspan="${NC}" style="padding:10px 14px;background:var(--panel-alt);">${cdDetailHtml(p)}</td></tr>`;
     });
-    if(!L.length) h += '<tr><td colspan="10" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
+    if(!L.length) h += '<tr><td colspan="${NC}" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
     h += '</tbody></table></div>';
   } else {
     const M = {};
@@ -20692,13 +20852,19 @@ function cdExport(){
         หมายเหตุ: inResp ? '' : 'รุ่นอื่น (ไม่นับใน %)' }); });
   });
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Certificate');
+  if(isManager()){
+    const kr = L.map(p=>{ const sc = certKpiScore(p.kpiPct); return { ชื่อ:p.name, ตำแหน่ง:p.position, พื้นที่:p.area, 'ต้องมีภายใน(ใบ)':p.reqI, 'มีภายใน(ใบ)':p.hasI, 'ต้องมีผู้ผลิต(ใบ)':p.reqM, 'มีผู้ผลิต(ใบ)':p.hasM, 'ขาด(ใบ)':p.miss.length, '% ถ่วงน้ำหนัก':p.kpiPct===null?'':p.kpiPct, 'คะแนน KPI':sc===null?'':sc }; });
+    kr.push({}); kr.push({ ชื่อ:'น้ำหนัก ภายใน/ผู้ผลิต', ตำแหน่ง:certKpiCfg.wInt+'/'+certKpiCfg.wMan });
+    certKpiCfg.bands.slice().sort((x,y)=>y.min-x.min).forEach(r=>kr.push({ ชื่อ:'ช่วง '+r.min+'-'+r.max+'%', ตำแหน่ง:'คะแนน '+r.score }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kr), 'KPI');
+  }
   XLSX.writeFile(wb, `certificate-overview-${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 (function cdBind(){
   const b = $('cd-v-person'); if(!b) return;
   $('cd-v-person').addEventListener('click', ()=>{ _cdState.view='person'; cdRender(); });
   $('cd-v-model').addEventListener('click', ()=>{ _cdState.view='model'; cdRender(); });
-  ['cd-q','cd-role','cd-prod','cd-stat'].forEach(id=>{ const el=$(id); if(el) el.addEventListener(id==='cd-q'?'input':'change', cdRender); });
+  ['cd-q','cd-role','cd-prod','cd-stat','cd-year'].forEach(id=>{ const el=$(id); if(el) el.addEventListener(id==='cd-q'?'input':'change', cdRender); });
   $('cd-export').addEventListener('click', cdExport);
 })();
 
