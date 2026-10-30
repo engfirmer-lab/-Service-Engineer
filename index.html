@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.30
-  อัปเดตล่าสุด   : 30 ตุลาคม 2569 12:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.31
+  อัปเดตล่าสุด   : 30 ตุลาคม 2569 13:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.30</title>
+<title>F1 Service — v11.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -214,6 +214,8 @@
   .navx-l1 button.active{background:var(--amber);color:#1a1206;}
   .navx-l2{display:flex;gap:5px;overflow-x:auto;padding:7px 0 1px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
   .navx-l2::-webkit-scrollbar{display:none;}
+  .maint-head{font-weight:700;font-size:12.5px;margin:10px 0 2px;padding:5px 8px;background:var(--panel-alt);border-radius:6px;}
+  .maint-up{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:99px;border:1px solid var(--amber);color:var(--amber);white-space:nowrap;}
   .navx-l2 button{flex:none;font-family:'Sarabun';font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:var(--panel);color:var(--text-dim);cursor:pointer;white-space:nowrap;}
   .navx-l2 button.active{background:var(--amber);border-color:var(--amber);color:#1a1206;}
   .navx-sub{max-width:1200px;margin:0 auto;padding:10px 16px 0;}
@@ -453,9 +455,10 @@
     .panel-block h2{ font-size:14px; margin-bottom:2px; }
     .panel-sub{ margin-bottom:8px; line-height:1.4; }
     .subtab-bar{ margin-bottom:10px; gap:5px; }
-    .navx-l1 button{ padding:6px 4px; font-size:12px; }
-    .navx-l2{ gap:4px; }
-    .navx-l2 button{ padding:5px 8px; font-size:12px; }
+    /* v11.31 — ปุ่มกดง่ายบนมือถือ: สูง ≥40px, ตัวหนังสือ 13px, แถวหน้าย่อยมีเงาจางบอกว่าเลื่อนได้ */
+    .navx-l1 button{ padding:11px 4px; min-height:42px; font-size:13px; }
+    .navx-l2{ gap:5px; padding-right:30px; -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 34px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 34px),transparent); }
+    .navx-l2 button{ padding:10px 13px; min-height:40px; font-size:13px; }
     .navx-sub{ padding:8px 12px 0; }
     header{ position:static; padding:10px 12px; }
     .signed-in-pill{ flex:1 1 100%; }
@@ -463,8 +466,13 @@
     .role-btn .rb-arr{ display:none; }
     .theme-toggle-btn{ width:34px; height:34px; }
     .brand-logo{ height:30px; }
-    .navx-l3 button{ font-size:12.5px; padding:6px 2px; }
-    .subtab-bar button{ padding:6px 11px; font-size:12px; }
+    .navx-l3 button{ font-size:13.5px; padding:12px 2px; }
+    .subtab-bar button{ padding:10px 13px; min-height:40px; font-size:13px; }
+    .signed-in-pill{ font-size:12.5px; gap:4px; }
+    #notif-bell, #edit-profile-btn, #change-name-btn{ font-size:13px !important; padding:11px 9px !important; min-height:40px; }
+    .theme-toggle-btn{ width:40px; height:40px; }
+    .role-btn{ padding:10px 9px; min-height:40px; }
+    .panel-sub, .status-line{ font-size:12.5px; }
     .status-line{ margin-bottom:8px; }
     .modal{ padding:14px; }
     .btn{ padding:8px 13px; }
@@ -2014,7 +2022,12 @@ setTimeout(function(){
     <!-- โหมดปิดปรับปรุง — เฉพาะ Super Admin เท่านั้นที่เห็น/ใช้งานส่วนนี้ได้ (ซ่อนด้วย JS ใน updateModeButtonVisibility) -->
     <div class="panel-block" id="maintenance-mode-panel" style="display:none;">
       <h2>🔧 ล็อกหน้าปิดปรับปรุง</h2>
-      <p class="panel-sub">ติ๊กหน้าที่ต้องการปิดปรับปรุง — มีผลกับผู้ใช้ทั่วไปเท่านั้น</p>
+      <p class="panel-sub">ติ๊กหน้าที่ต้องการปิดปรับปรุง — มีผลกับทุกคนยกเว้น Super Admin · ติ๊กหน้าหลักจะปิดหน้าย่อยทั้งหมดในนั้น · <span class="maint-up">📤 อัปโหลด</span> = หน้าที่มีการอัปโหลดไฟล์ขึ้น Google Drive</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;">
+        <button type="button" class="btn btn-ghost btn-sm" id="maint-tick-up">📤 ติ๊กทุกหน้าที่อัปโหลด</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="maint-untick-all">ยกเลิกติ๊กทั้งหมด</button>
+        <span id="maint-tick-hint" style="font-size:12px;color:var(--text-faint);align-self:center;"></span>
+      </div>
       <label style="display:flex;align-items:center;gap:8px;margin:4px 0 14px;padding:10px;border:1px solid var(--red);border-radius:8px;cursor:pointer;background:rgba(220,38,38,0.06);">
         <input type="checkbox" id="maintenance-mode-all-toggle" style="width:19px;height:19px;">
         <span><b style="color:var(--red);">🚫 ปิดทั้งแอปทั้งระบบ</b> — เข้าแอปไม่ได้เลยแม้แต่หน้าเดียว (ใช้ตอนต้องปรับปรุงทั้งระบบ) ยกเว้นติ๊กนี้ อย่างอื่นด้านล่างไม่มีผล</span>
@@ -2608,8 +2621,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.30";
-const APP_UPDATED_AT = "30 ตุลาคม 2569 12:30 น. เวลาไทย";
+const APP_VERSION = "11.31";
+const APP_UPDATED_AT = "30 ตุลาคม 2569 13:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6049,24 +6062,50 @@ $('version-update-refresh-btn').addEventListener('click', ()=>location.reload())
    เปิดเฉพาะหน้าที่ติ๊กไว้ — หน้าที่ไม่ติ๊กใช้งานได้ตามปกติ ทุกคน (ยกเว้น Super Admin) ที่กดเข้าหน้าที่ถูกล็อกจะเจอ toast แจ้งเตือนทันที ไม่สลับหน้าให้
    ถ้า user กำลังอยู่หน้าที่เพิ่งถูกล็อกระหว่างเปิดแอปค้างอยู่ จะโดนสลับออกไปหน้า eng ให้อัตโนมัติทันที (ไม่ต้อง Refresh เอง) */
 // key 'ALL' = ปิดทั้งแอปทั้งระบบ (ใช้ตอนต้องปรับปรุงใหญ่) — ไม่อยู่ใน list นี้ มีสวิตช์แยกต่างหากที่เด่นกว่าด้านบน
-// รายการหน้าหลัก + หน้าย่อย (children) ของแต่ละหน้า — ล็อกหน้าหลักจะบล็อกทุกหน้าย่อยในนั้นไปด้วยโดยอัตโนมัติ (ดู isModeLocked)
-// เฉพาะหน้าที่ "คนอื่น" (ไม่ใช่ Super Admin/Manager) ใช้งานเท่านั้น — ตั้งค่าระบบ/Manager/รายชื่อผู้ใช้งาน เป็นพื้นที่ของ Super Admin กับ Manager เอง เลยไม่ให้ล็อกตัวเองได้
+// v11.31 — รายการหน้าที่ล็อกได้ ตรงกับเมนูจริงของแอป จัดเป็นกลุ่ม · up:true = หน้านี้มีการอัปโหลดไฟล์ขึ้น Google Drive (ตรวจจากโค้ดแล้ว)
+// ล็อกหน้าหลักจะบล็อกทุกหน้าย่อยในนั้นไปด้วยโดยอัตโนมัติ (ดู isModeLocked) · มีผลกับทุกคนยกเว้น Super Admin
+// key ต้องตรงกับที่ switchMode / navxLocked / แท็บย่อย ตรวจ: eng:<tab> sup:<tab> mgr:<แท็บ> settings:<แท็บ> และโหมดเดี่ยว (exam, train, orgchart, roster, examadmin, trainadmin, admin-service, backup)
 const MAINTENANCE_MODE_LIST = [
-  { key:'eng', label:'👷 หน้างาน (Engineer)', children:[
-    { key:'eng:trbl',         label:'เครื่องมือ › Troubleshooting' },
+  { head:'👷 Service — หน้างาน (Engineer)' },
+  { key:'eng', label:'👷 เมนู Service ทั้งหมด', children:[
+    { key:'eng:trbl',         label:'เครื่องมือ › Troubleshooting (ส่ง Error ใหม่ / ยืนยันวิธีแก้ พร้อมแนบรูป-วิดีโอ)', up:true },
     { key:'eng:service_docs', label:'เครื่องมือ › เอกสาร Service' },
-    { key:'eng:my_work',      label:'บันทึกข้อมูล › รายการของฉัน' },
-    { key:'eng:claim',        label:'บันทึกข้อมูล › แจ้งเคลม/ส่งคืน' },
-    { key:'eng:cert',         label:'Certificate' },
+    { key:'eng:claim',        label:'บันทึกข้อมูล › ส่งคืนอะไหล่ / แจ้งเคลม-ปัญหา', up:true },
+    { key:'eng:my_work',      label:'บันทึกข้อมูล › รายการของฉัน (แก้รายการ แนบใบเบิก/หลักฐาน)', up:true },
+    { key:'eng:cert',         label:'Certificate › ของฉัน (แนบใบ Cer)', up:true },
   ]},
-  { key:'sup', label:'📋 จัดการ (Sup Product)', children:[
-    { key:'sup:trbl',   label:'จัดการ Error' },
-    { key:'sup:docs',   label:'จัดการเอกสาร' },
-    { key:'sup:claims', label:'เคลม/แจ้งปัญหา' },
+  { key:'exam',     label:'📝 ข้อสอบของฉัน (สอบผ่านแล้วระบบสร้างไฟล์ใบ Cer ลง Drive)', up:true },
+  { key:'train',    label:'📅 ตารางเทรน (ลงทะเบียน/เช็คชื่อ)' },
+  { key:'orgchart', label:'👥 ทีมงาน › ผังองค์กร' },
+  { key:'roster',   label:'👥 ทีมงาน › รายชื่อ' },
+  { head:'📋 จัดการ (Sup Product / Admin Service)' },
+  { key:'sup', label:'📋 เมนูจัดการทั้งหมด', children:[
+    { key:'sup:trbl',   label:'จัดการ Error (แนบรูป-วิดีโอ)', up:true },
+    { key:'sup:docs',   label:'จัดการเอกสาร (อัปโหลดไฟล์เอกสาร)', up:true },
+    { key:'sup:claims', label:'สรุปเคลมอะไหล่ / ปัญหา (แนบไฟล์)', up:true },
     { key:'sup:cert',   label:'Certificate › จัดการผู้ผลิตที่ดูแล' },
   ]},
-  { key:'admin-service', label:'🔧 ตรวจรับอะไหล่ (Admin Service)' },
-  { key:'orgchart',      label:'👥 ทีมงาน (ผังองค์กร / รายชื่อ)' },
+  { key:'admin-service', label:'📦 ตรวจรับอะไหล่ (Admin Service — แนบหลักฐาน)', up:true },
+  { key:'examadmin',     label:'📝 จัดการข้อสอบ (อัปโหลดรูปในข้อสอบ)', up:true },
+  { key:'trainadmin',    label:'📅 จัดการตารางเทรน (อัปโหลดรูป/ไฟล์ผู้ผลิต)', up:true },
+  { head:'📊 Dashboard' },
+  { key:'mgr', label:'📊 Dashboard ทั้งหมด', children:[
+    { key:'mgr:summary', label:'ภาพรวม' },
+    { key:'mgr:claims',  label:'เคลม' },
+    { key:'mgr:usage',   label:'Troubleshoot' },
+    { key:'mgr:return',  label:'อะไหล่คืน' },
+    { key:'mgr:cert',    label:'Certificate' },
+    { key:'mgr:people',  label:'ผู้ใช้งาน' },
+    { key:'mgr:pending', label:'งานค้าง' },
+  ]},
+  { head:'⚙️ ระบบ' },
+  { key:'settings', label:'⚙️ ตั้งค่าระบบทั้งหมด', children:[
+    { key:'settings:access',  label:'สิทธิ์ผู้ใช้' },
+    { key:'settings:owner',   label:'Product & Category' },
+    { key:'settings:maint',   label:'บำรุงรักษา (ตรวจไฟล์ตกค้าง / เปลี่ยนชื่อไฟล์ใน Drive)', up:true },
+    { key:'settings:menuacc', label:'สิทธิ์เมนู' },
+  ]},
+  { key:'backup', label:'📤 Export/Backup (สำรองข้อมูลลง Drive)', up:true },
 ];
 let maintenanceMode = { lockedModes:{}, message:'' };
 let _maintenanceWatchStarted = false;
@@ -6095,18 +6134,24 @@ function applyMaintenanceLock(){
     if(currentMode !== 'eng' && !isModeLocked('eng')){ switchMode('eng'); }
   }
 }
+document.addEventListener('click', e=>{
+  const t = e.target && e.target.closest ? e.target.closest('#maint-tick-up, #maint-untick-all') : null; if(!t) return;
+  const up = t.id==='maint-tick-up'; let n = 0;
+  document.querySelectorAll('.maint-mode-cb').forEach(cb=>{ if(up){ if(cb.getAttribute('data-up')==='1'){ cb.checked = true; n++; } } else { cb.checked = false; } });
+  const h = document.getElementById('maint-tick-hint'); if(h) h.textContent = up ? ('ติ๊กแล้ว '+n+' หน้า — กด "บันทึก" ด้านล่างเพื่อใช้งานจริง') : 'ยกเลิกติ๊กแล้ว — กด "บันทึก" เพื่อเปิดทุกหน้า';
+});
 function renderMaintenanceModeCheckboxes(){
   const allCb = $('maintenance-mode-all-toggle');
   if(allCb) allCb.checked = isAppFullyLocked();
   const box = $('maintenance-mode-checkboxes');
   if(!box) return;
   const rowHtml = (m, indent)=>`
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;${indent?'margin-left:26px;':''}">
-      <input type="checkbox" class="maint-mode-cb" data-mode="${m.key}" ${isModeLocked(m.key)?'checked':''} style="width:17px;height:17px;">
-      <span style="${indent?'font-size:12.5px;color:var(--text-faint);':''}">${m.label}${isModeLocked(m.key)?' — <b style="color:var(--red);">ปิดอยู่</b>':''}</span>
+    <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;${indent?'margin-left:26px;':''}">
+      <input type="checkbox" class="maint-mode-cb" data-mode="${m.key}" data-up="${m.up?1:0}" ${isModeLocked(m.key)?'checked':''} style="width:17px;height:17px;margin-top:2px;flex:none;">
+      <span style="${indent?'font-size:12.5px;color:var(--text-faint);':''}">${m.label}${m.up?' <span class="maint-up" title="หน้านี้มีการอัปโหลดไฟล์ขึ้น Google Drive">📤 อัปโหลด</span>':''}${isModeLocked(m.key)?' — <b style="color:var(--red);">ปิดอยู่</b>':''}</span>
     </label>
   `;
-  box.innerHTML = MAINTENANCE_MODE_LIST.map(m=>rowHtml(m,false) + (m.children||[]).map(c=>rowHtml(c,true)).join('')).join('');
+  box.innerHTML = MAINTENANCE_MODE_LIST.map(m=> m.head ? `<div class="maint-head">${m.head}</div>` : rowHtml(m,false) + (m.children||[]).map(c=>rowHtml(c,true)).join('')).join('');
 }
 function initMaintenanceWatch(){
   if(_maintenanceWatchStarted) return; // กันผูก listener ซ้ำ
@@ -6357,6 +6402,7 @@ function updateModeButtonVisibility(){
   // หน้าที่ถูกล็อกปิดปรับปรุงไว้ — ทำปุ่มให้ดูจางลง (ไม่ได้ซ่อน เพื่อให้รู้ว่ามีหน้านี้แต่ปิดอยู่) ยกเว้น Super Admin ที่เข้าได้ตามปกติ
   if(!isSuperAdmin() && maintenanceMode && maintenanceMode.lockedModes){
     MAINTENANCE_MODE_LIST.forEach(m=>{
+      if(!m.key) return;
       const btn = $('mode-'+m.key);
       if(btn) btn.style.opacity = isModeLocked(m.key) ? '0.4' : '';
     });
