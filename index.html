@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.34
-  อัปเดตล่าสุด   : 30 ตุลาคม 2569 16:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.35
+  อัปเดตล่าสุด   : 2 พฤศจิกายน 2569 14:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.34</title>
+<title>F1 Service — v11.35</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1319,7 +1319,7 @@ setTimeout(function(){
         <div class="panel-block" style="padding:14px;">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
             <div><h2 style="margin-bottom:2px;font-size:14px;">แจ้ง/เคลม ปัญหา</h2><p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ส่งถึง Sup Product โดยตรง</p></div>
-            <button class="btn btn-primary btn-sm" id="eng-quick-report-btn">📋 แจ้งปัญหา</button>
+            <button class="btn btn-primary btn-sm" id="eng-quick-report-btn">📋 แจ้งปัญหา/อะไหล่หมดประกัน</button>
             <button class="btn btn-primary btn-sm" id="eng-quick-claim-btn">🔧 เคลมอะไหล่</button>
           </div>
         </div>
@@ -1630,10 +1630,10 @@ setTimeout(function(){
       <h3 id="claim-modal-title">บันทึกเคลม/แจ้งปัญหาใหม่</h3>
       <!-- pre-step: เลือกแนบใบงาน Factorium เพื่อดึงข้อมูลอัตโนมัติ หรือกรอกเอง -->
       <div id="claim-prestep-wrap" style="display:none;margin-bottom:14px;">
-        <div style="font-size:12.5px;color:var(--fg2);margin-bottom:8px;">มีใบงาน Factorium (PDF)? แนบเพื่อเติมข้อมูลให้อัตโนมัติ (ไม่บังคับ)</div>
+        <div style="font-size:12.5px;color:var(--fg2);margin-bottom:8px;">มีใบงาน Factorium (PDF)? แนบเพื่อเติมข้อมูลให้อัตโนมัติ — ไฟล์ใบงานจะอยู่ช่องแนบอันสุดท้าย · ถ้ากรอกข้อมูลเอง ต้องแนบใบงานที่ท้ายฟอร์ม</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="btn btn-primary btn-sm" id="claim-prestep-pdf-btn">📎 แนบใบงาน (Factorium) เพื่อดึงข้อมูลอัตโนมัติ</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="claim-prestep-manual-btn">✏️ กรอกเองเลย</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="claim-prestep-manual-btn">✏️ กรอกข้อมูลเอง</button>
         </div>
         <input type="file" id="claim-prestep-pdf-input" accept="application/pdf,.pdf" style="display:none;">
         <div id="claim-prestep-status" style="font-size:12px;color:var(--fg2);margin-top:8px;"></div>
@@ -2621,8 +2621,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.34";
-const APP_UPDATED_AT = "30 ตุลาคม 2569 16:00 น. เวลาไทย";
+const APP_VERSION = "11.35";
+const APP_UPDATED_AT = "2 พฤศจิกายน 2569 14:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -11272,7 +11272,11 @@ const CLAIM_ATTACHMENT_GROUPS = [
   {key:'partsCompare', label:'อะไหล่ดี + อะไหล่เสียคู่กัน', required:false},
   {key:'afterResult', label:'ผลลัพธ์หลังการแก้ไข', required:false},
   {key:'partAge', label:'อายุอะไหล่ (กล่อง Electrode)', required:false},
+  {key:'jobSheet', label:'ใบงาน Factorium', required:true, newOnly:true}, // v11.35 — อยู่อันสุดท้ายเสมอ · บังคับเฉพาะรายการใหม่ (รายการเก่าที่เปิดแก้ไขไม่ถูกบังคับ)
 ];
+// v11.35 — หมวดนี้บังคับแนบไหม (รายการเก่าที่เปิดมาแก้ไขไม่ถูกบังคับหมวด newOnly)
+function claimGroupRequired(g){ return !!g.required && !(g.newOnly && claimEditingId); }
+function claimEnsureAtt(){ if(!claimDraft) return; if(!claimDraft.attachments || Array.isArray(claimDraft.attachments)) claimDraft.attachments = emptyClaimAttachments(); CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ if(!Array.isArray(claimDraft.attachments[g.key])) claimDraft.attachments[g.key] = []; }); }
 function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=>o[g.key]=[]); return o; }
 
 // ===== PDF auto-fill จากใบงาน Factorium (ไม่บังคับ — แค่ช่วยเติมข้อมูลบางส่วนให้ ทุกช่องยังแก้ไขได้ปกติ) =====
@@ -11841,10 +11845,11 @@ async function handleClaimAttachFiles(groupKey, fileList){
   renderClaimAttachGroupRow(groupKey);
 }
 function renderClaimAttachGroups(){
+  claimEnsureAtt();
   const wrap = $('claim-attach-groups');
   wrap.innerHTML = CLAIM_ATTACHMENT_GROUPS.map(g=>`
     <div class="field-wrap">
-      <label>${escapeHtml(g.label)}${g.required?' <span style="color:var(--red);">*</span>':' (ถ้ามี)'}</label>
+      <label>${escapeHtml(g.label)}${claimGroupRequired(g)?' <span style="color:var(--red);">*</span>':' (ถ้ามี)'}</label>
       <div class="file-dropzone" id="file-dropzone-${g.key}">
         <div class="img-upload-row" id="claim-attach-row-${g.key}">
           <label class="upload-btn">＋<input type="file" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none;" data-attachinput="${g.key}"></label>
@@ -11949,6 +11954,8 @@ function closeClaimModalWithGuard(){
 }
 
 function claimTypeLabel(type){ return type==='report' ? 'แจ้งปัญหา' : 'เคลมอะไหล่'; }
+// v11.35 — ชื่อที่ Engineer เห็นในหัวฟอร์ม (ฝั่ง Sup/Dashboard/ชื่อแท็บ Sheet ยังใช้ claimTypeLabel เดิม)
+function claimTypeLabelEng(type){ return type==='report' ? 'แจ้งปัญหา/อะไหล่หมดประกัน' : 'เคลมอะไหล่'; }
 function openClaimModal(existingClaim, type){
   if(existingClaim){
     claimEditingId = existingClaim.id;
@@ -11968,12 +11975,12 @@ function openClaimModal(existingClaim, type){
       parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({partNumber:p.partNumber||'',partName:p.partName||'',qty:p.qty||p.count||'',countQty:p.countQty||'',countUnit:p.countUnit||''})):[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}],
       loanSlipNo: existingClaim.loanSlipNo||'', jobFactorium: existingClaim.jobFactorium||'', attachments: groupedAtt
     };
-    $('claim-modal-title').textContent = 'แก้ไข'+claimTypeLabel(claimDraft.type);
+    $('claim-modal-title').textContent = 'แก้ไข'+claimTypeLabelEng(claimDraft.type);
     $('claim-prestep-wrap').style.display = 'none';
     $('claim-form-fields-wrap').style.display = '';
   } else {
     resetClaimDraft(type||'claim');
-    $('claim-modal-title').textContent = 'บันทึก'+claimTypeLabel(claimDraft.type)+'ใหม่';
+    $('claim-modal-title').textContent = 'บันทึก'+claimTypeLabelEng(claimDraft.type)+'ใหม่';
     // เคลมใหม่: โชว์ pre-step ให้เลือกแนบใบงาน Factorium หรือกรอกเองก่อน
     $('claim-prestep-status').textContent = '';
     $('claim-prestep-wrap').style.display = '';
@@ -12093,8 +12100,8 @@ $('claim-prestep-pdf-input').addEventListener('change', async (e)=>{
     }
     renderClaimPartsRows();
     refreshClaimPartsDatalist();
-    // แนบไฟล์ PDF ต้นฉบับเข้าไฟล์แนบหมวดแรก (Alarm Error หรือ อาการเสีย) เหมือนไฟล์หลักฐานทั่วไป
-    try{ await handleClaimAttachFiles(CLAIM_ATTACHMENT_GROUPS[0].key, [file]); renderClaimAttachGroups(); }catch(attErr){ console.warn('แนบไฟล์ PDF ใบงานไม่สำเร็จ (ไม่กระทบข้อมูลที่ดึงมาได้):', attErr.message); }
+    // v11.35 — แนบไฟล์ PDF ใบงานเข้าช่อง "ใบงาน Factorium" ซึ่งเป็นช่องสุดท้าย (เดิมเข้าหมวดแรก)
+    try{ await handleClaimAttachFiles(CLAIM_ATTACHMENT_GROUPS[CLAIM_ATTACHMENT_GROUPS.length-1].key, [file]); renderClaimAttachGroups(); }catch(attErr){ console.warn('แนบไฟล์ PDF ใบงานไม่สำเร็จ (ไม่กระทบข้อมูลที่ดึงมาได้):', attErr.message); }
     if(!parsed.parts || !parsed.parts.length){
       showToast('⚠ ไม่พบรายการอะไหล่ในใบงานนี้ กรุณาตรวจสอบและกรอกเองถ้ามีการเปลี่ยนอะไหล่');
     }
@@ -12143,7 +12150,7 @@ function validateClaimRequiredFields(){
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>{
     const dz = $('file-dropzone-'+g.key);
     if(!dz) return;
-    if(g.required && claimDraft.attachments[g.key].length===0){
+    if(claimGroupRequired(g) && (claimDraft.attachments[g.key]||[]).length===0){
       dz.classList.add('field-invalid');
       missingAttachments.push({ label:g.label, el:dz });
     } else {
@@ -12182,7 +12189,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     focusFirstInvalidField(partsInvalid);
     return;
   }
-  const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>g.required && claimDraft.attachments[g.key].length===0);
+  claimEnsureAtt();
+  const missingGroup = CLAIM_ATTACHMENT_GROUPS.find(g=>claimGroupRequired(g) && claimDraft.attachments[g.key].length===0);
   if(missingGroup){ showToast('⚠ กรุณาแนบไฟล์หมวด "'+missingGroup.label+'" อย่างน้อย 1 ไฟล์'); return; }
   if(navigator.onLine===false){ showToast('⚠ ไม่มีการเชื่อมต่ออินเทอร์เน็ต ระบบบันทึกข้อมูลที่กรอกไว้เป็นร่างในเครื่องแล้ว กรุณาลองกด "บันทึกเคลม" อีกครั้งเมื่อเชื่อมต่อเน็ตได้'); return; }
 
