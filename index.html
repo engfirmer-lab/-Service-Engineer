@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.40
-  อัปเดตล่าสุด   : 2 พฤศจิกายน 2569 20:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.41
+  อัปเดตล่าสุด   : 2 พฤศจิกายน 2569 21:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.40</title>
+<title>F1 Service — v11.41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2622,8 +2622,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.40";
-const APP_UPDATED_AT = "2 พฤศจิกายน 2569 20:00 น. เวลาไทย";
+const APP_VERSION = "11.41";
+const APP_UPDATED_AT = "2 พฤศจิกายน 2569 21:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15063,27 +15063,66 @@ async function cmRender(){
         <select id="exa-sample-title" onchange="document.getElementById('exa-sample-title-o').style.display=this.value==='__other'?'':'none'"><option value="">— เลือกตำแหน่ง —</option><option value="Supervisor">Supervisor</option><option value="Engineer Supervisor">Engineer Supervisor</option><option value="Engineer Product">Engineer Product</option><option value="Engineer Manager">Engineer Manager</option><option value="__other">อื่นๆ (กรอกเอง)</option></select>
         <input id="exa-sample-title-o" type="text" maxlength="60" placeholder="ระบุตำแหน่ง" style="display:none;margin-top:6px;"></label>
       <label style="display:block;margin:6px 0">Level (ไม่ใส่ก็ได้)<input id="exa-sample-level" type="text" maxlength="3" placeholder="เช่น 1" style="max-width:120px"></label>
-      <label style="display:block;margin:6px 0">รายชื่อผู้เทรน (ชื่อ-นามสกุลภาษาอังกฤษ — 1 ชื่อ/บรรทัด สูงสุด ${CM_MAX_NAMES} ชื่อ) *
-        <textarea id="cm-names" rows="6" placeholder="Somchai Jaidee&#10;Somsri Rakdee" style="width:100%;box-sizing:border-box;"></textarea></label>
-      <div class="ex-hint" id="cm-count">0 ชื่อ</div>
+      <div style="margin:6px 0;position:relative" id="cm-pick">
+        <label style="display:block">รายชื่อผู้เทรน * <span class="ex-hint">(เลือกได้หลายคน สูงสุด ${CM_MAX_NAMES} ชื่อ — ชื่อบนใบ = ชื่อ-นามสกุลอังกฤษจากโปรไฟล์)</span>
+          <input id="cm-search" type="text" autocomplete="off" placeholder="🔍 พิมพ์ค้นหาชื่อ / ชื่อเล่น / เขต แล้วติ๊กเลือก — หรือพิมพ์ชื่อ (อังกฤษ) ที่ไม่มีในรายการ แล้วกด Enter"></label>
+        <div id="cm-list" style="display:none;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;background:var(--card-bg,#fff);margin-top:4px;"></div>
+      </div>
+      <div id="cm-chips" class="ex-act" style="flex-wrap:wrap;gap:6px;margin:4px 0"></div>
+      <div class="ex-hint" id="cm-count">เลือกแล้ว 0 ชื่อ</div>
       <div class="ex-act"><button class="btn btn-primary" id="cm-go" onclick="cmGenerate()">📄 สร้างใบ Cer ทั้งหมด</button></div>
       <div id="cm-out" style="margin-top:8px;"></div></div>
     <div class="ex-hint" style="margin-top:8px;">ใช้แม่แบบ Google Slides ของตัวเอง? ใส่กล่องข้อความที่มีคำว่า <code>{{SUP_SIGN}}</code> ตรงตำแหน่งที่จะวางลายเซ็น ระบบจะวางรูปแทนที่ให้ (ไม่มีกล่องนี้ = ไม่แสดงลายเซ็น)</div>`;
-  const ta = $('cm-names'); if(ta) ta.addEventListener('input', ()=>{ $('cm-count').textContent = cmParseNames(ta.value).length + ' ชื่อ'; });
+  cmPickInit();
 }
 const CM_MAX_NAMES = 30;
-function cmParseNames(txt){
-  const seen = new Set(), out = [];
-  String(txt||'').split(/\r?\n/).forEach(x=>{ const n = x.replace(/\s+/g,' ').trim(); if(n && !seen.has(n.toLowerCase())){ seen.add(n.toLowerCase()); out.push(n); } });
-  return out;
+async function cmPickInit(){
+  CERTM.sel = []; CERTM.people = null;
+  const inp = $('cm-search'), list = $('cm-list'); if(!inp) return;
+  inp.addEventListener('focus', ()=>{ list.style.display = 'block'; cmListRender(); });
+  inp.addEventListener('input', ()=>{ list.style.display = 'block'; cmListRender(); });
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); const v = inp.value.replace(/\s+/g,' ').trim(); if(v){ cmToggle(v, v); inp.value=''; cmListRender(); } } });
+  document.addEventListener('click', cmOutside);
+  list.innerHTML = '<div class="ex-hint" style="padding:8px">⏳ กำลังโหลดรายชื่อ...</div>';
+  try{ await exaLoadProfiles(); CERTM.people = EXA.profiles || []; }catch(e){ CERTM.people = []; }
+  cmListRender();
 }
+function cmOutside(e){ const w = $('cm-pick'); if(!w){ document.removeEventListener('click', cmOutside); return; } if(!w.contains(e.target)){ const l = $('cm-list'); if(l) l.style.display = 'none'; } }
+function cmListRender(){
+  const list = $('cm-list'); if(!list || !CERTM.people) return;
+  const q = (($('cm-search')||{}).value||'').trim().toLowerCase();
+  const rows = CERTM.people.filter(p=>!q || [p.name,p.nameEn,p.area,p.firstTh,p.nickTh].join(' ').toLowerCase().includes(q));
+  list.innerHTML = (rows.length ? rows.map(p=>{
+    const has = !!p.nameEn, on = has && CERTM.sel.some(x=>x.key===p.email);
+    return `<label style="display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border);${has?'cursor:pointer':'opacity:.5'}"><input type="checkbox" ${on?'checked':''} ${has?'':'disabled'} data-cmk="${exH(p.email)}" data-cmn="${exH(p.nameEn)}" onchange="cmToggle(this.dataset.cmk,this.dataset.cmn)"><span style="flex:1">${exH(p.name)}${p.area?' <small class="ex-hint">· '+exH(p.area)+'</small>':''}<br><small class="ex-hint">${has?exH(p.nameEn):'ยังไม่มีชื่ออังกฤษในโปรไฟล์'}</small></span></label>`;
+  }).join('') : '<div class="ex-hint" style="padding:8px">ไม่พบรายชื่อ — พิมพ์ชื่ออังกฤษแล้วกด Enter เพื่อเพิ่มเอง</div>')
+  + (q && rows.some(p=>p.nameEn) ? `<div style="padding:6px 10px"><button type="button" class="btn btn-ghost btn-sm" onclick="cmSelectShown()">เลือกทั้งหมดที่ค้นหาเจอ</button></div>` : '');
+}
+function cmToggle(key, name){
+  if(!name) return;
+  const i = CERTM.sel.findIndex(x=>x.key===key);
+  if(i>=0) CERTM.sel.splice(i,1);
+  else { if(CERTM.sel.length >= CM_MAX_NAMES){ alert('เลือกได้ไม่เกิน '+CM_MAX_NAMES+' ชื่อต่อครั้ง'); cmListRender(); return; } if(!CERTM.sel.some(x=>x.name.toLowerCase()===name.toLowerCase())) CERTM.sel.push({ key, name }); }
+  cmChipsRender();
+}
+function cmSelectShown(){
+  document.querySelectorAll('#cm-list input[type=checkbox]:not(:disabled):not(:checked)').forEach(cb=>{ if(CERTM.sel.length < CM_MAX_NAMES) cmToggle(cb.dataset.cmk, cb.dataset.cmn); });
+  cmListRender();
+}
+function cmChipsRender(){
+  const c = $('cm-chips'); if(!c) return;
+  c.innerHTML = CERTM.sel.map((x,i)=>`<span class="ex-hint" style="background:var(--accent-soft,#f3e8d8);border-radius:14px;padding:3px 10px;white-space:nowrap">${exH(x.name)} <a href="#" onclick="cmRemove(${i});return false" style="text-decoration:none">✕</a></span>`).join('');
+  const n = $('cm-count'); if(n) n.textContent = 'เลือกแล้ว '+CERTM.sel.length+' ชื่อ';
+  const l = $('cm-list'); if(l && l.style.display!=='none') cmListRender();
+}
+function cmRemove(i){ CERTM.sel.splice(i,1); cmChipsRender(); }
 function cmSafe(x){ return String(x||'').replace(/[\\/:*?"<>|]/g,'-').replace(/\s+/g,' ').trim(); }
 async function cmGenerate(){
   const out = $('cm-out'), btn = $('cm-go');
   const course = (($('exa-sample-course')||{}).value||'').trim();
-  const names = cmParseNames(($('cm-names')||{}).value);
+  const names = (CERTM.sel||[]).map(x=>x.name);
   if(!course){ alert('กรุณากรอก หลักสูตร / รุ่น'); return; }
-  if(!names.length){ alert('กรุณาใส่ชื่อผู้เทรนอย่างน้อย 1 ชื่อ'); return; }
+  if(!names.length){ alert('กรุณาเลือกชื่อผู้เทรนอย่างน้อย 1 ชื่อ'); return; }
   if(names.length > CM_MAX_NAMES){ alert('ใส่ชื่อได้ไม่เกิน '+CM_MAX_NAMES+' ชื่อต่อครั้ง — แบ่งทำเป็นหลายรอบ'); return; }
   const common = { nameEn:exaMyEnName(), course, trainingDate:($('exa-sample-date')||{}).value||'', trainingEnd:($('exa-sample-end')||{}).value||'', level:($('exa-sample-level')||{}).value||'', supTitle:exaSampleTitle() };
   if(btn) btn.disabled = true;
