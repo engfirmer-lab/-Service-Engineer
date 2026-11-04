@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.65</title>
+<title>F1 Service — v11.66</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2631,7 +2631,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.65";
+const APP_VERSION = "11.66";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -3711,11 +3711,12 @@ async function loadData(){
     // v9.34 — เคลม/ข้อเสนอ/Error รอตรวจ: ใช้ snapshot แรกของ onSnapshot เป็นข้อมูลเริ่มต้นแทน getDocs (อ่านจำนวนเท่าเดิม ไม่อ่านซ้ำ)
     // หลังจากนั้นได้เฉพาะรายการที่เปลี่ยน · ถ้าฟังไม่ได้ จะตกไปใช้ getDocs แบบเดิมอัตโนมัติ
     const liveOrGet = (key, col)=> liveBoot(key).then(arr=>{ if(arr) return arr; if(LIVE.fail[key]==='timeout'||LIVE.fail[key]==='cache') setTimeout(()=>liveScheduleRetry(key, 60000), 0); return sdk.getDocs(sdk.collection(db,col)).then(sn=>{ const a=[]; sn.forEach(d=>a.push({ id:d.id, ...d.data() })); return a; }); });
+    const _lite = isLiteEngineer(); // v11.66
     const [docsSnap, propArr, pendArr, claimsArr, nickSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
       (isEditorReal() ? fsLoadDocumentsSmart(sdk) : Promise.resolve(null)),
-      liveOrGet('proposals','proposals'),
-      liveOrGet('pendingErrors','pendingErrors'),
-      liveOrGet('claims','claims'),
+      (_lite ? Promise.resolve([]) : liveOrGet('proposals','proposals')),
+      (_lite ? Promise.resolve([]) : liveOrGet('pendingErrors','pendingErrors')),
+      (_lite ? Promise.resolve([]) : liveOrGet('claims','claims')),
       sdk.getDocs(sdk.query(sdk.collection(db,'nicknames'), sdk.where('email','==',String(myUserEmail||'').toLowerCase()))), // v11.32 — เฉพาะของตัวเอง
       sdk.getDoc(sdk.doc(db,'meta','categories')),
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
@@ -3757,6 +3758,11 @@ async function loadData(){
       const nd = d.data();
       if(nd && nd.email){ nicknamesMap[nd.email.toLowerCase()] = nd.nickname; if(myUserEmail && nd.email.toLowerCase()===myUserEmail) myNicknameDocId = d.id; }
     });
+    if(_lite){ // v11.66 — โหลดเฉพาะของตัวเอง (ต้องรอ nicknamesMap ก่อน จึงมาอยู่ตรงนี้)
+      const own = await Promise.all(['proposals','pendingErrors','claims'].map(k=>liteGetOwn(k).catch(e=>{ console.warn('โหลด '+k+' ของฉันไม่สำเร็จ:', e&&e.message); return []; })));
+      own[0].forEach(x=> DATA.proposals.push(x)); own[1].forEach(x=> DATA.pendingErrors.push(x)); own[2].forEach(x=> DATA.claims.push(x));
+      _liteRefAt = Date.now();
+    }
     if(docsSnap){ docsSnap.forEach(x=> DATA.documents.push(x)); _docsLoaded = true; } else { _docsLoaded = false; }
      // v11.30 — docsSnap เป็นรายการ (จากแคชในเครื่องหรือจากเซิร์ฟเวอร์) ไม่ใช่ snapshot
     propArr.forEach(x=> DATA.proposals.push(x));
@@ -3970,6 +3976,33 @@ async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ..
 //   (คิดโควต้า 1 อ่านต่อเอกสารที่เปลี่ยนต่อเครื่อง) และข้อมูลบนจอเปลี่ยนทันที ไม่ต้องรอสัญญาณ+อ่านใหม่ทั้งชุดแบบเดิม
 // กันพลาด: (1) ฟังไม่ได้/หลุด → ตกไปใช้วิธีเดิมอัตโนมัติ + ลองต่อใหม่ (2) ตรวจจำนวนเอกสารกับเซิร์ฟเวอร์เป็นระยะ (getCountFromServer ราคา ~1 อ่าน)
 //   ถ้าไม่ตรงสองรอบติด จะอ่านทั้งชุดมาแก้ให้ตรง (3) หน้า "บำรุงรักษา" มีปุ่มตรวจเทียบละเอียดทีละเอกสาร
+// v11.66 — Engineer (ไม่ใช่ Editor/Admin Service) ไม่ฟังเคลม/Error รอตรวจ/ข้อเสนอ "ทั้งชุด" แบบสดอีกต่อไป
+// (เดิมทุกเครื่องของ Engineer ถูกคิดโควตา 1 อ่านต่อทุกการเปลี่ยนแปลงของทุกคน + อ่านทั้งชุดตอนเปิดแอป)
+// โหลดเฉพาะของตัวเองครั้งเดียวด้วย query แล้วรีเฟรชเมื่อเปิดดู "งานของฉัน"/กระดิ่ง (ไม่เกิน 1 ครั้ง/นาที) → แนบ/ส่งเคลมใช้ 0 อ่าน
+function isLiteEngineer(){ return !!myUserEmail && !isEditorReal() && !isAdminServiceReal(); }
+async function liteGetOwn(key){
+  await initFirebase(); const sdk = window._firebaseSdk;
+  let q;
+  if(key==='claims'){ q = sdk.query(sdk.collection(db,'claims'), sdk.where('submittedBy','==',myUserEmail)); }
+  else {
+    const names = [...new Set((mySubmitterNames()||[]).map(x=>String(x)).filter(Boolean))].slice(0,30);
+    if(!names.length) return [];
+    q = sdk.query(sdk.collection(db,key), sdk.where('submitterName','in',names));
+  }
+  const sn = await sdk.getDocs(q); const a = []; sn.forEach(d=>a.push({ id:d.id, ...d.data() })); return a;
+}
+let _liteRefAt = Date.now(), _liteRefBusy = false;
+async function liteRefreshOwn(force){
+  if(!DATA || !isLiteEngineer() || _liteRefBusy) return;
+  if(!force && Date.now()-_liteRefAt < 60000) return;
+  _liteRefBusy = true; _liteRefAt = Date.now();
+  try{
+    const [pr, pe, cl] = await Promise.all([liteGetOwn('proposals'), liteGetOwn('pendingErrors'), liteGetOwn('claims')]);
+    DATA.proposals = pr; DATA.pendingErrors = pe; DATA.claims = cl;
+    try{ renderEngMyClaimsList(); }catch(e){} try{ if(_myworkErrOpen) renderEngMyWorkErrSection(); }catch(e){} try{ updateNotifBadge(); }catch(e){}
+  }catch(e){ console.warn('รีเฟรชงานของฉันไม่สำเร็จ (ไม่กระทบข้อมูลหลัก):', e && e.message); }
+  finally{ _liteRefBusy = false; }
+}
 const LIVE = { subs:{}, on:{}, ready:{}, buf:{}, verifiedAt:{}, retry:{}, tok:{}, fail:{}, resyncs:0, verifying:false, timers:false, bootTimeout:45000 };
 const LIVE_DEF = {
   claims:        { label:'เคลม/แจ้งปัญหา',        build: sdk=>sdk.collection(db,'claims'),        after: ()=>liveAfterClaims() },
@@ -9194,7 +9227,7 @@ async function updateNotifBadge(){
     else{ claimsBadge.style.display='none'; }
   }
 }
-$('notif-bell').addEventListener('click', ()=>{
+$('notif-bell').addEventListener('click', ()=>{ liteRefreshOwn();
   if(!myUserName){ ensureSignedIn(()=>{ renderNotifList(); $('notif-modal').classList.add('show'); }); return; }
   renderNotifList(); $('notif-modal').classList.add('show');
   // ไม่เช็คสถานะ Backup อัตโนมัติตรงนี้อีกต่อไป — เพราะต้องขอสิทธิ์ Drive ซึ่งจะเป็นการเด้ง popup ทุกครั้งที่กดกระดิ่งโดยไม่จำเป็น
@@ -12962,7 +12995,7 @@ let _myworkClaimsOpen = false;
 let _myworkRpOpen = false;
 
 function _setMyworkClaimsOpen(open){
-  _myworkClaimsOpen = open;
+  _myworkClaimsOpen = open; if(open) liteRefreshOwn();
   const el = $('eng-mywork-claims-list');
   const btn = $('eng-mywork-claims-toggle-btn');
   if(el) el.style.display = open ? 'block' : 'none';
@@ -12978,7 +13011,7 @@ function _setMyworkRpOpen(open){
 
 let _myworkErrOpen = false;
 function _setMyworkErrOpen(open){
-  _myworkErrOpen = open;
+  _myworkErrOpen = open; if(open) liteRefreshOwn();
   const el = $('eng-mywork-err-list');
   const btn = $('eng-mywork-err-toggle-btn');
   if(el) el.style.display = open ? 'block' : 'none';
