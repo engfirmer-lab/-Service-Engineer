@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.60</title>
+<title>F1 Service — v11.62</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1376,7 +1376,7 @@ setTimeout(function(){
 
     <div id="eng-tab-docs" style="display:none;">
       <!-- v8.37 — sub-tabs ประเภทเอกสาร (แยกออกมาจาก eng-subtabs หลัก) -->
-      <div class="subtab-bar" id="eng-doctype-subtabs" style="margin-bottom:6px;">
+      <div class="subtab-bar" id="eng-doctype-subtabs" style="margin-bottom:6px;display:none;"><!-- v11.62: เลิกใช้แถบประเภท — แสดงทุกหัวข้อแบบจัดกลุ่มแทน -->
         <button data-doctype="service_manual" class="active">📘 Service Manual</button>
         <button data-doctype="spare_part">🔧 Spare Part</button>
         <button data-doctype="install_checklist">📋 Install</button>
@@ -2631,7 +2631,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.60";
+const APP_VERSION = "11.62";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -9542,8 +9542,8 @@ function updateDocModelFilterEng(){
   $('doc-filter-model').innerHTML = `<option value="all">Model: All</option>` + models.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   $('doc-filter-model').disabled = docFilterCategory==='all'; $('doc-filter-model').value='all'; docFilterModel='all';
 }
-$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); });
-$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; });
+$('doc-filter-category').addEventListener('change', e=>{ docFilterCategory=e.target.value; updateDocModelFilterEng(); renderEngDocResults(); });
+$('doc-filter-model').addEventListener('change', e=>{ docFilterModel=e.target.value; renderEngDocResults(); });
 $('doc-search-input').addEventListener('input', e=>{ docQuery=e.target.value; });
 $('doc-search-input').addEventListener('keydown', e=>{ if(e.key==='Enter') renderEngDocResults(); });
 $('doc-search-submit-btn').addEventListener('click', renderEngDocResults);
@@ -9567,22 +9567,28 @@ function bindDocOpenButtons(){
   });
 }
 function renderEngDocResults(){
+  // v11.62 — เลือก Product/รุ่น (หรือพิมพ์ค้นหา) แล้วเห็นเอกสารทุกหัวข้อของรุ่นนั้นแบบจัดกลุ่ม · รวมไม่เกิน 10 ไฟล์ = เปิดทุกกลุ่ม, มากกว่านั้น = พับไว้ กดเปิดเอง
   const list = $('doc-results-list');
-  const labelForCount = docTypeHasSubtypes(engDocTypeActive) ? `${docTypeLabel(engDocTypeActive)} - ${subtypeLabel(engDocTypeActive, engVideoSubtype)}` : docTypeLabel(engDocTypeActive);
   const hasSearchOrFilter = docQuery.trim()!=='' || docFilterCategory!=='all' || docFilterModel!=='all';
   if(!hasSearchOrFilter){
     $('doc-result-count').textContent = '';
-    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>พิมพ์คำค้นหา หรือเลือกตัวกรอง</h3><p>เพื่อเริ่มดูรายการเอกสาร ${labelForCount}</p></div>`;
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>เลือก Product / รุ่น หรือพิมพ์คำค้นหา</h3><p>จะเห็นเอกสารทุกหัวข้อของรุ่นนั้น แยกเป็นกลุ่ม (Service Manual, Spare Part, ...)</p></div>`;
     return;
   }
-  let filtered = DATA.documents.filter(d=>d.docType===engDocTypeActive);
-  if(docTypeHasSubtypes(engDocTypeActive)) filtered = filtered.filter(d=>d.videoSubtype===engVideoSubtype);
+  let filtered = DATA.documents.slice();
   if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
   if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
   if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
-  $('doc-result-count').textContent = `${labelForCount} · พบ ${filtered.length} เอกสาร`;
-  if(filtered.length===0){ list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
-  list.innerHTML = filtered.sort((a,b)=>b.uploadedAt-a.uploadedAt).map(docCard).join('');
+  if(filtered.length===0){ $('doc-result-count').textContent = 'พบ 0 เอกสาร'; list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  const colOf = d=> docTypeHasSubtypes(d.docType) ? d.docType+'_'+d.videoSubtype : d.docType;
+  const groups = COVERAGE_COLUMNS.map(c=>({ c, items: filtered.filter(d=>colOf(d)===c.key).sort((x,y)=>y.uploadedAt-x.uploadedAt) })).filter(g=>g.items.length);
+  const known = new Set(groups.flatMap(g=>g.items.map(d=>d.id)));
+  const rest = filtered.filter(d=>!known.has(d.id)); // ประเภทที่ไม่อยู่ในรายการมาตรฐาน (กันหาย)
+  if(rest.length) groups.push({ c:{ key:'_other', icon:'📄', label:'อื่นๆ' }, items: rest });
+  const openAll = filtered.length <= 10;
+  $('doc-result-count').innerHTML = `พบ ${filtered.length} เอกสาร · ${groups.length} หัวข้อ` + (groups.length>1 ? ` <button type="button" class="btn btn-ghost btn-sm" id="doc-grp-all" style="margin-left:8px;">${openAll?'พับทั้งหมด':'เปิดทั้งหมด'}</button>` : '');
+  list.innerHTML = groups.map(g=>`<details class="doc-group" ${openAll?'open':''} style="margin:0 0 10px;"><summary style="cursor:pointer;font-weight:700;font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);list-style:none;display:flex;justify-content:space-between;align-items:center;"><span>${g.c.icon} ${escapeHtml(g.c.label)}</span><span style="font-size:12px;color:var(--text-faint);font-weight:600;">${g.items.length} ไฟล์ ▾</span></summary><div style="margin-top:8px;">${g.items.map(docCard).join('')}</div></details>`).join('');
+  const tb = $('doc-grp-all'); if(tb) tb.addEventListener('click', ()=>{ const ds = list.querySelectorAll('details.doc-group'); const open = tb.textContent.trim()==='เปิดทั้งหมด'; ds.forEach(x=>{ x.open = open; }); tb.textContent = open ? 'พับทั้งหมด' : 'เปิดทั้งหมด'; });
   bindDocOpenButtons();
 }
 
@@ -10789,10 +10795,12 @@ function dlqStatus(it){
   if(it.state==='err') return '⚠ ไม่สำเร็จ: '+escapeHtml(it.err||'');
   return ''; // v11.56 — ไม่มีเพดานขนาดเอกสาร
 }
+function dlqColDefault(){ const c = doclinkContext||{}; return docTypeHasSubtypes(c.docType) ? c.docType+'_'+c.videoSubtype : c.docType; }
+function dlqColInfo(col){ const c = COVERAGE_COLUMNS.find(x=>x.key===col) || COVERAGE_COLUMNS.find(x=>x.key===dlqColDefault()) || COVERAGE_COLUMNS[0]; const docType = c.docType || c.key; return { docType, videoSubtype: c.subtype || null, label: c.subtype ? subtypeLabel(docType, c.subtype) : docTypeLabel(docType) }; }
 function doclinkQueueAdd(files){
   Array.from(files||[]).forEach(f=>{
     if(doclinkQueue.some(q=>q.file.name===f.name && q.file.size===f.size)) return;
-    doclinkQueue.push({ id:++doclinkQSeq, file:f, title:f.name.replace(/\.[^.\/]{1,8}$/, ''), state:'wait', pct:0 });
+    doclinkQueue.push({ id:++doclinkQSeq, file:f, title:f.name.replace(/\.[^.\/]{1,8}$/, ''), state:'wait', pct:0, col:dlqColDefault() });
   });
   $('doclink-dropzone').classList.remove('field-invalid');
   doclinkQueueRender();
@@ -10812,6 +10820,7 @@ function doclinkQueueRender(){
       <input type="text" class="dlq-title" value="${escapeHtml(it.title)}" ${lock||it.state==='done'?'disabled':''} placeholder="ชื่อเอกสาร" style="flex:1;min-width:0;">
       <button type="button" class="btn btn-ghost btn-sm dlq-del" ${lock?'disabled':''} title="เอาออก">✕</button>
     </div>
+    <div style="display:flex;gap:6px;align-items:center;margin-top:6px;"><span style="font-size:11px;color:var(--text-faint);white-space:nowrap;">หัวข้อ</span><select class="dlq-type" ${lock||it.state==='done'?'disabled':''} style="flex:1;min-width:0;">${COVERAGE_COLUMNS.map(c=>`<option value="${escapeHtml(c.key)}"${c.key===it.col?' selected':''}>${escapeHtml(c.icon+' '+c.label)}</option>`).join('')}</select></div>
     <div style="font-size:11px;color:var(--text-faint);margin-top:4px;word-break:break-all;">${escapeHtml(it.file.name)} · ${dlqSize(it.file.size)} <span id="dlq-st-${it.id}" style="margin-left:6px;">${dlqStatus(it)}</span></div>
   </div>`).join('');
   const pend = doclinkQueue.filter(x=>x.state!=='done').length;
@@ -10821,6 +10830,10 @@ function dlqRowStatus(it){ const el = document.getElementById('dlq-st-'+it.id); 
 $('doclink-queue').addEventListener('input', e=>{
   if(!e.target.classList.contains('dlq-title')) return;
   const row = e.target.closest('.dlq-row'); const it = doclinkQueue.find(x=>x.id===+row.dataset.qid); if(it){ it.title = e.target.value; e.target.classList.remove('field-invalid'); }
+});
+$('doclink-queue').addEventListener('change', e=>{
+  if(!e.target.classList.contains('dlq-type')) return;
+  const row = e.target.closest('.dlq-row'); const it = doclinkQueue.find(x=>x.id===+row.dataset.qid); if(it) it.col = e.target.value;
 });
 $('doclink-queue').addEventListener('click', e=>{
   const b = e.target.closest('.dlq-del'); if(!b || doclinkBusy) return;
@@ -10832,16 +10845,18 @@ async function doclinkSaveMulti(){
   if(!q.length){ $('doclink-dropzone').classList.add('field-invalid'); showToast('⚠ กรุณาเลือกไฟล์ที่จะอัปโหลดก่อน'); return; }
   const bad = q.filter(x=>!String(x.title).trim());
   if(bad.length){ bad.forEach(b=>{ const inp = document.querySelector(`.dlq-row[data-qid="${b.id}"] .dlq-title`); if(inp) inp.classList.add('field-invalid'); }); showToast('⚠ กรุณาตั้งชื่อเอกสารให้ครบทุกไฟล์'); return; }
-  const ctx = doclinkContext; const { category, model, docType, videoSubtype } = ctx;
+  const ctx = doclinkContext; const { category, model } = ctx;
   const shareTargets = Array.from(document.querySelectorAll('.doclink-share-chk:checked')).map(c=>({ category:c.getAttribute('data-cat'), model:c.getAttribute('data-model') }));
   doclinkBusy = true; saveBtn.disabled = true; saveBtn.style.opacity = '.5'; saveBtn.style.cursor = 'not-allowed';
   q.forEach(x=>{ x.state='wait'; x.err=''; x.pct=0; });
   doclinkQueueRender();
   const unlock = ()=>{ doclinkBusy = false; saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.style.cursor = ''; };
-  const typeLabel = docTypeHasSubtypes(docType) ? subtypeLabel(docType, videoSubtype) : docTypeLabel(docType);
-  let folderId;
+  const folderIds = {}; // typeLabel → folderId (เตรียมครั้งเดียวต่อหัวข้อ)
+  q.forEach(x=>{ x.info = dlqColInfo(x.col); });
+  const labels = [...new Set(q.map(x=>x.info.label))];
+  const typeLabel = labels.length===1 ? labels[0] : labels.length+' หัวข้อ';
   showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
-  try{ folderId = await ensureDocumentFolderPath(category, model, typeLabel); }
+  try{ for(const lb of labels) folderIds[lb] = await ensureDocumentFolderPath(category, model, lb); }
   catch(e){ hideLoadingOverlay(); unlock(); doclinkQueueRender(); showToast('⚠ เตรียมโฟลเดอร์ปลายทางไม่สำเร็จ: '+e.message); return; }
   hideLoadingOverlay();
   await initFirebase(); const sdk = window._firebaseSdk;
@@ -10852,13 +10867,13 @@ async function doclinkSaveMulti(){
       const it = q[i]; it.state = 'up'; it.pct = 0; dlqRowStatus(it);
       let fid = null, primaryDone = false;
       try{
-        const url = await driveUploadLargeFile(it.file, it.file.name, folderId, pct=>{ it.pct = pct; dlqRowStatus(it); });
+        const url = await driveUploadLargeFile(it.file, it.file.name, folderIds[it.info.label], pct=>{ it.pct = pct; dlqRowStatus(it); });
         fid = extractDriveFileId(url);
         it.state = 'save'; dlqRowStatus(it);
         const title = String(it.title).trim();
         const groupId = shareTargets.length>0 ? ('g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)) : null;
-        const base = { docType, title, method:'link', url, uploadedAt: Date.now() };
-        if(docTypeHasSubtypes(docType)) base.videoSubtype = videoSubtype;
+        const base = { docType:it.info.docType, title, method:'link', url, uploadedAt: Date.now() };
+        if(docTypeHasSubtypes(it.info.docType)) base.videoSubtype = it.info.videoSubtype;
         if(groupId) base.groupId = groupId;
         const targets = [{ category, model }].concat(shareTargets);
         for(const t of targets){
