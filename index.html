@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.43
+  เวอร์ชันปัจจุบัน : 11.46
   อัปเดตล่าสุด   : 3 พฤศจิกายน 2569 12:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.43</title>
+<title>F1 Service — v11.46</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1381,6 +1381,7 @@ setTimeout(function(){
         <button data-doctype="pm_checklist">🗓️ PM</button>
         <button data-doctype="protocol">📜 Protocol</button>
         <button data-doctype="diagram">📐 Diagram</button>
+        <button data-doctype="training_doc">📚 เอกสาร Training</button>
         <button data-doctype="video">🎬 Video</button>
       </div>
       <!-- sub-sub-tabs สำหรับ video และ diagram -->
@@ -2622,8 +2623,8 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.43";
-const APP_UPDATED_AT = "3 พฤศจิกายน 2569 12:00 น. เวลาไทย";
+const APP_VERSION = "11.46";
+const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3029,6 +3030,7 @@ const DOC_TYPES = [
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
   {key:'protocol', label:'Protocol', icon:'📜'},
   {key:'diagram', label:'Diagram', icon:'📐'},
+  {key:'training_doc', label:'เอกสาร Training', icon:'📚'}, // v11.46 — อยู่ก่อน Video-Training
   {key:'video', label:'Video', icon:'🎬'},
 ];
 const VIDEO_SUBTYPES = [
@@ -3047,13 +3049,9 @@ function subtypesFor(docType){ return SUBTYPES_MAP[docType] || []; }
 // หมายเหตุ: ฟิลด์ที่เก็บค่าประเภทย่อยใน Firestore ยังใช้ชื่อ "videoSubtype" เหมือนเดิม (ไม่ทำ data migration) แต่ตอนนี้ใช้เก็บค่าประเภทย่อยของ "ทุก" ประเภทเอกสารที่มีประเภทย่อย ไม่ใช่แค่ video อีกต่อไป
 function subtypeLabel(docType, subtypeKey){ const list = subtypesFor(docType); const d = list.find(x=>x.key===subtypeKey); return d ? d.icon+' '+d.label : subtypeKey; }
 
-const COVERAGE_COLUMNS = [
-  ...DOC_TYPES.filter(t=>!docTypeHasSubtypes(t.key)),
-  ...Object.entries(SUBTYPES_MAP).flatMap(([docType, subs])=>{
-    const dt = DOC_TYPES.find(d=>d.key===docType);
-    return subs.map(s=>({key:`${docType}_${s.key}`, label:`${dt.label}-${s.label}`, icon:dt.icon, docType, subtype:s.key}));
-  }),
-];
+const COVERAGE_COLUMNS = DOC_TYPES.flatMap(dt=> docTypeHasSubtypes(dt.key)
+  ? SUBTYPES_MAP[dt.key].map(s=>({key:`${dt.key}_${s.key}`, label:`${dt.label}-${s.label}`, icon:dt.icon, docType:dt.key, subtype:s.key}))
+  : [dt]); // v11.46 — เรียงตามลำดับ DOC_TYPES (เอกสาร Training อยู่ก่อน Video-Training)
 function hasCoverageDoc(colKey, category, model){
   const col = COVERAGE_COLUMNS.find(c=>c.key===colKey);
   if(col && col.subtype) return DATA.documents.some(d=>d.docType===col.docType && d.videoSubtype===col.subtype && d.category===category && d.model===model);
@@ -7811,6 +7809,13 @@ function renderOrgChart(){
     <div><b>${officeProfiles.length}</b> ส่วนกลาง (Office)</div>
     <div><b>${fieldProfiles.length}</b> ภาคสนาม</div>
   `;
+  // v11.44 — สรุปจำนวนคนแต่ละตำแหน่ง (นับเฉพาะคนที่กรอกโปรไฟล์แล้ว ไม่รวม CEO) เรียงตามลำดับตำแหน่งในผัง
+  { const cnt = {}; _chartPeople.forEach(p=>{ const k = (p.position||'').trim() || 'ยังไม่ระบุตำแหน่ง'; cnt[k] = (cnt[k]||0)+1; });
+    const rank = k=>{ const i = ORGCHART_POSITIONS.indexOf(k); return i<0 ? 98 : i; };
+    const keys = Object.keys(cnt).sort((a,b)=>rank(a)-rank(b) || cnt[b]-cnt[a]);
+    $('orgchart-stats').innerHTML += `<div style="flex-basis:100%;border-top:1px solid var(--border);padding-top:8px;margin-top:2px;"><div style="font-size:12px;color:var(--text-faint);margin-bottom:6px;">จำนวนคนแต่ละตำแหน่ง</div><div style="display:flex;gap:8px;flex-wrap:wrap;">`
+      + keys.map(k=>`<span style="background:var(--bg-soft,#f3ede4);border:1px solid var(--border);border-radius:14px;padding:3px 12px;">${escapeHtml(k)} <b>${cnt[k]}</b></span>`).join('')
+      + `</div></div>`; }
 
   // ---- กล่อง CEO บนสุดสุดของแผนผัง (เหนือ Manager) — ใช้แค่ nickname ไม่บังคับกรอกโปรไฟล์เต็ม ----
   if(ceoEmails.length){
@@ -10507,13 +10512,9 @@ async function rejectProposal(pid){
 }
 
 /* ===================== SUP PRODUCT: DOCUMENTS (ตารางเดียว เห็นทุกรุ่น กดใส่ลิงก์ตรงช่อง) ===================== */
-const MATRIX_COLUMNS = [
-  ...DOC_TYPES.filter(t=>!docTypeHasSubtypes(t.key)),
-  ...Object.entries(SUBTYPES_MAP).flatMap(([docType, subs])=>{
-    const dt = DOC_TYPES.find(d=>d.key===docType);
-    return subs.map(s=>({key:docType, videoSubtype:s.key, label:`${dt.label}-${s.label}`, icon:dt.icon}));
-  }),
-];
+const MATRIX_COLUMNS = DOC_TYPES.flatMap(dt=> docTypeHasSubtypes(dt.key)
+  ? SUBTYPES_MAP[dt.key].map(s=>({key:dt.key, videoSubtype:s.key, label:`${dt.label}-${s.label}`, icon:dt.icon}))
+  : [dt]); // v11.46
 function findMatrixDocs(category, model, docType, videoSubtype){
   return DATA.documents.filter(d=>d.category===category && d.model===model && d.docType===docType && (!docTypeHasSubtypes(docType) || d.videoSubtype===videoSubtype));
 }
@@ -11382,6 +11383,11 @@ const FACTORIUM_LABELS = [
   { key:'deviceCode',   frags:['เลขรหัสประจำเครื่อง','เลขรหัสประจาเครื่อง'] },
   { key:'symptom',      frags:['ลักษณะอาการเสีย'] },
   { key:'errCode',      frags:['รหัสข้อผิดพลาด','รหัสขอผิดพลาด'] },
+  // v11.45 — ใบรายงานการบริการแบบใหม่ (หัวตารางเป็นก้อนเดียว เช่น "รหัสครุภัณฑ์ (QR Code)")
+  { key:'modelBrand',   frags:['ยี่ห้อ(รุ่น) - รหัสสัญญา'] },
+  { key:'serialNumber2',frags:['รหัสครุภัณฑ์ (QR Code)'] },
+  { key:'siteName2',    frags:['สถานที่ตั้งเครื่องจักร / อุปกรณ์'], multiLine:true },
+  { key:'category2',    frags:['ประเภทเครื่องจักร / อุปกรณ์'] },
 ];
 
 // จับคู่แบบ "เท่ากันพอดี" เท่านั้น (สะสมคำทีละคำจนความยาวเท่ากับ label แล้วเทียบ) — ห้าม substring ข้ามหลายคำที่ต่อกันโดยบังเอิญ
@@ -11433,7 +11439,17 @@ function findFieldValue(lines, key){
       continue;
     }
     let j=i+1; while(j<lines.length && !lines[j].text) j++;
-    if(j<lines.length && lineKnownLabelKeys(lines[j]).length===0) return lines[j].text.trim();
+    if(j<lines.length && lineKnownLabelKeys(lines[j]).length===0){
+      // v11.45 — คอลัมน์สุดท้ายของแถวหัวตาราง (แบบใหม่): เอาเฉพาะคำที่อยู่ในคอลัมน์เดียวกัน ไม่ใช่ทั้งบรรทัด + ต่อบรรทัดที่ขึ้นต่อ (เช่น ชื่อโรงพยาบาล) ถ้ามี
+      if(def.multiLine){
+        const inCol = ws=>ws.filter(w=>w.x >= span.xStart-8);
+        let parts = [inCol(lines[j].words).map(w=>w.str).join(' ').trim()];
+        const nx = lines[j+1];
+        if(nx && nx.text && nx.words.length && nx.words.every(w=>w.x >= span.xStart-8) && lineKnownLabelKeys(nx).length===0) parts.push(nx.text.trim());
+        return parts.filter(Boolean).join(' ');
+      }
+      return lines[j].text.trim();
+    }
     return '';
   }
   return '';
@@ -11576,6 +11592,42 @@ function findPartsReturnTable(lines){
   return out;
 }
 
+// v11.45 — ตารางอะไหล่ของ "ใบรายงานการบริการ" แบบใหม่: หัวตาราง วันที่กรอก | รหัส | รายการ | จำนวน | หน่วยนับ | ราคาต่อหน่วย
+function findPartsTableNew(lines){
+  const out = [], seen = new Set();
+  for(let i=0;i<lines.length;i++){
+    const h = lines[i]; if(!h.text) continue;
+    const codeSpan = findLabelSpanInLine(h, ['รหัส']), nameSpan = findLabelSpanInLine(h, ['รายการ']), qtySpan = findLabelSpanInLine(h, ['จำนวน']), unitSpan = findLabelSpanInLine(h, ['หน่วยนับ']);
+    if(!codeSpan || !nameSpan || !qtySpan || !unitSpan) continue;
+    const cX = codeSpan.xStart, nX = nameSpan.xStart, qX = qtySpan.xStart, uX = unitSpan.xStart, m = 14;
+    let cur = null;
+    const flush = ()=>{
+      if(!cur) return;
+      const code = cur.code.join(' ').replace(/\s*-\s*/g,'-').trim();
+      if(/^[A-Za-z0-9][A-Za-z0-9\-\/\.]{2,}$/.test(code) && !seen.has(code)){
+        seen.add(code);
+        let name = cur.name.join(' ').replace(/\s*-\s*/g,'-').trim();
+        name = name.replace(new RegExp('\\s*'+code.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$'), '').trim();
+        const q = (cur.qty.join(' ').match(/\d+(?:\.\d+)?/)||[''])[0];
+        out.push({ partNumber:code, partName:name||code, qty:q, countQty:'', countUnit:'' });
+      }
+      cur = null;
+    };
+    for(let j=i+1;j<lines.length && j<i+60;j++){
+      const ln = lines[j]; if(!ln.text) continue;
+      if(ln.words[0].x < cX-30 && !/^\d+$/.test(ln.words[0].str.trim())) break; // เจอหัวข้อถัดไป (อยู่ซ้ายสุดและไม่ใช่เลขลำดับ) -> จบตาราง
+      for(const w of ln.words){
+        const x = w.x;
+        if(Math.abs(x-cX) <= m && /^[A-Za-z0-9][A-Za-z0-9\-\/\.]{2,}$/.test(w.str.replace(/\s*-\s*/g,'-')) ){ if(cur && cur.code.length) flush(); cur = cur || {code:[],name:[],qty:[]}; cur.code.push(w.str); }
+        else if(Math.abs(x-nX) <= m){ if(!cur) cur = {code:[],name:[],qty:[]}; cur.name.push(w.str); }
+        else if(Math.abs(x-qX) <= m){ if(!cur) cur = {code:[],name:[],qty:[]}; cur.qty.push(w.str); }
+      }
+    }
+    flush();
+    break;
+  }
+  return out;
+}
 // ทุกฟิลด์: ถ้าค่าที่ได้ดูไม่น่าเชื่อถือ (สั้นเกินไป/ว่าง/ดูเหมือนหยิบ label มาแทนค่า) จะปล่อยว่างไว้ ไม่เดา — ให้ Engineer กรอกเองดีกว่าได้ค่าผิด
 function parseFactoriumPdfText(lines){
   const result = { serialNumber:'', model:'', siteName:'', jobFactorium:'', problem:'', solution:'', cause:'', parts:[] };
@@ -11591,6 +11643,10 @@ function parseFactoriumPdfText(lines){
 
   const serialNumber = findFieldValue(lines, 'serialNumber');
   if(isSaneText(serialNumber, 3)) result.serialNumber = serialNumber;
+  // v11.45 — ใบรายงานการบริการแบบใหม่: ใช้เมื่อแบบเดิมไม่เจอ
+  if(!result.model){ const mb = findFieldValue(lines, 'modelBrand'); if(isSaneText(mb,2) && !looksLikeMisparsedHeader(mb)){ const mm = mb.match(/\(([^)]+)\)/); result.model = (mm ? mm[1] : mb).trim(); } }
+  if(!result.siteName){ const s2 = findFieldValue(lines, 'siteName2'); if(isSaneText(s2,3) && !looksLikeMisparsedHeader(s2)) result.siteName = s2; }
+  if(!result.serialNumber){ const sn2 = findFieldValue(lines, 'serialNumber2'); if(isSaneText(sn2,3) && !looksLikeMisparsedHeader(sn2)) result.serialNumber = sn2; }
 
   let symptom = findFieldValue(lines, 'symptom');
   let errCode = findFieldValue(lines, 'errCode');
@@ -11603,7 +11659,8 @@ function parseFactoriumPdfText(lines){
   // v8.75: ตารางรายการอะไหล่ — เปลี่ยนจาก regex เดา (เดิม) มาใช้การอ่านตาราง "รหัส/ชื่อรายการ/.../คืน" (ตารางอะไหล่ที่ถูกเบิก/เปลี่ยนจริงตอนปิดงาน)
   // ด้วยตำแหน่ง x เหมือนฟังก์ชันอื่นด้านบน — แม่นยำกว่าและรองรับหลายรายการ (ดูรายละเอียดที่ findPartsReturnTable)
   try{
-    const parts = findPartsReturnTable(lines);
+    let parts = findPartsReturnTable(lines);
+    if(!parts.length) parts = findPartsTableNew(lines); // v11.45 แบบใหม่
     if(parts.length) result.parts = parts;
   }catch(e){ console.warn('parseFactoriumPdfText: แยกตารางอะไหล่ล้มเหลว (ไม่กระทบฟิลด์อื่น):', e.message); }
 
@@ -11839,7 +11896,7 @@ function wireFileDropzone(zone, onFiles){
   });
 }
 // v11.39 — แปลง PDF → รูป JPG ต่อหน้า (ใช้ pdf.js ที่ฝังในแอป) ลดคุณภาพ/ขนาดทีละขั้นจนไม่เกิน 5MB
-const CLAIM_PDF_MAX_PAGES = 5;
+const CLAIM_PDF_MAX_PAGES = 8;
 async function claimPdfToImages(file){
   await loadPdfJsLib();
   const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
@@ -11915,7 +11972,7 @@ function renderClaimAttachGroups(){
         </div>
         <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
       </div>
-    </div>`).join('') + `<p style="font-size:11px;color:var(--text-faint);margin:-4px 0 4px;">ไฟล์ละไม่เกิน 5 MB · PDF จะถูกแปลงเป็นรูป (ไม่เกิน 5 หน้า)</p>`;
+    </div>`).join('') + `<p style="font-size:11px;color:var(--text-faint);margin:-4px 0 4px;">ไฟล์ละไม่เกิน 5 MB · PDF จะถูกแปลงเป็นรูป (ไม่เกิน 8 หน้า)</p>`;
   CLAIM_ATTACHMENT_GROUPS.forEach(g=>renderClaimAttachGroupRow(g.key));
   wrap.querySelectorAll('[data-attachinput]').forEach(inp=>{
     inp.addEventListener('change', async ()=>{
