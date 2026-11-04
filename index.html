@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.69</title>
+<title>F1 Service — v11.70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2631,7 +2631,14 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.69";
+/* ╔══════════════════════════════════════════════════════════════════════════════════╗
+   ║ กฎสำคัญสูงสุด (ผู้ใช้สั่ง 2026-11-04) — ห้ามแก้/ห้ามลบ/ห้ามหลีกเลี่ยง                  ║
+   ║ ทุกอย่างในแอพที่แนบ/สร้าง/บันทึก ลง Google Drive ต้องอยู่ใน Drive ของ EngFirmer เท่านั้น ║
+   ║ (เจ้าของ engfirmer@gmail.com ผ่าน Apps Script) ห้ามเข้า/สร้าง/อัปโหลดลง Google Drive   ║
+   ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
+   ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
+   ╚══════════════════════════════════════════════════════════════════════════════════╝ */
+const APP_VERSION = "11.70";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -4566,6 +4573,7 @@ async function driveFindOrCreateFolder(name, parentId){
     if(data.files && data.files.length>0){ _driveFolderCache.set(cacheKey, data.files[0].id); return data.files[0].id; }
     try{ const made = await examApiRetry('drvPath', { parentId, names:[sanitizeFolderName(name)] }); _driveFolderCache.set(cacheKey, made.id); return made.id; }
     catch(e){ if(!drvFallbackOk(e)) throw e; }
+    drvNoUserToken();
     const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
       method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
       body: JSON.stringify({ name: sanitizeFolderName(name), mimeType:'application/vnd.google-apps.folder', parents:[parentId] })
@@ -5819,7 +5827,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
 // fix-hyperlinks-btn ถูกลบออกจาก UI แล้ว (v7.94) — ไม่ต้องผูก event
 
 // อัปโหลดไฟล์ขนาดใหญ่ (เอกสาร/วิดีโอ) ด้วยวิธี resumable upload ของ Google Drive รองรับไฟล์ใหญ่กว่ารูปภาพมาก พร้อมแถบความคืบหน้า
-async function driveUploadLargeFile_legacy(file, filename, parentId, onProgress){
+async function driveUploadLargeFile_legacy(file, filename, parentId, onProgress){ drvNoUserToken();
   const token = await ensureDriveAccess();
   const initRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable`, {
     method: 'POST',
@@ -5943,7 +5951,7 @@ async function ensureImageFolderPath(category, model, errorCode, symptom, soluti
   const f6 = await driveFindOrCreateFolder(`วิธี ${solutionIndex+1}`, f5);
   return f6;
 }
-async function driveUploadImage_legacy(blob, filename, parentId){
+async function driveUploadImage_legacy(blob, filename, parentId){ drvNoUserToken();
   const token = await ensureDriveAccess();
   const metadata = { name: filename, parents:[parentId] };
   const form = new FormData();
@@ -5964,7 +5972,7 @@ async function driveUploadImage_legacy(blob, filename, parentId){
 }
 // อัปโหลดรูปที่ยัง "pending" (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) ขึ้น Drive จริง — รูปที่อัปโหลดไปแล้ว (เป็นลิงก์อยู่แล้ว) จะข้ามไป
 // v10.16 — คัดลอกไฟล์ใน Drive ไปโฟลเดอร์ใหม่ (ใช้ตอนกดบันทึก Error ที่คัดลอกมา) คืน fileId ใหม่ — ตั้งสิทธิ์ดูได้เหมือนไฟล์ปกติ
-async function driveCopyFileTo_legacy(srcUrl, parentId, name){
+async function driveCopyFileTo_legacy(srcUrl, parentId, name){ drvNoUserToken();
   const srcId = driveFileIdFromUrl(srcUrl); if(!srcId) throw new Error('อ่านลิงก์ไฟล์ต้นฉบับไม่ได้');
   const token = await ensureDriveAccess();
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${srcId}/copy?fields=id`, {
@@ -9906,6 +9914,7 @@ async function openStaleFolderScan(){
 }
 { const _sb = document.getElementById('stale-folder-scan-btn'); if(_sb) _sb.addEventListener('click', openStaleFolderScan); }
 function driveOwnerOnlyCreate(what){ if(myUserEmail !== SUPER_ADMIN_EMAIL) throw new Error('ยังไม่มี'+what+' — ต้องให้ engfirmer เป็นคนเปิดใช้งานครั้งแรก (กันไฟล์ไปอยู่ใน Drive ของคนอื่น)'); }
+function drvNoUserToken(){ if(myUserEmail !== SUPER_ADMIN_EMAIL) throw new Error('กฎระบบ: ห้ามสร้าง/อัปโหลดไฟล์ด้วยบัญชี Google ของผู้ใช้ — ไฟล์ต้องอยู่ใน Drive ของ EngFirmer เท่านั้น'); } // v11.70 — รั้วกฎสำคัญสูงสุด (ดูหัวไฟล์)
 function drvPutResumable(file, uploadUrl, mime, onProgress){
   return new Promise((resolve, reject)=>{
     const xhr = new XMLHttpRequest();
@@ -12848,6 +12857,7 @@ async function captureElementAndUploadToDrive(el, driveFolderUrl){
   { const _fn = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
     try{ const _id = await drvUploadBlob(blob, _fn, 'image/png', folderId || DRIVE_ROOT_FOLDER_ID, true); return { fileId:_id, url:`https://drive.google.com/file/d/${_id}/view` }; }
     catch(e){ if(!drvFallbackOk(e)){ console.warn('อัปโหลดรูปสรุปไม่สำเร็จ:', e.message); return {fileId:'',url:''}; } } }
+  drvNoUserToken();
   const token = await ensureDriveAccess();
   const fileName = `สรุปเคลม_${bangkokDateDDMMYYYY()}.png`;
   const boundary = 'f1service_boundary_'+Date.now();
@@ -14507,7 +14517,7 @@ async function exportLogToExcel(){
 $('export-log-excel-btn').addEventListener('click', exportLogToExcel);
 
 /* ===================== Backup ทันทีเข้า Google Drive (ไม่ต้องรอรอบอัตโนมัติทุกวัน) ===================== */
-async function driveUploadFile_legacy(blob, filename, mimeType, parentId){
+async function driveUploadFile_legacy(blob, filename, mimeType, parentId){ drvNoUserToken();
   showLoadingOverlay('กำลังอัปโหลด...');
   try{
     const token = await ensureDriveAccess();
