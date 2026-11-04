@@ -2623,7 +2623,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.46";
+const APP_VERSION = "11.47";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -15099,10 +15099,10 @@ async function cmEnter(){
   try{
     const init = await examApi('adminInit');
     if(init.role === 'user'){ root.innerHTML = '<div class="ex-note ex-bad">บัญชีนี้ยังไม่มีสิทธิ์ออกใบ Cer ในระบบสอบ<br>ให้ Super Admin เปิดสิทธิ์ที่ ระบบ › สิทธิ์ผู้ใช้</div>'; return; }
-    await cmRender();
+    await certmRender();
   }catch(e){ root.innerHTML = `<div class="ex-note ex-bad">⚠ ${exH(e.message)} <button class="btn btn-ghost btn-sm" onclick="cmEnter()">ลองใหม่</button></div>`; }
 }
-async function cmRender(){
+async function certmRender(){
   const root = $('cm-root');
   const d = await examApi('adminGetSignature');
   EXA.sign = d; EXA.signNew = null; CERTM.results = [];
@@ -15325,13 +15325,13 @@ async function exaSigSave(){
   const n = EXA.signNew; if(!n) return;
   const nm = exaMyEnName(); if(!nm){ alert('ยังไม่มีชื่อ-นามสกุลภาษาอังกฤษในโปรไฟล์ — กรอกในโปรไฟล์ก่อน'); return; }
   showLoadingOverlay('กำลังบันทึกลายเซ็น...');
-  try{ await examApi('adminSaveSignature', { nameEn:nm, dataUrl:n.dataUrl, w:n.w, h:n.h }); hideLoadingOverlay(); showToast('✓ บันทึกลายเซ็นแล้ว'); cmRender(); }
+  try{ await examApi('adminSaveSignature', { nameEn:nm, dataUrl:n.dataUrl, w:n.w, h:n.h }); hideLoadingOverlay(); showToast('✓ บันทึกลายเซ็นแล้ว'); certmRender(); }
   catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 async function exaSigDel(){
   if(!confirm('ลบลายเซ็นของคุณ? ใบ Cer ที่ออกต่อจากนี้จะไม่มีลายเซ็น (ใบที่ออกไปแล้วไม่เปลี่ยน)')) return;
   showLoadingOverlay('กำลังลบ...');
-  try{ await examApi('adminDeleteSignature'); hideLoadingOverlay(); showToast('✓ ลบลายเซ็นแล้ว'); cmRender(); }
+  try{ await examApi('adminDeleteSignature'); hideLoadingOverlay(); showToast('✓ ลบลายเซ็นแล้ว'); certmRender(); }
   catch(e){ hideLoadingOverlay(); alert(e.message); }
 }
 
