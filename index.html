@@ -2629,7 +2629,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.50";
+const APP_VERSION = "11.51";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -8518,6 +8518,34 @@ function navxRefreshContent(){
   try{ if(typeof renderSupCertTab==='function' && supActiveTab==='cert') renderSupCertTab(true); }catch(e){}
   try{ if(typeof _examRefreshAll==='function') _examRefreshAll(); }catch(e){}
 }
+
+// v11.51 — Manager เลือก "ดูในมุมมอง Sup Product": เลือกชื่อ Sup ทันที แล้วพาไปหน้าที่เห็น Product ที่คนนั้นดูแล
+function navxAskSup(){
+  try{
+    if(!SUP_PRODUCTS || !SUP_PRODUCTS.length) return;
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    const cur = SUP_PRODUCTS.includes(currentSupIdentity) ? currentSupIdentity : SUP_PRODUCTS[0];
+    const prods = n=>{ const c = Object.keys(DATA.categories||{}).filter(k=>(DATA.categories[k]||[]).some(m=>ownerOf(k,m)===n)).sort(naturalSort); return c.length ? c.join(', ') : 'ยังไม่มี Product ที่ดูแล'; };
+    ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:380px;width:100%;">
+      <p style="font-size:14.5px;font-weight:600;margin:0 0 4px;">ดูในมุมมอง Sup Product</p>
+      <p style="font-size:12px;color:var(--text-faint);margin:0 0 10px;">เลือกชื่อ Sup แล้วระบบจะแสดงเฉพาะ Product ที่คนนั้นดูแล</p>
+      <select id="navx-ask-sel" style="width:100%;font-size:13.5px;padding:7px 8px;border-radius:6px;border:1px solid var(--border);">${SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}" ${n===cur?'selected':''}>${escapeHtml(n)}</option>`).join('')}</select>
+      <p id="navx-ask-prods" style="font-size:12.5px;margin:8px 0 14px;"></p>
+      <div style="display:flex;gap:8px;"><button id="navx-ask-go" class="btn btn-primary btn-sm" style="flex:1;">ดูเลย</button><button id="navx-ask-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button></div></div>`;
+    document.body.appendChild(ov);
+    const sel = ov.querySelector('#navx-ask-sel'), pr = ov.querySelector('#navx-ask-prods');
+    const upd = ()=>{ pr.innerHTML = 'Product ที่ดูแล: <b>'+escapeHtml(prods(sel.value))+'</b>'; }; upd(); sel.addEventListener('change', upd);
+    ov.querySelector('#navx-ask-cancel').addEventListener('click', ()=>ov.remove());
+    ov.querySelector('#navx-ask-go').addEventListener('click', ()=>{
+      const v = sel.value; ov.remove();
+      const si = $('sup-identity'); if(si){ si.value = v; si.dispatchEvent(new Event('change')); }
+      _supAll = false;
+      try{ if(currentMode!=='sup') requestModeSwitch('sup'); }catch(e){}
+      try{ navxRender(); }catch(e){}
+    });
+  }catch(e){ console.warn('navxAskSup', e); }
+}
 function navxView(){ const r = navxRealRole(); return (r==='m' && _navxViewAs) ? _navxViewAs : r; }
 function navxRoleName(r){
   if(r==='m'){ if(isCEO()) return 'CEO'; return myUserEmail===SUPER_ADMIN_EMAIL ? 'Super Admin' : 'Manager'; }
@@ -8656,6 +8684,7 @@ function navxRender(){
       const r=o.getAttribute('data-view'); _navxViewAs = (r==='m') ? null : r; rm.classList.remove('show'); navxRefreshContent();
       const vis=navxVisible(); let found=false; vis.forEach(G=>G.items.forEach(X=>X.subs.forEach(sb=>{ if(navxMatch(sb)) found=true; })));
       if(!found && vis.length){ _navxLastG=0; navxGoSub(navxPickSub(vis[0], vis[0].items[0])); } else navxRender();
+      if(r==='s') navxAskSup(); // v11.51 — เลือกมุมมอง Sup Product → ถามชื่อ Sup แล้วแสดง Product ที่คนนั้นดูแลทันที
     });
   }
   if(bn) bn.addEventListener('click', e=>{ if(e.target.id==='navx-back'){ _navxViewAs=null; navxRefreshContent(); navxRender(); } });
