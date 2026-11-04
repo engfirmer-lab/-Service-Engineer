@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.62</title>
+<title>F1 Service — v11.65</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2631,7 +2631,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.62";
+const APP_VERSION = "11.65";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -2940,6 +2940,21 @@ async function f1CachedList(col, fetchFn){
   return items;
 }
 const DOCS_CACHE_TTL = 12*3600*1000;
+// v11.65 — ลดการอ่าน: คนที่ไม่ใช่ Editor (Engineer ฯลฯ) ไม่โหลดรายการเอกสารทั้งชุดตอนเปิดแอพ · โหลดเมื่อเลือกดูเอกสารจริงเท่านั้น (Editor โหลดตอนเปิดแอพเหมือนเดิม)
+let _docsLoaded = true, _docsLoading = null;
+function ensureDocsLoaded(){
+  if(_docsLoaded) return Promise.resolve();
+  if(_docsLoading) return _docsLoading;
+  _docsLoading = (async()=>{
+    await initFirebase();
+    const items = await fsLoadDocumentsSmart(window._firebaseSdk);
+    const have = new Set((DATA.documents||[]).map(d=>d.id));
+    items.forEach(x=>{ if(!have.has(x.id)) DATA.documents.push(x); });
+    _docsLoaded = true;
+  })();
+  _docsLoading.then(()=>{ _docsLoading = null; }, ()=>{ _docsLoading = null; });
+  return _docsLoading;
+}
 async function fsLoadDocumentsSmart(sdk){
   let ver = null;
   try{ const vd = await sdk.getDoc(sdk.doc(db,'meta','docsVersion')); ver = vd.exists() ? (Number((vd.data()||{}).v)||0) : 0; }catch(e){ ver = null; }
@@ -3697,7 +3712,7 @@ async function loadData(){
     // หลังจากนั้นได้เฉพาะรายการที่เปลี่ยน · ถ้าฟังไม่ได้ จะตกไปใช้ getDocs แบบเดิมอัตโนมัติ
     const liveOrGet = (key, col)=> liveBoot(key).then(arr=>{ if(arr) return arr; if(LIVE.fail[key]==='timeout'||LIVE.fail[key]==='cache') setTimeout(()=>liveScheduleRetry(key, 60000), 0); return sdk.getDocs(sdk.collection(db,col)).then(sn=>{ const a=[]; sn.forEach(d=>a.push({ id:d.id, ...d.data() })); return a; }); });
     const [docsSnap, propArr, pendArr, claimsArr, nickSnap, catDoc, supDoc, catVerDoc] = await Promise.all([
-      fsLoadDocumentsSmart(sdk),
+      (isEditorReal() ? fsLoadDocumentsSmart(sdk) : Promise.resolve(null)),
       liveOrGet('proposals','proposals'),
       liveOrGet('pendingErrors','pendingErrors'),
       liveOrGet('claims','claims'),
@@ -3742,7 +3757,8 @@ async function loadData(){
       const nd = d.data();
       if(nd && nd.email){ nicknamesMap[nd.email.toLowerCase()] = nd.nickname; if(myUserEmail && nd.email.toLowerCase()===myUserEmail) myNicknameDocId = d.id; }
     });
-    docsSnap.forEach(x=> DATA.documents.push(x)); // v11.30 — docsSnap เป็นรายการ (จากแคชในเครื่องหรือจากเซิร์ฟเวอร์) ไม่ใช่ snapshot
+    if(docsSnap){ docsSnap.forEach(x=> DATA.documents.push(x)); _docsLoaded = true; } else { _docsLoaded = false; }
+     // v11.30 — docsSnap เป็นรายการ (จากแคชในเครื่องหรือจากเซิร์ฟเวอร์) ไม่ใช่ snapshot
     propArr.forEach(x=> DATA.proposals.push(x));
     pendArr.forEach(x=> DATA.pendingErrors.push(x));
     claimsArr.forEach(x=> DATA.claims.push(x));
@@ -9567,12 +9583,18 @@ function bindDocOpenButtons(){
   });
 }
 function renderEngDocResults(){
-  // v11.62 — เลือก Product/รุ่น (หรือพิมพ์ค้นหา) แล้วเห็นเอกสารทุกหัวข้อของรุ่นนั้นแบบจัดกลุ่ม · รวมไม่เกิน 10 ไฟล์ = เปิดทุกกลุ่ม, มากกว่านั้น = พับไว้ กดเปิดเอง
+  // v11.62 — เลือก Product/รุ่น (หรือพิมพ์ค้นหา) แล้วเห็นเอกสารทุกหัวข้อของรุ่นนั้นแบบจัดกลุ่ม · พับทุกกลุ่มไว้ก่อน กดเปิดดูเอง
   const list = $('doc-results-list');
   const hasSearchOrFilter = docQuery.trim()!=='' || docFilterCategory!=='all' || docFilterModel!=='all';
   if(!hasSearchOrFilter){
     $('doc-result-count').textContent = '';
     list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><h3>เลือก Product / รุ่น หรือพิมพ์คำค้นหา</h3><p>จะเห็นเอกสารทุกหัวข้อของรุ่นนั้น แยกเป็นกลุ่ม (Service Manual, Spare Part, ...)</p></div>`;
+    return;
+  }
+  if(!_docsLoaded){
+    $('doc-result-count').textContent = '';
+    list.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><h3>กำลังโหลดรายการเอกสาร...</h3></div>';
+    ensureDocsLoaded().then(()=>{ if(currentMode==='eng' && engActiveTab==='service_docs') renderEngDocResults(); }).catch(e=>{ const m = f1IsQuotaErr(e&&e.message) ? F1_QUOTA_MSG : ('โหลดเอกสารไม่สำเร็จ: '+(e&&e.message||e)); list.innerHTML = '<div class="empty"><div class="empty-icon">⚠</div><h3>'+escapeHtml(m)+'</h3></div>'; });
     return;
   }
   let filtered = DATA.documents.slice();
@@ -9585,7 +9607,7 @@ function renderEngDocResults(){
   const known = new Set(groups.flatMap(g=>g.items.map(d=>d.id)));
   const rest = filtered.filter(d=>!known.has(d.id)); // ประเภทที่ไม่อยู่ในรายการมาตรฐาน (กันหาย)
   if(rest.length) groups.push({ c:{ key:'_other', icon:'📄', label:'อื่นๆ' }, items: rest });
-  const openAll = filtered.length <= 10;
+  const openAll = false; // v11.63 — พับทุกกลุ่มไว้ก่อน กดเปิดดูเอง
   $('doc-result-count').innerHTML = `พบ ${filtered.length} เอกสาร · ${groups.length} หัวข้อ` + (groups.length>1 ? ` <button type="button" class="btn btn-ghost btn-sm" id="doc-grp-all" style="margin-left:8px;">${openAll?'พับทั้งหมด':'เปิดทั้งหมด'}</button>` : '');
   list.innerHTML = groups.map(g=>`<details class="doc-group" ${openAll?'open':''} style="margin:0 0 10px;"><summary style="cursor:pointer;font-weight:700;font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);list-style:none;display:flex;justify-content:space-between;align-items:center;"><span>${g.c.icon} ${escapeHtml(g.c.label)}</span><span style="font-size:12px;color:var(--text-faint);font-weight:600;">${g.items.length} ไฟล์ ▾</span></summary><div style="margin-top:8px;">${g.items.map(docCard).join('')}</div></details>`).join('');
   const tb = $('doc-grp-all'); if(tb) tb.addEventListener('click', ()=>{ const ds = list.querySelectorAll('details.doc-group'); const open = tb.textContent.trim()==='เปิดทั้งหมด'; ds.forEach(x=>{ x.open = open; }); tb.textContent = open ? 'พับทั้งหมด' : 'เปิดทั้งหมด'; });
@@ -21627,6 +21649,9 @@ function cdSupNameFor(email){
 // คำนวณข้อมูลรายคน: เฉพาะคนที่มีรายชื่อ (userProfiles) ณ ปัจจุบัน — ชื่อเล่น/ตำแหน่ง/พื้นที่ มาจากรายชื่อ
 // ลำดับ: Sup Product → ส่วนกลางอื่นๆ → แต่ละเขต (Sup Area ก่อน แล้วตามด้วยคนในเขตนั้น) เรียงเขตตามลิสต์มาตรฐาน
 const CD_SKIP_POS = ['Manager','IT Service','Admin Service'];
+// v11.64 — ปี 2026 (พ.ศ. 2569) รุ่นที่ต้องมีทั้ง Cer ภายใน+ผู้ผลิต ขอแค่มีอย่างใดอย่างหนึ่งก็นับว่าครบ · ตั้งแต่ปี 2027 (พ.ศ. 2570) กลับมานับครบทั้งสองชนิด (แก้ปีที่เริ่มเข้มงวดที่ค่านี้)
+const CERT_STRICT_FROM_YEAR = 2027;
+function cdRelaxed(){ const yv = ($('cd-year')||{}).value||''; const y = yv ? Number(yv)-543 : new Date().getFullYear(); return y < CERT_STRICT_FROM_YEAR; }
 function cdGroupOf(p){
   if(p.position==='Sup Product') return { ord:0, label:'Sup Product' };
   if(p.area===ORGCHART_OFFICE_AREA || !p.area){ return { ord:1, label:'ส่วนกลาง (Office)' }; }
@@ -21638,7 +21663,7 @@ function cdCompute(){
   const yEnd = yv ? Date.UTC(Number(yv)-543,11,31,16,59,59,999) : Infinity;
   const certs = _cdState.certs.filter(c=> (c.uploadedAt||0) <= yEnd), cats = DATA.categories||{};
   const lc = x=>String(x||'').toLowerCase();
-  const out = []; const unsetKeys = new Set();
+  const out = []; const unsetKeys = new Set(); const relaxed = cdRelaxed();
   (_cdState.profiles||[]).forEach(pf=>{
     const e = lc(pf.email); if(!e || ceoEmails.map(lc).includes(e)) return;
     if(CD_SKIP_POS.includes(pf.position)) return;
@@ -21653,19 +21678,22 @@ function cdCompute(){
       models = ((rd && rd.models)||[]).filter(m=> (cats[m.category]||[]).includes(m.model));
     }
     const respSet = new Set(models.map(m=>m.category+'|'+m.model));
-    let reqI=0, reqM=0, hasI=0, hasM=0; const miss = [], reqMap = {};
+    let reqI=0, reqM=0, hasI=0, hasM=0; const miss = [], reqMap = {}, easedKeys = {};
     models.forEach(({category,model})=>{
       const key = category+'|'+model, req = certRequirements[key];
       if(!req){ unsetKeys.add(key); return; }
       let needI = (req==='internal'||req==='both'), needM = (req==='manufacturer'||req==='both');
       if(isSup){ needI = false; } // Sup แนบเฉพาะ Cer ผู้ผลิต
       reqMap[key] = [needI, needM];
-      if(needI){ reqI++; if(mine.some(c=>c.category===category && c.model===model && c.certType==='internal')) hasI++; else miss.push({category, model, type:'ภายใน'}); }
-      if(needM){ reqM++; if(mine.some(c=>c.category===category && c.model===model && c.certType==='manufacturer')) hasM++; else miss.push({category, model, type:'ผู้ผลิต'}); }
+      const gotI = mine.some(c=>c.category===category && c.model===model && c.certType==='internal'), gotM = mine.some(c=>c.category===category && c.model===model && c.certType==='manufacturer');
+      const eased = relaxed && needI && needM && (gotI || gotM); // ปีผ่อนผัน: มีอย่างใดอย่างหนึ่ง = ครบทั้งรุ่น
+      if(needI){ reqI++; if(gotI || eased) hasI++; else miss.push({category, model, type:'ภายใน'}); }
+      if(needM){ reqM++; if(gotM || eased) hasM++; else miss.push({category, model, type:'ผู้ผลิต'}); }
+      if(eased && !(gotI && gotM)) easedKeys[key] = true;
     });
     const other = mine.filter(c=>!respSet.has(c.category+'|'+c.model)).length;
     const g = cdGroupOf(pf);
-    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, certs: mine, reqI, reqM, hasI, hasM, miss, other, kpiPct: certKpiPct(reqI,reqM,hasI,hasM) });
+    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, easedKeys, certs: mine, reqI, reqM, hasI, hasM, miss, other, kpiPct: certKpiPct(reqI,reqM,hasI,hasM) });
   });
   const posRank = pos => { const i = ORGCHART_POSITIONS.indexOf(pos); return i<0 ? 99 : i; };
   out.sort((a,b)=>{
@@ -21702,6 +21730,7 @@ function cdDetailHtml(p){
     const [cat,model] = key.split('|'); const r = p.reqMap[key];
     const list = p.certs.filter(c=>c.category===cat && c.model===model && c.certType===type);
     if(list.length) return `<span style="color:var(--green);font-weight:700;">✓ ${list.length}</span> ${cdFileLinks(list)}`;
+    if(r && r[idx] && p.easedKeys && p.easedKeys[key]) return '<span style="color:var(--text-faint);">นับครบแล้ว (มีอีกชนิด)</span>';
     if(r && r[idx]) return '<span style="color:var(--red);font-weight:700;">ขาด</span>';
     return '<span style="color:var(--text-faint);">'+(r?'ไม่ต้องมี':'—')+'</span>';
   };
@@ -21737,6 +21766,7 @@ function cdRender(){
   const kAvg = kScores.length ? kScores.reduce((x,y)=>x+y,0)/kScores.length : null;
   const kTile = showKpi ? `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">คะแนน KPI เฉลี่ย</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${certKpiScoreColor(kAvg)};">${kAvg===null?'—':(Math.round(kAvg*100)/100)}</div><div style="font-size:11px;color:var(--text-faint);">${kScores.length} คนที่มีคะแนน · ไม่มีคะแนน ${L.length-kScores.length} คน</div></div>` : '';
   let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0;">${kp('ครบรวม',H,R)}${kp('ภายใน',sum.hi,sum.ri)}${kp('ผู้ผลิต',sum.hm,sum.rm)}${kTile}</div>`;
+  if(cdRelaxed()) h += `<div style="background:var(--panel-alt);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;margin-bottom:8px;">ℹ️ ปี ${CERT_STRICT_FROM_YEAR-1} (พ.ศ. ${CERT_STRICT_FROM_YEAR-1+543}) รุ่นที่ต้องมีทั้งภายในและผู้ผลิต <b>มีอย่างใดอย่างหนึ่งก็นับว่าครบ</b> · ตั้งแต่ปี ${CERT_STRICT_FROM_YEAR} (พ.ศ. ${CERT_STRICT_FROM_YEAR+543}) จะนับครบทั้งสองชนิด</div>`;
   if(data.unset>0) h += `<div style="background:rgba(245,158,11,.12);border:1px solid var(--amber);border-radius:8px;padding:7px 10px;font-size:12px;margin-bottom:8px;">⚠ มี <b>${data.unset}</b> รุ่น (ที่มีคนรับผิดชอบ) ที่ Sup ยังไม่ได้กำหนดว่าต้องมี Cer — ไม่นับใน %</div>`;
   const thS = 'padding:8px 6px;font-size:11px;color:var(--text-faint);font-weight:600;background:var(--panel-alt);text-align:center;';
   const tdS = 'padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle;';
