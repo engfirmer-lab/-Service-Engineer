@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.58</title>
+<title>F1 Service — v11.59</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2207,6 +2207,7 @@ setTimeout(function(){
       <div class="panel-block">
         <h2>🎓 Dashboard Certificate</h2>
         <p class="panel-sub">% = ใบที่มี ÷ ใบที่ต้องมี (ตามที่ Sup กำหนด) · ใบรุ่นอื่นไม่นับ</p>
+        <p id="cd-scope-note" class="panel-sub" style="display:none;font-weight:600;"></p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0;">
           <span style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;"><button id="cd-v-person" style="border:0;background:var(--amber);color:#fff;padding:7px 12px;font:inherit;cursor:pointer;">👤 ตามคน</button><button id="cd-v-model" style="border:0;background:none;color:inherit;padding:7px 12px;font:inherit;cursor:pointer;">🔧 ตามรุ่น (ใครมี Cer รุ่นนี้)</button></span>
           <input id="cd-q" placeholder="🔍 ชื่อเล่น / รุ่น" style="flex:1;width:auto;min-width:180px;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;background:var(--panel);color:inherit;">
@@ -2630,7 +2631,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.58";
+const APP_VERSION = "11.59";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -4135,13 +4136,13 @@ function liveAfterClaims(){ liveDefer('claims', ()=>{
   if(currentMode==='sup' && supActiveTab==='claims') renderClaimsView();
   if(currentMode==='eng' && engActiveTab==='claim') renderEngMyClaimsList();
   updateNotifBadge();
-  if(currentMode==='mgr'){ updateMgrPendingBadge(); if(_mgrSubActive==='pending') renderMgrPendingClaims(); }
+  if((currentMode==='mgr' && !_mgrCertOnly)){ updateMgrPendingBadge(); if(_mgrSubActive==='pending') renderMgrPendingClaims(); }
   dxLive('claims');
 }); }
 function liveAfterReview(){ liveDefer('review', ()=>{
   if(!DATA) return;
   updateNotifBadge();
-  if(currentMode==='mgr'){ if(_mgrSubActive==='summary') renderMgrView(); dxLive('review'); }
+  if((currentMode==='mgr' && !_mgrCertOnly)){ if(_mgrSubActive==='summary') renderMgrView(); dxLive('review'); }
 }); }
 function liveAfterNotices(){ liveDefer('notices', ()=>{
   if(!DATA) return;
@@ -6429,7 +6430,7 @@ function initRpRealtimeWatch(){
       _lastSeenRpActivityTs = ts;
       // รีเฟรช RP ในหน้าที่เกี่ยวข้อง
       if(currentMode==='admin-service') renderAdminServiceView();
-      if(currentMode==='mgr'){ updateMgrPendingBadge(true); dxLive('rp'); }
+      if((currentMode==='mgr' && !_mgrCertOnly)){ updateMgrPendingBadge(true); dxLive('rp'); }
       if(currentMode==='eng') renderEngMyWorkRpSection();
     }, (e)=>console.warn('ฟังการเปลี่ยนแปลง RP ไม่สำเร็จ (ไม่กระทบการใช้งาน):', e));
   }catch(e){ console.warn('เริ่มฟังการเปลี่ยนแปลง RP ไม่สำเร็จ (ไม่กระทบการใช้งาน):', e); }
@@ -8285,11 +8286,15 @@ function requestModeSwitch(mode){
     switchMode(mode); return;
   }
   if(!isEditor()){
+    // v11.59: Dashboard Certificate เปิดให้ทุกคน (เห็นเฉพาะของตัวเอง / Sup Area เห็นลูกทีมในเขต) — เข้าได้เฉพาะแท็บ Certificate
+    if(mode==='mgr' && isApproved()){ _mgrCertOnly = true; switchMode('mgr'); return; }
     showToast('⛔ ไม่มีสิทธิ์เข้าถึงหน้านี้ — เฉพาะผู้ดูแลระบบ (Editor) เท่านั้น');
     return;
   }
+  _mgrCertOnly = false;
   switchMode(mode);
 }
+let _mgrCertOnly = false; // true = ผู้ใช้ที่ไม่ใช่ Editor เปิดหน้า Dashboard เฉพาะแท็บ Certificate
 
 // v8.37 — ตั้งค่าระบบ sub-tab switch (สิทธิ์ผู้ใช้ | Product & Category)
 let _settingsSubActive = 'access';
@@ -8396,7 +8401,12 @@ function switchMode(mode){
   if(mode==='sup') renderSupView();
   if(mode==='settings') switchSettingsSubTab(_settingsSubActive); // โหลด sub-tab ที่ active ล่าสุด
   // Dashboard — ไม่โหลดอัตโนมัติ รอให้ user กดปุ่มแต่ละส่วนเอง
-  if(mode==='mgr'){ setupRpManagerLinks(); updateMgrPendingBadge(); switchMgrSubTab('summary'); } // v8.36: เปิด tab สรุปข้อมูล + โหลดข้อมูล
+  if(mode==='mgr'){
+    if(isEditor()) _mgrCertOnly = false;
+    const _st = $('mgr-subtabs'); if(_st) _st.style.display = _mgrCertOnly ? 'none' : 'flex';
+    if(_mgrCertOnly){ switchMgrSubTab('cert'); }
+    else { setupRpManagerLinks(); updateMgrPendingBadge(); switchMgrSubTab('summary'); }
+  } // v8.36: เปิด tab สรุปข้อมูล + โหลดข้อมูล
   if(mode==='backup'){ updateExportLogPanelVisibility(); renderBackupSchedulePanel(); /* ส่วนอื่นในหน้านี้เป็นแบบกดเช็คเองทั้งหมด ไม่มีอะไรทำงานอัตโนมัติแล้ว ประหยัดโควต้า */ }
   if(mode==='admin-service'){ renderAdminServiceView(); }
   if(mode==='orgchart'){ loadAndRenderOrgChart(); }
@@ -8449,7 +8459,8 @@ const NAVX = [
       { t:'รายการของฉัน',   m:'eng', tab:'my_work', badge:'eng-mywork-badge', k:'f_mywork', cap:'es' } ] },
     { t:'🎓 Certificate', subs:[
       { t:'ของฉัน',          m:'eng', tab:'cert', k:'f_cert', cap:'es' },
-      { t:'จัดการผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' } ] },
+      { t:'จัดการผู้ผลิตที่ดูแล', m:'sup', tab:'cert', k:'f_certsup', cap:'s' },
+      { t:'ภาพรวม Cer',      m:'mgr', mtab:'cert', k:'f_certdash', cap:'e' } ] },
     { t:'📝 ข้อสอบ', subs:[
       { t:'ข้อสอบของฉัน', m:'exam', k:'f_exam', cap:'es' } ] },
     { t:'📅 ตารางเทรน', subs:[
@@ -8724,7 +8735,7 @@ function renderAll(){
   updateEngMyWorkBadge();
   if(currentMode==='sup') renderSupView();
   if(currentMode==='settings') switchSettingsSubTab(_settingsSubActive); // v8.37
-  if(currentMode==='mgr'){ renderMgrView(); updateMgrPendingBadge(); if(_mgrSubActive==='pending') renderMgrPendingClaims(); }
+  if((currentMode==='mgr' && !_mgrCertOnly)){ renderMgrView(); updateMgrPendingBadge(); if(_mgrSubActive==='pending') renderMgrPendingClaims(); }
 }
 
 /* ===================== ENGINEER SUB-TABS ===================== */
@@ -20397,6 +20408,7 @@ let _mgrSubActive = 'summary';
 let _mgrDataLoaded = false;
 
 function switchMgrSubTab(tab){
+  if(_mgrCertOnly) tab = 'cert'; // ผู้ใช้ที่ไม่ใช่ Editor เห็นได้แค่แท็บ Certificate
   DX.silent = false; // เผื่อค้างจากการวาดสดของแท็บก่อนหน้า — แท็บใหม่ต้องโชว์ "กำลังโหลด" ตามปกติ
   if(isModeLocked('mgr:'+tab) && !isSuperAdmin()){
     showToast('🔒 '+maintenanceLockMessage());
@@ -20410,7 +20422,7 @@ function switchMgrSubTab(tab){
   document.querySelectorAll('#mgr-subtabs [data-mgrtab]').forEach(btn=>{
     btn.classList.toggle('active', btn.getAttribute('data-mgrtab')===tab);
   });
-  if(!_mgrDataLoaded){ loadAllErrorsThenRenderMgr(); _mgrDataLoaded = true; }
+  if(!_mgrDataLoaded && !_mgrCertOnly){ loadAllErrorsThenRenderMgr(); _mgrDataLoaded = true; }
   if(tab==='pending'){
     renderMgrPendingClaims();
     updateMgrPendingBadge();
@@ -21515,22 +21527,50 @@ async function cdKpiSave(){
 
 /* ===================== v9.22 — Dashboard Certificate (ภาพรวมรายคน/รายรุ่น + % ความครบถ้วน) ===================== */
 let _cdState = { loaded:false, loading:false, certs:[], resps:[], view:'person', open:{}, openP:{}, openM:{} };
+// v11.59 — ขอบเขตข้อมูล: all = Editor/Manager เห็นทุกคน · area = Sup Area เห็นลูกทีมในเขตตัวเอง · self = Engineer เห็นของตัวเอง
+function cdScope(){
+  if(isEditor()) return 'all';
+  return (myUserProfile && myUserProfile.position==='Sup Area') ? 'area' : 'self';
+}
 async function cdLoadData(){
   await initFirebase(); const sdk = window._firebaseSdk;
-  const [certs, resps, profs] = await Promise.all([ fsListAllCertificates(), f1CachedList('engineerResponsibility', async S=>{ const sn = await S.getDocs(S.collection(db,'engineerResponsibility')); const a=[]; sn.forEach(d=>a.push({ id:d.id, ...d.data() })); return a; }), fetchAllUserProfiles(), fsLoadCertRequirements(), fsLoadCertKpi() ]);
+  const sc = cdScope(), lc = x=>String(x||'').toLowerCase();
+  let certs, resps, profs;
+  if(sc==='all'){
+    [certs, resps, profs] = await Promise.all([ fsListAllCertificates(), f1CachedList('engineerResponsibility', async S=>{ const sn = await S.getDocs(S.collection(db,'engineerResponsibility')); const a=[]; sn.forEach(d=>a.push({ id:d.id, ...d.data() })); return a; }), fetchAllUserProfiles(), fsLoadCertRequirements(), fsLoadCertKpi() ]);
+  } else {
+    const me = lc(myUserEmail), mine = { email: me, ...(myUserProfile||{}) };
+    let team = [mine];
+    if(sc==='area' && mine.area){
+      const all = await fetchAllUserProfiles();
+      team = all.filter(p=> lc(p.email)===me || (p.area===mine.area && p.position!=='Sup Product' && !CD_SKIP_POS.includes(p.position)));
+      if(!team.some(p=>lc(p.email)===me)) team.unshift(mine);
+    }
+    profs = team;
+    const emails = team.map(p=>lc(p.email));
+    const [cl, rl] = await Promise.all([
+      Promise.all(emails.map(e=> fsListCertificatesByOwner(e))),
+      Promise.all(emails.map(async e=>{ const sn = await sdk.getDoc(sdk.doc(db,'engineerResponsibility',e)); return sn.exists() ? { id:sn.id, ...sn.data() } : null; })),
+      fsLoadCertRequirements()
+    ]);
+    certs = [].concat(...cl); resps = rl.filter(Boolean);
+    _cdState.open = {}; if(sc==='self') _cdState.open[me] = true;
+  }
   _cdState.certs = certs; _cdState.profiles = profs;
   _cdState.resps = resps;
+  _cdState.scope = sc;
   _cdState.loaded = true;
 }
 async function cdLoad(force){
   if(_cdState.loading) return;
-  if(_cdState.loaded && !force) { cdRender(); return; }
+  if(_cdState.loaded && !force && _cdState.scope===cdScope()) { cdRender(); return; }
   _cdState.loading = true;
   const box = $('cd-body'); if(box) box.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-faint);font-size:13px;">กำลังโหลด...</div>';
   try{
     await cdLoadData();
   }catch(e){
-    if(box) box.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(e.message||String(e))}</div>`;
+    const _denied = e && (e.code==='permission-denied' || /permission|insufficient/i.test(String(e.message||'')));
+    if(box) box.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);font-size:13px;">${_denied ? 'ฐานข้อมูลยังไม่อนุญาตให้ดูข้อมูลส่วนนี้ — แจ้งผู้ดูแลระบบให้ปรับสิทธิ์ (Firestore rules) ของ certificates / engineerResponsibility' : 'โหลดไม่สำเร็จ: '+escapeHtml(e.message||String(e))}</div>`;
     _cdState.loading = false; return;
   }
   _cdState.loading = false; cdRender();
@@ -21639,6 +21679,14 @@ function cdRender(){
   const fy = $('cd-year');
   if(fy && !fy.dataset.f){ const be = new Date().getFullYear()+543; fy.innerHTML = `<option value="">ปีนี้ (${be})</option>` + [1,2,3].map(n=>`<option value="${be-n}">ณ สิ้นปี ${be-n}</option>`).join(''); fy.dataset.f='1'; }
   const kbtn = $('cd-kpi-btn'); if(kbtn) kbtn.style.display = showKpi ? '' : 'none';
+  { // v11.59: จำกัดปุ่ม/ตัวกรองตามขอบเขต (Export + ตัวกรองตำแหน่ง/พื้นที่ เฉพาะ Editor · Engineer เห็นของตัวเองไม่ต้องค้นหา)
+    const sc = _cdState.scope || cdScope(), sh = (id,on)=>{ const el=$(id); if(el) el.style.display = on?'':'none'; };
+    sh('cd-export', sc==='all'); sh('cd-role', sc==='all'); sh('cd-prod', sc==='all');
+    sh('cd-q', sc!=='self'); sh('cd-stat', sc!=='self');
+    const vp = $('cd-v-person'); if(vp && vp.parentNode) vp.parentNode.style.display = sc==='self' ? 'none' : 'inline-flex';
+    if(sc==='self' && _cdState.view!=='person') _cdState.view = 'person';
+    const nt = $('cd-scope-note'); if(nt){ nt.style.display = sc==='all' ? 'none' : ''; nt.textContent = sc==='area' ? '👥 แสดงเฉพาะทีมในเขตของคุณ ('+((myUserProfile&&myUserProfile.area)||'-')+')' : '👤 แสดงเฉพาะ Certificate ของคุณเอง'; }
+  }
   cdKpiPanel();
   const data = cdCompute();
   // เติมตัวเลือก Product
@@ -21699,6 +21747,7 @@ function cdRender(){
   $('cd-v-model').style.background = _cdState.view==='model' ? 'var(--amber)' : ''; $('cd-v-model').style.color = _cdState.view==='model' ? '#fff' : '';
 }
 function cdExport(){
+  if(cdScope()!=='all'){ showToast('⛔ Export ได้เฉพาะผู้ดูแลระบบ'); return; }
   if(typeof XLSX==='undefined'){ showToast('⚠ ยังโหลดตัวส่งออก Excel ไม่ได้ (ต้องต่ออินเทอร์เน็ต)'); return; }
   const data = cdCompute(), L = cdFiltered(data), rows = [];
   L.forEach(p=>{
