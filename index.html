@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.68</title>
+<title>F1 Service — v11.69</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2631,7 +2631,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.68";
+const APP_VERSION = "11.69";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -9862,9 +9862,9 @@ function openAddErrorForModel(category, model){
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
    เซิร์ฟเวอร์ (Apps Script) เปิดช่องอัปโหลดในนามเจ้าของ → มือถืออัปโหลดตรงเข้าช่องนั้น · ถ้า Apps Script ยังไม่ได้ Deploy เวอร์ชันใหม่ → ใช้วิธีเดิมชั่วคราว (ไม่ให้ระบบพัง) */
 // v10.87 — ปิดทางสำรอง: ห้ามอัปโหลด/สร้างด้วยโทเคนผู้ใช้เองเด็ดขาด (ไฟล์ต้องเป็นของ engfirmer เท่านั้น) — ถ้า Apps Script ยังไม่พร้อมให้แจ้ง error แทน
-// v11.68 — ตอนโควตา Firestore เต็ม เซิร์ฟเวอร์ (Apps Script drvPath) สร้างโฟลเดอร์ให้ไม่ได้เพราะมันอ่าน Firestore ตรวจสิทธิ์ → ส่งเคลมของ Engineer ล้มทั้งที่แค่จะสร้างโฟลเดอร์
-// จึงยอมให้สร้างโฟลเดอร์ตรงด้วยสิทธิ์ Drive ของผู้ใช้เองเฉพาะกรณีโควตาเต็มเท่านั้น (ปกติยังใช้ทางเซิร์ฟเวอร์เหมือนเดิม)
-function drvFallbackOk(e){ const m = String(e && e.message || ''); return f1IsQuotaErr(m) || m.indexOf('โควตาอ่านข้อมูลฟรี') >= 0; }
+// v11.69 — ยกเลิก fallback ของ v11.68: ห้ามใช้ token ผู้ใช้สร้างโฟลเดอร์/อัปโหลดเด็ดขาด (ไฟล์ต้องเป็นของ engfirmer เท่านั้น ไม่ลงบัญชีส่วนตัว)
+// ตอนโควตา Firestore เต็ม ฝั่ง Apps Script ใช้สำเนารายชื่อสิทธิ์ (DRV_ALLOW) แทนการอ่าน Firestore — ดู Code.gs v11.69
+function drvFallbackOk(e){ return false; }
 // v10.89 — สแกนโฟลเดอร์รุ่นใน Drive ที่ชื่อไม่ตรงกับรุ่นใดในแอป → เลือกรุ่นปลายทางแล้วรวมทีเดียว (ใช้ adminRenameProduct เดิม)
 async function openStaleFolderScan(){
   const cats = {}; Object.keys(DATA.categories||{}).forEach(c=>{ cats[c] = (DATA.categories[c]||[]).slice(); });
