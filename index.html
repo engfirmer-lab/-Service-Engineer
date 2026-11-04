@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.46</title>
+<title>F1 Service — v11.54</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2629,7 +2629,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.52";
+const APP_VERSION = "11.54";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -8610,7 +8610,7 @@ function navxRenderRole(){
   const can = real==='m', R = NAVX_ROLES[v];
   const nm = r => r==='m' ? navxRoleName('m') : NAVX_ROLES[r].n;
   btn.className = 'role-btn' + (can ? '' : ' locked');
-  btn.innerHTML = (can && _navxViewAs ? '👁 ' : '') + escapeHtml(nm(v)) + '<span class="rb-arr">' + (can ? ' ▾' : ' ⓘ') + '</span>';
+  btn.innerHTML = (can && _navxViewAs ? '👁 ' : '') + escapeHtml(nm(v)) + (can && _navxViewAs==='s' && currentSupIdentity ? ' · ' + escapeHtml(String(currentSupIdentity).replace(/\s*\(.*\)\s*$/,'')) : '') + '<span class="rb-arr">' + (can ? ' ▾' : ' ⓘ') + '</span>';
   let h = '';
   if(can){
     h += '<div class="rm-h">ดูแอพในมุมมองของ… (ทดสอบ)</div>';
@@ -8655,9 +8655,10 @@ function navxRender(){
   const _v = navxView(); const picker = navxRealRole()==='m' && (_v==='m' || _v==='s') && currentMode==='sup';
   const noSup = isEditor() && !isSuperAdmin() && currentSupIdentity===NAVX_NOSUP;
   let bh = '';
-  if(viewing) bh += `👁 กำลังดูในมุมมอง <b>${NAVX_ROLES[_navxViewAs].n}</b> · `;
-  if(picker) bh += `ดูข้อมูลของ Sup: <select id="navx-supsel">${supActiveTab==='claims'?`<option value=""${_supAll?' selected':''}>ทุกคน</option>`:''}${SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}"${(n===currentSupIdentity && !(supActiveTab==='claims' && _supAll))?' selected':''}>${escapeHtml(n)}</option>`).join('')}</select> · `;
-  if(viewing) bh += `เปลี่ยนแค่หน้าจอ <u id="navx-back">กลับมุมมองตัวเอง</u>`;
+  const viewAsSup = viewing && _navxViewAs==='s'; // v11.53 — เลือก Sup ตั้งแต่แรกแล้ว ไม่ต้องมีแถบ "กำลังดูในมุมมอง" (ชื่อ Sup แสดงที่ปุ่มบทบาท สลับได้จากเมนูบทบาท)
+  if(viewing && !viewAsSup) bh += `👁 กำลังดูในมุมมอง <b>${NAVX_ROLES[_navxViewAs].n}</b> · `;
+  if(picker && !viewAsSup) bh += `ดูข้อมูลของ Sup: <select id="navx-supsel">${supActiveTab==='claims'?`<option value=""${_supAll?' selected':''}>ทุกคน</option>`:''}${SUP_PRODUCTS.map(n=>`<option value="${escapeHtml(n)}"${(n===currentSupIdentity && !(supActiveTab==='claims' && _supAll))?' selected':''}>${escapeHtml(n)}</option>`).join('')}</select> · `;
+  if(viewing && !viewAsSup) bh += `เปลี่ยนแค่หน้าจอ <u id="navx-back">กลับมุมมองตัวเอง</u>`;
   if(noSup){ bh = '⚠ <b>ยังไม่ได้ตั้งชื่อ Sup Product ของคุณในโปรไฟล์</b> — จึงยังไม่แสดงข้อมูล กรุณาแจ้ง Manager'; }
   const showBn = !!bh;
   if(bn){ bn.style.display = showBn ? '' : 'none'; if(bn._h!==bh){ bn._h=bh; bn.innerHTML=bh; } bn.style.borderColor = noSup ? 'var(--red)' : ''; }
@@ -10708,24 +10709,28 @@ async function execDocMove(docs, dCat, dModel, dType, dSub){
   const todoIds = new Set(todo.map(d=>d.id)), fids = new Set();
   todo.forEach(d=>{ const fid = d.url ? extractDriveFileId(d.url) : null; if(fid) fids.add(fid); });
   const fidsToMove = Array.from(fids).filter(fid=> !DATA.documents.some(x=>!todoIds.has(x.id) && x.url && extractDriveFileId(x.url)===fid));
-  let moved = 0, driveFail = 0;
+  // v11.54 — ย้ายไฟล์ใน Drive "ก่อน" แล้วค่อยย้ายในแอพ: ถ้า Drive ย้ายไม่สำเร็จ (หรือเกินเวลา) เอกสารนั้นจะคงอยู่ที่เดิมทั้งแอพและ Drive (ไม่ให้ข้อมูลสองที่ไม่ตรงกัน)
+  let moved = 0; const failed = [], movedFids = new Set(), failedFids = new Set(); let lastErr = '';
   try{
-    for(const d of todo){
-      showLoadingOverlay(`กำลังย้าย ${moved+1}/${todo.length}...`);
+    let folderId = null;
+    if(fidsToMove.length){
+      showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทางใน Drive...');
+      try{ folderId = await exWithTimeout(ensureDocumentFolderPath(dCat, dModel, typeLabel), 60000, 'สร้างโฟลเดอร์ปลายทาง'); }catch(e){ lastErr = e.message; console.warn('สร้างโฟลเดอร์ปลายทางไม่สำเร็จ', e); }
+    }
+    for(let i=0;i<todo.length;i++){
+      const d = todo[i];
+      showLoadingOverlay(`กำลังย้าย ${i+1}/${todo.length}...`);
+      const fid = d.url ? extractDriveFileId(d.url) : null;
+      if(fid && fidsToMove.includes(fid) && !movedFids.has(fid)){
+        if(failedFids.has(fid) || !folderId){ failed.push(d); continue; }
+        try{ await exWithTimeout(examApi('drvMove', { fileId: fid, parentIds: [folderId] }), 45000, 'ย้ายไฟล์ใน Drive'); movedFids.add(fid); }
+        catch(e){ failedFids.add(fid); failed.push(d); lastErr = e.message; console.warn('ย้ายไฟล์ Drive ไม่สำเร็จ — คงเอกสารไว้ที่เดิม', e); continue; }
+      }
       const fields = { category:dCat, model:dModel, docType:dType, videoSubtype: hasSub ? dSub : null };
       await fsUpdateDocument(d.id, fields);
       Object.assign(d, fields); moved++;
     }
-    if(fidsToMove.length){
-      showLoadingOverlay('กำลังย้ายไฟล์ใน Drive...');
-      let folderId = null;
-      try{ folderId = await ensureDocumentFolderPath(dCat, dModel, typeLabel); }catch(e){ console.warn('สร้างโฟลเดอร์ปลายทางไม่สำเร็จ', e); }
-      for(const fid of fidsToMove){
-        if(!folderId){ driveFail++; continue; }
-        try{ await examApiRetry('drvMove', { fileId: fid, parentIds: [folderId] }); }catch(e){ driveFail++; console.warn('ย้ายไฟล์ Drive ไม่สำเร็จ', e); }
-      }
-    }
-    try{ fsWriteLog(`ย้ายเอกสาร ${moved} รายการ → ${dCat} · ${dModel} · ${typeLabel}`); }catch(_){}
+    try{ fsWriteLog(`ย้ายเอกสาร ${moved} รายการ → ${dCat} · ${dModel} · ${typeLabel}`+(failed.length?` (ไม่สำเร็จ ${failed.length})`:'')); }catch(_){}
     try{ dxInvalidate(); }catch(_){}
   }catch(e){
     hideLoadingOverlay(); showToast('⚠ ย้ายไม่สำเร็จบางส่วน ('+moved+'/'+todo.length+'): '+e.message);
@@ -10734,7 +10739,8 @@ async function execDocMove(docs, dCat, dModel, dType, dSub){
   hideLoadingOverlay();
   if(doclinkListContext) renderDocLinkListItems();
   renderAll();
-  showToast(`✓ ย้ายแล้ว ${moved} รายการ → ${dCat} · ${dModel}`+(skipped.length?` · ข้าม ${skipped.length} (มีอยู่แล้ว)`:'')+(driveFail?` · ย้ายไฟล์ใน Drive ไม่ได้ ${driveFail} ไฟล์ (ลิงก์ยังใช้ได้)`:''));
+  if(failed.length) showToast((moved?`ย้ายแล้ว ${moved} รายการ · `:'')+`⚠ ย้ายไม่ได้ ${failed.length} รายการ (ไฟล์ใน Drive ย้ายไม่สำเร็จ จึงคงไว้ที่เดิมทั้งแอพและ Drive — ลองใหม่อีกครั้ง)`);
+  else showToast(`✓ ย้ายแล้ว ${moved} รายการ → ${dCat} · ${dModel}`+(skipped.length?` · ข้าม ${skipped.length} (มีอยู่แล้ว)`:''));
 }
 $('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
 $('doclink-list-add-btn').addEventListener('click', ()=>{
