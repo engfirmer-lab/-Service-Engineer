@@ -152,6 +152,9 @@
   #eng-cert-sum-table th:first-child, #eng-cert-sum-table td:first-child{ text-align:left; white-space:normal; padding-left:8px; }
   #eng-cert-sum-table th:nth-child(n+2), #eng-cert-sum-table td:nth-child(n+2){ width:62px; }
   #eng-cert-matrix, #eng-cert-summary{ overscroll-behavior:contain; }
+  /* v11.50 — หัวตารางล็อกค้างทุกตารางยาว (ใส่ class f1-sth ให้อัตโนมัติ ดู f1StickyHeads) */
+  .f1-sth{position:sticky !important;top:0;z-index:4;background:var(--panel,#fff);box-shadow:0 1px 0 var(--border,#ccc);}
+  .f1-stwrap{overflow:auto;max-height:70vh;-webkit-overflow-scrolling:touch;}
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
@@ -1411,7 +1414,7 @@ setTimeout(function(){
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div>
             <h2 style="margin-bottom:2px;font-size:14px;">รุ่นเครื่องที่ดูแล</h2>
-            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ระบุรุ่นที่คุณดูแล เพื่อสรุปว่า Cer ขาดกี่ใบ</p>
+            <p class="panel-sub" style="margin-bottom:0;font-size:11.5px;">ต้องระบุก่อนแนบใบ Cer · ใช้สรุปว่า Cer ขาดกี่ใบ (แนบได้ทุกรุ่น)</p>
           </div>
           <button class="btn btn-ghost btn-sm" id="eng-resp-open-btn">✏️ เลือก/แก้ไขรุ่นเครื่องที่ดูแล</button>
         </div>
@@ -1543,7 +1546,10 @@ setTimeout(function(){
       <h3 id="doclink-list-title">เอกสาร</h3>
       <p id="doclink-list-sub" style="font-size:12px;color:var(--text-faint);margin-bottom:14px;"></p>
       <div id="doclink-list-items"></div>
-      <button class="btn btn-primary btn-sm" id="doclink-list-add-btn" style="margin-top:14px;">+ เพิ่มเอกสาร</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn btn-primary btn-sm" id="doclink-list-add-btn">+ เพิ่มเอกสาร</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-list-move-btn" style="display:none;">↔ ย้ายที่เลือก</button>
+      </div>
     </div>
   </div>
 
@@ -2623,7 +2629,7 @@ const FIREBASE_CONFIG = {
 let db, auth, googleProvider, _fbReady = false;
 
 /* ===================== เวอร์ชันแอป — จุดเดียวที่ต้องแก้ทุกครั้งที่ส่งมอบ (title/brand/footer ด้านล่างดึงจากค่านี้อัตโนมัติ) ===================== */
-const APP_VERSION = "11.47";
+const APP_VERSION = "11.50";
 const APP_UPDATED_AT = "4 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
@@ -3088,6 +3094,7 @@ function seedData(){
 }
 
 let DATA = null;
+let myRespDeclared = false; // v11.48 — เคยระบุรุ่นที่ดูแลแล้วหรือยัง (มีเอกสารใน engineerResponsibility)
 let myResponsibility = []; // [{category, model}] รุ่นเครื่องที่ดูแลของ Engineer ที่ login อยู่ (v8.58) — ใช้แค่แสดงผล ไม่ใช้กั้นการอัปโหลด Cer (v8.60)
 let certRequirements = {}; // "category|model" -> 'internal'|'manufacturer'|'both' — Sup Product เป็นคนกำหนด (v8.60)
 let _engCertHiddenCats = new Set(); // ประเภทที่ซ่อนไว้ (v9.01)
@@ -10564,8 +10571,10 @@ function renderDocLinkListItems(){
   wrap.innerHTML = docs.length===0
     ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มีลิงก์ในช่องนี้</p>`
     : docs.map(d=>`<div class="admin-row">
+        <label style="display:flex;align-items:center;padding-right:6px;flex-shrink:0;" title="เลือกเพื่อย้าย"><input type="checkbox" class="dlm-chk" value="${d.id}"></label>
         <div class="admin-row-main"><a href="${escapeHtml(safeHttpUrl(d.url))}" target="_blank" rel="noopener" style="font-size:12.5px;color:var(--text);text-decoration:underline;word-break:break-all;">${escapeHtml(d.title)}</a></div>
         <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button class="icon-btn btn-sm" data-movelink="${d.id}">ย้าย</button>
           <button class="icon-btn btn-sm" data-editlink="${d.id}">แก้ไข</button>
           <button class="icon-btn danger btn-sm" data-dellink="${d.id}">ลบ</button>
         </div>
@@ -10573,6 +10582,19 @@ function renderDocLinkListItems(){
   wrap.querySelectorAll('[data-editlink]').forEach(b=>b.addEventListener('click', ()=>{
     openDocLinkModal(category, model, docType, videoSubtype, b.getAttribute('data-editlink'));
   }));
+  // v11.49 — ย้ายเอกสาร (ทีละไฟล์ / เลือกหลายไฟล์) ข้ามหัวข้อ/รุ่น/Product
+  wrap.querySelectorAll('[data-movelink]').forEach(b=>b.addEventListener('click', ()=> openDocMoveModal([b.getAttribute('data-movelink')])));
+  const mvBtn = $('doclink-list-move-btn');
+  if(mvBtn){
+    mvBtn.style.display = docs.length>0 ? '' : 'none';
+    const upd = ()=>{ const n = wrap.querySelectorAll('.dlm-chk:checked').length; mvBtn.textContent = n>0 ? `↔ ย้ายที่เลือก (${n})` : '↔ ย้ายที่เลือก'; };
+    wrap.querySelectorAll('.dlm-chk').forEach(c=>c.addEventListener('change', upd)); upd();
+    mvBtn.onclick = ()=>{
+      const ids = Array.from(wrap.querySelectorAll('.dlm-chk:checked')).map(c=>c.value);
+      if(!ids.length){ showToast('ติ๊กเลือกเอกสารที่จะย้ายก่อน (หรือกด "ย้าย" ที่แถว)'); return; }
+      openDocMoveModal(ids);
+    };
+  }
   wrap.querySelectorAll('[data-dellink]').forEach(b=>b.addEventListener('click', async ()=>{
     const id = b.getAttribute('data-dellink');
     const doc = docs.find(d=>d.id===id);
@@ -10592,6 +10614,98 @@ function renderDocLinkListItems(){
     renderDocLinkListItems();
     showToast(idsToDelete.length>1 ? `✓ ลบแล้ว ${idsToDelete.length} รายการ` : (driveFileId ? '✓ ลบไฟล์และลิงก์แล้ว' : '✓ ลบลิงก์แล้ว'));
   }));
+}
+
+/* ===================== v11.49 ย้ายเอกสาร ===================== */
+function dmOwnedModels(){
+  const out = [];
+  Object.entries(DATA.categories).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,ms])=>{ [...ms].sort(naturalSort).forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) out.push({category:cat, model:m}); }); });
+  return out;
+}
+function dmDocLabel(d){ return docTypeHasSubtypes(d.docType) ? subtypeLabel(d.docType, d.videoSubtype) : docTypeLabel(d.docType); }
+function openDocMoveModal(ids){
+  const docs = ids.map(id=>DATA.documents.find(d=>d.id===id)).filter(Boolean); if(!docs.length) return;
+  const owned = dmOwnedModels(); if(!owned.length){ showToast('ยังไม่มีรุ่นที่คุณดูแล'); return; }
+  const cats = Array.from(new Set(owned.map(x=>x.category)));
+  const f = docs[0];
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const names = docs.slice(0,5).map(d=>`<div style="font-size:12.5px;word-break:break-all;">• ${escapeHtml(d.title)} <span style="color:var(--text-faint);">(${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${escapeHtml(dmDocLabel(d))})</span></div>`).join('') + (docs.length>5 ? `<div style="font-size:12px;color:var(--text-faint);">… และอีก ${docs.length-5} รายการ</div>` : '');
+  const selSty = 'width:100%;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px;';
+  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;">
+      <p style="font-size:14.5px;font-weight:600;margin:0 0 6px;">↔ ย้ายเอกสาร ${docs.length} รายการ</p>
+      <div style="margin-bottom:12px;">${names}</div>
+      <label style="font-size:12px;color:var(--text-faint);">ย้ายไปที่ Product</label>
+      <select id="dm-cat" style="${selSty}">${cats.map(c=>`<option value="${escapeHtml(c)}" ${c===f.category?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+      <label style="font-size:12px;color:var(--text-faint);">รุ่น</label>
+      <select id="dm-model" style="${selSty}"></select>
+      <label style="font-size:12px;color:var(--text-faint);">หัวข้อเอกสาร</label>
+      <select id="dm-type" style="${selSty}">${MATRIX_COLUMNS.map(c=>`<option value="${c.key}|${c.videoSubtype||''}" ${(c.key===f.docType && (c.videoSubtype||'')===(f.videoSubtype||''))?'selected':''}>${c.icon} ${escapeHtml(c.label)}</option>`).join('')}</select>
+      <p style="font-size:11.5px;color:var(--text-faint);margin:0 0 12px;">ลิงก์เดิมยังใช้ได้ · ไฟล์ใน Google Drive จะย้ายตามไปโฟลเดอร์ใหม่เมื่อทำได้</p>
+      <div style="display:flex;gap:8px;">
+        <button id="dm-go" class="btn btn-primary btn-sm" style="flex:1;">ย้าย</button>
+        <button id="dm-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button>
+      </div></div>`;
+  document.body.appendChild(ov);
+  const fillModels = ()=>{
+    const c = ov.querySelector('#dm-cat').value;
+    const ms = owned.filter(x=>x.category===c).map(x=>x.model);
+    ov.querySelector('#dm-model').innerHTML = ms.map(m=>`<option value="${escapeHtml(m)}" ${(c===f.category && m===f.model)?'selected':''}>${escapeHtml(m)}</option>`).join('');
+  };
+  fillModels();
+  ov.querySelector('#dm-cat').addEventListener('change', fillModels);
+  ov.querySelector('#dm-cancel').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#dm-go').addEventListener('click', async ()=>{
+    const dCat = ov.querySelector('#dm-cat').value, dModel = ov.querySelector('#dm-model').value;
+    const [dType, dSub] = ov.querySelector('#dm-type').value.split('|');
+    if(!dCat || !dModel){ showToast('กรุณาเลือกรุ่นปลายทาง'); return; }
+    ov.remove();
+    await execDocMove(docs, dCat, dModel, dType, dSub||undefined);
+  });
+}
+async function execDocMove(docs, dCat, dModel, dType, dSub){
+  const hasSub = docTypeHasSubtypes(dType);
+  const sel = new Set(docs.map(d=>d.id));
+  const sameSlot = x=> x.category===dCat && x.model===dModel && x.docType===dType && (!hasSub || x.videoSubtype===dSub);
+  const todo = [], skipped = [];
+  docs.forEach(d=>{
+    if(sameSlot(d)) { skipped.push(d); return; } // อยู่ที่ปลายทางอยู่แล้ว
+    if(DATA.documents.some(x=>!sel.has(x.id) && sameSlot(x) && x.url && x.url===d.url)) { skipped.push(d); return; } // ปลายทางมีลิงก์เดียวกันแล้ว
+    todo.push(d);
+  });
+  if(!todo.length){ showToast('ไม่มีรายการที่ต้องย้าย (อยู่ที่ปลายทางอยู่แล้ว หรือมีลิงก์เดียวกันอยู่แล้ว)'); return; }
+  const typeLabel = hasSub ? subtypeLabel(dType, dSub) : docTypeLabel(dType);
+  // ไฟล์ Drive ที่ย้ายตามได้ = ไม่มีเอกสารนอกกลุ่มที่เลือกอ้างถึงไฟล์เดียวกัน
+  const todoIds = new Set(todo.map(d=>d.id)), fids = new Set();
+  todo.forEach(d=>{ const fid = d.url ? extractDriveFileId(d.url) : null; if(fid) fids.add(fid); });
+  const fidsToMove = Array.from(fids).filter(fid=> !DATA.documents.some(x=>!todoIds.has(x.id) && x.url && extractDriveFileId(x.url)===fid));
+  let moved = 0, driveFail = 0;
+  try{
+    for(const d of todo){
+      showLoadingOverlay(`กำลังย้าย ${moved+1}/${todo.length}...`);
+      const fields = { category:dCat, model:dModel, docType:dType, videoSubtype: hasSub ? dSub : null };
+      await fsUpdateDocument(d.id, fields);
+      Object.assign(d, fields); moved++;
+    }
+    if(fidsToMove.length){
+      showLoadingOverlay('กำลังย้ายไฟล์ใน Drive...');
+      let folderId = null;
+      try{ folderId = await ensureDocumentFolderPath(dCat, dModel, typeLabel); }catch(e){ console.warn('สร้างโฟลเดอร์ปลายทางไม่สำเร็จ', e); }
+      for(const fid of fidsToMove){
+        if(!folderId){ driveFail++; continue; }
+        try{ await examApiRetry('drvMove', { fileId: fid, parentIds: [folderId] }); }catch(e){ driveFail++; console.warn('ย้ายไฟล์ Drive ไม่สำเร็จ', e); }
+      }
+    }
+    try{ fsWriteLog(`ย้ายเอกสาร ${moved} รายการ → ${dCat} · ${dModel} · ${typeLabel}`); }catch(_){}
+    try{ dxInvalidate(); }catch(_){}
+  }catch(e){
+    hideLoadingOverlay(); showToast('⚠ ย้ายไม่สำเร็จบางส่วน ('+moved+'/'+todo.length+'): '+e.message);
+    if(doclinkListContext) renderDocLinkListItems(); renderAll(); return;
+  }
+  hideLoadingOverlay();
+  if(doclinkListContext) renderDocLinkListItems();
+  renderAll();
+  showToast(`✓ ย้ายแล้ว ${moved} รายการ → ${dCat} · ${dModel}`+(skipped.length?` · ข้าม ${skipped.length} (มีอยู่แล้ว)`:'')+(driveFail?` · ย้ายไฟล์ใน Drive ไม่ได้ ${driveFail} ไฟล์ (ลิงก์ยังใช้ได้)`:''));
 }
 $('doclink-list-close').addEventListener('click', ()=>{ $('doclink-list-modal').classList.remove('show'); doclinkListContext=null; });
 $('doclink-list-add-btn').addEventListener('click', ()=>{
@@ -20202,6 +20316,7 @@ async function ensureCertificateFolderPath(certType, ownerName, category, model)
 async function fsLoadMyResponsibility(){
   await initFirebase(); const sdk = window._firebaseSdk;
   const snap = await sdk.getDoc(sdk.doc(db,'engineerResponsibility', myUserEmail));
+  myRespDeclared = snap.exists();
   myResponsibility = snap.exists() ? (snap.data().models||[]) : [];
 }
 async function fsSaveMyResponsibility(models){
@@ -20209,7 +20324,7 @@ async function fsSaveMyResponsibility(models){
   await sdk.setDoc(sdk.doc(db,'engineerResponsibility', myUserEmail), {
     models, ownerEmail: myUserEmail, ownerName: myClaimantName(), updatedAt: Date.now()
   });
-  myResponsibility = models;
+  myResponsibility = models; myRespDeclared = true;
   fsWriteLog(`ตั้งพื้นที่รับผิดชอบ Certificate: ${models.length} รุ่น`);
 }
 
@@ -20430,14 +20545,41 @@ async function renderEngCertTab(forceReload){
           Object.keys(DATA.categories||{}).forEach(cat=>{ (DATA.categories[cat]||[]).forEach(m=>{ if(ownerOf(cat,m)===currentSupIdentity) myModelSet.add(cat+'|'+m); }); });
         }
       }catch(_){}
-      _engCertDataCache = { certMap, myModelSet };
+      _engCertDataCache = { certMap, myModelSet, declared: myRespDeclared };
     }catch(err){
       wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red, #dc2626);font-size:13px;">โหลดไม่สำเร็จ: ${escapeHtml(err.message||String(err))}</div>`;
       console.error('renderEngCertTab error:', err);
       return;
     }
   }
-  const { certMap, myModelSet } = _engCertDataCache;
+  const { certMap, myModelSet, declared } = _engCertDataCache;
+  // v11.48 — Engineer ต้องระบุรุ่นที่ดูแลก่อนจึงแนบใบ Cer ได้ (แนบได้ทุกรุ่นหลังระบุแล้ว) · Sup/Editor ไม่ถูกล็อก
+  try{
+    const gated = !isEditor() && !declared;
+    const attachPanel = $('eng-cert-body') && $('eng-cert-body').closest('.panel-block');
+    const dashPanel = $('eng-cert-dash-panel');
+    if(attachPanel) attachPanel.style.display = gated ? 'none' : '';
+    if(dashPanel) dashPanel.style.display = gated ? 'none' : '';
+    let g = $('eng-resp-gate');
+    if(!g){ g = document.createElement('div'); g.id = 'eng-resp-gate'; const rp = $('eng-resp-open-btn').closest('.panel-block'); rp.parentNode.insertBefore(g, rp.nextSibling); }
+    if(gated){
+      g.className = 'panel-block'; g.style.cssText = 'padding:14px;border:1px solid var(--orange,#b4730f);';
+      g.innerHTML = `<h2 style="margin:0 0 4px;font-size:14px;">⚠️ กรุณาระบุรุ่นเครื่องที่ดูแลก่อนแนบใบ Cer</h2>
+        <p class="panel-sub" style="font-size:12.5px;margin:0 0 10px;">ข้อมูลนี้ใช้สรุปว่าคุณต้องมี Cer รุ่นไหนบ้าง · หลังระบุแล้วแนบได้ <b>ทุกรุ่น</b> รวมรุ่นที่ไม่ได้ดูแล</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" id="eng-resp-gate-pick">✏️ เลือกรุ่นที่ดูแล</button>
+          <button class="btn btn-ghost btn-sm" id="eng-resp-gate-none">ไม่ได้ดูแลเครื่องใด</button>
+        </div>`;
+      g.style.display = '';
+      $('eng-resp-gate-pick').addEventListener('click', ()=> $('eng-resp-open-btn').click());
+      $('eng-resp-gate-none').addEventListener('click', async ()=>{
+        if(!confirm('ยืนยัน: ไม่ได้ดูแลเครื่องใดเลย?\n(แก้ไขภายหลังได้ที่ปุ่ม "เลือก/แก้ไขรุ่นเครื่องที่ดูแล")')) return;
+        showLoadingOverlay('กำลังบันทึก...');
+        try{ await fsSaveMyResponsibility([]); hideLoadingOverlay(); _engCertDataCache = null; renderEngCertTab(true); }
+        catch(e){ hideLoadingOverlay(); alert('บันทึกไม่สำเร็จ: '+e.message); }
+      });
+    } else { g.style.display = 'none'; g.innerHTML = ''; }
+  }catch(e){ console.warn('eng resp gate:', e); }
   const cats = Object.keys(DATA.categories||{}).sort(naturalSort);
   // ---- Dashboard สรุป (v9.02) — แยก 2 แบบ: เครื่องที่ดูแล / เครื่องนอกดูแล ----
   const calcStats = (wantMine)=>{
@@ -22028,6 +22170,40 @@ async function rpEditSave(){
     }
     // exitGuardArmed เป็น false อยู่แล้ว (เช่นกรณีนี้คือ popstate ที่เกิดจาก history.back() ที่เราสั่งตอนยืนยันออกด้านบน) — ปล่อยให้เบราว์เซอร์ออกจากแอปไปตามปกติ ไม่ต้องทำอะไรเพิ่ม
   });
+})();
+
+// v11.50 — หัวตารางล็อกค้างอัตโนมัติ: ตารางที่มี ≥ 8 แถว จะอยู่ในกรอบเลื่อนสูงสุด 70% ของจอ และหัวตารางค้างไว้ด้านบนกรอบ
+(function(){
+  const SKIP_ID = new Set(['sup-doc-matrix','claims-table','eng-cert-matrix']); // ตารางที่ล็อกหัวไว้เองแล้ว
+  function headCells(t){
+    const th = t.querySelectorAll('thead th'); if(th.length) return Array.from(th);
+    const tr = t.querySelector('tr'); if(!tr) return [];
+    const cells = Array.from(tr.children); return cells.length && cells.every(c=>c.tagName==='TH') ? cells : [];
+  }
+  function apply(){
+    document.querySelectorAll('table').forEach(t=>{
+      try{
+        if(SKIP_ID.has(t.id)) return;
+        if(t.closest('.modal,.modal-overlay,.ex-sktable,#manual-modal,#view-manual')) { return; }
+        if(t.querySelectorAll('tr').length < 8) return;
+        const hc = headCells(t); if(!hc.length) return;
+        hc.forEach(c=>{ if(!c.classList.contains('f1-sth')) c.classList.add('f1-sth'); });
+        const p = t.parentElement; if(!p) return;
+        if(p.classList.contains('f1-stwrap')) return;
+        const cs = getComputedStyle(p);
+        if(/(auto|scroll)/.test(cs.overflowX) || /(auto|scroll)/.test(cs.overflowY) || cs.overflow==='clip'){
+          p.classList.add('f1-stwrap'); // มีกรอบเลื่อนอยู่แล้ว → ใช้กรอบเดิม จำกัดความสูง
+        } else {
+          const w = document.createElement('div'); w.className = 'f1-stwrap';
+          p.insertBefore(w, t); w.appendChild(t);
+        }
+      }catch(e){}
+    });
+  }
+  let tm = null; const run = ()=>{ clearTimeout(tm); tm = setTimeout(apply, 150); };
+  try{ new MutationObserver(run).observe(document.body, {childList:true, subtree:true}); }catch(e){}
+  run();
+  window.f1StickyHeads = apply;
 })();
 </script>
 
