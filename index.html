@@ -3,7 +3,7 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.71
+  เวอร์ชันปัจจุบัน : 11.73
   อัปเดตล่าสุด   : 4 พฤศจิกายน 2569 23:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.71</title>
+<title>F1 Service — v11.73</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2638,8 +2638,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.71";
-const APP_UPDATED_AT = "4 พฤศจิกายน 2569 23:10 น. เวลาไทย";
+const APP_VERSION = "11.73";
+const APP_UPDATED_AT = "5 พฤศจิกายน 2569 12:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2988,6 +2988,11 @@ async function fsBumpDocsVersion(){
 }
 // ข้อความเมื่อโควตา Firestore เต็ม (แทนข้อความดิบภาษาอังกฤษ)
 function f1IsQuotaErr(m){ return /Quota exceeded|RESOURCE_EXHAUSTED|Firestore 429|resource-exhausted/i.test(String(m||'')); }
+// v11.73 — แคชรายชื่อสิทธิ์/ข้อมูลพื้นฐานในเครื่อง ใช้เฉพาะตอนโควตา Read เต็ม (ใช้เปิดแอป/ฟอร์มได้เท่านั้น — สิทธิ์จริงยังบังคับที่ Firestore Rules + Apps Script)
+// กฎสำคัญ: ไฟล์ทุกอย่างยังสร้างใน Drive ของ EngFirmer เท่านั้น แคชนี้ไม่เกี่ยวกับการสร้างไฟล์
+function f1CacheSet(k,v){ try{ localStorage.setItem('f1c_'+k, JSON.stringify(v)); }catch(_){} }
+function f1CacheGet(k){ try{ const r=localStorage.getItem('f1c_'+k); return r?JSON.parse(r):null; }catch(_){ return null; } }
+window._f1Offline = false;
 const F1_QUOTA_MSG = 'โควตาอ่านข้อมูลฟรีของวันนี้เต็มแล้ว (Firebase จำกัดวันละ 50,000 ครั้ง) จะรีเซ็ตประมาณ 14:00–15:00 น. เวลาไทย — ข้อมูลที่กรอกยังอยู่ ลองใหม่หลังเวลานี้ หรือแจ้ง Manager ให้อัปเกรดแพ็กเกจ';
 async function initFirebase(){
   if(_fbReady) return;
@@ -3790,9 +3795,25 @@ async function loadData(){
       if(!supDoc.exists() && isEditor()) await sdk.setDoc(sdk.doc(db,'meta','supProducts'), { names: SUP_PRODUCTS });
     }
     if(!SUP_PRODUCTS.includes(currentSupIdentity)) currentSupIdentity = SUP_PRODUCTS[0] || '';
+    f1CacheSet('base', { categories: DATA.categories, owners: DATA.owners, sup: SUP_PRODUCTS, at: Date.now() });
     renderSupIdentityOptions();
     setStatus(false, `พร้อมใช้งาน`);
   }catch(e){
+    // v11.73 — โควตา Read เต็ม: ใช้หมวด/รุ่น/ผู้ดูแลที่แคชไว้ เพื่อให้ฟอร์มแจ้งเคลมเปิดได้ (ข้อมูลเคลมเดิมจะว่างจนกว่าโควตารีเซ็ต)
+    const _bc = f1IsQuotaErr(e.message) ? f1CacheGet('base') : null;
+    if(_bc && _bc.categories){
+      window._f1Offline = true;
+      setStatus(false, '⚠ โควตาอ่านเต็ม — ใช้ข้อมูลพื้นฐานที่จำไว้ในเครื่อง');
+      showToast('⚠ โควตาอ่านข้อมูลฟรีวันนี้เต็ม — ฟอร์มแจ้งเคลมใช้ได้ แต่รายการเดิมจะแสดงหลังโควตารีเซ็ต (ประมาณ 15:00 น.)');
+      DATA = { errors:[], documents:[], proposals:[], pendingErrors:[], claims:[], claimNotices:[], categories:_bc.categories, owners:_bc.owners||{categoryOwners:{},modelOverrides:{}} };
+      if(Array.isArray(_bc.sup) && _bc.sup.length) SUP_PRODUCTS = _bc.sup;
+      window._dataLoadFailed = true;
+      try{ liveStopAll(); }catch(_){}
+      ensureDataShape();
+      renderSupIdentityOptions();
+      renderAll();
+      return;
+    }
     // v8.90 — โหลดพลาดต้องไม่สลับไปใช้ข้อมูลตัวอย่าง (ผู้ใช้แก้ไขบนข้อมูลปลอมแล้วเขียนขยะลงฐานข้อมูลจริงได้) → แสดงว่างพร้อมแจ้งให้รีเฟรช
     setStatus(false, '⚠ เชื่อมต่อ Firestore ไม่สำเร็จ — กรุณารีเฟรชหน้า');
     showToast('⚠ โหลดข้อมูลไม่สำเร็จ: '+e.message+' — กรุณารีเฟรชหน้า');
@@ -6612,9 +6633,18 @@ async function checkAccessAndLoad(){
       try{ await sdk.setDoc(sdk.doc(db,'meta','approvedUsers'), { emails: approvedUsers }); }
       catch(bootstrapErr){ console.warn('ยังสร้างรายชื่อผู้มีสิทธิ์เข้าถึงเริ่มต้นไม่ได้:', bootstrapErr); }
     }
+    f1CacheSet('access', { adminEmails, approvedUsers, managerEmails, adminServiceEmails, ceoEmails, at: Date.now() });
   }catch(e){
-    setStatus(false, '⚠ ตรวจสอบสิทธิ์ไม่สำเร็จ: '+e.message);
-    return;
+    // v11.73 — โควตา Read เต็ม: ใช้รายชื่อสิทธิ์ที่แคชไว้ครั้งล่าสุดเพื่อให้เปิดแอป/แจ้งเคลมได้ (ถ้าไม่เคยมีแคชก็แจ้งตามเดิม)
+    const _ac = f1IsQuotaErr(e.message) ? f1CacheGet('access') : null;
+    if(_ac && Array.isArray(_ac.approvedUsers)){
+      adminEmails=_ac.adminEmails||[]; approvedUsers=_ac.approvedUsers||[]; managerEmails=_ac.managerEmails||[]; adminServiceEmails=_ac.adminServiceEmails||[]; ceoEmails=_ac.ceoEmails||[];
+      window._f1Offline = true;
+      showToast('⚠ โควตาอ่านข้อมูลฟรีวันนี้เต็ม — เปิดด้วยข้อมูลที่จำไว้ในเครื่อง แจ้งเคลม/แนบไฟล์ยังใช้ได้ ข้อมูลรายการอื่นจะกลับมาหลังโควตารีเซ็ต');
+    } else {
+      setStatus(false, '⚠ ตรวจสอบสิทธิ์ไม่สำเร็จ: '+e.message);
+      return;
+    }
   }
 
   if(!isApproved()){
@@ -6664,7 +6694,7 @@ async function checkAccessAndLoad(){
   initRpRealtimeWatch();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
-  updateNotifBadge();
+  updateNotifBadge(); try{ f1ObRefreshPill(); }catch(_){}
   await checkUserProfileGate(); try{ renderSupIdentityOptions(); }catch(_){} setTimeout(()=>{ try{ checkBirthdayToday(); }catch(_){} }, 1800); // v11.00 — แจ้งวันเกิดเพื่อนร่วมงาน (วันละครั้ง) // บังคับกรอกโปรไฟล์ครั้งแรก (ยกเว้น Super Admin) — เช็คว่ามี userProfiles/{email} หรือยัง ครอบคลุมทั้งคนใหม่และคนเก่าที่ยังไม่เคยกรอก
   // รีเซ็ต mode ทุกครั้งที่ login/สลับบัญชี — กันบั๊ก: currentMode ของบัญชีก่อนหน้า (เช่น 'admin-service') ค้างอยู่
   // ทำให้บัญชีใหม่ที่ไม่ใช่ Admin Service ยังเห็นหน้า admin-service อยู่ แม้ว่า mode button จะแสดงถูกแล้ว
@@ -12446,7 +12476,34 @@ function closeClaimModalWithGuard(){
 function claimTypeLabel(type){ return type==='report' ? 'แจ้งปัญหา' : 'เคลมอะไหล่'; }
 // v11.35 — ชื่อที่ Engineer เห็นในหัวฟอร์ม (ฝั่ง Sup/Dashboard/ชื่อแท็บ Sheet ยังใช้ claimTypeLabel เดิม)
 function claimTypeLabelEng(type){ return type==='report' ? 'แจ้งปัญหา/อะไหล่หมดประกัน' : 'เคลมอะไหล่'; }
-function openClaimModal(existingClaim, type){
+// ===== v11.73 — Outbox: เก็บเคลมใหม่ที่ส่งไม่สำเร็จ (โควตาเต็ม/เน็ตหลุด) พร้อมไฟล์แนบไว้ในเครื่อง (IndexedDB) แล้วกดส่งซ้ำได้ภายหลัง
+// ⚠ กฎสำคัญสูงสุด: Outbox เก็บแค่ในเบราว์เซอร์ของผู้ใช้ชั่วคราวเท่านั้น ไม่ใช่ที่เก็บถาวร — ตอนส่งจริง ไฟล์ยังไปสร้างใน Drive ของ EngFirmer เท่านั้น (ผ่าน Apps Script) ไม่เคยเข้า Drive ส่วนตัวของผู้ใช้
+let claimOutboxId = null;
+function f1ObOpen(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open('f1_outbox',1); r.onupgradeneeded=()=>{ r.result.createObjectStore('claims',{keyPath:'id'}); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); }
+async function f1ObPut(item){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readwrite'); t.objectStore('claims').put(item); t.oncomplete=()=>{d.close();res();}; t.onerror=()=>{d.close();rej(t.error);}; }); }
+async function f1ObDel(id){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readwrite'); t.objectStore('claims').delete(id); t.oncomplete=()=>{d.close();res();}; t.onerror=()=>{d.close();rej(t.error);}; }); }
+async function f1ObAll(){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readonly'); const q=t.objectStore('claims').getAll(); q.onsuccess=()=>{d.close();res((q.result||[]).filter(x=>x.owner===myUserEmail));}; q.onerror=()=>{d.close();rej(q.error);}; }); }
+async function f1ObEnqueueClaim(){
+  if(!claimDraft || claimEditingId) return; // เก็บเฉพาะเคลมใหม่ (แก้เคลมเดิมใช้ร่างตามปกติ)
+  const files=[];
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ ((claimDraft.attachments||{})[g.key]||[]).forEach(a=>{ if(a.pending){ const b=a.blob||a.file; if(b) files.push({group:g.key, kind:a.kind, name:a.name||'', blob:b}); } }); });
+  const id = claimOutboxId || ('ob'+Date.now());
+  const draft = { type:claimDraft.type, claimant:claimDraft.claimant, siteName:claimDraft.siteName, category:claimDraft.category, model:claimDraft.model, serialNumber:claimDraft.serialNumber, problem:claimDraft.problem, problemDetail:claimDraft.problemDetail, solution:claimDraft.solution, problemDate:claimDraft.problemDate, fixDate:claimDraft.fixDate, parts:claimDraft.parts, loanSlipNo:claimDraft.loanSlipNo, jobFactorium:claimDraft.jobFactorium };
+  await f1ObPut({ id, owner:myUserEmail, savedAt:Date.now(), draft, files });
+  claimOutboxId = id;
+  f1ObRefreshPill();
+}
+async function f1ObRefreshPill(){
+  let n=0, first=null; try{ const all=await f1ObAll(); n=all.length; first=all.sort((a,b)=>a.savedAt-b.savedAt)[0]; }catch(_){}
+  let el=document.getElementById('f1-outbox-pill');
+  if(!n){ if(el) el.remove(); return; }
+  if(!el){ el=document.createElement('button'); el.id='f1-outbox-pill'; el.type='button'; el.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9000;background:#e65100;color:#fff;border:0;border-radius:22px;padding:10px 16px;font:600 13.5px Sarabun,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.3);cursor:pointer;'; document.body.appendChild(el); }
+  el.textContent='📤 มีเคลมค้างส่ง '+n+' รายการ — กดเพื่อเปิดและส่งอีกครั้ง';
+  el.onclick=()=>{ try{ openClaimModal(null, first.draft.type, first); }catch(e){ showToast('⚠ เปิดรายการค้างส่งไม่สำเร็จ: '+e.message); } };
+}
+window.addEventListener('online', ()=>{ try{ f1ObRefreshPill(); }catch(_){} });
+function openClaimModal(existingClaim, type, outboxItem){
+  claimOutboxId = outboxItem ? outboxItem.id : null;
   if(existingClaim){
     claimEditingId = existingClaim.id;
     const oldAtt = existingClaim.attachments;
@@ -12475,12 +12532,20 @@ function openClaimModal(existingClaim, type){
     $('claim-prestep-status').textContent = '';
     $('claim-prestep-wrap').style.display = '';
     $('claim-form-fields-wrap').style.display = 'none';
+    if(outboxItem){ // v11.73 — เปิดจากรายการค้างส่ง: ใส่ข้อมูล+ไฟล์กลับเข้าฟอร์ม แล้วให้ผู้ใช้กดบันทึกอีกครั้ง
+      Object.assign(claimDraft, outboxItem.draft);
+      claimDraft.attachments = emptyClaimAttachments();
+      (outboxItem.files||[]).forEach(f=>{ if(!claimDraft.attachments[f.group]) return;
+        if(f.kind==='image') claimDraft.attachments[f.group].push({ kind:'image', pending:true, dataUrl:URL.createObjectURL(f.blob), blob:f.blob, name:f.name });
+        else claimDraft.attachments[f.group].push({ kind:'file', pending:true, file:f.blob, name:f.name }); });
+      $('claim-prestep-wrap').style.display = 'none'; $('claim-form-fields-wrap').style.display = '';
+    }
   }
   applyClaimModalTypeUI(claimDraft.type);
   // มีร่างที่ autosave ไว้ก่อนหน้า (โหมด/เคลมเดียวกัน) ถามผู้ใช้ว่าจะกู้คืนหรือไม่ ก่อนเติมค่าลงฟอร์ม
   try{
     const savedRaw = localStorage.getItem(claimDraftStorageKey());
-    if(savedRaw){
+    if(savedRaw && !outboxItem){
       const saved = JSON.parse(savedRaw);
       if(isClaimDraftMeaningful(saved)){
         const savedDate = saved.savedAt ? new Date(saved.savedAt).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
@@ -12685,6 +12750,7 @@ $('claim-save-btn').addEventListener('click', async ()=>{
 
   const btn = $('claim-save-btn'); btn.disabled=true; btn.style.opacity='.5';
   showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทาง...');
+  let _claimDbSaved = false;
   try{
     // ชื่อโฟลเดอร์ตามข้อกำหนด: DDMMYYYY_ผู้เคลม_สถานที่_รุ่น_อาการ — ตัดอาการให้สั้นลงกันชื่อโฟลเดอร์ยาวเกินไป (sanitizeFolderName ตัดความยาวรวมอีกชั้นอยู่แล้ว)
     const symptomShort = claimDraft.problem.slice(0, 40);
@@ -12777,6 +12843,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     } else {
       fields.status = 'pending'; fields.createdAt = Date.now(); fields.serviceOrderNo = '';
       const newId = await fsAddClaim(fields);
+      _claimDbSaved = true;
+      if(claimOutboxId){ try{ await f1ObDel(claimOutboxId); }catch(_){} claimOutboxId = null; f1ObRefreshPill(); }
       _f1Created = []; f1TrackStop();
       liveUpsert('claims', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
       // สร้างรูปสรุปครั้งแรกทันทีหลังบันทึกเคลมใหม่ — ⚠ +1 Firestore write
@@ -12789,8 +12857,9 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     showClaimSuccessSummary(fields);
   }catch(e){
     f1TrackStop(); let _rbN = 0; try{ _rbN = await f1RollbackCreated(); }catch(_){}
+    let _obSaved=false; if(!_claimDbSaved && !claimEditingId){ try{ await f1ObEnqueueClaim(); _obSaved=true; }catch(_){} }
     // บันทึกไม่สำเร็จ (เช่นเน็ตหลุดระหว่างอัปโหลด) — จงใจไม่ลบร่างที่ autosave ไว้ ผู้ใช้เปิดฟอร์มนี้ใหม่แล้วกู้คืนข้อมูลมากรอกซ้ำ/ลองบันทึกใหม่ได้ทันที ไม่ต้องพิมพ์ใหม่ทั้งหมด
-    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rbN>0?' · ยกเลิกไฟล์ที่อัปโหลดค้างไว้แล้ว '+_rbN+' ไฟล์':'')+' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)');
+    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rbN>0?' · ยกเลิกไฟล์ที่อัปโหลดค้างไว้แล้ว '+_rbN+' ไฟล์':'')+(_obSaved?' · 📤 เก็บเคลมพร้อมไฟล์แนบไว้ในเครื่องแล้ว ถ้าปิดฟอร์มจะมีปุ่ม "เคลมค้างส่ง" มุมซ้ายล่างให้กดส่งใหม่':' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)'));
   } finally {
     btn.disabled=false; btn.style.opacity='';
     hideLoadingOverlay();
