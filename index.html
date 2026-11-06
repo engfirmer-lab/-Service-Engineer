@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.73
-  อัปเดตล่าสุด   : 4 พฤศจิกายน 2569 23:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.75
+  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 12:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -93,8 +93,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>F1 Service — v11.73</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>F1 Service — v11.75</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -425,6 +425,9 @@
   .img-thumb button{position:absolute;top:1px;right:1px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:3px;font-size:9px;width:14px;height:14px;cursor:pointer;line-height:1;}
   .upload-btn{width:56px;height:56px;border:1px dashed var(--border);border-radius:6px;background:var(--panel);color:var(--text-faint);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .upload-btn:hover{border-color:var(--amber);color:var(--amber);}
+  /* v11.74 — กันหน้าจอซูมเอง (double-tap ซูมตอนแตะปุ่ม ＋/✕ รัวๆ ตอนแนบไฟล์ ทำให้เลื่อนฟอร์มลงไม่ได้) + ขยายปุ่มให้กดง่ายบนมือถือ */
+  html,body{touch-action:manipulation;}
+  @media (max-width:700px){ .upload-btn{min-width:60px;min-height:60px;} .img-thumb{width:64px;height:64px;} .img-thumb button{width:24px;height:24px;font-size:13px;top:2px;right:2px;} .img-upload-row{gap:12px;} }
   .file-dropzone{border:1px dashed transparent;border-radius:8px;padding:4px;transition:.12s;}
   .file-dropzone.drag-over{border-color:var(--amber);background:rgba(232,163,61,.08);}
   .file-dropzone-hint{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
@@ -2638,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.73";
-const APP_UPDATED_AT = "5 พฤศจิกายน 2569 12:00 น. เวลาไทย";
+const APP_VERSION = "11.75";
+const APP_UPDATED_AT = "6 พฤศจิกายน 2569 12:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4366,6 +4369,7 @@ function compressImage(file){
       resolve({ pending:true, dataUrl:URL.createObjectURL(file), blob:file, _fallbackNoCompress:true });
     };
     const finish = (result)=>{ if(done) return; done = true; resolve(result); };
+    setTimeout(fallback, 20000); // v11.74 — รูปที่เบราว์เซอร์ถอดรหัสไม่ได้ (onload/onerror ไม่ยิง) ห้ามค้างตลอดไป
     try{
       const reader = new FileReader();
       reader.onload = e=>{
@@ -12307,6 +12311,7 @@ async function claimPdfToImages(file){
   if(pdf.numPages > CLAIM_PDF_MAX_PAGES) return { tooMany:true, pages:pdf.numPages };
   const blobs = [];
   for(let i=1;i<=pdf.numPages;i++){
+    await new Promise(r=>setTimeout(r,30)); // v11.74 — ให้เบราว์เซอร์พักวาดหน้าจอ/รับการสัมผัสระหว่างหน้า
     const page = await pdf.getPage(i);
     const vp1 = page.getViewport({ scale:1 });
     let width = 1800, blob = null;
@@ -12329,9 +12334,18 @@ async function claimPdfToImages(file){
   return { blobs };
 }
 // จัดการไฟล์ที่เลือกมา ไม่ว่าจะมาจากปุ่ม ＋ (input file) หรือลากไฟล์มาวาง (drag & drop) — ใช้ฟังก์ชันเดียวกัน กันโค้ดซ้ำ
+function f1ResetZoom(){ // v11.74 — ถ้าหน้าจอถูกซูมอยู่ ดึงกลับ 100% (สลับ viewport ชั่วคราว)
+  try{ const vv = window.visualViewport; if(!vv || vv.scale<=1.02) return; const m=document.querySelector('meta[name="viewport"]'); if(!m) return; const orig=m.content; m.content='width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0'; setTimeout(()=>{ m.content=orig; },300); }catch(_){}
+}
 async function handleClaimAttachFiles(groupKey, fileList){
   const files = Array.from(fileList);
+  let _fi = 0, _ov = false;
+  try{ showLoadingOverlay('กำลังเตรียมไฟล์ 1/'+files.length+' ...'); _ov = true; }catch(_){}
+  try{
   for(const file of files){
+    _fi++;
+    try{ const t=document.querySelector('#global-loading-overlay .loading-text, #global-loading-text'); if(t) t.textContent='กำลังเตรียมไฟล์ '+_fi+'/'+files.length+' ...'; }catch(_){}
+    await new Promise(r=>setTimeout(r,30)); // ให้วงโหลดวาดก่อนเริ่มงานหนัก และพักเธรดหลักระหว่างไฟล์
     if(file.type.startsWith('image/')){
       try{
         const c = await compressImage(file);
@@ -12362,7 +12376,8 @@ async function handleClaimAttachFiles(groupKey, fileList){
       claimDraft.attachments[groupKey].push({ kind:'file', pending:true, file, name:file.name });
     }
   }
-  renderClaimAttachGroupRow(groupKey); pokeDirtyGuards();
+  }finally{ if(_ov){ try{ hideLoadingOverlay(); }catch(_){} } }
+  renderClaimAttachGroupRow(groupKey); pokeDirtyGuards(); f1ResetZoom();
 }
 function renderClaimAttachGroups(){
   claimEnsureAtt();
@@ -17410,10 +17425,11 @@ function trRegInfo(s){
   const today = trToday();
   if(s.status !== 'open') return { open:false, reason:'' };
   if((s.dateMode||'exact') !== 'exact') return { open:false, reason:'' };
-  if(today > s.endDate) return { open:false, reason:'' };
   const mode = String(s.regMode||'');
+  // v11.75 — Sup สั่งเปิด/ปิดเอง มีผลเหนือทุกกำหนด (รวมถึงงานที่เลยวันสิ้นสุดแล้ว)
   if(mode === 'open') return { open:true, reason:'', forced:true };
   if(mode === 'closed') return { open:false, reason:'Sup ปิดรับลงทะเบียน', by:'manual' };
+  if(today > s.endDate) return { open:false, reason:'งานเทรนจบแล้ว', by:'rule' };
   if(s.regDeadline && today > s.regDeadline) return { open:false, reason:'เลยกำหนดปิดรับ ('+trFmtDate(s.regDeadline)+')', by:'rule' };
   if(Number(s.regAutoClose) === 1 && today >= s.startDate) return { open:false, reason:'ถึงวันเริ่มเทรนแล้ว', by:'rule' };
   return { open:true, reason:'' };
@@ -18685,7 +18701,7 @@ function traBlankForm(){
   const me = (TRA.sets && TRA.sets.owners || []).find(o=>o.email===String(myUserEmail).toLowerCase());
   return { id:'', imported:false, status0:'', f:{
     category:'', model:'', title:'', dateMode:'exact', startDate:'', endDate:'', month:'', location:'', trainer:myClaimantName(), trainerEn:exaMyEnName(), trainerTitle:'',
-    seats:0, regDeadline:'', regAutoClose:0, certType:'none', certIssuer:'', examSetId:'', status:'plan', ownerEmail:me ? me.email : String(myUserEmail).toLowerCase(), note:''
+    seats:0, regDeadline:'', regAutoClose:0, regMode:'', certType:'none', certIssuer:'', examSetId:'', status:'plan', ownerEmail:me ? me.email : String(myUserEmail).toLowerCase(), note:''
   }, days:[] };
 }
 async function traPrepareForm(id){
@@ -18700,7 +18716,7 @@ async function traPrepareForm(id){
     const s = g.session;
     TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
       category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:s.startDate.slice(0,7), location:s.location,
-      trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
+      trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, regMode:String(s.regMode||''), certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
       status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
       days:JSON.parse(JSON.stringify(g.days)), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
   } else if(!TRA.form || TRA.form.id) TRA.form = traBlankForm();
@@ -18760,7 +18776,10 @@ function traRenderForm(){
     <div class="tr-fs"><b>สถานะ</b>
       ${closed ? '<div class="ex-note">งานนี้ปิดแล้ว — ใช้ปุ่ม "เปิดงานกลับ" ในหน้าจัดการก่อนถ้าต้องการเปลี่ยนสถานะ</div>' :
       `<div class="subtab-bar tr-seg">${seg('f_status','plan',f.status,'แผน (ยังไม่เปิดรับ)')}${seg('f_status','open',f.status,'เปิดรับลงทะเบียน', f.dateMode==='month')}</div>`}
-      ${f.dateMode==='exact' && !closed ? `<label class="tr-lb">ปิดรับลงทะเบียนหลังวันที่ (ไม่บังคับ)</label><input class="tr-in" type="date" data-tr="f_fld" data-k="regDeadline" value="${trH(f.regDeadline||'')}">
+      ${f.dateMode==='exact' && !closed ? `<label class="tr-lb">การรับลงทะเบียน (สั่งเองได้เลย)</label>
+      <div class="subtab-bar tr-seg">${seg('f_regmode','',String(f.regMode||''),'ตามกำหนด')}${seg('f_regmode','open',String(f.regMode||''),'🔓 เปิดเอง')}${seg('f_regmode','closed',String(f.regMode||''),'🔒 ปิดเอง')}</div>
+      <div class="ex-hint">เปิดเอง/ปิดเอง = ใช้ทันทีหลังกดบันทึก ไม่สนวันที่ด้านล่าง · ตามกำหนด = ใช้วันปิดรับ/ปิดอัตโนมัติด้านล่าง</div>
+      <label class="tr-lb">ปิดรับลงทะเบียนหลังวันที่ (ไม่บังคับ)</label><input class="tr-in" type="date" data-tr="f_fld" data-k="regDeadline" value="${trH(f.regDeadline||'')}">
       <div class="subtab-bar tr-seg">${seg('f_autoclose','1',String(f.regAutoClose?1:0),'ปิดรับอัตโนมัติเมื่อถึงวันเริ่มเทรน')}${seg('f_autoclose','0',String(f.regAutoClose?1:0),'ไม่ปิดอัตโนมัติ')}</div>
       <div class="ex-hint">ปิดแล้วเปิดกลับได้เสมอ — กด "🔓 เปิดรับลงทะเบียนอีกครั้ง" ในหน้าจัดการงาน</div>` : ''}
       ${TRA.role==='manager' && ((TRA.sets && TRA.sets.owners)||[]).length ? `<label class="tr-lb">เจ้าของงาน (Sup ที่อนุมัติ/เช็คชื่อ)</label><select class="tr-in" data-tr="f_fld" data-k="ownerEmail">${TRA.sets.owners.map(o=>`<option value="${trH(o.email)}" ${f.ownerEmail===o.email?'selected':''}>${trH(o.name)} (${o.role==='manager'?'Manager':'Sup'})</option>`).join('')}</select>` : ''}
@@ -19079,7 +19098,7 @@ function trOnEvent(e){
     case 'sch_edit': { const s = TRA.g.session;
       TRA.form = { id:s.sessionId, imported:!!s.imported, status0:s.status, f:{
         category:s.category, model:s.model, title:s.title, dateMode:s.dateMode, startDate:s.startDate, endDate:s.endDate, month:String(s.startDate||'').slice(0,7), location:s.location,
-        trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
+        trainer:s.trainer, trainerEn:s.trainerEn, trainerTitle:s.trainerTitle, seats:s.seats, regDeadline:s.regDeadline||'', regAutoClose:Number(s.regAutoClose)||0, regMode:String(s.regMode||''), certType:s.certType, certIssuer:s.certIssuer, examSetId:s.examSetId,
         status:(s.status==='open'||s.status==='plan') ? s.status : 'plan', ownerEmail:s.ownerEmail, note:s.note },
         days:JSON.parse(JSON.stringify(TRA.g.days||[])), origSig:s.startDate+'|'+s.endDate+'|'+s.dateMode };
       if(!TRA.form.days.length) TRA.form.days.push({ date:s.startDate, items:[{ timeFrom:'', timeTo:'', content:'', media:'' }] });
@@ -19131,6 +19150,7 @@ function trOnEvent(e){
     case 'f_mode': TRA.form.f.dateMode = v; if(v === 'month'){ TRA.form.f.status = 'plan'; if(!TRA.form.f.month && TRA.form.f.startDate) TRA.form.f.month = TRA.form.f.startDate.slice(0,7); } traRenderForm(); return;
     case 'f_cert': TRA.form.f.certType = v; if(v !== 'internal') TRA.form.f.examSetId = ''; traRenderForm(); return;
     case 'f_status': TRA.form.f.status = v; traRenderForm(); return;
+    case 'f_regmode': TRA.form.f.regMode = v || ''; traRenderForm(); return;
     case 'f_autoclose': TRA.form.f.regAutoClose = v === '1' ? 1 : 0; traRenderForm(); return;
     case 'regmode': { const lab = v === 'closed' ? 'ปิดรับลงทะเบียน' : v === 'open' ? 'เปิดรับลงทะเบียนอีกครั้ง' : 'ใช้กำหนดปิดรับตามเดิม'; if(!confirm(lab+'?')) return;
       showLoadingOverlay('กำลังบันทึก...'); examApi('trSetRegMode', { sessionId:TRA.g.session.sessionId, mode:v }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; showToast('✓ '+lab+'แล้ว'); return traReload(true); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
