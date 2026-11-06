@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.75
-  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 12:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.76
+  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 18:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.75</title>
+<title>F1 Service — v11.76</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1203,15 +1203,15 @@ const PDFJS_WORKER_B64 = "LyoqCiAqIEBsaWNzdGFydCBUaGUgZm9sbG93aW5nIGlzIHRoZSBlbn
 </head>
 <body>
 <script>
-/* v9.15 — ตัวเฝ้าระวังไฟล์ไม่สมบูรณ์: ถ้าสคริปต์หลักไม่เริ่มทำงานภายใน 6 วินาที (ไฟล์ถูกตัดท้าย/เสียตอนอัปโหลด/แคชค้าง) ให้ขึ้นข้อความแดงบอกสาเหตุ แทนที่จะค้างหน้าเปล่าเงียบๆ
+/* v9.15 — ตัวเฝ้าระวังไฟล์ไม่สมบูรณ์: ถ้าสคริปต์หลักไม่เริ่มทำงานภายใน 20 วินาที (v11.76: เดิม 6 วินาที ไฟล์ ~6 MB บนเน็ตช้าโหลดไม่ทัน ทำให้แถบแดงขึ้นผิด) (ไฟล์ถูกตัดท้าย/เสียตอนอัปโหลด/แคชค้าง) ให้ขึ้นข้อความแดงบอกสาเหตุ แทนที่จะค้างหน้าเปล่าเงียบๆ
    สคริปต์นี้เล็กและแยกอิสระ — ทำงานได้แม้สคริปต์หลักพังตั้งแต่ตอนอ่านไฟล์ */
 setTimeout(function(){
   if(window.__f1Booted) return;
   var d = document.createElement('div');
   d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#b91c1c;color:#fff;padding:12px 14px;font:600 14px/1.5 Sarabun,sans-serif;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3);';
-  d.innerHTML = '⚠ แอพเริ่มทำงานไม่ได้ — ไฟล์ index.html บนเว็บน่าจะไม่สมบูรณ์ (ถูกตัดท้ายหรืออัปโหลดไม่ครบ)<br><span style="font-weight:400;font-size:12.5px;">ให้อัปโหลด index.html ใหม่จากคอมพิวเตอร์ (ขนาดไฟล์ควรประมาณ 3.2 MB) แล้ว Refresh แรงๆ · ถ้ายังเป็นอยู่ ให้ล้างแคชของเบราว์เซอร์</span>';
+  d.innerHTML = '⚠ แอพเริ่มทำงานไม่ได้ — ไฟล์ index.html บนเว็บน่าจะไม่สมบูรณ์ (ถูกตัดท้ายหรืออัปโหลดไม่ครบ)<br><span style="font-weight:400;font-size:12.5px;">ให้อัปโหลด index.html ใหม่จากคอมพิวเตอร์ (ขนาดไฟล์ควรประมาณ 6 MB) แล้ว Refresh แรงๆ · ถ้ายังเป็นอยู่ ให้ล้างแคชของเบราว์เซอร์</span>';
   (document.body || document.documentElement).appendChild(d);
-}, 6000);
+}, 20000);
 </script>
 
 <div id="version-update-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--amber);color:#fff;padding:10px 16px;text-align:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.2);">
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.75";
-const APP_UPDATED_AT = "6 พฤศจิกายน 2569 12:00 น. เวลาไทย";
+const APP_VERSION = "11.76";
+const APP_UPDATED_AT = "6 พฤศจิกายน 2569 18:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4640,7 +4640,10 @@ function sanitizeSheetTabName(name){
 // หา (หรือสร้างใหม่ถ้ายังไม่มี) สเปรดชีตกลางไว้บันทึกเคลมที่จบเคสแล้ว — วางไว้ใต้โฟลเดอร์ root เดียวกับข้อมูลอื่นๆ ในแอป
 async function ensureClaimsLogSpreadsheet(){
   if(_claimsSheetIdCache) return _claimsSheetIdCache;
-  if(DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId){ _claimsSheetIdCache = DATA.claimsSheetMeta.spreadsheetId; return _claimsSheetIdCache; }
+  if(DATA.claimsSheetMeta && DATA.claimsSheetMeta.spreadsheetId){
+    if(await f1SheetCacheOk(DATA.claimsSheetMeta.spreadsheetId)){ _claimsSheetIdCache = DATA.claimsSheetMeta.spreadsheetId; return _claimsSheetIdCache; }
+    console.warn('ID ชีตเคลมที่จำไว้ไม่อยู่ใน F1 Service แล้ว — ค้นตามชื่อใหม่'); DATA.claimsSheetMeta.spreadsheetId = null;
+  }
   if(_claimsSheetInFlight) return _claimsSheetInFlight;
   _claimsSheetInFlight = (async ()=>{
     const token = await ensureDriveAccess();
@@ -5009,6 +5012,18 @@ function computeYmdDuration(fromISO){
   if(months < 0){ years -= 1; months += 12; }
   return `${years} ปี ${months} เดือน ${days} วัน`;
 }
+/* v11.76 — ID ชีตที่แอปจำไว้ใน Firestore (meta/claimsSheet, meta/profilesSheet) อาจชี้ไฟล์เก่าที่ถูกย้าย/ลบ/ไม่อยู่ใน F1 Service แล้ว
+   ตรวจก่อนใช้: ไม่พบ/อยู่ถังขยะ/ไม่อยู่ใต้โฟลเดอร์ F1 Service → ทิ้ง ID เก่า แล้วค้นตามชื่อใหม่ · ตรวจไม่ได้ (เน็ต/สิทธิ์) → ใช้ ID เดิมต่อ */
+async function f1SheetCacheOk(id){
+  try{
+    const token = await ensureDriveAccess();
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?fields=id,trashed,parents&supportsAllDrives=true`, { headers:{ Authorization:`Bearer ${token}` } });
+    if(r.status===404) return false;
+    if(!r.ok) return true;
+    const j = await r.json();
+    return !j.trashed && Array.isArray(j.parents) && j.parents.indexOf(DRIVE_ROOT_FOLDER_ID)>=0;
+  }catch(e){ return true; }
+}
 let _profilesSheetIdCache = null;
 let _profilesSheetInFlight = null;
 async function fsSaveProfilesSheetMeta(){
@@ -5018,7 +5033,10 @@ async function fsSaveProfilesSheetMeta(){
 // หา (หรือสร้างใหม่ถ้ายังไม่มี) สเปรดชีตกลางของรายชื่อผู้ใช้งาน — เหมือน ensureClaimsLogSpreadsheet แต่แท็บเดียว ไม่แยกตามผู้ดูแล
 async function ensureProfilesSpreadsheet(){
   if(_profilesSheetIdCache) return _profilesSheetIdCache;
-  if(DATA.profilesSheetMeta && DATA.profilesSheetMeta.spreadsheetId){ _profilesSheetIdCache = DATA.profilesSheetMeta.spreadsheetId; return _profilesSheetIdCache; }
+  if(DATA.profilesSheetMeta && DATA.profilesSheetMeta.spreadsheetId){
+    if(await f1SheetCacheOk(DATA.profilesSheetMeta.spreadsheetId)){ _profilesSheetIdCache = DATA.profilesSheetMeta.spreadsheetId; return _profilesSheetIdCache; }
+    console.warn('ID ชีตรายชื่อที่จำไว้ไม่อยู่ใน F1 Service แล้ว — ค้นตามชื่อใหม่'); DATA.profilesSheetMeta.spreadsheetId = null;
+  }
   if(_profilesSheetInFlight) return _profilesSheetInFlight;
   _profilesSheetInFlight = (async ()=>{
     const token = await ensureDriveAccess();
@@ -6802,6 +6820,7 @@ async function userProfileExists(email){
     await initFirebase();
     const sdk = window._firebaseSdk;
     const docSnap = await sdk.getDoc(sdk.doc(db,'userProfiles', email.toLowerCase()));
+    window._profLoadErr = null;
     if(docSnap.exists()){
       const _d = docSnap.data() || {};
       if(!(String(_d.nicknameTh||'').trim() || String(_d.firstNameTh||'').trim() || String(_d.phone||'').trim())) return false; // เอกสารว่าง/มีแค่ตำแหน่ง-เขต → ยังไม่ได้กรอกจริง
@@ -6809,7 +6828,8 @@ async function userProfileExists(email){
     }
     return false;
   }catch(e){
-    console.warn('ตรวจสอบ userProfiles ไม่สำเร็จ:', e);
+    window._profLoadErr = e; // v11.76 — จำสาเหตุที่อ่านโปรไฟล์ตัวเองไม่สำเร็จ ให้ปุ่ม "โปรไฟล์" ใช้ตัดสินใจ (ไม่เปิดฟอร์มว่างเมื่ออ่านพลาด)
+    console.warn('ตรวจสอบ userProfiles ไม่สำเร็จ:', (e && (e.code||e.name)) || '', (e && e.message) || e);
     return true; // โหลดไม่ได้ (เช่น ออฟไลน์) — ไม่บังคับ block การใช้งานซ้ำ ให้ลองใหม่ตอน login/refresh ครั้งหน้า
   }
 }
@@ -7144,6 +7164,19 @@ $('edit-profile-btn').addEventListener('click', async ()=>{
   if(isCEO()) return;
   await loadThaiAddressData();
   if(!myUserProfile) await userProfileExists(myUserEmail);
+  /* v11.76 — อ่านเอกสารโปรไฟล์ตัวเองไม่สำเร็จ: ลองดึงจากรายชื่อทั้งหมด (มีแคช) ก่อน · ถ้ายังไม่ได้ → ห้ามเปิดฟอร์มว่าง (ผู้ใช้เข้าใจผิดว่าข้อมูลหาย/กดบันทึกทับ) */
+  if(!myUserProfile){
+    try{
+      const all = await fetchAllUserProfiles();
+      const me = all.find(x=> String(x.email||'').toLowerCase()===String(myUserEmail).toLowerCase());
+      if(me && (String(me.nicknameTh||'').trim() || String(me.firstNameTh||'').trim() || String(me.phone||'').trim())){ myUserProfile = me; window._profLoadErr = null; }
+    }catch(e){ if(!window._profLoadErr) window._profLoadErr = e; console.warn('โหลดรายชื่อโปรไฟล์สำรองไม่สำเร็จ:', (e && (e.code||e.name)) || '', (e && e.message) || e); }
+  }
+  if(!myUserProfile && window._profLoadErr){
+    const er = window._profLoadErr, why = (er && (er.code||er.message)) ? String(er.code||er.message).slice(0,80) : 'ไม่ทราบสาเหตุ';
+    showToast('⚠ โหลดโปรไฟล์ของคุณไม่สำเร็จ ('+why+') — ยังไม่เปิดฟอร์มเพื่อกันกรอกทับ ลองรีเฟรชแล้วกดใหม่');
+    return;
+  }
   showProfileModal(false);
 });
 
