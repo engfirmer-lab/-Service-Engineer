@@ -1,4 +1,4 @@
-/**
+v/**
  * ===================================================================
  * TRBL Daily Backup Script (รันโดย GitHub Actions อัตโนมัติทุกวัน)
  * ===================================================================
@@ -189,7 +189,7 @@ async function main(schedule){
 
   console.log(`ดึงข้อมูลเสร็จ: ${errors.length} Error, ${documents.length} เอกสาร, ${proposals.length} ข้อเสนอ, ${pendingErrors.length} รายการรออนุมัติ + คอลเลกชันอื่น ${Object.keys(otherCollections).length} รายการ`);
 
-  const dateStamp = new Date().toISOString().slice(0, 10);
+  const dateStamp = thaiDateStamp(); // v11.78 — ใช้วันที่ตามเวลาไทย (เดิม UTC ทำให้ชื่อโฟลเดอร์เพี้ยน 7 ชม.)
 
   // ----- ไฟล์ JSON -----
   const jsonFilename = `trbl-backup-${dateStamp}.json`;
@@ -307,12 +307,13 @@ async function cleanupOldBackups(folderId, daysToKeep){
     fields: 'files(id, name, createdTime)',
     pageSize: 1000,
   });
-  const oldFiles = res.data.files || [];
+  // v11.78 — ห้ามแตะ backup-status.json (ใช้เช็คว่าวันนี้ backup แล้วหรือยัง) และ "ย้ายลงถังขยะ" แทนการลบถาวร (กู้คืนได้ 30 วัน)
+  const oldFiles = (res.data.files || []).filter(f => f.name !== 'backup-status.json');
   if (oldFiles.length === 0) { console.log('ไม่มีไฟล์เก่าที่ต้องลบ'); return; }
   for (const f of oldFiles) {
     try {
-      await drive.files.delete({ fileId: f.id });
-      console.log(`ลบไฟล์เก่าแล้ว: ${f.name} (สร้างเมื่อ ${f.createdTime})`);
+      await drive.files.update({ fileId: f.id, resource: { trashed: true } });
+      console.log(`ย้ายไฟล์เก่าลงถังขยะแล้ว: ${f.name} (สร้างเมื่อ ${f.createdTime})`);
     } catch (e) {
       console.error(`ลบไฟล์ไม่สำเร็จ: ${f.name}`, e.message);
     }
@@ -342,7 +343,7 @@ async function writeStatusFile(success, errorMessage){
     const statusContent = JSON.stringify({
       success,
       timestamp: Date.now(),
-      dateStamp: new Date().toISOString().slice(0, 10),
+      dateStamp: thaiDateStamp(),
       error: errorMessage || null,
       warnings,
     }, null, 2);
@@ -404,6 +405,9 @@ async function readLastBackupData(){
   return contentRes.data;
 }
 
+// v11.78 — วันที่ (YYYY-MM-DD) ตามเวลาไทย
+function thaiDateStamp(ms){ return new Date(ms == null ? Date.now() : ms).toLocaleDateString('sv-SE', { timeZone: 'Asia/Bangkok' }); }
+
 // ----- เช็คว่าถึงเวลาต้อง Backup จริงหรือยัง ตามการตั้งค่าที่ Super Admin ตั้งไว้ในแอป (meta/backupSchedule) -----
 // รันมือ (workflow_dispatch) จะข้ามการเช็คนี้เสมอ บังคับ Backup ทันที
 async function resolveScheduleAndShouldRun(){
@@ -426,11 +430,22 @@ async function resolveScheduleAndShouldRun(){
     return { shouldRun: false, schedule };
   }
 
+  // v11.78 — เดิมรันเฉพาะเมื่อ "ชั่วโมงตรงเป๊ะ" แต่ GitHub รัน schedule แค่ ~4 ครั้ง/วันแบบสุ่มเวลา จึงข้าม backup บ่อย
+  // ตอนนี้: ถึงเวลาแล้ว (ชั่วโมงปัจจุบัน >= ที่ตั้งไว้) และ "วันนี้ (เวลาไทย) ยังไม่มี backup สำเร็จ" → รัน (ถ้าพลาดจะลองใหม่ทุกรอบจนสำเร็จ)
   const nowThai = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
   const currentHour = nowThai.getHours();
-  if (currentHour !== (schedule.hour ?? 1)) {
-    console.log(`ยังไม่ถึงชั่วโมงที่ตั้งไว้ (ตั้งไว้ ${schedule.hour}:00 น. ตอนนี้ ${currentHour}:00 น. เวลาไทย) — ข้ามรอบนี้`);
+  if (currentHour < (schedule.hour ?? 1)) {
+    console.log(`ยังไม่ถึงเวลาที่ตั้งไว้ (ตั้งไว้ ${schedule.hour ?? 1}:00 น. ตอนนี้ ${currentHour}:00 น. เวลาไทย) — ข้ามรอบนี้`);
     return { shouldRun: false, schedule };
+  }
+  try {
+    const lastToday = await readLastBackupStatus();
+    if (lastToday && lastToday.success && thaiDateStamp(lastToday.timestamp) === thaiDateStamp()) {
+      console.log('วันนี้ (เวลาไทย) Backup สำเร็จไปแล้ว — ข้ามรอบนี้');
+      return { shouldRun: false, schedule };
+    }
+  } catch (e) {
+    console.warn('เช็คสถานะ backup ล่าสุดไม่สำเร็จ ถือว่ายังไม่ได้ backup วันนี้:', e.message);
   }
 
   const intervalDays = schedule.intervalDays ?? 1;
