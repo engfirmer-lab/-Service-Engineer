@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.77
-  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 21:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.78
+  อัปเดตล่าสุด   : 7 พฤศจิกายน 2569 18:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.77</title>
+<title>F1 Service — v11.78</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.77";
-const APP_UPDATED_AT = "6 พฤศจิกายน 2569 21:30 น. เวลาไทย";
+const APP_VERSION = "11.78";
+const APP_UPDATED_AT = "7 พฤศจิกายน 2569 18:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -17030,6 +17030,43 @@ async function examApiRetry(action, payload, tries){ // v10.47 — เน็ต�
   }
   throw last;
 }
+
+/* ============================================================================================
+   ⚠⚠⚠ กฎสูงสุดของแอปนี้ (ห้ามลบ/ห้ามอ้อม) — v11.78 ⚠⚠⚠
+   ทุกสิ่งที่แอปสร้าง/บันทึก/เขียน (ไฟล์ โฟลเดอร์ Google Sheet ข้อมูลในชีต) ต้องเป็นของ engfirmer@gmail.com เท่านั้น
+   ห้ามไปอยู่ใน Drive/Gmail ส่วนตัวของผู้ใช้แอป และห้ามใช้ token ของผู้ใช้สร้าง/อัปโหลด/เขียนทับ — ไม่มี fallback ใดๆ
+   • Drive: สร้าง/อัปโหลด/ลบ ผ่าน Apps Script (examApiRetry 'drvPath'|'drvUploadBlob'|'drvTrash') ซึ่งรันเป็น engfirmer
+   • Google Sheets: ทุกคำสั่ง "เขียน" (POST/PUT) ไป sheets.googleapis.com ถูกดักที่ window.fetch ด้านล่าง แล้วส่งผ่าน Apps Script
+     (examApi 'shRaw') ซึ่งรันเป็น engfirmer — ผู้ใช้ทั่วไปจึงไม่ต้องมีสิทธิ์แก้ไขไฟล์ใน Drive เลย (ตั้งเป็น "ดูอย่างเดียว" ได้)
+   • ถ้าจะเพิ่มโค้ดที่เขียน Drive/Sheet ใหม่ ต้องผ่านทางข้างบนเท่านั้น
+   ============================================================================================ */
+(function f1OwnerGuardInstall(){
+  if(window.__f1OwnerGuard) return; window.__f1OwnerGuard = true;
+  const _fetch = window.fetch.bind(window);
+  const SHEETS_RE = /^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets(\/[^?#]*)?(\?[^#]*)?$/;
+  const DRIVE_W_RE = /^https:\/\/www\.googleapis\.com\/(upload\/)?drive\/v3\//;
+  window._f1UserDriveWrites = [];
+  window.fetch = function(input, init){
+    try{
+      const url = (typeof input === 'string') ? input : ((input && input.url) || '');
+      const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if(method !== 'GET' && method !== 'HEAD'){
+        const m = SHEETS_RE.exec(url);
+        if(m && m[1]) return f1SheetsViaScript(m[1], m[2] || '', method, init && init.body);   // เขียน Sheet → ผ่าน Apps Script (engfirmer)
+        if(DRIVE_W_RE.test(url)){ // เขียน Drive ด้วย token ผู้ใช้ — ไม่ควรเกิด (ควรผ่าน Apps Script) บันทึกไว้ให้ตรวจย้อนหลัง
+          try{ if(!(typeof myUserEmail !== 'undefined' && myUserEmail === 'engfirmer@gmail.com')){ window._f1UserDriveWrites.push(method + ' ' + url.slice(0, 120)); console.warn('[owner-guard] เขียน Drive ด้วย token ผู้ใช้:', method, url.slice(0, 120)); } }catch(_){}
+        }
+      }
+    }catch(_){}
+    return _fetch(input, init);
+  };
+})();
+// ส่งคำสั่งเขียน Sheets ไปให้ Apps Script ทำในนาม engfirmer แล้วห่อผลเป็น Response เหมือน fetch ปกติ (โค้ดเดิมที่เช็ค res.ok / res.json() ใช้ต่อได้)
+async function f1SheetsViaScript(path, query, method, body){
+  const r = await examApi('shRaw', { method, path: path + (query || ''), body: (body == null ? '' : String(body)) }); // ไม่ retry อัตโนมัติ (append ซ้ำได้)
+  return new Response(r && r.body != null ? r.body : '', { status: (r && r.status) || 500, headers: { 'Content-Type': 'application/json' } });
+}
+
 function exOverlayText(t){ try{ const el = document.getElementById('global-loading-text'); if(el) el.textContent = t; }catch(_){} }
 
 /* ---------- คัดลอกข้อสอบจากชุดอื่น / ทำสำเนาข้อเดิม (ใช้ช้อยส์ซ้ำได้) — เข้าเป็น "ร่างที่ยังไม่บันทึก" แก้ได้ก่อนบันทึก ---------- */
