@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.76
-  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 18:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.77
+  อัปเดตล่าสุด   : 6 พฤศจิกายน 2569 21:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.76</title>
+<title>F1 Service — v11.77</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.76";
-const APP_UPDATED_AT = "6 พฤศจิกายน 2569 18:00 น. เวลาไทย";
+const APP_VERSION = "11.77";
+const APP_UPDATED_AT = "6 พฤศจิกายน 2569 21:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6716,7 +6716,7 @@ async function checkAccessAndLoad(){
   initRpRealtimeWatch();
   $('gsi-overlay').classList.remove('show');
   $('access-request-overlay').classList.remove('show');
-  updateNotifBadge(); try{ f1ObRefreshPill(); }catch(_){}
+  updateNotifBadge(); try{ f1ObRefreshPill(); f1ObPersist(); setTimeout(()=>f1ObAutoSend(), 8000); }catch(_){}
   await checkUserProfileGate(); try{ renderSupIdentityOptions(); }catch(_){} setTimeout(()=>{ try{ checkBirthdayToday(); }catch(_){} }, 1800); // v11.00 — แจ้งวันเกิดเพื่อนร่วมงาน (วันละครั้ง) // บังคับกรอกโปรไฟล์ครั้งแรก (ยกเว้น Super Admin) — เช็คว่ามี userProfiles/{email} หรือยัง ครอบคลุมทั้งคนใหม่และคนเก่าที่ยังไม่เคยกรอก
   // รีเซ็ต mode ทุกครั้งที่ login/สลับบัญชี — กันบั๊ก: currentMode ของบัญชีก่อนหน้า (เช่น 'admin-service') ค้างอยู่
   // ทำให้บัญชีใหม่ที่ไม่ใช่ Admin Service ยังเห็นหน้า admin-service อยู่ แม้ว่า mode button จะแสดงถูกแล้ว
@@ -12531,25 +12531,96 @@ function f1ObOpen(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open
 async function f1ObPut(item){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readwrite'); t.objectStore('claims').put(item); t.oncomplete=()=>{d.close();res();}; t.onerror=()=>{d.close();rej(t.error);}; }); }
 async function f1ObDel(id){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readwrite'); t.objectStore('claims').delete(id); t.oncomplete=()=>{d.close();res();}; t.onerror=()=>{d.close();rej(t.error);}; }); }
 async function f1ObAll(){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readonly'); const q=t.objectStore('claims').getAll(); q.onsuccess=()=>{d.close();res((q.result||[]).filter(x=>x.owner===myUserEmail));}; q.onerror=()=>{d.close();rej(q.error);}; }); }
+async function f1ObGet(id){ const d=await f1ObOpen(); return new Promise((res,rej)=>{ const t=d.transaction('claims','readonly'); const q=t.objectStore('claims').get(id); q.onsuccess=()=>{d.close();res(q.result||null);}; q.onerror=()=>{d.close();rej(q.error);}; }); }
+// v11.77 — ขอให้เบราว์เซอร์ "ห้ามลบ" พื้นที่เก็บของแอปเองเมื่อเครื่องพื้นที่ใกล้เต็ม (ช่วยให้ของค้างส่งไม่หายง่าย ไม่รับประกัน 100% — ล้างข้อมูลเบราว์เซอร์เองยังหาย)
+async function f1ObPersist(){ try{ if(navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); }catch(_){} }
+// v11.77 — ข้อผิดพลาดแบบ "ส่งใหม่ภายหลังได้" (โควตา/เน็ต) — ไม่เก็บค้างถ้าเป็นข้อผิดพลาดอื่น (เช่นไฟล์ไม่ถูกต้อง) กันส่งซ้ำวนไม่จบ
+function f1ObRetryable(err){ const m=String((err&&err.message)||err||''); return f1IsQuotaErr(m) || navigator.onLine===false || /Failed to fetch|NetworkError|network|timeout|timed out|Load failed|ECONN|unavailable/i.test(m); }
+let _f1ObQuiet=false, _f1ObBusy=false, _f1ObNextTry=0;
+const F1_OB_WARN = '⚠ ยังไม่ได้ส่งขึ้นระบบ\n\nระบบเก็บไว้ในเครื่อง/เบราว์เซอร์นี้ชั่วคราวแล้ว และจะส่งให้อัตโนมัติเมื่อโควตา/อินเทอร์เน็ตกลับมา (ต้องเปิดแอปนี้ไว้)\n\n❗ ห้ามล้างข้อมูลเบราว์เซอร์ ห้ามใช้โหมดส่วนตัว และห้ามถอนการติดตั้งแอป จนกว่าปุ่มสีส้ม "ค้างส่ง" มุมซ้ายล่างจะหายไป';
 async function f1ObEnqueueClaim(){
-  if(!claimDraft || claimEditingId) return; // เก็บเฉพาะเคลมใหม่ (แก้เคลมเดิมใช้ร่างตามปกติ)
-  const files=[];
-  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ ((claimDraft.attachments||{})[g.key]||[]).forEach(a=>{ if(a.pending){ const b=a.blob||a.file; if(b) files.push({group:g.key, kind:a.kind, name:a.name||'', blob:b}); } }); });
-  const id = claimOutboxId || ('ob'+Date.now());
+  if(!claimDraft) return;
+  const isEdit = !!claimEditingId; // v11.77 — รองรับ "แก้ไขเคลมเดิม" ด้วย (เก็บไฟล์ใหม่ + รายการไฟล์เดิมที่ยังคงไว้)
+  const files=[]; const kept={};
+  CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ kept[g.key]=[]; ((claimDraft.attachments||{})[g.key]||[]).forEach(a=>{
+    if(a.pending){ const b=a.blob||a.file; if(b) files.push({group:g.key, kind:a.kind, name:a.name||'', blob:b}); }
+    else if(isEdit){ try{ kept[g.key].push(JSON.parse(JSON.stringify(a))); }catch(_){} } }); });
+  const id = claimOutboxId || (isEdit ? ('obe_'+claimEditingId) : ('ob'+Date.now()));
   const draft = { type:claimDraft.type, claimant:claimDraft.claimant, siteName:claimDraft.siteName, category:claimDraft.category, model:claimDraft.model, serialNumber:claimDraft.serialNumber, problem:claimDraft.problem, problemDetail:claimDraft.problemDetail, solution:claimDraft.solution, problemDate:claimDraft.problemDate, fixDate:claimDraft.fixDate, parts:claimDraft.parts, loanSlipNo:claimDraft.loanSlipNo, jobFactorium:claimDraft.jobFactorium };
-  await f1ObPut({ id, owner:myUserEmail, savedAt:Date.now(), draft, files });
+  await f1ObPut({ id, kind:isEdit?'claimEdit':'claim', editId:isEdit?claimEditingId:null, owner:myUserEmail, savedAt:Date.now(), draft, kept, files });
   claimOutboxId = id;
+  f1ObPersist();
   f1ObRefreshPill();
+}
+async function f1ObEnqueueCert(ctx, file){
+  const id='obc'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  await f1ObPut({ id, kind:'cert', owner:myUserEmail, savedAt:Date.now(), ctx, files:[{ name:file.name, type:file.type||'', blob:file }] });
+  f1ObPersist(); f1ObRefreshPill();
 }
 async function f1ObRefreshPill(){
   let n=0, first=null; try{ const all=await f1ObAll(); n=all.length; first=all.sort((a,b)=>a.savedAt-b.savedAt)[0]; }catch(_){}
   let el=document.getElementById('f1-outbox-pill');
   if(!n){ if(el) el.remove(); return; }
   if(!el){ el=document.createElement('button'); el.id='f1-outbox-pill'; el.type='button'; el.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9000;background:#e65100;color:#fff;border:0;border-radius:22px;padding:10px 16px;font:600 13.5px Sarabun,sans-serif;box-shadow:0 3px 10px rgba(0,0,0,.3);cursor:pointer;'; document.body.appendChild(el); }
-  el.textContent='📤 มีเคลมค้างส่ง '+n+' รายการ — กดเพื่อเปิดและส่งอีกครั้ง';
-  el.onclick=()=>{ try{ openClaimModal(null, first.draft.type, first); }catch(e){ showToast('⚠ เปิดรายการค้างส่งไม่สำเร็จ: '+e.message); } };
+  el.textContent='📤 ค้างส่ง '+n+' รายการ (ยังไม่ได้ขึ้นระบบ) — กดเพื่อส่งเดี๋ยวนี้';
+  el.onclick=async ()=>{
+    try{
+      await f1ObAutoSend(true);
+      const rest=(await f1ObAll()).sort((a,b)=>a.savedAt-b.savedAt)[0];
+      if(rest && rest.kind!=='cert' && !document.querySelector('.modal-overlay.show')){
+        let ex=null; if(rest.kind==='claimEdit'){ ex=(DATA.claims||[]).find(x=>x.id===rest.editId); if(!ex){ showToast('⚠ ไม่พบเคลมเดิมที่ค้างแก้ไข (อาจถูกลบหรือยังโหลดไม่เสร็จ)'); return; } }
+        openClaimModal(ex, rest.draft.type, rest);
+      }
+    }catch(e){ showToast('⚠ เปิดรายการค้างส่งไม่สำเร็จ: '+e.message); }
+  };
 }
-window.addEventListener('online', ()=>{ try{ f1ObRefreshPill(); }catch(_){} });
+// v11.77 — ส่งซ้ำอัตโนมัติ: ทำงานเมื่อกลับมาออนไลน์ / กลับมาที่แท็บ / ทุก 10 นาที / หลังล็อกอิน — เฉพาะตอน "ว่าง" (ไม่มีหน้าต่างเปิดอยู่) เพื่อไม่แย่งหน้าจอผู้ใช้
+// ⚠ กฎสูงสุด: ตอนส่งจริงไฟล์ยังไปสร้างใน Drive ของ EngFirmer เท่านั้น (ผ่านฟังก์ชันเดิมที่ใช้ Apps Script) — Outbox ไม่เคยเขียน Drive ส่วนตัวของผู้ใช้
+async function f1ObSendClaim(it){
+  let ex=null;
+  if(it.kind==='claimEdit'){ ex=(DATA.claims||[]).find(x=>x.id===it.editId); if(!ex) return false; }
+  openClaimModal(ex, it.draft.type, it);
+  try{ await f1ClaimSave(); }catch(e){ console.warn('Outbox ส่งเคลมไม่สำเร็จ:', e&&e.message); }
+  let still=null; try{ still=await f1ObGet(it.id); }catch(_){ still=it; }
+  if(still){ // ไม่สำเร็จ — ปิดฟอร์มเงียบๆ ของยังอยู่ใน Outbox
+    $('claim-modal').classList.remove('show'); claimOutboxId=null; claimEditingId=null;
+    try{ clearPersistedClaimDraft(); }catch(_){}
+  }
+  return !still;
+}
+async function f1ObSendCert(it){
+  const f=(it.files||[])[0]; if(!f) { await f1ObDel(it.id); return true; }
+  const file = new File([f.blob], f.name, { type: f.type || f.blob.type || '' });
+  const c=it.ctx||{};
+  await fsUploadCertificate(it.owner, c.ownerName, c.role, c.certType, c.category, c.model, file);
+  await f1ObDel(it.id);
+  try{ await refreshCertCaches(c.role); }catch(_){}
+  return true;
+}
+async function f1ObAutoSend(force){
+  if(_f1ObBusy || !myUserEmail) return;
+  if(!force){
+    if(Date.now()<_f1ObNextTry || navigator.onLine===false || document.hidden) return;
+    if(document.querySelector('.modal-overlay.show') || $('global-loading-overlay').classList.contains('show')) return;
+  }
+  let items=[]; try{ items=(await f1ObAll()).sort((a,b)=>a.savedAt-b.savedAt); }catch(_){ return; }
+  if(!items.length) return;
+  _f1ObBusy=true; _f1ObQuiet=true; let okN=0, failN=0;
+  try{
+    for(const it of items){
+      let ok=false;
+      try{ ok = (it.kind==='cert') ? await f1ObSendCert(it) : await f1ObSendClaim(it); }catch(e){ console.warn('Outbox ส่งไม่สำเร็จ:', e&&e.message); }
+      if(ok) okN++; else { failN++; break; } // พลาดแล้วหยุด (ปกติคือโควตา/เน็ตยังไม่กลับ) ลองใหม่รอบหน้า
+    }
+  } finally { _f1ObQuiet=false; _f1ObBusy=false; }
+  _f1ObNextTry = failN ? Date.now()+5*60*1000 : 0;
+  try{ await f1ObRefreshPill(); }catch(_){}
+  if(okN) showToast('✓ ส่งรายการที่ค้างไว้สำเร็จ '+okN+' รายการ');
+  else if(failN && force) showToast('⚠ ยังส่งไม่สำเร็จ — ระบบจะลองใหม่อัตโนมัติเมื่อโควตา/เน็ตพร้อม');
+}
+window.addEventListener('online', ()=>{ try{ f1ObRefreshPill(); _f1ObNextTry=0; setTimeout(()=>f1ObAutoSend(),1500); }catch(_){} });
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden){ try{ setTimeout(()=>f1ObAutoSend(),1500); }catch(_){} } });
+setInterval(()=>{ try{ f1ObAutoSend(); }catch(_){} }, 10*60*1000);
 function openClaimModal(existingClaim, type, outboxItem){
   claimOutboxId = outboxItem ? outboxItem.id : null;
   if(existingClaim){
@@ -12570,6 +12641,14 @@ function openClaimModal(existingClaim, type, outboxItem){
       parts: (existingClaim.parts&&existingClaim.parts.length)?existingClaim.parts.map(p=>({partNumber:p.partNumber||'',partName:p.partName||'',qty:p.qty||p.count||'',countQty:p.countQty||'',countUnit:p.countUnit||''})):[{partNumber:'',partName:'',qty:'',countQty:'',countUnit:''}],
       loanSlipNo: existingClaim.loanSlipNo||'', jobFactorium: existingClaim.jobFactorium||'', attachments: groupedAtt
     };
+    if(outboxItem){ // v11.77 — เปิดแก้ไขจากรายการค้างส่ง: ใส่ค่าที่แก้ไว้ + ไฟล์เดิมที่คงไว้ + ไฟล์ใหม่ กลับเข้าฟอร์ม
+      Object.assign(claimDraft, outboxItem.draft);
+      claimDraft.attachments = emptyClaimAttachments();
+      CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ ((outboxItem.kept||{})[g.key]||[]).forEach(a=>claimDraft.attachments[g.key].push({...a})); });
+      (outboxItem.files||[]).forEach(f=>{ if(!claimDraft.attachments[f.group]) return;
+        if(f.kind==='image') claimDraft.attachments[f.group].push({ kind:'image', pending:true, dataUrl:URL.createObjectURL(f.blob), blob:f.blob, name:f.name });
+        else claimDraft.attachments[f.group].push({ kind:'file', pending:true, file:f.blob, name:f.name }); });
+    }
     $('claim-modal-title').textContent = 'แก้ไข'+claimTypeLabelEng(claimDraft.type);
     $('claim-prestep-wrap').style.display = 'none';
     $('claim-form-fields-wrap').style.display = '';
@@ -12634,6 +12713,7 @@ function openClaimModal(existingClaim, type, outboxItem){
   // dirty-check ปุ่ม "บันทึกเคลม" เฉพาะตอนแก้ไขเคลมเดิม (existingClaim) — ตอนบันทึกเคลมใหม่ให้กดได้ตามปกติเสมอ ไม่ต้องรอให้ "เปลี่ยนค่า" ก่อน
   if(existingClaim){
     claimDirtyGuard = attachEditDirtyGuard($('claim-modal'), $('claim-save-btn'), snapshotClaimEditState);
+    if(outboxItem) $('claim-save-btn').disabled = false; // v11.77 — รายการค้างส่งต้องกดส่งได้ทันที ไม่ต้องรอ "เปลี่ยนค่า"
   } else {
     claimDirtyGuard = null;
     $('claim-modal')._dirtyGuardRefresh = null; // ปิด hook เดิม (ถ้ามีจากรอบแก้ไขก่อนหน้า) กันมันมาสั่ง disabled ปุ่มระหว่างกรอกเคลมใหม่ทั้งที่ไม่ต้องเช็ค dirty
@@ -12764,7 +12844,7 @@ function validateClaimRequiredFields(){
   return { valid: allMissing.length===0, missing: allMissing.map(m=>m.label) };
 }
 
-$('claim-save-btn').addEventListener('click', async ()=>{
+async function f1ClaimSave(){
   claimDraft.claimant = $('claim-f-claimant').value.trim();
   claimDraft.siteName = $('claim-f-site').value.trim();
   claimDraft.category = $('claim-f-category').value;
@@ -12879,6 +12959,8 @@ $('claim-save-btn').addEventListener('click', async ()=>{
         orphanIdsAfterSave = oldAtts.map(a=>a.driveFileId || extractDriveFileId(a.url||'')).filter(f=>f && !newFileIds.has(f));
       }
       await fsUpdateClaim(claimEditingId, fields);
+      _claimDbSaved = true; // v11.77 — บันทึกขึ้น Firestore แล้ว: ล้างรายการค้างส่งของเคลมนี้ (ถ้ามี)
+      try{ await f1ObDel('obe_'+claimEditingId); if(claimOutboxId && claimOutboxId!=='obe_'+claimEditingId) await f1ObDel(claimOutboxId); }catch(_){} claimOutboxId = null; try{ f1ObRefreshPill(); }catch(_){}
       _f1Created = []; f1TrackStop();
       // v8.90 — ลบไฟล์เก่าใน Drive "หลัง" บันทึก Firestore สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าบันทึกพลาดไฟล์หายแต่รายการยังอ้างอิง)
       if(orphanIdsAfterSave.length){
@@ -12902,17 +12984,19 @@ $('claim-save-btn').addEventListener('click', async ()=>{
     $('claim-modal').classList.remove('show');
     renderClaimsView();
     renderEngMyClaimsList();
-    showClaimSuccessSummary(fields);
+    if(_f1ObQuiet) showToast('✓ ส่งเคลมที่ค้างไว้สำเร็จแล้ว'); else showClaimSuccessSummary(fields);
   }catch(e){
     f1TrackStop(); let _rbN = 0; try{ _rbN = await f1RollbackCreated(); }catch(_){}
-    let _obSaved=false; if(!_claimDbSaved && !claimEditingId){ try{ await f1ObEnqueueClaim(); _obSaved=true; }catch(_){} }
+    let _obSaved=false; if(!_claimDbSaved){ try{ await f1ObEnqueueClaim(); _obSaved=true; }catch(_){} }
     // บันทึกไม่สำเร็จ (เช่นเน็ตหลุดระหว่างอัปโหลด) — จงใจไม่ลบร่างที่ autosave ไว้ ผู้ใช้เปิดฟอร์มนี้ใหม่แล้วกู้คืนข้อมูลมากรอกซ้ำ/ลองบันทึกใหม่ได้ทันที ไม่ต้องพิมพ์ใหม่ทั้งหมด
-    showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rbN>0?' · ยกเลิกไฟล์ที่อัปโหลดค้างไว้แล้ว '+_rbN+' ไฟล์':'')+(_obSaved?' · 📤 เก็บเคลมพร้อมไฟล์แนบไว้ในเครื่องแล้ว ถ้าปิดฟอร์มจะมีปุ่ม "เคลมค้างส่ง" มุมซ้ายล่างให้กดส่งใหม่':' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)'));
+    if(_f1ObQuiet) console.warn('Outbox auto-send ไม่สำเร็จ:', e.message); else showToast('⚠ บันทึกไม่สำเร็จ: '+e.message+(_rbN>0?' · ยกเลิกไฟล์ที่อัปโหลดค้างไว้แล้ว '+_rbN+' ไฟล์':'')+(_obSaved?' · 📤 เก็บเคลมพร้อมไฟล์แนบไว้ในเครื่องแล้ว ถ้าปิดฟอร์มจะมีปุ่ม "เคลมค้างส่ง" มุมซ้ายล่างให้กดส่งใหม่':' (ข้อมูลที่กรอกไว้ยังอยู่ในร่าง ลองบันทึกใหม่ได้)'));
+    if(_obSaved && !_f1ObQuiet){ try{ alert(F1_OB_WARN); }catch(_){} } // v11.77 — เตือนชัดๆ ว่ายังไม่ได้ส่ง ห้ามล้างข้อมูลเบราว์เซอร์
   } finally {
     btn.disabled=false; btn.style.opacity='';
     hideLoadingOverlay();
   }
-});
+}
+$('claim-save-btn').addEventListener('click', ()=>f1ClaimSave());
 
 function showClaimSuccessSummary(fields){
   const partsRows = (fields.parts||[]).map(p=>`<tr><td>${escapeHtml(p.partNumber||'-')}</td><td>${escapeHtml(p.partName||'-')}</td><td>${escapeHtml((p.qty||'-').toString())} ชิ้น</td><td>${p.countQty?escapeHtml(p.countQty.toString())+' '+escapeHtml(p.countUnit||'Test'):'-'}</td></tr>`).join('');
@@ -21143,18 +21227,18 @@ $('cert-detail-upload-input').addEventListener('change', async e=>{
   if(!files.length || !_certDetailCtx) return;
   const { role, certType, category, model } = _certDetailCtx;
   const ownerName = myClaimantName();
-  let ok = 0; const errs = [];
+  let ok = 0, queued = 0; const errs = [];
   showLoadingOverlay(`กำลังอัปโหลด Certificate 1/${files.length}...`); // v8.90 — เรียกครั้งเดียว (ตัวนับ overlay) แล้วอัปเดตแค่ข้อความ
   // v11.13 — ไฟล์แรกทำก่อน (สร้างโฟลเดอร์/แคช) ที่เหลือพร้อมกันครั้งละ 3 · แต่ละไฟล์พลาดแยกกัน ไม่กระทบไฟล์อื่น
   let _cd = 0;
-  const _one = async f=>{ try{ await fsUploadCertificate(myUserEmail, ownerName, role, certType, category, model, f); ok++; }catch(err){ errs.push(f.name+': '+err.message); } _cd++; updateLoadingOverlayText(`กำลังอัปโหลด Certificate ${_cd}/${files.length}...`); };
+  const _one = async f=>{ try{ await fsUploadCertificate(myUserEmail, ownerName, role, certType, category, model, f); ok++; }catch(err){ let q=false; if(f1ObRetryable(err)){ try{ await f1ObEnqueueCert({ role, certType, category, model, ownerName }, f); q=true; queued++; }catch(_){} } errs.push(f.name+': '+err.message+(q?' (เก็บไว้ในเครื่องแล้ว)':'')); } _cd++; updateLoadingOverlayText(`กำลังอัปโหลด Certificate ${_cd}/${files.length}...`); };
   if(files.length){ await _one(files[0]); await f1Pool(files.slice(1), _one, 3); }
   e.target.value = '';
   try{ await refreshCertCaches(role); }catch(err){ console.warn('refresh Cer ไม่สำเร็จ:', err.message); }
   hideLoadingOverlay();
   renderCertDetailList();
   if(ok) showToast(`✓ อัปโหลดแล้ว ${ok} ไฟล์`);
-  if(errs.length) alert('อัปโหลดไม่สำเร็จ:\n'+errs.join('\n'));
+  if(errs.length) alert('อัปโหลดไม่สำเร็จ:\n'+errs.join('\n')+(queued?'\n\n'+F1_OB_WARN.replace('⚠ ยังไม่ได้ส่งขึ้นระบบ','⚠ Certificate '+queued+' ไฟล์ยังไม่ได้ส่งขึ้นระบบ'):''));
 });
 
 // ---- UI: Sup Product — แท็บ Certificate (เฉพาะรุ่นที่ตัวเองดูแล, เฉพาะผู้ผลิต) ----
