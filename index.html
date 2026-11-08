@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.80
-  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.81
+  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.80</title>
+<title>F1 Service — v11.81</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.80";
-const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:30 น. เวลาไทย";
+const APP_VERSION = "11.81";
+const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6159,7 +6159,7 @@ function resetPerAccountCaches(){
   try{ driveAccessToken = null; driveTokenExpiry = 0; _driveFolderCache.clear(); _driveFolderInFlight.clear(); sessionStorage.removeItem(DRIVE_TOKEN_SS_KEY); }catch(e){}
   try{ _claimsSheetIdCache = null; _profilesSheetIdCache = null; _sheetDoneCountCache = {}; }catch(e){}
   // v9.36 — ล้างแคช/ร่างใน localStorage ที่ผูกกับบัญชีเดิมตอนสลับบัญชี (เก็บเฉพาะค่าตั้งค่าหน้าจอที่ไม่ผูกบัญชี: mgr_hidden_cols_*)
-  try{ Object.keys(localStorage).forEach(k=>{ if(!k.startsWith('mgr_hidden_cols_')) localStorage.removeItem(k); }); }catch(e){}
+  try{ Object.keys(localStorage).forEach(k=>{ if(!k.startsWith('mgr_hidden_cols_') && !k.startsWith('f1_bdayshown_')) localStorage.removeItem(k); }); }catch(e){}
   try{ myUserProfile = null; _engCertDataCache = null; _supCertDataCache = null; profileLabelMap = {}; _profileLabelsLoaded = false; }catch(e){}
   try{ f1ResetExamTrainState(); }catch(e){}
   try{ supActiveTab = 'trbl'; }catch(e){}
@@ -7484,6 +7484,15 @@ async function checkBirthdayToday(opts){
     try{ if(localStorage.getItem(key) === st.today) return; }catch(e){}                                  // วันนี้ขึ้นป๊อปอัปให้เครื่องนี้แล้ว → ไม่ขึ้นซ้ำ (ใช้ปุ่ม 🎂 แทน)
     const has = (st.people||[]).length || (st.myWishes||[]).some(x=>x.date !== st.today && x.wishes && x.wishes.length);
     if(!has) return;
+    // v11.81 — ถ้าเคยอวยพรทุกคนที่วันเกิดวันนี้ไปแล้ว (ตรวจจาก Firestore ไม่พึ่งแค่ localStorage ที่อาจถูกล้าง/ไม่คงอยู่ในบางเบราว์เซอร์) → ไม่เด้งซ้ำ
+    try{
+      const others = (st.people||[]).filter(p=>String(p.email).toLowerCase()!==em);
+      const onlyToday = !(st.myWishes||[]).some(x=>x.date !== st.today && x.wishes && x.wishes.length) && !(st.people||[]).some(p=>String(p.email).toLowerCase()===em);
+      if(onlyToday && others.length){
+        const done = await Promise.all(others.map(p=>bdayGetMyWish(p.email, st.today).then(w=>!!(w&&w.text)).catch(()=>false)));
+        if(done.every(Boolean)){ try{ localStorage.setItem(key, st.today); }catch(e){} return; }
+      }
+    }catch(e){}
     try{ localStorage.setItem(key, st.today); }catch(e){}                                                // ตีตราเมื่อจะขึ้นจริงเท่านั้น
     bdayOpenModal(st);
   }catch(e){ console.warn('birthday popup', e); }
