@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.79
-  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.80
+  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.79</title>
+<title>F1 Service — v11.80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1990,7 +1990,7 @@ setTimeout(function(){
       </div>
       <div class="panel-block">
         <h2>📊 การอ่าน Firestore วันนี้ (เครื่องนี้)</h2>
-        <p class="panel-sub">โควตาฟรี 50,000 ครั้ง/วัน นับรวมทุกเครื่อง รีเซ็ต ~14:00 น. · ตัวเลขนี้นับเฉพาะเครื่องนี้ ใช้ดูว่าส่วนไหนอ่านเยอะ</p>
+        <p class="panel-sub">โควตาฟรี 50,000 ครั้ง/วัน นับรวมทุกเครื่อง รีเซ็ต ~15:00 น. · ตัวเลขนี้นับเฉพาะเครื่องนี้ ใช้ดูว่าส่วนไหนอ่านเยอะ</p>
         <button class="btn btn-ghost btn-sm" id="maint-reads-btn">📊 ดูตัวนับ</button>
         <div id="maint-reads-box" style="margin-top:8px;"></div>
       </div>
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.79";
-const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:00 น. เวลาไทย";
+const APP_VERSION = "11.80";
+const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2818,7 +2818,7 @@ async function driveFileDeadState(fileId, token){
 }
 
 /* ===================== v11.30 — ประหยัดโควตา Firestore: ตัวนับการอ่าน + แคชรายการเอกสารในเครื่อง ===================== */
-// Firebase แพ็กเกจฟรีอ่านได้วันละ 50,000 ครั้ง (นับรวมทุกเครื่อง · รีเซ็ตเที่ยงคืนเวลาแปซิฟิก ≈ 14:00 น. เวลาไทย)
+// Firebase แพ็กเกจฟรีอ่านได้วันละ 50,000 ครั้ง (นับรวมทุกเครื่อง · รีเซ็ตเที่ยงคืนเวลาแปซิฟิก ≈ 15:00 น. เวลาไทย ช่วงเวลามาตรฐาน / ≈ 14:00 ช่วงเวลาออมแสง)
 // ตัวนับนี้นับเฉพาะ "เครื่องนี้" แยกตาม collection เพื่อให้เห็นว่าอะไรกินโควตา (ดูได้ที่หน้า บำรุงรักษา)
 const F1R = (function(){
   const KEY = 'f1_reads_v1';
@@ -2996,7 +2996,7 @@ function f1IsQuotaErr(m){ return /Quota exceeded|RESOURCE_EXHAUSTED|Firestore 42
 function f1CacheSet(k,v){ try{ localStorage.setItem('f1c_'+k, JSON.stringify(v)); }catch(_){} }
 function f1CacheGet(k){ try{ const r=localStorage.getItem('f1c_'+k); return r?JSON.parse(r):null; }catch(_){ return null; } }
 window._f1Offline = false;
-const F1_QUOTA_MSG = 'โควตาอ่านข้อมูลฟรีของวันนี้เต็มแล้ว (Firebase จำกัดวันละ 50,000 ครั้ง) จะรีเซ็ตประมาณ 14:00–15:00 น. เวลาไทย — ข้อมูลที่กรอกยังอยู่ ลองใหม่หลังเวลานี้ หรือแจ้ง Manager ให้อัปเกรดแพ็กเกจ';
+const F1_QUOTA_MSG = 'โควตาอ่านข้อมูลฟรีของวันนี้เต็มแล้ว (Firebase จำกัดวันละ 50,000 ครั้ง) จะรีเซ็ตประมาณ 15:00 น. เวลาไทย — ข้อมูลที่กรอกยังอยู่ ลองใหม่หลังเวลานี้ หรือแจ้ง Manager ให้อัปเกรดแพ็กเกจ';
 async function initFirebase(){
   if(_fbReady) return;
   await waitForFirebaseSdk();
