@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.78
-  อัปเดตล่าสุด   : 7 พฤศจิกายน 2569 18:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.79
+  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.78</title>
+<title>F1 Service — v11.79</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2641,8 +2641,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.78";
-const APP_UPDATED_AT = "7 พฤศจิกายน 2569 18:30 น. เวลาไทย";
+const APP_VERSION = "11.79";
+const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2984,7 +2984,7 @@ async function fsLoadDocumentsSmart(sdk){
 async function fsBumpDocsVersion(){
   try{ f1IdbSet('documents', null); }catch(e){}
   for(let i=0;i<2;i++){
-    try{ await initFirebase(); const sdk = window._firebaseSdk; await sdk.setDoc(sdk.doc(db,'meta','docsVersion'), { v:Date.now() }); return true; }
+    try{ await initFirebase(); const sdk = window._firebaseSdk; await exWithTimeout(sdk.setDoc(sdk.doc(db,'meta','docsVersion'), { v:Date.now() }), 15000, 'การอัปเดตเลขเวอร์ชันเอกสาร'); return true; }
     catch(e){ if(i===1) console.warn('อัปเดตเลขเวอร์ชันเอกสารไม่สำเร็จ (เครื่องอื่นอาจเห็นข้อมูลเดิมได้ถึง 12 ชม. หรือจนกว่าจะรีเฟรช):', e && e.message); }
   }
   return false;
@@ -4000,7 +4000,7 @@ async function fsAddPendingError(fields){ showLoadingOverlay('กำลังบ
 async function fsUpdatePendingError(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'pendingErrors',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsAddDocument(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'documents'), fields); await fsBumpDocsVersion(); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdateDocument(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'documents',id), fields); await fsBumpDocsVersion(); }finally{ hideLoadingOverlay(); } }
-async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.deleteDoc(sdk.doc(db,'documents',id)); await fsBumpDocsVersion(); dxInvalidate(); }finally{ hideLoadingOverlay(); } }
+async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await exWithTimeout(sdk.deleteDoc(sdk.doc(db,'documents',id)), 30000, 'การลบรายการ'); await fsBumpDocsVersion(); dxInvalidate(); }finally{ hideLoadingOverlay(); } }
 /* ===================== v9.34 — ซิงก์สด (อ่านเฉพาะรายการที่เปลี่ยน) + ตัวตรวจเทียบข้อมูล ===================== */
 // เดิม: ทุกครั้งที่ใครแก้เคลม ทุกเครื่องที่เปิดแอปค้างไว้อ่านเคลม "ทั้ง collection" ใหม่ (จำนวนเครื่อง × จำนวนเคลม)
 // ใหม่: ฟังด้วย onSnapshot — snapshot แรกใช้เป็นข้อมูลเริ่มต้นแทน getDocs เดิม (ไม่อ่านซ้ำ) หลังจากนั้น Firestore ส่งมาเฉพาะเอกสารที่เปลี่ยน
@@ -4311,7 +4311,7 @@ async function driveDeleteFile(fileId){
   const msg = await googleApiErrorMessage(res);
   if(res.status===403){
     try{
-      const sv = await examApiRetry('drvTrash', { ids:[fileId] });
+      const sv = await exWithTimeout(examApiRetry('drvTrash', { ids:[fileId] }), 30000, 'การลบไฟล์ใน Drive'); // v11.79 — เวลาจำกัด กันค้าง "กำลังลบ..."
       if(sv.failed && sv.failed.length) throw new Error(sv.failed[0].msg);
       driveCacheForgetId(fileId); return sv.missing ? 'missing' : 'trashed';
     }catch(se){ if(!drvFallbackOk(se) && !/ไม่ถูกต้อง|นอกโฟลเดอร์|ไม่ได้รับอนุมัติ/.test(String(se.message||''))) throw se; }
