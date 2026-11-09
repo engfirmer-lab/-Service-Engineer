@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.81
-  อัปเดตล่าสุด   : 8 พฤศจิกายน 2569 14:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.82
+  อัปเดตล่าสุด   : 9 พฤศจิกายน 2569 11:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.81</title>
+<title>F1 Service — v11.82</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -915,6 +915,8 @@ html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain
    หน้า/แผงเต็มจอ ≤ 300 < bg-jobs 350 < modal 400 (doclink 410) < lightbox 450 < gsi 460 < inapp 480 < loading 500 < toast 600
    กฎ: หน้าเต็มจอใหม่ต้อง z-index ≤ 300 · ป๊อปอัปใหม่ใช้ class modal-overlay เสมอ (ห้ามตั้ง z-index เอง) · รันเทสต์ test/t75.js ทุกครั้งก่อนส่ง */
 .modal-overlay{z-index:400 !important;}
+/* v11.82 — ตัวเลือกเวลา/วันที่ (วงล้อ) ต้องอยู่เหนือแผ่นล่างของตารางเทรน (tr-sheet z-index 9000) ไม่งั้นเปิดแล้วไปอยู่ด้านหลัง เปลี่ยนเวลาเช็คชื่อไม่ได้ */
+#f1-tp.modal-overlay, #f1-dp.modal-overlay{z-index:9500 !important;}
 #doclink-modal{z-index:410 !important;}
 #bg-jobs{z-index:350 !important;}
 .lightbox{z-index:450 !important;}
@@ -2641,8 +2643,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.81";
-const APP_UPDATED_AT = "8 พฤศจิกายน 2569 14:50 น. เวลาไทย";
+const APP_VERSION = "11.82";
+const APP_UPDATED_AT = "9 พฤศจิกายน 2569 11:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
