@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.84
-  อัปเดตล่าสุด   : 10 พฤศจิกายน 2569 19:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.85
+  อัปเดตล่าสุด   : 10 พฤศจิกายน 2569 20:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.84</title>
+<title>F1 Service — v11.85</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2643,8 +2643,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.84";
-const APP_UPDATED_AT = "10 พฤศจิกายน 2569 19:00 น. เวลาไทย";
+const APP_VERSION = "11.85";
+const APP_UPDATED_AT = "10 พฤศจิกายน 2569 20:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -10086,6 +10086,11 @@ async function driveUploadLargeFile(file, filename, parentId, onProgress){
   try{ const id = await drvUploadBlob(file, filename, file.type, parentId, true, onProgress); return `https://drive.google.com/file/d/${id}/view`; }
   catch(e){ if(drvFallbackOk(e)) return await driveUploadLargeFile_legacy(file, filename, parentId, onProgress); throw e; }
 }
+// v11.85 — Sup/Manager ที่อัปโหลดเอกสาร → ให้สิทธิ์ "แก้ไขไฟล์" (เฉพาะ PowerPoint/Excel/Word/Google Docs-Sheets-Slides · ไฟล์ยังเป็นของ engfirmer · PDF/วิดีโอ/รูป ดูอย่างเดียว) ทำผ่าน Apps Script · ล้มเหลวไม่กระทบการอัปโหลด
+async function grantUploaderEdit(fileUrl){
+  try{ const id = extractDriveFileId(fileUrl); if(!id) return; await exWithTimeout(examApi('drvGrantEdit', { fileId: id }), 20000, 'ให้สิทธิ์แก้ไขไฟล์'); }
+  catch(e){ console.warn('ให้สิทธิ์แก้ไขไฟล์ไม่สำเร็จ (ข้าม):', e && e.message); }
+}
 async function driveUploadImage(blob, filename, parentId){
   try{ const id = await drvUploadBlob(blob, filename, blob.type || 'image/jpeg', parentId, true); return `https://lh3.googleusercontent.com/d/${id}`; }
   catch(e){ if(drvFallbackOk(e)) return await driveUploadImage_legacy(blob, filename, parentId); throw e; }
@@ -11013,6 +11018,7 @@ async function doclinkSaveMulti(){
       try{
         const url = await driveUploadLargeFile(it.file, it.file.name, folderIds[it.info.label], pct=>{ it.pct = pct; dlqRowStatus(it); });
         fid = extractDriveFileId(url);
+        grantUploaderEdit(url);
         it.state = 'save'; dlqRowStatus(it);
         const title = String(it.title).trim();
         const groupId = shareTargets.length>0 ? ('g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)) : null;
@@ -11223,6 +11229,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
         $('doclink-upload-progress-bar').style.width = pct+'%';
         $('doclink-upload-progress-text').textContent = `กำลังอัปโหลด... ${pct}%`;
       });
+      await grantUploaderEdit(url);
     }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
