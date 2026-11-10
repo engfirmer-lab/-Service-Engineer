@@ -10088,7 +10088,7 @@ async function driveUploadLargeFile(file, filename, parentId, onProgress){
 }
 // v11.85 — Sup/Manager ที่อัปโหลดเอกสาร → ให้สิทธิ์ "แก้ไขไฟล์" (เฉพาะ PowerPoint/Excel/Word/Google Docs-Sheets-Slides · ไฟล์ยังเป็นของ engfirmer · PDF/วิดีโอ/รูป ดูอย่างเดียว) ทำผ่าน Apps Script · ล้มเหลวไม่กระทบการอัปโหลด
 async function grantUploaderEdit(fileUrl){
-  try{ const id = extractDriveFileId(fileUrl); if(!id) return; await exWithTimeout(examApi('drvGrantEdit', { fileId: id }), 20000, 'ให้สิทธิ์แก้ไขไฟล์'); }
+  try{ const id = extractDriveFileId(fileUrl) || (String(fileUrl).match(/docs\.google\.com\/(?:spreadsheets|document|presentation)\/d\/([\w-]+)/)||[])[1]; if(!id) return; await exWithTimeout(examApi('drvGrantEdit', { fileId: id }), 20000, 'ให้สิทธิ์แก้ไขไฟล์'); }
   catch(e){ console.warn('ให้สิทธิ์แก้ไขไฟล์ไม่สำเร็จ (ข้าม):', e && e.message); }
 }
 async function driveUploadImage(blob, filename, parentId){
