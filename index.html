@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.88
-  อัปเดตล่าสุด   : 11 พฤศจิกายน 2569 19:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.89
+  อัปเดตล่าสุด   : 11 พฤศจิกายน 2569 19:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.88</title>
+<title>F1 Service — v11.89</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2643,8 +2643,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.88";
-const APP_UPDATED_AT = "11 พฤศจิกายน 2569 19:30 น. เวลาไทย";
+const APP_VERSION = "11.89";
+const APP_UPDATED_AT = "11 พฤศจิกายน 2569 19:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6046,7 +6046,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
-// v11.88 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+// v11.89 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
 function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
 function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
 function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
@@ -6064,7 +6064,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const isDoc = !isVideoFile(v.file);
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
-      if(isDoc) await grantUploaderEdit(url); // v11.88 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
+      if(isDoc) await grantUploaderEdit(url); // v11.89 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6080,7 +6080,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.88 — เอกสารที่ยังไม่อัปโหลด
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.89 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -9950,6 +9950,7 @@ function openAddErrorForModel(category, model){
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
+  _errDraftOn = true; errDraftRestore(category, model); // v11.89 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
@@ -10157,6 +10158,7 @@ async function navReopenClaim(c){
   openClaimDetail(cur || c);
 }
 function closeAddErrorPanel(){
+  errDraftClear(); // v11.89 — ยกเลิก/บันทึกสำเร็จ = ทิ้งร่าง (ปิดแท็บ/รีเฟรช/บันทึกพลาด = เก็บร่างไว้)
   resetErrorForm();
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
@@ -10347,7 +10349,41 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
 }
 
+// ===== v11.89 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
+// เก็บข้อความในเครื่อง (localStorage) แยกตามบัญชี+รุ่น · ไม่เก็บรูป/วิดีโอ/เอกสารที่แนบ (ต้องแนบใหม่) · บันทึกสำเร็จหรือกดยกเลิก = ลบร่าง
+let _errDraftOn = false, _errDraftTimer = null;
+function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + ($('f-category').value||'') + '|' + ($('f-model').value||''); }
+function errDraftSnap(){
+  const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length) }));
+  return { code:$('f-code').value, symptom:$('f-symptom').value, sols, savedAt:Date.now() };
+}
+function errDraftMeaningful(d){
+  return !!(String(d.code||'').trim() || String(d.symptom||'').trim() || (d.sols||[]).some(s=>String(s.title||'').trim() || String(s.desc||'').trim() || String(s.time||'').trim() || (s.tools||[]).some(x=>String(x||'').trim()) || (s.parts||[]).some(x=>String(x||'').trim())));
+}
+function errDraftSave(){
+  if(!_errDraftOn || !$('add-error-modal').classList.contains('show')) return;
+  if(!$('f-category').value || !$('f-model').value) return;
+  try{ const d = errDraftSnap(); if(errDraftMeaningful(d)) localStorage.setItem(errDraftKey(), JSON.stringify(d)); else localStorage.removeItem(errDraftKey()); }catch(e){}
+}
+function errDraftSchedule(){ if(!_errDraftOn) return; clearTimeout(_errDraftTimer); _errDraftTimer = setTimeout(errDraftSave, 600); }
+function errDraftClear(){ try{ clearTimeout(_errDraftTimer); if($('f-category') && $('f-model') && $('f-category').value && $('f-model').value) localStorage.removeItem(errDraftKey()); }catch(e){} }
+function errDraftExists(){ try{ return !!localStorage.getItem(errDraftKey()); }catch(e){ return false; } }
+function errDraftRestore(category, model){
+  try{
+    const raw = localStorage.getItem(errDraftKey()); if(!raw) return;
+    const d = JSON.parse(raw); if(!d || !errDraftMeaningful(d)) return;
+    $('f-code').value = d.code || ''; $('f-symptom').value = d.symptom || '';
+    const sols = (d.sols||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', images:[], videos:[], tools:Array.isArray(s.tools)?s.tools:[], parts:Array.isArray(s.parts)?s.parts:[], partsQty:s.partsQty||undefined, time:s.time||'' }));
+    if(sols.length) editingSolutions = sols;
+    renderSolutionsEditor();
+    const lost = (d.sols||[]).reduce((n,s)=>n+(s.media||0),0);
+    showToast('📝 กู้คืนแบบร่างที่ยังไม่ได้บันทึกแล้ว' + (lost ? ' — รูป/วิดีโอ/เอกสารที่แนบไว้ ('+lost+' ไฟล์) ต้องแนบใหม่' : ''));
+  }catch(e){}
+}
+['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(_errDraftOn && e.target && e.target.closest && e.target.closest('#add-error-modal')) errDraftSchedule(); }, true));
+window.addEventListener('beforeunload', e=>{ if(_errDraftOn && $('add-error-modal') && $('add-error-modal').classList.contains('show') && errDraftExists()){ e.preventDefault(); e.returnValue=''; } });
 function resetErrorForm(){
+  _errDraftOn = false; // v11.89 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
