@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.86
-  อัปเดตล่าสุด   : 10 พฤศจิกายน 2569 22:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.87
+  อัปเดตล่าสุด   : 11 พฤศจิกายน 2569 16:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.86</title>
+<title>F1 Service — v11.87</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2643,8 +2643,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.86";
-const APP_UPDATED_AT = "10 พฤศจิกายน 2569 22:05 น. เวลาไทย";
+const APP_VERSION = "11.87";
+const APP_UPDATED_AT = "11 พฤศจิกายน 2569 16:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3175,11 +3175,11 @@ function renderDownModalCauses(){
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอ / เอกสารประกอบ</label>
         <div class="file-dropzone" data-viddrop="${s.id}">
           <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
             ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+            <label class="upload-btn">＋<input type="file" accept="video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt" multiple style="display:none;" data-uploadvid="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
@@ -3190,7 +3190,7 @@ function renderDownModalCauses(){
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ downModalCauses = downModalCauses.filter(s=>s.id!==btn.getAttribute('data-remove')); renderDownModalCauses(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=downModalCauses.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderDownModalCauses(); pokeDirtyGuards(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
-  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=downModalCauses.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalCauses(); }); });
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=downModalCauses.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ if(!isVideoOrDocFile(file)){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ/เอกสาร ข้ามไฟล์นี้'); continue; } sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderDownModalCauses(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=downModalCauses.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderDownModalCauses(); }); }));
   wireSolutionMediaDropzones(wrap, sid=>downModalCauses.find(s=>s.id===sid), renderDownModalCauses);
 }
@@ -6046,19 +6046,25 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
+// v11.87 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
+function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
+function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
 // อัปโหลดวิดีโอที่ยัง pending (ไฟล์ในเครื่อง ยังไม่เคยอัปโหลด) — ใช้ resumable upload รองรับไฟล์วิดีโอขนาดใหญ่
 async function resolveVideosForUpload(videos, category, model, errorCode, symptom, solutionIndex){
   if(!videos || videos.length===0) return [];
   const needsUpload = videos.some(v=>typeof v!=='string');
   if(!needsUpload) return [...videos];
-  showLoadingOverlay('กำลังอัปโหลดวิดีโอ...');
+  showLoadingOverlay('กำลังอัปโหลดวิดีโอ/เอกสาร...');
   try{
     const folderId = await ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex);
     const resolved = [];
     for(const v of videos){
       if(typeof v==='string'){ resolved.push(v); continue; }
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
-      const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลดวิดีโอ... ${pct}%`); });
+      const isDoc = !isVideoFile(v.file);
+      const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
+      if(isDoc) await grantUploaderEdit(url); // v11.87 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6074,6 +6080,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.87 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -9780,11 +9787,11 @@ function renderEngSolutionsEditor(){
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอ / เอกสารประกอบ</label>
         <div class="file-dropzone" data-viddrop="${s.id}">
           <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
             ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+            <label class="upload-btn">＋<input type="file" accept="video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt" multiple style="display:none;" data-uploadvid="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
@@ -9795,7 +9802,7 @@ function renderEngSolutionsEditor(){
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ engEditingSolutions = engEditingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderEngSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=engEditingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderEngSolutionsEditor(); pokeDirtyGuards(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
-  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=engEditingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ if(!isVideoOrDocFile(file)){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ/เอกสาร ข้ามไฟล์นี้'); continue; } sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderEngSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=engEditingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderEngSolutionsEditor(); }); }));
   wireSolutionMediaDropzones(wrap, sid=>engEditingSolutions.find(s=>s.id===sid), renderEngSolutionsEditor);
 }
@@ -10257,11 +10264,11 @@ function renderSolutionsEditor(){
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอประกอบ</label>
+      <div class="field-wrap" style="margin-top:8px;"><label>วิดีโอ / เอกสารประกอบ</label>
         <div class="file-dropzone" data-viddrop="${s.id}">
           <div style="display:flex;flex-wrap:wrap;gap:8px;" data-vidrow="${s.id}">
             ${(s.videos||[]).map((v,i)=>`<div class="img-thumb" style="width:140px;height:90px;">${videoEmbedHtml(v,{width:'140',height:'90'})}<button data-rmvid="${s.id}:${i}">✕</button></div>`).join('')}
-            <label class="upload-btn">＋<input type="file" accept="video/*" multiple style="display:none;" data-uploadvid="${s.id}"></label>
+            <label class="upload-btn">＋<input type="file" accept="video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt" multiple style="display:none;" data-uploadvid="${s.id}"></label>
           </div>
           <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
         </div>
@@ -10272,7 +10279,7 @@ function renderSolutionsEditor(){
   wrap.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ editingSolutions = editingSolutions.filter(s=>s.id!==btn.getAttribute('data-remove')); renderSolutionsEditor(); }));
   wrap.querySelectorAll('[data-upload]').forEach(inp=>{ inp.addEventListener('change', async ()=>{ const sid=inp.getAttribute('data-upload'); const sol=editingSolutions.find(s=>s.id===sid); for(const file of inp.files){ try{ const c=await compressImage(file); sol.images.push(c); }catch(e){} } renderSolutionsEditor(); pokeDirtyGuards(); }); });
   wrap.querySelectorAll('[data-rmimg]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmimg').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.images[parseInt(idx)], ()=>{ sol.images.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
-  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
+  wrap.querySelectorAll('[data-uploadvid]').forEach(inp=>{ inp.addEventListener('change', ()=>{ const sid=inp.getAttribute('data-uploadvid'); const sol=editingSolutions.find(s=>s.id===sid); if(!sol.videos) sol.videos=[]; for(const file of inp.files){ if(!isVideoOrDocFile(file)){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ/เอกสาร ข้ามไฟล์นี้'); continue; } sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file }); } renderSolutionsEditor(); }); });
   wrap.querySelectorAll('[data-rmvid]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx]=btn.getAttribute('data-rmvid').split(':'); const sol=editingSolutions.find(s=>s.id===sid); confirmAndRemoveMedia(sol.videos[parseInt(idx)], ()=>{ sol.videos.splice(parseInt(idx),1); renderSolutionsEditor(); }); }));
   wireSolutionMediaDropzones(wrap, sid=>editingSolutions.find(s=>s.id===sid), renderSolutionsEditor);
 }
@@ -12331,7 +12338,7 @@ function wireSolutionMediaDropzones(wrap, findSol, onRerender){
       const sol = findSol(sid); if(!sol) return;
       if(!sol.videos) sol.videos = [];
       for(const file of Array.from(files)){
-        if(!file.type.startsWith('video/')){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ ข้ามไฟล์นี้'); continue; }
+        if(!isVideoOrDocFile(file)){ showToast('⚠ '+file.name+' ไม่ใช่ไฟล์วิดีโอ/เอกสาร ข้ามไฟล์นี้'); continue; }
         sol.videos.push({ pending:true, localUrl:URL.createObjectURL(file), file });
       }
       onRerender();
