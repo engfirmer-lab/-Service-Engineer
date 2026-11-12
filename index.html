@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.91
-  อัปเดตล่าสุด   : 12 พฤศจิกายน 2569 10:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.92
+  อัปเดตล่าสุด   : 12 พฤศจิกายน 2569 17:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.91</title>
+<title>F1 Service — v11.92</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2004,6 +2004,13 @@ setTimeout(function(){
         <div id="dup-files-result"></div>
       </div>
       <div class="panel-block">
+        <h2>🧹 เอกสารตกค้าง</h2>
+        <p class="panel-sub">เอกสารที่รุ่นของมันถูกลบ/เปลี่ยนชื่อ/แยกรุ่นไปแล้ว (ยังโผล่ในการค้นหา) — ตรวจแล้วล้างได้ ลบเฉพาะรายการในแอป ไฟล์ใน Drive ไม่ถูกลบ</p>
+        <button class="btn btn-ghost btn-sm" id="orphan-scan-btn">🔎 ตรวจหาเอกสารตกค้าง</button>
+        <div id="orphan-status" style="font-size:12.5px;color:var(--text-faint);margin-top:10px;"></div>
+        <div id="orphan-result"></div>
+      </div>
+      <div class="panel-block">
         <h2>Google Drive Database</h2>
         <p class="panel-sub">สร้างโฟลเดอร์ใน Drive ล่วงหน้าทุกรุ่นที่ดูแล</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -2643,8 +2650,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.91";
-const APP_UPDATED_AT = "12 พฤศจิกายน 2569 10:40 น. เวลาไทย";
+const APP_VERSION = "11.92";
+const APP_UPDATED_AT = "12 พฤศจิกายน 2569 17:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5416,6 +5423,119 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 
+// ===== v11.92 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
+// สาเหตุที่ทำ: ตอนแยกรุ่น "BS-240 & BS-360E" เป็น BS-240/BS-360E มีการเพิ่มเอกสารเดิมเข้ารุ่นใหม่ แต่รายการของรุ่นรวมไม่ถูกเก็บกวาด → เห็นเอกสารซ้ำ
+// การล้างทุกแบบ ลบเฉพาะ "รายการในแอป" (Firestore) ไม่แตะไฟล์ใน Drive เด็ดขาด
+function docFileKey(d){ return (d && d.url && extractDriveFileId(d.url)) || ''; }
+function docCoveredIn(d, cat, model){ // รุ่นปลายทางมีเอกสารนี้แล้วไหม: ประเภทเดียวกัน + ไฟล์ Drive เดียวกัน (ถ้าไม่มีไฟล์: ชื่อเดียวกัน)
+  const fid = docFileKey(d);
+  return (DATA.documents||[]).some(x=> x.id!==d.id && x.category===cat && x.model===model && x.docType===d.docType && (fid ? docFileKey(x)===fid : (!docFileKey(x) && String(x.title||'')===String(d.title||''))));
+}
+function orphanTargetsOf(model, cat){ // เดารุ่นปลายทางจากชื่อรุ่นรวม เช่น "BS-240 & BS-360E"
+  const valid = DATA.categories[cat] || [];
+  return String(model||'').split(/\s*(?:&|,|\+|\/|และ)\s*/).map(x=>x.trim()).filter(Boolean).filter(t=>valid.includes(t));
+}
+function orphanDocsList(){
+  return (DATA.documents||[]).filter(d=> DATA.categories[d.category] && !DATA.categories[d.category].includes(d.model) && (isSuperAdmin() || ownerOf(d.category, d.model)===currentSupIdentity));
+}
+function docCopyFields(d, model, groupId){
+  const f = {}; Object.keys(d).forEach(k=>{ if(k==='id' || d[k]===undefined) return; f[k]=d[k]; });
+  f.model = model; if(groupId) f.groupId = groupId; return f;
+}
+function newGroupId(){ return 'g_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+async function docMoveToTargets(d, targets){ // สร้างรายการในรุ่นปลายทางที่ยังไม่มี แล้วลบรายการเดิม (เฉพาะในแอป)
+  const missing = targets.filter(t=>!docCoveredIn(d, d.category, t));
+  const gid = d.groupId || newGroupId();
+  for(const t of missing){
+    const f = docCopyFields(d, t, gid);
+    const id = await fsAddDocument(f);
+    DATA.documents.push({ id, ...f });
+  }
+  await fsDeleteDocument(d.id);
+  DATA.documents = DATA.documents.filter(x=>x.id!==d.id);
+  return missing.length;
+}
+function renderOrphanPanel(){
+  const st = $('orphan-status'), box = $('orphan-result'); if(!st || !box) return;
+  const list = orphanDocsList();
+  if(!list.length){ st.textContent = '✓ ไม่พบเอกสารตกค้าง'; box.innerHTML = ''; return; }
+  const auto = [], manual = [];
+  list.forEach(d=>{ const t = orphanTargetsOf(d.model, d.category); (t.length ? auto : manual).push({ d, t, missing: t.filter(x=>!docCoveredIn(d, d.category, x)) }); });
+  const dup = auto.filter(x=>x.missing.length===0).length, mv = auto.length - dup;
+  st.textContent = `พบเอกสารตกค้าง ${list.length} รายการ — ล้างอัตโนมัติได้ ${auto.length} (ลบรายการซ้ำ ${dup} · เพิ่มเข้ารุ่นที่ขาดแล้วลบอันเก่า ${mv}) · ต้องเลือกรุ่นเอง ${manual.length}`;
+  const opts = (cat)=> (DATA.categories[cat]||[]).map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  box.innerHTML = `
+    ${auto.length ? `<button class="btn btn-primary btn-sm" id="orphan-auto-btn" style="margin-top:10px;">🧹 ล้างอัตโนมัติ ${auto.length} รายการ</button><p style="font-size:11.5px;color:var(--text-faint);margin:6px 0 0;">ลบเฉพาะรายการในแอป · ไฟล์ใน Google Drive ไม่ถูกลบ · รายการที่รุ่นปลายทางยังไม่มี จะถูกเพิ่มให้ก่อนลบอันเก่า</p>` : ''}
+    <div style="max-height:320px;overflow:auto;margin-top:10px;font-size:12px;">
+      ${auto.concat(manual).map(x=>`<div style="padding:5px 0;border-bottom:1px solid var(--border,#ddd);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="flex:1;min-width:160px;">${escapeHtml(x.d.title||'')} <span style="color:var(--text-faint);">· ${escapeHtml(docTypeLabel(x.d.docType)||x.d.docType||'')} · ${escapeHtml(x.d.category)} / ${escapeHtml(x.d.model)}</span></span>
+        ${x.t && x.t.length ? `<span style="color:var(--text-faint);">${x.missing.length ? '→ เพิ่มเข้า '+escapeHtml(x.missing.join(', ')) : 'มีในรุ่นปลายทางแล้ว → ลบรายการซ้ำ'}</span>`
+          : `<select data-orphan-sel="${x.d.id}" style="font-size:12px;">${opts(x.d.category)}</select><button class="btn btn-ghost btn-sm" data-orphan-move="${x.d.id}">ย้าย</button>`}
+      </div>`).join('')}
+    </div>`;
+  const ab = $('orphan-auto-btn');
+  if(ab) ab.addEventListener('click', async ()=>{
+    if(!confirm(`ล้างเอกสารตกค้างอัตโนมัติ ${auto.length} รายการ?\n\n• ลบ ${dup} รายการที่ซ้ำกับรุ่นปลายทาง\n• ย้าย ${mv} รายการ (เพิ่มเข้ารุ่นที่ขาด แล้วลบอันเก่า)\n\nลบเฉพาะรายการในแอป — ไฟล์ใน Drive ไม่ถูกลบ`)) return;
+    ab.disabled = true; let done = 0, added = 0;
+    try{
+      for(const x of auto){ added += await docMoveToTargets(x.d, x.t); done++; st.textContent = `กำลังล้าง... ${done}/${auto.length}`; }
+      fsWriteLog(`ล้างเอกสารตกค้าง ${done} รายการ (เพิ่มเข้ารุ่นปลายทาง ${added})`);
+      showToast(`✓ ล้างแล้ว ${done} รายการ (เพิ่มเข้ารุ่นปลายทาง ${added})`);
+    }catch(e){ showToast('⚠ ล้างไม่สำเร็จ: '+e.message+' (ทำไปแล้ว '+done+' รายการ กดตรวจซ้ำได้)'); }
+    try{ renderAll(); }catch(e){}
+    renderOrphanPanel();
+  });
+  box.querySelectorAll('[data-orphan-move]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    const id = btn.getAttribute('data-orphan-move'); const d = DATA.documents.find(z=>z.id===id); if(!d) return;
+    const to = box.querySelector(`[data-orphan-sel="${id}"]`).value; if(!to) return;
+    btn.disabled = true;
+    try{ await fsUpdateDocument(id, { model: to }); d.model = to; showToast('✓ ย้ายแล้ว'); }
+    catch(e){ showToast('⚠ ย้ายไม่สำเร็จ: '+e.message); btn.disabled = false; return; }
+    try{ renderAll(); }catch(e){}
+    renderOrphanPanel();
+  }));
+}
+// แยกรุ่น: รุ่นเดิม → หลายรุ่นใหม่ (เอกสารทุกอย่างถูกเพิ่มเข้าทุกรุ่นใหม่ แล้วรุ่นเดิมถูกลบ) · ถ้ารุ่นเดิมยังมี Error/รออนุมัติ/เคลม จะไม่ทำ (กันข้อมูลหาย)
+async function splitModelFlow(cat, oldModel){
+  const raw = prompt(`แยกรุ่น "${oldModel}" (ประเภท ${cat}) เป็นรุ่นใหม่\n\nพิมพ์ชื่อรุ่นใหม่ คั่นด้วยเครื่องหมายจุลภาค เช่น BS-240, BS-360E\n(ชื่อที่มีอยู่แล้วในระบบใช้ได้ — จะเพิ่มเอกสารเข้าไปให้)`, oldModel.split(/\s*(?:&|,|\+)\s*/).join(', '));
+  if(!raw) return;
+  const names = Array.from(new Set(raw.split(',').map(x=>x.trim()).filter(Boolean)));
+  if(!names.length){ showToast('⚠ กรุณาพิมพ์ชื่อรุ่นใหม่'); return; }
+  if(names.includes(oldModel)){ showToast('⚠ ชื่อรุ่นใหม่ต้องไม่เหมือนรุ่นเดิม'); return; }
+  let docs;
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const [errSnap, pendSnap, claimSnap, docSnap] = await Promise.all(['errors','pendingErrors','claims','documents'].map(c=> sdk.getDocs(sdk.query(sdk.collection(db,c), sdk.where('category','==',cat)))));
+    let blockers = 0; [errSnap, pendSnap, claimSnap].forEach(sn=> sn.forEach(x=>{ if(x.data().model===oldModel) blockers++; }));
+    if(blockers>0){ alert(`แยกรุ่นไม่ได้ครับ — รุ่น "${oldModel}" ยังมี Error/รออนุมัติ/เคลมผูกอยู่ ${blockers} รายการ\n\nให้ใช้ "เปลี่ยนชื่อรุ่น" แทน (ย้ายข้อมูลตามให้ครบ) หรือย้ายรายการเหล่านั้นก่อน`); return; }
+    docs = []; docSnap.forEach(x=>{ const v = x.data(); if(v.model===oldModel) docs.push({ id:x.id, ...v }); });
+  }catch(e){ showToast('⚠ เช็คข้อมูลไม่สำเร็จ: '+e.message); return; }
+  if(!confirm(`แยก "${oldModel}" เป็น: ${names.join(', ')}\n\n• เอกสาร ${docs.length} รายการ จะถูกเพิ่มเข้าทุกรุ่นใหม่ (ถ้ายังไม่มี) แล้วลบรายการของรุ่นเดิม\n• รุ่นเดิมจะถูกลบออกจากรายการรุ่น\n• ไฟล์ใน Google Drive ไม่ถูกย้าย/ลบ\n\nดำเนินการ?`)) return;
+  const prevCats = JSON.parse(JSON.stringify(DATA.categories)), prevOwn = JSON.parse(JSON.stringify(DATA.owners));
+  let done = 0;
+  try{
+    showLoadingOverlay('กำลังแยกรุ่น...');
+    names.forEach(n=>{ if(!DATA.categories[cat].includes(n)){ DATA.categories[cat].push(n); } });
+    for(const d of docs){
+      const live = DATA.documents.find(x=>x.id===d.id) || d; // ใช้ข้อมูลจากเซิร์ฟเวอร์เป็นหลัก
+      Object.assign(live, d);
+      if(!DATA.documents.includes(live)) DATA.documents.push(live);
+      await docMoveToTargets(live, names); done++;
+    }
+    const ovKey = cat+'|'+oldModel;
+    if(DATA.owners.modelOverrides[ovKey]!==undefined){ names.forEach(n=>{ if(DATA.owners.modelOverrides[cat+'|'+n]===undefined) DATA.owners.modelOverrides[cat+'|'+n] = DATA.owners.modelOverrides[ovKey]; }); delete DATA.owners.modelOverrides[ovKey]; }
+    DATA.categories[cat] = DATA.categories[cat].filter(m=>m!==oldModel);
+    await fsSaveCategoriesDoc();
+    invalidateErrorsCacheForCategory(cat); fsBumpCategoryVersion(cat);
+    fsWriteLog(`แยกรุ่น ${cat}/${oldModel} → ${names.join(', ')} (เอกสาร ${done} รายการ)`);
+    hideLoadingOverlay();
+    showToast(`✓ แยกรุ่นแล้ว (เอกสาร ${done} รายการ)`);
+  }catch(e){
+    hideLoadingOverlay(); DATA.categories = prevCats; DATA.owners = prevOwn;
+    showToast('⚠ แยกรุ่นไม่สำเร็จ: '+e.message+(done?` (ทำไปแล้ว ${done} รายการ — กดแยกรุ่นซ้ำได้ ระบบข้ามรายการที่ทำแล้ว)`:''));
+  }
+  try{ renderAll(); renderOwnerView(); renderCatModelManage(); }catch(e){}
+}
 // v8.64 — ตรวจสอบไฟล์ซ้ำ: ดึง md5Checksum ของไฟล์ Drive ที่ทุกเอกสาร (ทุกรุ่นที่ดูแล) ชี้ไปหา แล้วจัดกลุ่มไฟล์ที่ md5 ตรงกัน (=ไบต์เหมือนกันเป๊ะ)
 // แต่คนละไฟล์จริงใน Drive (คนละ fileId) — เสนอให้รวมเป็นเอกสารเดียว (ผูก groupId เดียวกัน + ลบไฟล์ซ้ำออก เหลือไฟล์เดียว)
 function checkDuplicateFiles(){
@@ -5506,6 +5626,7 @@ function renderDupGroups(r){
   }));
 }
 $('check-dup-files-btn').addEventListener('click', checkDuplicateFiles);
+$('orphan-scan-btn').addEventListener('click', renderOrphanPanel);
 
 // ใช้ extractDriveFileId ที่มีอยู่แล้วในไฟล์นี้ (ดึงรหัสไฟล์ Drive จากลิงก์) — เช็คว่าไฟล์นี้เคยถูกลิงก์ไว้ในระบบแล้วหรือยัง กันสร้างซ้ำ
 // สำรวจโฟลเดอร์ Drive ของทุกรุ่น/ทุกประเภทเอกสารที่ Sup Product คนปัจจุบันดูแล หาไฟล์ที่ยังไม่เคยลิงก์ไว้ในระบบ แล้วสร้างลิงก์ให้อัตโนมัติ
@@ -6046,7 +6167,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
-// v11.91 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+// v11.92 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
 function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
 function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
 function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
@@ -6064,7 +6185,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const isDoc = !isVideoFile(v.file);
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
-      if(isDoc) await grantUploaderEdit(url); // v11.91 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
+      if(isDoc) await grantUploaderEdit(url); // v11.92 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6080,7 +6201,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.91 — เอกสารที่ยังไม่อัปโหลด
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.92 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -9950,7 +10071,7 @@ function openAddErrorForModel(category, model){
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
-  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.91 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
+  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.92 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
@@ -10158,7 +10279,7 @@ async function navReopenClaim(c){
   openClaimDetail(cur || c);
 }
 function closeAddErrorPanel(){
-  errDraftClear(); // v11.91 — ยกเลิก/บันทึกสำเร็จ = ทิ้งร่าง (ปิดแท็บ/รีเฟรช/บันทึกพลาด = เก็บร่างไว้)
+  errDraftClear(); // v11.92 — ยกเลิก/บันทึกสำเร็จ = ทิ้งร่าง (ปิดแท็บ/รีเฟรช/บันทึกพลาด = เก็บร่างไว้)
   resetErrorForm();
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
@@ -10349,10 +10470,10 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
 }
 
-// ===== v11.91 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
+// ===== v11.92 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
 // เก็บข้อความในเครื่อง (localStorage) แยกตามบัญชี+รุ่น · ไม่เก็บรูป/วิดีโอ/เอกสารที่แนบ (ต้องแนบใหม่) · บันทึกสำเร็จหรือกดยกเลิก = ลบร่าง
 let _errDraftOn = false, _errDraftTimer = null, _errDraftCat = '', _errDraftModel = '';
-function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.91 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
+function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.92 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
 function errDraftSnap(){
   const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length) }));
   return { code:$('f-code').value, symptom:$('f-symptom').value, sols, savedAt:Date.now() };
@@ -10383,7 +10504,7 @@ function errDraftRestore(category, model){
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(_errDraftOn && e.target && e.target.closest && e.target.closest('#add-error-modal')) errDraftSchedule(); }, true));
 window.addEventListener('beforeunload', e=>{ if(_errDraftOn && $('add-error-modal') && $('add-error-modal').classList.contains('show') && errDraftExists()){ e.preventDefault(); e.returnValue=''; } });
 function resetErrorForm(){
-  _errDraftOn = false; // v11.91 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
+  _errDraftOn = false; // v11.92 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
@@ -11277,6 +11398,17 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
       });
       await grantUploaderEdit(url);
     }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
+  }
+
+  if(!existingId){ // v11.92 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
+    const fidNew = extractDriveFileId(url);
+    if(fidNew){
+      const shareModels = Array.from(document.querySelectorAll('.doclink-share-chk:checked')).map(c=>c.getAttribute('data-model'));
+      const dupDoc = (DATA.documents||[]).find(d=>d.category===category && d.model!==model && d.docType===docType && extractDriveFileId(d.url)===fidNew && !shareModels.includes(d.model));
+      if(dupDoc && !confirm(`⚠ ไฟล์นี้มีอยู่แล้วในรุ่น "${dupDoc.model}" ("${dupDoc.title||''}")\n\nถ้าต้องการให้หลายรุ่นใช้ไฟล์เดียวกัน ให้กด "ยกเลิก" แล้วติ๊ก "ใช้เอกสารเดียวกันกับรุ่นอื่นด้วย" แทน (จะได้ไม่ซ้ำและแก้ที่เดียว)\n\nกด "ตกลง" เพื่อเพิ่มเป็นรายการแยกต่อไป`)){
+        f1TrackStop(); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return;
+      }
+    }
   }
 
   try{
@@ -14041,6 +14173,7 @@ function renderCatModelManage(){
           ` : `
             <span data-editmodelname="${escapeHtml(key)}" style="flex:1;min-width:100px;font-size:12.5px;cursor:pointer;" title="คลิกเพื่อแก้ไขชื่อรุ่น">${escapeHtml(m)}</span>
             <select class="model-owner-select" data-modelownerselect="${escapeHtml(key)}" style="font-size:11.5px;max-width:160px;${noOwnerYet?'border-color:var(--amber);color:var(--amber);':''}">${ownerSelectOptions(currentOwner==='ยังไม่มีผู้ดูแล'?NO_OWNER:currentOwner, false)}</select>
+            <button data-splitmodel="${escapeHtml(key)}" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;" title="แยกรุ่นนี้เป็นหลายรุ่น (เอกสารถูกเพิ่มเข้าทุกรุ่นใหม่)">✂</button>
             <button data-mergemodelfolder="${escapeHtml(key)}" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:14px;" title="รวมโฟลเดอร์/ข้อมูลใน Drive จากชื่อรุ่นเดิม เข้ามาที่รุ่นนี้">🔀</button>
             <button data-delmodel="${escapeHtml(key)}" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;" title="ระบบจะเช็คข้อมูลจริงจากเซิร์ฟเวอร์อีกครั้งก่อนลบเสมอ">✕</button>
           `}
@@ -14167,6 +14300,7 @@ function renderCatModelManage(){
 
   // แก้ไขชื่อรุ่น — เปิด/ปิดช่องแก้ไข
   wrap.querySelectorAll('[data-editmodelname]').forEach(el=>el.addEventListener('click', ()=>{ editingModelKey=el.getAttribute('data-editmodelname'); editingCatName=null; renderCatModelManage(); }));
+  wrap.querySelectorAll('[data-splitmodel]').forEach(b=>b.addEventListener('click', async (ev)=>{ ev.stopPropagation(); const [c,m] = splitCatModel(b.getAttribute('data-splitmodel')); await splitModelFlow(c, m); }));
   wrap.querySelectorAll('[data-mergemodelfolder]').forEach(b=>b.addEventListener('click', async (ev)=>{
     ev.stopPropagation();
     const [cat, model] = splitCatModel(b.getAttribute('data-mergemodelfolder'));
