@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.93
-  อัปเดตล่าสุด   : 12 พฤศจิกายน 2569 18:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.94
+  อัปเดตล่าสุด   : 12 พฤศจิกายน 2569 18:35 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.93</title>
+<title>F1 Service — v11.94</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1286,6 +1286,7 @@ setTimeout(function(){
           <button class="btn btn-primary btn-sm" id="eng-toggle-add-error-btn">+ เพิ่ม Error ใหม่</button>
         </div>
         <div id="eng-add-error-form" style="display:none;margin-top:14px;">
+          <div id="eng-draft-bar" style="display:none;margin:0 0 12px;padding:6px 10px;border-radius:8px;background:rgba(80,160,100,.12);font-size:12px;color:var(--text-dim,#555);"></div>
           <div class="form-grid two">
             <div class="field-wrap"><label>Product <span style="color:var(--red);">*</span></label><select id="eng-f-category"></select></div>
             <div class="field-wrap"><label>Model <span style="color:var(--red);">*</span></label><select id="eng-f-model"></select></div>
@@ -2651,8 +2652,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.93";
-const APP_UPDATED_AT = "12 พฤศจิกายน 2569 18:10 น. เวลาไทย";
+const APP_VERSION = "11.94";
+const APP_UPDATED_AT = "12 พฤศจิกายน 2569 18:35 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5424,7 +5425,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 
-// ===== v11.93 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
+// ===== v11.94 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
 // สาเหตุที่ทำ: ตอนแยกรุ่น "BS-240 & BS-360E" เป็น BS-240/BS-360E มีการเพิ่มเอกสารเดิมเข้ารุ่นใหม่ แต่รายการของรุ่นรวมไม่ถูกเก็บกวาด → เห็นเอกสารซ้ำ
 // การล้างทุกแบบ ลบเฉพาะ "รายการในแอป" (Firestore) ไม่แตะไฟล์ใน Drive เด็ดขาด
 function docFileKey(d){ return (d && d.url && extractDriveFileId(d.url)) || ''; }
@@ -6168,7 +6169,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
-// v11.93 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+// v11.94 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
 function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
 function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
 function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
@@ -6186,7 +6187,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const isDoc = !isVideoFile(v.file);
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
-      if(isDoc) await grantUploaderEdit(url); // v11.93 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
+      if(isDoc) await grantUploaderEdit(url); // v11.94 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6202,7 +6203,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.93 — เอกสารที่ยังไม่อัปโหลด
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.94 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -6290,7 +6291,7 @@ function resetPerAccountCaches(){
   try{ driveAccessToken = null; driveTokenExpiry = 0; _driveFolderCache.clear(); _driveFolderInFlight.clear(); sessionStorage.removeItem(DRIVE_TOKEN_SS_KEY); }catch(e){}
   try{ _claimsSheetIdCache = null; _profilesSheetIdCache = null; _sheetDoneCountCache = {}; }catch(e){}
   // v9.36 — ล้างแคช/ร่างใน localStorage ที่ผูกกับบัญชีเดิมตอนสลับบัญชี (เก็บเฉพาะค่าตั้งค่าหน้าจอที่ไม่ผูกบัญชี: mgr_hidden_cols_*)
-  try{ Object.keys(localStorage).forEach(k=>{ if(!k.startsWith('mgr_hidden_cols_') && !k.startsWith('f1_bdayshown_') && !k.startsWith('firmer_err_draft_new:')) localStorage.removeItem(k); }); }catch(e){}
+  try{ Object.keys(localStorage).forEach(k=>{ if(!k.startsWith('mgr_hidden_cols_') && !k.startsWith('f1_bdayshown_') && !k.startsWith('firmer_err_draft_new:') && !k.startsWith('firmer_err_draft_eng:')) localStorage.removeItem(k); }); }catch(e){}
   try{ myUserProfile = null; _engCertDataCache = null; _supCertDataCache = null; profileLabelMap = {}; _profileLabelsLoaded = false; }catch(e){}
   try{ f1ResetExamTrainState(); }catch(e){}
   try{ supActiveTab = 'trbl'; }catch(e){}
@@ -9875,12 +9876,13 @@ $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
   ensureSignedIn(()=>{
     const form = $('eng-add-error-form'); const showing = form.style.display==='block';
     form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
-    if(!showing){ resetEngErrorForm(); }
+    if(!showing){ resetEngErrorForm(); engDraftRestore(); } // v11.94 — เปิดฟอร์มแล้วกู้แบบร่าง
   });
 });
 $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
 
 function resetEngErrorForm(){
+  engDraftBar(false);
   $('eng-f-code').value=''; $('eng-f-symptom').value='';
   ['eng-f-category','eng-f-model','eng-f-code','eng-f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
   engEditingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
@@ -9968,6 +9970,7 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   liveUpsert('pendingErrors', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
+  engDraftClear(); // v11.94 — ส่งสำเร็จ = ทิ้งแบบร่าง
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
   showToast('✓ ส่งให้ Sup Product ตรวจสอบแล้ว — ดูสถานะได้ที่ บันทึกข้อมูล › รายการของฉัน');
@@ -10072,7 +10075,7 @@ function openAddErrorForModel(category, model){
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
-  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.93 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
+  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.94 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
@@ -10280,7 +10283,7 @@ async function navReopenClaim(c){
   openClaimDetail(cur || c);
 }
 function closeAddErrorPanel(){
-  resetErrorForm(); // v11.93 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
+  resetErrorForm(); // v11.94 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
@@ -10470,10 +10473,10 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
 }
 
-// ===== v11.93 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
+// ===== v11.94 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
 // เก็บข้อความในเครื่อง (localStorage) แยกตามบัญชี+รุ่น · ไม่เก็บรูป/วิดีโอ/เอกสารที่แนบ (ต้องแนบใหม่) · บันทึกสำเร็จหรือกดยกเลิก = ลบร่าง
 let _errDraftOn = false, _errDraftTimer = null, _errDraftCat = '', _errDraftModel = '';
-function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.93 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
+function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.94 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
 function errDraftSnap(){
   const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length) }));
   return { code:$('f-code').value, symptom:$('f-symptom').value, sols, savedAt:Date.now() };
@@ -10513,8 +10516,49 @@ function errDraftRestore(category, model){
 }
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(_errDraftOn && e.target && e.target.closest && e.target.closest('#add-error-modal')) errDraftSchedule(); }, true));
 window.addEventListener('beforeunload', e=>{ if(_errDraftOn && $('add-error-modal') && $('add-error-modal').classList.contains('show') && errDraftExists()){ e.preventDefault(); e.returnValue=''; } });
+
+/* v11.94 — แบบร่างของฟอร์ม "เพิ่ม Error ใหม่" ฝั่ง Engineer (หน้า Service): บันทึกอัตโนมัติ เก็บไว้แม้กดซ่อน/ยกเลิก ล้างเมื่อส่งสำเร็จหรือกด "ล้างแบบร่าง" (รูป/วิดีโอไม่ถูกเก็บ) */
+let _engDraftTimer = null;
+function engDraftKey(){ return 'firmer_err_draft_eng:' + String(myUserEmail||'').toLowerCase(); }
+function engDraftSnap(){
+  const sols = (engEditingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length) }));
+  return { category:$('eng-f-category').value, model:$('eng-f-model').value, code:$('eng-f-code').value, symptom:$('eng-f-symptom').value, sols, savedAt:Date.now() };
+}
+function engDraftBar(on){
+  const b = $('eng-draft-bar'); if(!b) return;
+  if(!on){ b.style.display='none'; b.innerHTML=''; return; }
+  const t = new Date(Date.now()+7*3600000), p = n=>String(n).padStart(2,'0');
+  b.style.display='block';
+  b.innerHTML = `📝 บันทึกแบบร่างอัตโนมัติแล้ว ${p(t.getUTCHours())}:${p(t.getUTCMinutes())}:${p(t.getUTCSeconds())} · ซ่อนฟอร์มแล้วกลับมาเปิดใหม่ข้อมูลยังอยู่ <a href="#" id="eng-draft-clear" style="margin-left:6px;">ล้างแบบร่าง</a>`;
+  const a = $('eng-draft-clear');
+  if(a) a.addEventListener('click', ev=>{ ev.preventDefault(); if(!confirm('ล้างแบบร่างนี้และเคลียร์ฟอร์ม?')) return; engDraftClear(); resetEngErrorForm(); updateEngModelSelect(); showToast('ล้างแบบร่างแล้ว'); });
+}
+function engDraftSave(){
+  const f = $('eng-add-error-form'); if(!f || f.style.display!=='block') return;
+  try{
+    const d = engDraftSnap();
+    if(errDraftMeaningful(d)){ localStorage.setItem(engDraftKey(), JSON.stringify(d)); engDraftBar(true); }
+    else { localStorage.removeItem(engDraftKey()); engDraftBar(false); }
+  }catch(e){}
+}
+function engDraftClear(){ try{ clearTimeout(_engDraftTimer); localStorage.removeItem(engDraftKey()); }catch(e){} }
+function engDraftRestore(){
+  try{
+    const raw = localStorage.getItem(engDraftKey()); if(!raw) return;
+    const d = JSON.parse(raw); if(!d || !errDraftMeaningful(d)) return;
+    if(d.category && [...$('eng-f-category').options].some(o=>o.value===d.category)){ $('eng-f-category').value = d.category; updateEngModelSelect(); if(d.model && [...$('eng-f-model').options].some(o=>o.value===d.model)) $('eng-f-model').value = d.model; }
+    $('eng-f-code').value = d.code || ''; $('eng-f-symptom').value = d.symptom || '';
+    const sols = (d.sols||[]).map(x=>({ id:uid('sol'), title:x.title||'', desc:x.desc||'', images:[], videos:[], tools:Array.isArray(x.tools)?x.tools:[], parts:Array.isArray(x.parts)?x.parts:[], partsQty:x.partsQty||null, time:x.time||'' }));
+    if(sols.length) engEditingSolutions = sols;
+    renderEngSolutionsEditor();
+    const lost = (d.sols||[]).reduce((n,x)=>n+(x.media||0),0);
+    engDraftBar(true);
+    showToast('📝 กู้คืนแบบร่างที่ยังไม่ได้ส่งแล้ว' + (lost ? ' — รูป/วิดีโอ/เอกสารต้องแนบใหม่' : ''));
+  }catch(e){}
+}
+['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(e.target && e.target.closest && e.target.closest('#eng-add-error-form')){ clearTimeout(_engDraftTimer); _engDraftTimer = setTimeout(engDraftSave, 600); } }, true));
 function resetErrorForm(){
-  errDraftBar(false); _errDraftOn = false; // v11.93 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
+  errDraftBar(false); _errDraftOn = false; // v11.94 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
@@ -10579,7 +10623,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
-  errDraftClear(); // v11.93 — บันทึกสำเร็จ = ทิ้งแบบร่าง
+  errDraftClear(); // v11.94 — บันทึกสำเร็จ = ทิ้งแบบร่าง
   closeAddErrorPanel();
   renderAll(); renderErrorCountSummary();
 });
@@ -11411,7 +11455,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
     }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
-  if(!existingId){ // v11.93 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
+  if(!existingId){ // v11.94 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
     const fidNew = extractDriveFileId(url);
     if(fidNew){
       const shareModels = Array.from(document.querySelectorAll('.doclink-share-chk:checked')).map(c=>c.getAttribute('data-model'));
