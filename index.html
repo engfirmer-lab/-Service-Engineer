@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.96
-  อัปเดตล่าสุด   : 15 พฤศจิกายน 2569 20:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.97
+  อัปเดตล่าสุด   : 15 พฤศจิกายน 2569 20:40 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.96</title>
+<title>F1 Service — v11.97</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2658,8 +2658,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.96";
-const APP_UPDATED_AT = "15 พฤศจิกายน 2569 20:20 น. เวลาไทย";
+const APP_VERSION = "11.97";
+const APP_UPDATED_AT = "15 พฤศจิกายน 2569 20:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3181,7 +3181,7 @@ function renderDownModalCauses(){
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>รูปประกอบสาเหตุ/วิธีแก้ไข</label>
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปภาพประกอบ</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
             ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
@@ -3229,7 +3229,7 @@ let rosterEditingEmail = null; // ถ้าไม่ null = Manager กำลั
 let rosterProfiles = []; // [{email, ...profileData}] แคชล่าสุดของหน้า roster (Manager) — คนละตัวแปรกับ orgChartProfiles เผื่อเปิดคนละแท็บพร้อมกัน แต่โครงสร้างข้อมูลเหมือนกัน
 
 let engEditingSolutions = [];
-/* v11.96 — รูปปัญหาที่พบ ระดับ Error (ใช้ร่วมทุกสาเหตุ) — เก็บใน errors/{id}.problemImages (ฟิลด์เสริม ไม่บังคับ Error เก่าไม่มีฟิลด์นี้ก็ใช้งานได้ตามเดิม) */
+/* v11.97 — รูปปัญหาที่พบ ระดับ Error (ใช้ร่วมทุกสาเหตุ) — เก็บใน errors/{id}.problemImages (ฟิลด์เสริม ไม่บังคับ Error เก่าไม่มีฟิลด์นี้ก็ใช้งานได้ตามเดิม) */
 let supProblemImgs = [], engProblemImgs = [];
 function problemImgsOf(kind){ return kind==='eng' ? engProblemImgs : supProblemImgs; }
 function setProblemImgs(kind, arr){ if(kind==='eng') engProblemImgs = arr; else supProblemImgs = arr; renderProblemImgs(kind); }
@@ -5451,7 +5451,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 
-// ===== v11.96 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
+// ===== v11.97 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
 // สาเหตุที่ทำ: ตอนแยกรุ่น "BS-240 & BS-360E" เป็น BS-240/BS-360E มีการเพิ่มเอกสารเดิมเข้ารุ่นใหม่ แต่รายการของรุ่นรวมไม่ถูกเก็บกวาด → เห็นเอกสารซ้ำ
 // การล้างทุกแบบ ลบเฉพาะ "รายการในแอป" (Firestore) ไม่แตะไฟล์ใน Drive เด็ดขาด
 function docFileKey(d){ return (d && d.url && extractDriveFileId(d.url)) || ''; }
@@ -6128,10 +6128,11 @@ async function downloadClaimImagesAsZip(c){
     hideLoadingOverlay();
   }
 }
+function solFolderLabel(i){ return i==='problem' ? 'รูปปัญหา' : (typeof i==='string' && i.indexOf('cause:')===0) ? 'สาเหตุ '+(parseInt(i.slice(6))+1) : 'วิธี '+(i+1); } // v11.97
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
-  { const _nm = [ownerFolderName, category, model, 'Troubleshooting', (errorCode ? `${errorCode} - ${symptom}` : symptom), (solutionIndex==='problem' ? 'รูปปัญหา' : `วิธี ${solutionIndex+1}`)].map(sanitizeFolderName);
+  { const _nm = [ownerFolderName, category, model, 'Troubleshooting', (errorCode ? `${errorCode} - ${symptom}` : symptom), solFolderLabel(solutionIndex)].map(sanitizeFolderName);
     const _ck = 'P::'+_nm.join('/');
     if(_driveFolderCache.has(_ck)) return _driveFolderCache.get(_ck);
     try{ const r = await examApiRetry('drvPath', { parentId: DRIVE_ROOT_FOLDER_ID, names:_nm }); _driveFolderCache.set(_ck, r.id); return r.id; }
@@ -6142,7 +6143,7 @@ async function ensureImageFolderPath(category, model, errorCode, symptom, soluti
   const f4 = await driveFindOrCreateFolder('Troubleshooting', f3);
   const errorFolderName = errorCode ? `${errorCode} - ${symptom}` : symptom;
   const f5 = await driveFindOrCreateFolder(errorFolderName, f4);
-  const f6 = await driveFindOrCreateFolder((solutionIndex==='problem' ? 'รูปปัญหา' : `วิธี ${solutionIndex+1}`), f5);
+  const f6 = await driveFindOrCreateFolder(solFolderLabel(solutionIndex), f5);
   return f6;
 }
 async function driveUploadImage_legacy(blob, filename, parentId){ drvNoUserToken();
@@ -6195,7 +6196,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
-// v11.96 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+// v11.97 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
 function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
 function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
 function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
@@ -6213,7 +6214,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const isDoc = !isVideoFile(v.file);
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
-      if(isDoc) await grantUploaderEdit(url); // v11.96 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
+      if(isDoc) await grantUploaderEdit(url); // v11.97 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6229,7 +6230,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.96 — เอกสารที่ยังไม่อัปโหลด
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.97 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -9311,6 +9312,7 @@ function renderSolutionCard(err, s, idx){
   <div class="solution-block">
     <div class="solution-num">สาเหตุที่ ${idx+1}</div>
     ${s.title ? `<div class="solution-desc" style="font-weight:600;margin-bottom:4px;">${escapeHtml(s.title)}</div>` : ''}
+    ${s.causeImages && s.causeImages.length ? `<div class="solution-imgs">${s.causeImages.map((img,i)=>`<img src="${escapeHtml(imgSrcOf(img)||'')}" data-lightbox-cause="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     <div class="solution-desc">${escapeHtml(s.desc)}</div>
     ${s.images && s.images.length ? `<div class="solution-imgs">${s.images.map((img,i)=>`<img src="${escapeHtml(imgSrcOf(img)||'')}" data-lightbox-sol="${s.id}" data-lightbox-idx="${i}">`).join('')}</div>`:''}
     ${s.videos && s.videos.length ? `<div class="solution-imgs" style="flex-direction:column;">${s.videos.map(v=>videoEmbedHtml(v)).join('')}</div>`:''}
@@ -9701,7 +9703,7 @@ async function renderNotifList(){
       }
     });
   });
-  // v11.96 — กดรายการ "รอคุณตรวจสอบ" ในกระดิ่ง → ไปหน้า Sup › Trouble Shooting เลื่อนไปที่รายการนั้นแล้วไฮไลต์
+  // v11.97 — กดรายการ "รอคุณตรวจสอบ" ในกระดิ่ง → ไปหน้า Sup › Trouble Shooting เลื่อนไปที่รายการนั้นแล้วไฮไลต์
   list.querySelectorAll('[data-notif-go]').forEach(row=>{
     row.addEventListener('click', ()=>notifGoReview(row.getAttribute('data-notif-go')));
   });
@@ -9835,6 +9837,7 @@ document.addEventListener('keydown', e=>{ if(!$('lightbox').classList.contains('
 })();
 function bindLightboxTriggers(root){
   root = root || document;
+  root.querySelectorAll('[data-lightbox-cause]').forEach(img=>{ img.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=img.getAttribute('data-lightbox-cause'); for(const e of DATA.errors){ const sol=(e.solutions||[]).find(x=>x.id===solId); if(sol&&sol.causeImages){ openLightbox(sol.causeImages, parseInt(img.getAttribute('data-lightbox-idx'))); break; } } }); });
   root.querySelectorAll('[data-lightbox-prob]').forEach(img=>{ img.addEventListener('click', ev=>{ ev.stopPropagation(); const e=DATA.errors.find(x=>x.id===img.getAttribute('data-lightbox-prob')); if(e&&e.problemImages) openLightbox(e.problemImages, parseInt(img.getAttribute('data-lightbox-idx'))); }); });
   root.querySelectorAll('[data-lightbox-sol]').forEach(img=>{
     img.addEventListener('click', ev=>{ ev.stopPropagation(); const solId=img.getAttribute('data-lightbox-sol'); const idx=parseInt(img.getAttribute('data-lightbox-idx'));
@@ -9922,7 +9925,7 @@ $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
   ensureSignedIn(()=>{
     const form = $('eng-add-error-form'); const showing = form.style.display==='block';
     form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
-    if(!showing){ resetEngErrorForm(); engDraftRestore(); } // v11.96 — เปิดฟอร์มแล้วกู้แบบร่าง
+    if(!showing){ resetEngErrorForm(); engDraftRestore(); } // v11.97 — เปิดฟอร์มแล้วกู้แบบร่าง
   });
 });
 $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
@@ -9948,7 +9951,8 @@ function renderEngSolutionsEditor(){
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>รูปประกอบสาเหตุ/วิธีแก้ไข</label>
+      ${causeImgsHtml(s)}
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปวิธีแก้ไข</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
             ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
@@ -9997,17 +10001,18 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
       btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return;
     }
   }
-  const origMedia = validSolutions.map(s=>({ images:s.images, videos:s.videos }));
-  const restoreMedia = ()=>{ validSolutions.forEach((s,i)=>{ s.images = origMedia[i].images; s.videos = origMedia[i].videos; }); };
+  const origMedia = validSolutions.map(s=>({ images:s.images, videos:s.videos, causeImages:s.causeImages }));
+  const restoreMedia = ()=>{ validSolutions.forEach((s,i)=>{ s.images = origMedia[i].images; s.videos = origMedia[i].videos; s.causeImages = origMedia[i].causeImages; }); };
   f1TrackStart();
   let engProblemUploaded = [];
   try{
     const staged = [];
     for(let i=0;i<validSolutions.length;i++){
-      staged.push({ images: await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i),
+      staged.push({ causes: await resolveImagesForUpload(validSolutions[i].causeImages||[], category, model, errorCode, symptom, 'cause:'+i),
+                    images: await resolveImagesForUpload(validSolutions[i].images||[], category, model, errorCode, symptom, i),
                     videos: await resolveVideosForUpload(validSolutions[i].videos||[], category, model, errorCode, symptom, i) });
     }
-    staged.forEach((st,i)=>{ validSolutions[i].images = st.images; validSolutions[i].videos = st.videos; });
+    staged.forEach((st,i)=>{ validSolutions[i].images = st.images; validSolutions[i].videos = st.videos; validSolutions[i].causeImages = st.causes; });
     if(engProblemImgs.length) engProblemUploaded = await resolveImagesForUpload(engProblemImgs, category, model, errorCode, symptom, 'problem');
   }catch(e){ f1TrackStop(); restoreMedia(); const n = await f1RollbackCreated(); showToast('⚠ อัปโหลดไฟล์ไม่สำเร็จ: '+e.message+(n>0?' (ยกเลิกไฟล์ที่สร้างไว้แล้ว '+n+' ไฟล์)':'')); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   f1TrackStop();
@@ -10018,7 +10023,7 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   liveUpsert('pendingErrors', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
-  engDraftClear(); // v11.96 — ส่งสำเร็จ = ทิ้งแบบร่าง
+  engDraftClear(); // v11.97 — ส่งสำเร็จ = ทิ้งแบบร่าง
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
   showToast('✓ ส่งให้ Sup Product ตรวจสอบแล้ว — ดูสถานะได้ที่ บันทึกข้อมูล › รายการของฉัน');
@@ -10123,7 +10128,7 @@ function openAddErrorForModel(category, model){
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
-  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.96 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
+  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.97 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
@@ -10331,7 +10336,7 @@ async function navReopenClaim(c){
   openClaimDetail(cur || c);
 }
 function closeAddErrorPanel(){
-  resetErrorForm(); // v11.96 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
+  resetErrorForm(); // v11.97 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
@@ -10433,7 +10438,8 @@ function renderSolutionsEditor(){
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
-      <div class="field-wrap" style="margin-top:8px;"><label>รูปประกอบสาเหตุ/วิธีแก้ไข</label>
+      ${causeImgsHtml(s)}
+      <div class="field-wrap" style="margin-top:8px;"><label>รูปวิธีแก้ไข</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
             ${s.images.map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button data-rmimg="${s.id}:${i}">✕</button></div>`).join('')}
@@ -10479,7 +10485,7 @@ async function renameErrorDriveFolder(oldF, newF){ // v10.92 — Error เปล
 }
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
-async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds, problemImgs){ // v11.96 — problemImgs: รูปปัญหาระดับ Error (undefined = ไม่แตะฟิลด์นี้)
+async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds, problemImgs){ // v11.97 — problemImgs: รูปปัญหาระดับ Error (undefined = ไม่แตะฟิลด์นี้)
   if(fields.category) { invalidateErrorsCacheForCategory(fields.category); fsBumpCategoryVersion(fields.category); } // ข้อมูลเปลี่ยนแล้ว แคชเก่าใช้ไม่ได้อีกต่อไป + แจ้งคนอื่นด้วย
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
@@ -10488,7 +10494,8 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   try{
     for(let i=0;i<validSolutions.length;i++){
       const s0 = validSolutions[i], before = _f1Created.length;
-      staged.push({ images: await resolveImagesForUpload(s0.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i),
+      staged.push({ causes: await resolveImagesForUpload(s0.causeImages||[], fields.category, fields.model, fields.errorCode, fields.symptom, 'cause:'+i),
+                    images: await resolveImagesForUpload(s0.images||[], fields.category, fields.model, fields.errorCode, fields.symptom, i),
                     videos: await resolveVideosForUpload(s0.videos||[], fields.category, fields.model, fields.errorCode, fields.symptom, i) });
       counts.push(_f1Created.length - before);
     }
@@ -10514,12 +10521,12 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   const keepIds = new Set(validSolutions.map(s=>s.id));
   for(let i=0;i<validSolutions.length;i++){
     const s = validSolutions[i];
-    const uploadedImages = staged[i].images, uploadedVideos = staged[i].videos, prevImages = s.images, prevVideos = s.videos;
-    s.images = uploadedImages; s.videos = uploadedVideos; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
+    const uploadedImages = staged[i].images, uploadedVideos = staged[i].videos, uploadedCauses = staged[i].causes, prevImages = s.images, prevVideos = s.videos, prevCauses = s.causeImages;
+    s.images = uploadedImages; s.videos = uploadedVideos; s.causeImages = uploadedCauses; // อัปเดตในหน่วยความจำด้วย กันอัปโหลดซ้ำถ้ามีการเรียกซ้อน
     try{
-    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
+    await fsSaveSolution(errorId, s.id, { title:s.title||'', desc:s.desc, causeImages:uploadedCauses, images:uploadedImages, videos:uploadedVideos, tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'', order:i, ...((!originalSolutionIds || !originalSolutionIds.includes(s.id)) ? { feedback:s.feedback||[] } : {}) }); // v8.90 — วิธีแก้เดิมห้ามเขียนทับ feedback (โหวตที่เข้ามาระหว่างแก้ไขจะหาย)
     _f1Created.splice(0, counts[i]);
-    }catch(e){ s.images = prevImages; s.videos = prevVideos; const n = await f1RollbackCreated(); if(e && typeof e.message==='string' && n>0) e.message += ' (ยกเลิกไฟล์ที่ยังไม่ได้บันทึกแล้ว '+n+' ไฟล์)'; throw e; }
+    }catch(e){ s.images = prevImages; s.videos = prevVideos; s.causeImages = prevCauses; const n = await f1RollbackCreated(); if(e && typeof e.message==='string' && n>0) e.message += ' (ยกเลิกไฟล์ที่ยังไม่ได้บันทึกแล้ว '+n+' ไฟล์)'; throw e; }
   }
   // v8.90 — ลบวิธีแก้ที่ถูกเอาออก "หลัง" บันทึก/อัปโหลดของใหม่สำเร็จแล้วเท่านั้น (เดิมลบก่อน ถ้าอัปโหลดพลาดข้อมูลเดิมหายแต่ของใหม่ไม่ถูกบันทึก)
   if(originalSolutionIds){
@@ -10527,12 +10534,12 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
 }
 
-// ===== v11.96 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
+// ===== v11.97 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
 // เก็บข้อความในเครื่อง (localStorage) แยกตามบัญชี+รุ่น · ไม่เก็บรูป/วิดีโอ/เอกสารที่แนบ (ต้องแนบใหม่) · บันทึกสำเร็จหรือกดยกเลิก = ลบร่าง
 let _errDraftOn = false, _errDraftTimer = null, _errDraftCat = '', _errDraftModel = '';
-function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.96 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
+function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.97 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
 function errDraftSnap(){
-  const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length) }));
+  const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length+(s.causeImages||[]).length) }));
   return { code:$('f-code').value, symptom:$('f-symptom').value, sols, savedAt:Date.now() };
 }
 function errDraftMeaningful(d){
@@ -10571,7 +10578,7 @@ function errDraftRestore(category, model){
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(_errDraftOn && e.target && e.target.closest && e.target.closest('#add-error-modal')) errDraftSchedule(); }, true));
 window.addEventListener('beforeunload', e=>{ if(_errDraftOn && $('add-error-modal') && $('add-error-modal').classList.contains('show') && errDraftExists()){ e.preventDefault(); e.returnValue=''; } });
 
-/* v11.96 — แบบร่างของฟอร์ม "เพิ่ม Error ใหม่" ฝั่ง Engineer (หน้า Service): บันทึกอัตโนมัติ เก็บไว้แม้กดซ่อน/ยกเลิก ล้างเมื่อส่งสำเร็จหรือกด "ล้างแบบร่าง" (รูป/วิดีโอไม่ถูกเก็บ) */
+/* v11.97 — แบบร่างของฟอร์ม "เพิ่ม Error ใหม่" ฝั่ง Engineer (หน้า Service): บันทึกอัตโนมัติ เก็บไว้แม้กดซ่อน/ยกเลิก ล้างเมื่อส่งสำเร็จหรือกด "ล้างแบบร่าง" (รูป/วิดีโอไม่ถูกเก็บ) */
 let _engDraftTimer = null;
 function engDraftKey(){ return 'firmer_err_draft_eng:' + String(myUserEmail||'').toLowerCase(); }
 function engDraftSnap(){
@@ -10612,7 +10619,7 @@ function engDraftRestore(){
 }
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(e.target && e.target.closest && e.target.closest('#eng-add-error-form')){ clearTimeout(_engDraftTimer); _engDraftTimer = setTimeout(engDraftSave, 600); } }, true));
 function resetErrorForm(){
-  setProblemImgs('sup', []); errDraftBar(false); _errDraftOn = false; // v11.96 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
+  setProblemImgs('sup', []); errDraftBar(false); _errDraftOn = false; // v11.97 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
@@ -10677,7 +10684,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
-  errDraftClear(); // v11.96 — บันทึกสำเร็จ = ทิ้งแบบร่าง
+  errDraftClear(); // v11.97 — บันทึกสำเร็จ = ทิ้งแบบร่าง
   closeAddErrorPanel();
   renderAll(); renderErrorCountSummary();
 });
@@ -10719,7 +10726,7 @@ async function startCopyError(id){
   $('sup-form-sub').textContent = 'คัดลอกจาก Error เดิม (รวมรูป/วิดีโอ — ไฟล์จริงจะถูกคัดลอกใน Drive ตอนกดบันทึกเท่านั้น) — แก้ Error Code หรืออาการให้ต่างจากเดิมก่อนบันทึก';
   $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom||'';
-  editingSolutions = (err.solutions||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', images:(s.images||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), videos:(s.videos||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'' }));
+  editingSolutions = (err.solutions||[]).map(s=>({ id:uid('sol'), title:s.title||'', desc:s.desc||'', causeImages:(s.causeImages||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), images:(s.images||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), videos:(s.videos||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})), tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:partsQtyOf(s.parts, s.partsQty), time:s.time||'' }));
   if(!editingSolutions.length) editingSolutions = [{id:uid('sol'), title:'', desc:'', images:[], videos:[], tools:[], parts:[], time:''}];
   setProblemImgs('sup', (err.problemImages||[]).filter(u=>typeof u==='string').map(u=>({copyFrom:u})));
   renderSolutionsEditor();
@@ -10737,7 +10744,7 @@ async function startEditError(id){
   $('save-error-btn').textContent = 'บันทึกการแก้ไข';
   $('f-category').value = err.category; updateModelSelect(); $('f-model').value = err.model;
   $('f-code').value = err.errorCode||''; $('f-symptom').value = err.symptom;
-  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
+  editingSolutions = err.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])], causeImages:[...(s.causeImages||[])]}));
   setProblemImgs('sup', [...(err.problemImages||[])]);
   renderSolutionsEditor();
   errorDirtyGuard = attachEditDirtyGuard($('add-error-modal'), $('save-error-btn'), snapshotErrorEditState);
@@ -10795,12 +10802,12 @@ async function purgeRejectedMedia(kind, item){
   try{
     const ids = new Set();
     if(kind==='proposal') orphanCollectIds({ images:item.images, videos:item.videos }, '', ids);
-    else { (item.solutions||[]).forEach(sl=>orphanCollectIds({ images:sl.images, videos:sl.videos }, '', ids)); orphanCollectIds({ images:item.problemImages||[] }, '', ids); }
+    else { (item.solutions||[]).forEach(sl=>orphanCollectIds({ images:sl.images, videos:sl.videos, causeImages:sl.causeImages||[] }, '', ids)); orphanCollectIds({ images:item.problemImages||[] }, '', ids); }
     if(!ids.size) return;
     const r = await driveDeleteMany(Array.from(ids));
     if(r.failed.length){ showToast('⚠ ลบไฟล์แนบของรายการที่ปฏิเสธไม่สำเร็จ '+driveFailSummary(r)+' — ตรวจได้ที่ปุ่ม "ตรวจไฟล์ตกค้าง"'); return; }
     if(kind==='proposal'){ await fsUpdateProposal(item.id, { images:[], videos:[] }); item.images=[]; item.videos=[]; }
-    else { const cleaned = (item.solutions||[]).map(sl=>({ ...sl, images:[], videos:[] })); await fsUpdatePendingError(item.id, { solutions:cleaned, problemImages:[] }); item.solutions = cleaned; item.problemImages = []; }
+    else { const cleaned = (item.solutions||[]).map(sl=>({ ...sl, images:[], videos:[], causeImages:[] })); await fsUpdatePendingError(item.id, { solutions:cleaned, problemImages:[] }); item.solutions = cleaned; item.problemImages = []; }
   }catch(e){ console.warn('เก็บกวาดไฟล์แนบของรายการที่ปฏิเสธไม่สำเร็จ:', e.message); }
 }
 async function deleteError(id){
@@ -10849,7 +10856,7 @@ function startReviewPendingError(id){
   $('save-error-btn').textContent = 'อนุมัติ Error นี้';
   $('f-category').value = pe.category; updateModelSelect(); $('f-model').value = pe.model;
   $('f-code').value = pe.errorCode||''; $('f-symptom').value = pe.symptom;
-  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])]}));
+  editingSolutions = pe.solutions.map(s=>({...s, images:[...(s.images||[])], videos:[...(s.videos||[])], causeImages:[...(s.causeImages||[])]}));
   setProblemImgs('sup', [...(pe.problemImages||[])]);
   renderSolutionsEditor();
 }
@@ -11513,7 +11520,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
     }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
-  if(!existingId){ // v11.96 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
+  if(!existingId){ // v11.97 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
     const fidNew = extractDriveFileId(url);
     if(fidNew){
       const shareModels = Array.from(document.querySelectorAll('.doclink-share-chk:checked')).map(c=>c.getAttribute('data-model'));
@@ -12605,7 +12612,30 @@ $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
 // ผูก drag & drop ให้กับกล่อง "รูปภาพประกอบ"/"วิดีโอประกอบ" ของสาเหตุแต่ละอัน (ใช้ซ้ำ 3 จุด: เสนอวิธีแก้ใหม่, Engineer เพิ่ม Error ใหม่, Sup Product แก้ไข Error)
 // wrap: container ที่ innerHTML ถูก re-render ทุกครั้ง (มี [data-imgdrop]/[data-viddrop] อยู่ข้างใน) · findSol: (sid)=>solution object · onRerender: เรียกหลังเพิ่มไฟล์เสร็จ
+// v11.97 — รูปสาเหตุ (ระดับสาเหตุ) แยกจากรูปวิธีแก้ไข — เก็บใน solution.causeImages (ฟิลด์เสริม ไม่บังคับ)
+function causeImgsHtml(s){
+  return `<div class="field-wrap" style="margin-top:8px;"><label>รูปสาเหตุ (ถ้ามี) <span style="font-weight:400;color:var(--text-faint);font-size:11.5px;">— รูปอาการ/จุดที่เสียของสาเหตุนี้</span></label>
+        <div class="file-dropzone" data-causedrop="${s.id}">
+          <div class="img-upload-row">
+            ${(s.causeImages||[]).map((img,i)=>`<div class="img-thumb"><img src="${escapeHtml(imgSrcOf(img)||'')}"><button type="button" data-rmcause="${s.id}:${i}">✕</button></div>`).join('')}
+            <label class="upload-btn">＋<input type="file" accept="image/*" multiple style="display:none;" data-causeinput="${s.id}"></label>
+          </div>
+          <p class="file-dropzone-hint">หรือลากไฟล์มาวางตรงนี้</p>
+        </div>
+      </div>`;
+}
+async function addCauseImgs(sol, files){
+  if(!sol) return; if(!sol.causeImages) sol.causeImages = [];
+  for(const f of Array.from(files||[])){
+    if(!String(f.type||'').startsWith('image/')){ showToast('⚠ '+f.name+' ไม่ใช่ไฟล์รูปภาพ ข้ามไฟล์นี้'); continue; }
+    try{ sol.causeImages.push(await compressImage(f)); }catch(e){ showToast('⚠ แนบรูป '+f.name+' ไม่สำเร็จ'); }
+  }
+  try{ pokeDirtyGuards(); }catch(e){}
+}
 function wireSolutionMediaDropzones(wrap, findSol, onRerender){
+  wrap.querySelectorAll('[data-causeinput]').forEach(inp=>inp.addEventListener('change', async ()=>{ await addCauseImgs(findSol(inp.getAttribute('data-causeinput')), inp.files); inp.value=''; onRerender(); }));
+  wrap.querySelectorAll('[data-causedrop]').forEach(zone=>wireFileDropzone(zone, async files=>{ await addCauseImgs(findSol(zone.getAttribute('data-causedrop')), files); onRerender(); }));
+  wrap.querySelectorAll('[data-rmcause]').forEach(btn=>btn.addEventListener('click', ()=>{ const [sid,idx] = btn.getAttribute('data-rmcause').split(':'); const sol = findSol(sid); if(!sol||!sol.causeImages) return; confirmAndRemoveMedia(sol.causeImages[parseInt(idx)], ()=>{ sol.causeImages.splice(parseInt(idx),1); onRerender(); try{ pokeDirtyGuards(); }catch(e){} }); }));
   wrap.querySelectorAll('[data-imgdrop]').forEach(zone=>{
     const sid = zone.getAttribute('data-imgdrop');
     wireFileDropzone(zone, async (files)=>{
