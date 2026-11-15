@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 11.97
-  อัปเดตล่าสุด   : 15 พฤศจิกายน 2569 20:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 11.98
+  อัปเดตล่าสุด   : 15 พฤศจิกายน 2569 20:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v11.97</title>
+<title>F1 Service — v11.98</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2658,8 +2658,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "11.97";
-const APP_UPDATED_AT = "15 พฤศจิกายน 2569 20:40 น. เวลาไทย";
+const APP_VERSION = "11.98";
+const APP_UPDATED_AT = "15 พฤศจิกายน 2569 20:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3229,7 +3229,7 @@ let rosterEditingEmail = null; // ถ้าไม่ null = Manager กำลั
 let rosterProfiles = []; // [{email, ...profileData}] แคชล่าสุดของหน้า roster (Manager) — คนละตัวแปรกับ orgChartProfiles เผื่อเปิดคนละแท็บพร้อมกัน แต่โครงสร้างข้อมูลเหมือนกัน
 
 let engEditingSolutions = [];
-/* v11.97 — รูปปัญหาที่พบ ระดับ Error (ใช้ร่วมทุกสาเหตุ) — เก็บใน errors/{id}.problemImages (ฟิลด์เสริม ไม่บังคับ Error เก่าไม่มีฟิลด์นี้ก็ใช้งานได้ตามเดิม) */
+/* v11.98 — รูปปัญหาที่พบ ระดับ Error (ใช้ร่วมทุกสาเหตุ) — เก็บใน errors/{id}.problemImages (ฟิลด์เสริม ไม่บังคับ Error เก่าไม่มีฟิลด์นี้ก็ใช้งานได้ตามเดิม) */
 let supProblemImgs = [], engProblemImgs = [];
 function problemImgsOf(kind){ return kind==='eng' ? engProblemImgs : supProblemImgs; }
 function setProblemImgs(kind, arr){ if(kind==='eng') engProblemImgs = arr; else supProblemImgs = arr; renderProblemImgs(kind); }
@@ -5451,7 +5451,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
 wirePanelHideToggle('sup-doc-matrix-hide-btn', 'sup-doc-matrix-body', 'hide_sup_doc_matrix');
 
-// ===== v11.97 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
+// ===== v11.98 — เอกสารตกค้าง (รุ่นถูกลบ/เปลี่ยนชื่อไปแล้ว) · แยกรุ่น · เตือนไฟล์ซ้ำ =====
 // สาเหตุที่ทำ: ตอนแยกรุ่น "BS-240 & BS-360E" เป็น BS-240/BS-360E มีการเพิ่มเอกสารเดิมเข้ารุ่นใหม่ แต่รายการของรุ่นรวมไม่ถูกเก็บกวาด → เห็นเอกสารซ้ำ
 // การล้างทุกแบบ ลบเฉพาะ "รายการในแอป" (Firestore) ไม่แตะไฟล์ใน Drive เด็ดขาด
 function docFileKey(d){ return (d && d.url && extractDriveFileId(d.url)) || ''; }
@@ -6128,7 +6128,7 @@ async function downloadClaimImagesAsZip(c){
     hideLoadingOverlay();
   }
 }
-function solFolderLabel(i){ return i==='problem' ? 'รูปปัญหา' : (typeof i==='string' && i.indexOf('cause:')===0) ? 'สาเหตุ '+(parseInt(i.slice(6))+1) : 'วิธี '+(i+1); } // v11.97
+function solFolderLabel(i){ return i==='problem' ? 'รูปปัญหา' : (typeof i==='string' && i.indexOf('cause:')===0) ? 'สาเหตุ '+(parseInt(i.slice(6))+1) : 'วิธี '+(i+1); } // v11.98
 async function ensureImageFolderPath(category, model, errorCode, symptom, solutionIndex){
   const owner = ownerOf(category, model);
   const ownerFolderName = owner==='ยังไม่มีผู้ดูแล' ? 'ไม่มีผู้รับผิดชอบ' : owner;
@@ -6196,7 +6196,7 @@ async function resolveImagesForUpload(images, category, model, errorCode, sympto
     return resolved;
   }finally{ hideLoadingOverlay(); }
 }
-// v11.97 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
+// v11.98 — Troubleshooting แนบเอกสาร (PDF/Word/Excel/PowerPoint/CSV/TXT) ได้ นอกจากวิดีโอ — เก็บในช่อง videos เดิม (ไฟล์เดียวกันกับวิดีโอ ลงโฟลเดอร์วิธีแก้เดียวกัน)
 function isVideoFile(f){ return !!f && String(f.type||'').startsWith('video/'); }
 function isDocFile(f){ return !!f && /\.(pdf|docx?|xlsx?|pptx?|csv|txt)$/i.test(String(f.name||'')); }
 function isVideoOrDocFile(f){ return isVideoFile(f) || isDocFile(f); }
@@ -6214,7 +6214,7 @@ async function resolveVideosForUpload(videos, category, model, errorCode, sympto
       if(v.copyFrom){ const nid = await driveCopyFileTo(v.copyFrom, folderId, `vid-${Date.now()}-${resolved.length}`); resolved.push(`https://drive.google.com/file/d/${nid}/view`); continue; }
       const isDoc = !isVideoFile(v.file);
       const url = await driveUploadLargeFile(v.file, v.file.name, folderId, (pct)=>{ updateLoadingOverlayText(`กำลังอัปโหลด${isDoc?'เอกสาร':'วิดีโอ'}... ${pct}%`); });
-      if(isDoc) await grantUploaderEdit(url); // v11.97 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
+      if(isDoc) await grantUploaderEdit(url); // v11.98 — Sup ที่อัปโหลดแก้ไขไฟล์ Office ได้ (ไฟล์ยังเป็นของ engfirmer)
       resolved.push(url);
     }
     return resolved;
@@ -6230,7 +6230,7 @@ function videoEmbedHtml(v, opts){
     if(!fileId) return '';
     return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="${w}" height="${h}" allow="autoplay" style="border:none;border-radius:8px;display:block;" allowfullscreen></iframe>`;
   }
-  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.97 — เอกสารที่ยังไม่อัปโหลด
+  if(v.file && !isVideoFile(v.file)) return `<div style="width:${w==='100%'?'100%':w+'px'};min-height:${h}px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;border:1px solid var(--border,#ccc);border-radius:8px;font-size:11px;text-align:center;word-break:break-all;"><span style="font-size:22px;">📄</span>${escapeHtml(v.file.name||'เอกสาร')}</div>`; // v11.98 — เอกสารที่ยังไม่อัปโหลด
   if(v.copyFrom) return videoEmbedHtml(v.copyFrom, opts); // v10.16 — ไฟล์ที่คัดลอกมาจาก Error เดิม (ยังไม่สร้างไฟล์จริง) แสดงจากต้นฉบับก่อน
   return `<video width="${w}" height="${h}" controls style="border-radius:8px;background:#000;display:block;object-fit:contain;"><source src="${escapeHtml(v.localUrl||'')}"></video>`;
 }
@@ -9703,7 +9703,7 @@ async function renderNotifList(){
       }
     });
   });
-  // v11.97 — กดรายการ "รอคุณตรวจสอบ" ในกระดิ่ง → ไปหน้า Sup › Trouble Shooting เลื่อนไปที่รายการนั้นแล้วไฮไลต์
+  // v11.98 — กดรายการ "รอคุณตรวจสอบ" ในกระดิ่ง → ไปหน้า Sup › Trouble Shooting เลื่อนไปที่รายการนั้นแล้วไฮไลต์
   list.querySelectorAll('[data-notif-go]').forEach(row=>{
     row.addEventListener('click', ()=>notifGoReview(row.getAttribute('data-notif-go')));
   });
@@ -9925,7 +9925,7 @@ $('eng-toggle-add-error-btn').addEventListener('click', ()=>{
   ensureSignedIn(()=>{
     const form = $('eng-add-error-form'); const showing = form.style.display==='block';
     form.style.display = showing ? 'none':'block'; $('eng-toggle-add-error-btn').textContent = showing ? '+ เพิ่ม Error ใหม่' : 'ซ่อนฟอร์ม';
-    if(!showing){ resetEngErrorForm(); engDraftRestore(); } // v11.97 — เปิดฟอร์มแล้วกู้แบบร่าง
+    if(!showing){ resetEngErrorForm(); engDraftRestore(); } // v11.98 — เปิดฟอร์มแล้วกู้แบบร่าง
   });
 });
 $('eng-cancel-error-btn').addEventListener('click', ()=>{ resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่'; });
@@ -9945,13 +9945,13 @@ function renderEngSolutionsEditor(){
       <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${engEditingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
       <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} <span style="color:var(--red);">*</span></label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      ${causeImgsHtml(s)}
       <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
-      ${causeImgsHtml(s)}
       <div class="field-wrap" style="margin-top:8px;"><label>รูปวิธีแก้ไข</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
@@ -10023,7 +10023,7 @@ $('eng-save-error-btn').addEventListener('click', async ()=>{
   liveUpsert('pendingErrors', { id:newId, ...fields }); // v9.34 — ไม่ push ซ้ำ
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('eng-save-msg').style.opacity=1; setTimeout(()=>$('eng-save-msg').style.opacity=0,1600);
-  engDraftClear(); // v11.97 — ส่งสำเร็จ = ทิ้งแบบร่าง
+  engDraftClear(); // v11.98 — ส่งสำเร็จ = ทิ้งแบบร่าง
   resetEngErrorForm(); $('eng-add-error-form').style.display='none'; $('eng-toggle-add-error-btn').textContent='+ เพิ่ม Error ใหม่';
   renderAll();
   showToast('✓ ส่งให้ Sup Product ตรวจสอบแล้ว — ดูสถานะได้ที่ บันทึกข้อมูล › รายการของฉัน');
@@ -10128,7 +10128,7 @@ function openAddErrorForModel(category, model){
   $('f-category-field').style.display='none'; $('f-model-field').style.display='none';
   $('f-category').value = category; updateModelSelect(); $('f-model').value = model;
   $('add-error-modal').classList.add('show');
-  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.97 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
+  _errDraftCat = category; _errDraftModel = model; _errDraftOn = true; errDraftRestore(category, model); // v11.98 — เปิดฟอร์ม Error ใหม่: เปิดระบบแบบร่าง + กู้คืนร่างที่ค้างของรุ่นนี้ (ถ้ามี)
 }
 /* v10.80 — ย้อนกลับ 1 ขั้นเสมอ: เปิดหน้าต่างย่อยจากหน้าต่างแม่ (แม่ถูกซ่อนไว้) → ปิดหน้าย่อยด้วยวิธีไหนก็ได้ (บันทึก/ยกเลิก/✕) กลับมาที่แม่เสมอ */
 /* v10.82 — ไฟล์ที่ผู้ใช้อัปโหลดต้องเป็นของ engfirmer (เจ้าของสคริปต์) ไม่กินโควตา Google ของคนอัปโหลด:
@@ -10336,7 +10336,7 @@ async function navReopenClaim(c){
   openClaimDetail(cur || c);
 }
 function closeAddErrorPanel(){
-  resetErrorForm(); // v11.97 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
+  resetErrorForm(); // v11.98 — ปิด/ยกเลิกฟอร์ม ไม่ล้างแบบร่าง (ล้างเฉพาะตอนบันทึกสำเร็จ หรือกด "ล้างแบบร่าง")
   $('add-error-modal').classList.remove('show');
   $('f-category-field').style.display=''; $('f-model-field').style.display='';
 }
@@ -10432,13 +10432,13 @@ function renderSolutionsEditor(){
       <div class="num-badge">สาเหตุที่ ${idx+1}</div>
       ${editingSolutions.length>1?`<button class="remove-solution" data-remove="${s.id}">✕</button>`:''}
       <div class="field-wrap" style="margin-top:8px;"><label>สาเหตุที่ ${idx+1} <span style="color:var(--red);">*</span></label><input type="text" data-field="title" data-sid="${s.id}" value="${escapeHtml(s.title||'')}" placeholder="เช่น ระบบ Vacuum สกปรก"></div>
+      ${causeImgsHtml(s)}
       <div class="field-wrap" style="margin-top:8px;"><label>ขั้นตอน <span style="color:var(--red);">*</span></label><textarea data-field="desc" data-sid="${s.id}" placeholder="1. แกะชุด Vacuum...&#10;2. แกะล้าง...">${escapeHtml(s.desc)}</textarea></div>
       <div class="form-grid two" style="margin-top:8px;">
         <div class="field-wrap"><label>อุปกรณ์ที่ใช้</label>${renderItemListRows(toItemList(s.tools), s.id, 'tools')}</div>
         <div class="field-wrap"><label>อะไหล่ที่ใช้</label>${renderItemListRows(toItemList(s.parts), s.id, 'parts', s.partsQty)}</div>
         <div class="field-wrap"><label>เวลาโดยประมาณ</label><input type="text" data-field="time" data-sid="${s.id}" value="${escapeHtml(s.time)}" placeholder="เช่น 30 นาที"></div>
       </div>
-      ${causeImgsHtml(s)}
       <div class="field-wrap" style="margin-top:8px;"><label>รูปวิธีแก้ไข</label>
         <div class="file-dropzone" data-imgdrop="${s.id}">
           <div class="img-upload-row" data-imgrow="${s.id}">
@@ -10485,7 +10485,7 @@ async function renameErrorDriveFolder(oldF, newF){ // v10.92 — Error เปล
 }
 let _originalSolutionIds = []; // ใช้เช็คว่าวิธีแก้ไขไหนถูกลบออกตอนแก้ไข Error
 
-async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds, problemImgs){ // v11.97 — problemImgs: รูปปัญหาระดับ Error (undefined = ไม่แตะฟิลด์นี้)
+async function saveErrorWithSolutions(errorId, fields, validSolutions, originalSolutionIds, problemImgs){ // v11.98 — problemImgs: รูปปัญหาระดับ Error (undefined = ไม่แตะฟิลด์นี้)
   if(fields.category) { invalidateErrorsCacheForCategory(fields.category); fsBumpCategoryVersion(fields.category); } // ข้อมูลเปลี่ยนแล้ว แคชเก่าใช้ไม่ได้อีกต่อไป + แจ้งคนอื่นด้วย
   fields.hasImages = validSolutions.some(s => (s.images||[]).length > 0);
   fields.hasVideos = validSolutions.some(s => (s.videos||[]).length > 0);
@@ -10534,10 +10534,10 @@ async function saveErrorWithSolutions(errorId, fields, validSolutions, originalS
   }
 }
 
-// ===== v11.97 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
+// ===== v11.98 — แบบร่างอัตโนมัติของฟอร์ม "เพิ่ม Error ใหม่" (Sup Product) =====
 // เก็บข้อความในเครื่อง (localStorage) แยกตามบัญชี+รุ่น · ไม่เก็บรูป/วิดีโอ/เอกสารที่แนบ (ต้องแนบใหม่) · บันทึกสำเร็จหรือกดยกเลิก = ลบร่าง
 let _errDraftOn = false, _errDraftTimer = null, _errDraftCat = '', _errDraftModel = '';
-function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.97 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
+function errDraftKey(){ return 'firmer_err_draft_new:' + String(myUserEmail||'').toLowerCase() + ':' + _errDraftCat + '|' + _errDraftModel; } // v11.98 — ใช้รุ่นที่จำไว้ตอนเปิดฟอร์ม (ไม่อ่านจาก dropdown ที่อาจถูกรีเซ็ตตอนข้อมูลโหลดเสร็จ)
 function errDraftSnap(){
   const sols = (editingSolutions||[]).map(s=>({ title:s.title||'', desc:s.desc||'', tools:toItemList(s.tools), parts:toItemList(s.parts), partsQty:s.partsQty||null, time:s.time||'', media:((s.images||[]).length+(s.videos||[]).length+(s.causeImages||[]).length) }));
   return { code:$('f-code').value, symptom:$('f-symptom').value, sols, savedAt:Date.now() };
@@ -10578,7 +10578,7 @@ function errDraftRestore(category, model){
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(_errDraftOn && e.target && e.target.closest && e.target.closest('#add-error-modal')) errDraftSchedule(); }, true));
 window.addEventListener('beforeunload', e=>{ if(_errDraftOn && $('add-error-modal') && $('add-error-modal').classList.contains('show') && errDraftExists()){ e.preventDefault(); e.returnValue=''; } });
 
-/* v11.97 — แบบร่างของฟอร์ม "เพิ่ม Error ใหม่" ฝั่ง Engineer (หน้า Service): บันทึกอัตโนมัติ เก็บไว้แม้กดซ่อน/ยกเลิก ล้างเมื่อส่งสำเร็จหรือกด "ล้างแบบร่าง" (รูป/วิดีโอไม่ถูกเก็บ) */
+/* v11.98 — แบบร่างของฟอร์ม "เพิ่ม Error ใหม่" ฝั่ง Engineer (หน้า Service): บันทึกอัตโนมัติ เก็บไว้แม้กดซ่อน/ยกเลิก ล้างเมื่อส่งสำเร็จหรือกด "ล้างแบบร่าง" (รูป/วิดีโอไม่ถูกเก็บ) */
 let _engDraftTimer = null;
 function engDraftKey(){ return 'firmer_err_draft_eng:' + String(myUserEmail||'').toLowerCase(); }
 function engDraftSnap(){
@@ -10619,7 +10619,7 @@ function engDraftRestore(){
 }
 ['input','change','click'].forEach(ev=>document.addEventListener(ev, e=>{ if(e.target && e.target.closest && e.target.closest('#eng-add-error-form')){ clearTimeout(_engDraftTimer); _engDraftTimer = setTimeout(engDraftSave, 600); } }, true));
 function resetErrorForm(){
-  setProblemImgs('sup', []); errDraftBar(false); _errDraftOn = false; // v11.97 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
+  setProblemImgs('sup', []); errDraftBar(false); _errDraftOn = false; // v11.98 — แบบร่างใช้เฉพาะฟอร์ม "เพิ่ม Error ใหม่" (เปิดใหม่อีกทีใน openAddErrorForModel)
   editingErrorId = null; reviewingPendingErrorId = null; _originalSolutionIds = []; _newErrorDraftId = null;
   $('f-code').value=''; $('f-symptom').value='';
   ['f-category','f-model','f-code','f-symptom'].forEach(id=>{ const el=$(id); if(el) el.classList.remove('field-invalid'); });
@@ -10684,7 +10684,7 @@ $('save-error-btn').addEventListener('click', async ()=>{
   }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); btn.disabled=false; btn.style.opacity=''; btn.style.cursor=''; return; }
   btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
   $('save-msg').style.opacity=1; setTimeout(()=>$('save-msg').style.opacity=0,1600);
-  errDraftClear(); // v11.97 — บันทึกสำเร็จ = ทิ้งแบบร่าง
+  errDraftClear(); // v11.98 — บันทึกสำเร็จ = ทิ้งแบบร่าง
   closeAddErrorPanel();
   renderAll(); renderErrorCountSummary();
 });
@@ -11520,7 +11520,7 @@ $('doclink-save-btn').addEventListener('click', async ()=>{
     }catch(e){ f1TrackStop(); await f1RollbackCreated(); showToast('⚠ อัปโหลดไม่สำเร็จ: '+e.message); saveBtn.disabled=false; saveBtn.style.opacity=''; saveBtn.style.cursor=''; return; }
   }
 
-  if(!existingId){ // v11.97 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
+  if(!existingId){ // v11.98 — เตือนก่อนเพิ่มไฟล์ที่มีอยู่แล้วในรุ่นอื่นของประเภทเดียวกัน (ต้นเหตุเอกสารซ้ำตอนแยกรุ่น)
     const fidNew = extractDriveFileId(url);
     if(fidNew){
       const shareModels = Array.from(document.querySelectorAll('.doclink-share-chk:checked')).map(c=>c.getAttribute('data-model'));
@@ -12612,7 +12612,7 @@ $('claim-f-category').addEventListener('change', populateClaimModelSelect);
 
 // ผูก drag & drop ให้กับกล่อง "รูปภาพประกอบ"/"วิดีโอประกอบ" ของสาเหตุแต่ละอัน (ใช้ซ้ำ 3 จุด: เสนอวิธีแก้ใหม่, Engineer เพิ่ม Error ใหม่, Sup Product แก้ไข Error)
 // wrap: container ที่ innerHTML ถูก re-render ทุกครั้ง (มี [data-imgdrop]/[data-viddrop] อยู่ข้างใน) · findSol: (sid)=>solution object · onRerender: เรียกหลังเพิ่มไฟล์เสร็จ
-// v11.97 — รูปสาเหตุ (ระดับสาเหตุ) แยกจากรูปวิธีแก้ไข — เก็บใน solution.causeImages (ฟิลด์เสริม ไม่บังคับ)
+// v11.98 — รูปสาเหตุ (ระดับสาเหตุ) แยกจากรูปวิธีแก้ไข — เก็บใน solution.causeImages (ฟิลด์เสริม ไม่บังคับ)
 function causeImgsHtml(s){
   return `<div class="field-wrap" style="margin-top:8px;"><label>รูปสาเหตุ (ถ้ามี) <span style="font-weight:400;color:var(--text-faint);font-size:11.5px;">— รูปอาการ/จุดที่เสียของสาเหตุนี้</span></label>
         <div class="file-dropzone" data-causedrop="${s.id}">
