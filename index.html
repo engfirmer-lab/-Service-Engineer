@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.09
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 23:35 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.10
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 23:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.09</title>
+<title>F1 Service — v12.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1522,7 +1522,6 @@ setTimeout(function(){
               <option value="claimed">รออะไหล่เคลม</option>
               <option value="received">เสร็จสิ้น</option>
               <option value="rejected">ถูกปฏิเสธ</option>
-              <option value="cancelled">ยกเลิก</option>
             </select>
           </div>
           <div class="field-wrap"><label>ค้นหา</label><input type="text" id="claims-filter-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
@@ -2659,8 +2658,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.09";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 23:35 น. เวลาไทย";
+const APP_VERSION = "12.10";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 23:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4896,7 +4895,7 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
 // v12.07 — "วันที่ได้รับอะไหล่/จบเคส" (closeDate) ใช้เหมือนกันทุกรายการ (เคลม + แจ้งปัญหา) และบังคับกรอกก่อนจบเคสทุกอัน — claimDate คือชื่อเก่าที่เคยบันทึกไว้ ยังอ่านต่อได้
 function closeDateOf(c){ return (c && (c.closeDate || c.claimDate)) || ''; }
 // v12.03 — ข้อความ "สถานะจบเคส" ในชีต: เสร็จสิ้น / ถูกปฏิเสธ / ยกเลิก (+ เหตุผลถ้ามี)
-function claimCloseStatusText(c){ const l = claimStatusInfo(c.status).label; return c.closeReason ? `${l} — ${c.closeReason}` : l; }
+function claimCloseStatusText(c){ const l = claimStatusInfo(c.status).label; return (c.status==='rejected' && c.closeReason) ? `${l} — ${c.closeReason}` : l; }
 function buildClaimSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}]; // ถ้าไม่มี part ให้มี 1 แถวว่าง
   const sharedFirst = [
@@ -12093,7 +12092,8 @@ const CLAIM_STATUS = [
 ];
 function claimStatusInfo(key){ return CLAIM_STATUS.find(s=>s.key===key) || CLAIM_STATUS[0]; }
 // สถานะ "จบเคส" — พอเปลี่ยนเป็นสถานะเหล่านี้ ระบบจะย้ายข้อมูลไปบันทึกใน Google Sheet แล้วลบออกจาก Firestore (กันข้อมูลค้างเปลือง Storage)
-const CLAIM_TERMINAL_STATUSES = ['received','rejected','cancelled'];
+// v12.10 — จบเคส (ย้ายลง Sheet) เฉพาะ "เสร็จสิ้น" — "ถูกปฏิเสธ" ค้างในแอปได้ (ต้องคุยกับ Mindray ก่อน อาจลบทิ้ง) / "ยกเลิก" ไม่มีให้เลือกแล้ว ใช้ปุ่ม "ลบ" แทน (cancelled เก็บไว้เฉพาะรายการเก่าที่ค้าง)
+const CLAIM_TERMINAL_STATUSES = ['received','cancelled'];
 
 // 5 หมวดไฟล์แนบเฉพาะทาง — แต่ละหมวดแนบได้หลายไฟล์ในตัวเอง หมวดบังคับ (alarmError) — swVersion/jobSheet ไม่บังคับตั้งแต่ v11.57 ที่เหลือไม่บังคับ
 const CLAIM_ATTACHMENT_GROUPS = [
@@ -13849,11 +13849,13 @@ function renderClaimsDashboard(){
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:2px 0 2px;">🔧 เคลมอะไหล่</div>
     <div class="stat-card cd-c3"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
     <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${count('draft')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">ถูกปฏิเสธ</div><div class="value" style="color:var(--red);">${count('rejected')}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">ยังค้างในแอป</div></div>
     <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
     <div class="stat-card cd-c3"><div class="label">ยังค้างอยู่ (ในแอป)</div><div class="value amber">${reports.length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แก้ไขแล้ว ${reportFixedCount} / ยังไม่แก้ไข ${reportUnfixedCount}</div></div>
     <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${reports.filter(r=>r.status==='draft').length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แจ้งปัญหาที่ได้ SVO แล้ว ยังไม่ส่ง</div></div>
+    <div class="stat-card cd-c3"><div class="label">ถูกปฏิเสธ</div><div class="value" style="color:var(--red);">${reports.filter(r=>r.status==='rejected').length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แจ้งปัญหา · ยังค้างในแอป</div></div>
     ${canSeeSheet ? `<div class="stat-card cd-c3"><div class="label">จบเคสแล้ว (ปี <span id="report-done-yr">${yr}</span>)</div><div class="value green" id="report-done-count-val">${repCached !== undefined ? repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div></div>
     <div class="stat-card cd-c3"><div class="label">รวมทั้งหมด</div><div class="value" style="color:var(--blue);" id="report-total-val">${repCached !== undefined ? reports.length + repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">ค้าง + จบเคส</div></div>` : ''}
   `;
@@ -14131,10 +14133,11 @@ function openClaimDetail(id){
     ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
     ${true ? (canManage ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(closeDateOf(c))}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (closeDateOf(c) ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส</div><div class="v">${escapeHtml(dateTh(closeDateOf(c)))}</div></div>` : '')) : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
+    ${c.status==='rejected' && c.closeReason ? `<div class="meta-item"><div class="k">เหตุผลที่ถูกปฏิเสธ</div><div class="v">${escapeHtml(c.closeReason)}</div></div>` : ''}
     ${canManage && CLAIM_TERMINAL_STATUSES.includes(c.status) ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;">⚠ เคลมนี้อยู่สถานะจบเคสแล้วแต่ยังค้างอยู่ในแอพ (ครั้งก่อนย้ายไป Sheet ไม่สำเร็จ) — กดปุ่มด้านล่างเพื่อลองย้ายอีกครั้ง</p>` : ''}
     <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
       ${canManage && claimImageCount>0 ? `<button class="btn btn-ghost btn-sm" id="claim-detail-download-zip-btn">📦 ดาวน์โหลดรูปภาพทั้งหมด (.zip)</button>` : ''}
@@ -14219,7 +14222,14 @@ function openClaimDetail(id){
         return;
       }
       try{
-        await fsUpdateClaim(c.id, {status:newStatus}); c.status=newStatus;
+        const upd = { status:newStatus };
+        // v12.10 — ถูกปฏิเสธ: ค้างในแอปต่อ (ไม่ย้ายลงชีต) ถามเหตุผล/ความคืบหน้าการคุยกับผู้ผลิต (ไม่บังคับ — กด Cancel = ไม่เปลี่ยนสถานะ)
+        if(newStatus==='rejected'){
+          const r = prompt('เหตุผลที่ถูกปฏิเสธ / ความคืบหน้าการคุยกับผู้ผลิต (ไม่บังคับ — รายการจะอยู่ในแอปต่อ ไม่ย้ายลง Sheet)');
+          if(r===null){ $('claim-detail-status').value = prevStatus; return; }
+          upd.closeReason = r.trim();
+        } else if(c.closeReason){ upd.closeReason = ''; }
+        await fsUpdateClaim(c.id, upd); Object.assign(c, upd);
         fsUpsertClaimNotice(c); // แจ้งเตือนผู้แจ้งเคลมว่าสถานะเปลี่ยน
         // อัปเดตรูปสรุปทุกครั้งที่สถานะเปลี่ยน (ลบเก่า → ถ่ายใหม่ → อัปโหลด) — ⚠ +1 Firestore write
         try{ await updateSummaryImageForClaim(c); } catch(imgErr){ console.warn('อัปเดตรูปสรุปหลังเปลี่ยนสถานะไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
