@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.02
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 15:45 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.03
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 18:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.02</title>
+<title>F1 Service — v12.03</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1518,6 +1518,7 @@ setTimeout(function(){
             <select id="claims-filter-status">
               <option value="">ทั้งหมด</option>
               <option value="pending">ยังไม่เคลม</option>
+              <option value="draft">Draft (ได้ SVO แล้ว ยังไม่ส่ง)</option>
               <option value="claimed">รออะไหล่เคลม</option>
               <option value="received">เสร็จสิ้น</option>
               <option value="rejected">ถูกปฏิเสธ</option>
@@ -2658,8 +2659,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.02";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 15:45 น. เวลาไทย";
+const APP_VERSION = "12.03";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 18:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4659,7 +4660,7 @@ async function googleApiErrorMessage(res){
    สเปรดชีตกลาง 1 ไฟล์ แต่แยกเป็น "แท็บ" (sheet tab) ย่อยตามผู้ดูแล Product — เคลมของ Product ไหน ใครเป็นผู้ดูแล Product นั้น (ownerOf) แถวจะถูกเก็บไว้ในแท็บของคนนั้น
    ทำให้แต่ละ Sup Product เปิดดูประวัติเคลมที่จบแล้วของ Product ตัวเองได้ตรงๆ โดยไม่ปนกับ Product คนอื่น */
 const CLAIMS_SHEET_NAME = 'บันทึกเคลมอะไหล่ (จบเคสแล้ว)';
-const CLAIMS_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่เคลม','ผู้เคลม','สถานที่','Product','รุ่น','S/N','แจ้งอาการเสีย','Part number','Part name','จำนวนอะไหล่','Service Order','Counter Test','เลขใบยืม','ช่างส่งคืน','ได้รับจากผู้ผลิต','ส่งคืนผู้ผลิต','รูปสรุปบันทึกเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive'];
+const CLAIMS_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่เคลม','ผู้เคลม','สถานที่','Product','รุ่น','S/N','แจ้งอาการเสีย','Part number','Part name','จำนวนอะไหล่','Service Order','Counter Test','เลขใบยืม','ช่างส่งคืน','ได้รับจากผู้ผลิต','ส่งคืนผู้ผลิต','รูปสรุปบันทึกเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส'];
 let _claimsSheetIdCache = null;
 let _claimsSheetInFlight = null;
 // บันทึก spreadsheetId + gid ของแต่ละแท็บ ลง Firestore (meta/claimsSheet) กันต้องยิง Sheets API ค้นหาใหม่ทุกครั้ง — ไม่ critical ถ้าเขียนไม่สำเร็จ (แค่แคชหาย ต้องหาใหม่รอบหน้า ไม่กระทบข้อมูลเคลม)
@@ -4741,6 +4742,27 @@ async function ensureOwnerSheetTab(spreadsheetId, ownerName, headers){
     let gid;
     if(existing){
       gid = existing.properties.sheetId;
+      // v12.03 — แท็บเก่าที่ยังไม่มีคอลัมน์ท้าย (สถานะจบเคส) → เติมหัวคอลัมน์ให้ (เติมเฉพาะเซลล์หัวที่ขาด ไม่แตะข้อมูล) และคัดลอกรูปแบบหัวจากคอลัมน์ก่อนหน้า
+      try{
+        const hRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`'${tabTitle.replace(/'/g,"''")}'!1:1`)}`, { headers:{ Authorization:`Bearer ${token}` } });
+        if(hRes.ok){
+          const hRow = ((await hRes.json()).values||[[]])[0]||[];
+          if(hRow.length>0 && hRow.length<headers.length && hRow[0]===headers[0]){
+            const startCol = hRow.length; // 0-based คอลัมน์แรกที่ขาด
+            const colA1 = (n)=>{ let r='',x=n+1; while(x>0){ const m=(x-1)%26; r=String.fromCharCode(65+m)+r; x=Math.floor((x-1)/26); } return r; };
+            const missing = headers.slice(startCol);
+            const wRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(`'${tabTitle.replace(/'/g,"''")}'!${colA1(startCol)}1`)}?valueInputOption=RAW`, {
+              method:'PUT', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' }, body: JSON.stringify({ values:[missing] })
+            });
+            if(wRes.ok){
+              await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+                method:'POST', headers:{ Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+                body: JSON.stringify({ requests:[{ copyPaste:{ source:{ sheetId:gid, startRowIndex:0, endRowIndex:1, startColumnIndex:startCol-1, endColumnIndex:startCol }, destination:{ sheetId:gid, startRowIndex:0, endRowIndex:1, startColumnIndex:startCol, endColumnIndex:headers.length }, pasteType:'PASTE_FORMAT' } }] })
+              });
+            }
+          }
+        }
+      }catch(hdrErr){ console.warn('เติมหัวคอลัมน์ "สถานะจบเคส" ไม่สำเร็จ (ไม่กระทบข้อมูล):', hdrErr.message); }
     } else {
       // แท็บไม่มีอยู่จริง (ถูกลบหรือยังไม่เคยสร้าง) → สร้างใหม่พร้อมหัวตารางและการจัดรูปแบบ
       const addRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
@@ -4867,6 +4889,8 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
 // buildClaimSheetRows: คืน array of arrays (1 part = 1 แถว) — ถ้าไม่มี parts เลยให้คืน 1 แถวแบบไม่มี part
 // summaryImageUrl: URL ของรูปสรุปที่อัปโหลดไว้ใน Drive (ใส่ในแถวแรกเท่านั้น)
 // หัวตาราง 19 คอลัมน์: วันที่พบปัญหา | วันที่เคลม | ผู้เคลม | สถานที่ | Product | รุ่น | S/N | แจ้งอาการเสีย | Part number | Part name | จำนวนอะไหล่ | Service Order | Counter Test | เลขใบยืม | ช่างส่งคืน | ได้รับจากผู้ผลิต | ส่งคืนผู้ผลิต | รูปสรุปบันทึกเคลม | ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+// v12.03 — ข้อความ "สถานะจบเคส" ในชีต: เสร็จสิ้น / ถูกปฏิเสธ / ยกเลิก (+ เหตุผลถ้ามี)
+function claimCloseStatusText(c){ const l = claimStatusInfo(c.status).label; return c.closeReason ? `${l} — ${c.closeReason}` : l; }
 function buildClaimSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}]; // ถ้าไม่มี part ให้มี 1 แถวว่าง
   const sharedFirst = [
@@ -4894,13 +4918,14 @@ function buildClaimSheetRows(c, summaryImageUrl){
       '',                                // ส่งคืนผู้ผลิต (Sup กรอกเอง)
       safeHttpUrl(summaryImageUrl) ? `=HYPERLINK("${safeHttpUrl(summaryImageUrl).replace(/"/g,'%22')}";"รูปสรุป")` : '',   // รูปสรุปบันทึกเคลม (ใช้ ; สำหรับ Sheets ภาษาไทย)
       safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive (ใช้ ; สำหรับ Sheets ภาษาไทย)
-    ] : ['','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
+      claimCloseStatusText(c),           // สถานะจบเคส (v12.03)
+    ] : ['','','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
 }
 // buildReportSheetRows: เหมือน buildClaimSheetRows แต่คอลัมน์ชุดเล็กกว่า (ใช้กับ type==='report' — ไม่มีเลขใบยืม/ช่างส่งคืน/ได้รับจากผู้ผลิต/ส่งคืนผู้ผลิต เพราะไม่ใช่การเคลมกับผู้ผลิตจริง)
 // หัวตาราง 15 คอลัมน์: วันที่พบปัญหา | วันที่บันทึก | ผู้แจ้ง | สถานที่ | Product | รุ่น | S/N | Error message/อาการเสีย | Part number | Part name | จำนวนอะไหล่ | Counter Test | รูปสรุป | ลิงก์โฟลเดอร์ไฟล์แนบ
-const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่บันทึก','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive'];
+const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่บันทึก','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส'];
 function buildReportSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}];
   const sharedFirst = [
@@ -4914,7 +4939,8 @@ function buildReportSheetRows(c, summaryImageUrl){
       p.countQty ? String(p.countQty)+(p.countUnit?' '+p.countUnit:'') : '',
       safeHttpUrl(summaryImageUrl) ? `=HYPERLINK("${safeHttpUrl(summaryImageUrl).replace(/"/g,'%22')}";"รูปสรุป")` : '',
       safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',
-    ] : ['','',''];
+      claimCloseStatusText(c),
+    ] : ['','','',''];
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
 }
@@ -12051,6 +12077,7 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 /* ===================== เคลมอะไหล่ ===================== */
 const CLAIM_STATUS = [
   {key:'pending', label:'ยังไม่เคลม', color:'var(--amber)'},
+  {key:'draft', label:'Draft', color:'#8b5cf6'}, // v12.03 — ได้เลข Service Order แล้ว แต่ยังไม่ได้กด Submit ส่งให้ผู้ผลิต/ต่างประเทศ
   {key:'claimed', label:'รออะไหล่เคลม', color:'var(--blue)'},
   {key:'received', label:'เสร็จสิ้น', color:'var(--green)'},
   {key:'rejected', label:'ถูกปฏิเสธ', color:'var(--red)'},
@@ -13813,6 +13840,7 @@ function renderClaimsDashboard(){
   $('claims-dashboard').innerHTML = `
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:2px 0 2px;">🔧 เคลมอะไหล่</div>
     <div class="stat-card cd-c3"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">Draft (ยังไม่ส่ง)</div><div class="value" style="color:#8b5cf6;">${count('draft')}</div></div>
     <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
@@ -14093,7 +14121,7 @@ function openClaimDetail(id){
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
     ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft (ได้ SVO แล้ว ยังไม่ส่ง)</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
@@ -14126,7 +14154,8 @@ function openClaimDetail(id){
       const svo = $('claim-detail-svo').value.trim();
       const updates = { serviceOrderNo: svo };
       // กรอกเลข Service Order ครั้งแรกตอนยังอยู่สถานะ "ยังไม่เคลม" ให้ขยับสถานะเป็น "รออะไหล่เคลม" ให้อัตโนมัติ — ไม่งั้นต้องมาคอยเปลี่ยนสถานะเองซ้ำอีกขั้น
-      if(svo && c.status==='pending') updates.status = 'claimed';
+      // v12.03 — ได้เลข SVO แล้วขยับเป็น "Draft" (ยังไม่ได้ Submit) — Sup เปลี่ยนเป็น "รออะไหล่เคลม" เองเมื่อส่งแล้ว
+      if(svo && c.status==='pending') updates.status = 'draft';
       try{
         await fsUpdateClaim(c.id, updates); Object.assign(c, updates);
         fsUpsertClaimNotice(c); // แจ้งเตือนผู้แจ้งเคลมว่ามีความคืบหน้า (เลข SVO บันทึกแล้ว และ/หรือสถานะขยับ)
@@ -14138,11 +14167,18 @@ function openClaimDetail(id){
       const newStatus = $('claim-detail-status').value;
       const prevStatus = c.status;
       if(CLAIM_TERMINAL_STATUSES.includes(newStatus)){
+        // v12.03 — ถูกปฏิเสธ/ยกเลิก: ถามเหตุผล (ไม่บังคับ) เก็บลงชีตคู่กับสถานะ — กด Cancel = ไม่เปลี่ยนสถานะ
+        let closeReason = '';
+        if(newStatus==='rejected' || newStatus==='cancelled'){
+          const r = prompt(newStatus==='rejected' ? 'เหตุผลที่ถูกปฏิเสธ (ไม่บังคับ — จะบันทึกลง Google Sheet)' : 'เหตุผลที่ยกเลิก (ไม่บังคับ — จะบันทึกลง Google Sheet)');
+          if(r===null){ $('claim-detail-status').value = prevStatus; return; }
+          closeReason = r.trim();
+        }
         if(!confirm('สถานะนี้เป็นสถานะจบเคส — ระบบจะบันทึกข้อมูลเคลมนี้ลง Google Sheet แล้วลบออกจากแอพเพื่อไม่ให้เปลืองพื้นที่ Firestore\nยืนยันหรือไม่?')){
           $('claim-detail-status').value = prevStatus; return;
         }
         try{
-          await fsUpdateClaim(c.id, {status:newStatus}); c.status = newStatus;
+          await fsUpdateClaim(c.id, {status:newStatus, closeReason:closeReason}); c.status = newStatus; c.closeReason = closeReason;
           await fsUpsertClaimNotice(c); // บันทึกแจ้งเตือนสถานะสุดท้ายไว้ก่อนย้าย/ลบเคลมหลัก กันแจ้งเตือนหายไปพร้อมกัน
           // อัปเดตรูปสรุป (ลบเก่า → ถ่ายใหม่ → อัปโหลด) ก่อน archive — ⚠ +1 Firestore write
           try{ await updateSummaryImageForClaim(c); } catch(imgErr){ console.warn('อัปเดตรูปสรุปก่อน archive ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
@@ -21917,11 +21953,12 @@ async function dxRenderClaims(force){
   if(force){ try{ if(LIVE.on.claims) await liveVerify(); else await refreshClaimsRealtime(); }catch(e){} } // รีเฟรช = ตรวจจำนวนกับเซิร์ฟเวอร์ (โหมดสด) หรืออ่านใหม่ (โหมดสำรอง)
   const all = DATA.claims||[];
   const claims = all.filter(c=>(c.type||'claim')==='claim'), reports = all.filter(c=>c.type==='report');
-  const open = claims.filter(c=>c.status==='pending'||c.status==='claimed');
+  const open = claims.filter(c=>c.status==='pending'||c.status==='draft'||c.status==='claimed');
   const repOpen = reports.filter(r=>!r.fixDate).length;
-  const nPend = open.filter(c=>c.status==='pending').length, nClaimed = open.filter(c=>c.status==='claimed').length;
+  const nPend = open.filter(c=>c.status==='pending').length, nDraft = open.filter(c=>c.status==='draft').length, nClaimed = open.filter(c=>c.status==='claimed').length;
   let h = dxStamp(LIVE.on.claims ? 'ข้อมูลสด — เปลี่ยนแล้วอัปเดตทันที' : 'โหมดสำรอง — กด 🔄 เพื่อดึงใหม่', LIVE.on.claims) + dxKpis([
     dxKpi('ยังไม่เคลม', nPend, 'รอ Sup ดำเนินการ', nPend?'var(--amber)':'var(--green)'),
+    dxKpi('Draft (ได้ SVO ยังไม่ส่ง)', nDraft, 'รอ Sup กด Submit', '#8b5cf6'),
     dxKpi('เคลมแล้ว (รออะไหล่)', nClaimed, 'เคลมกับผู้ผลิตแล้ว', 'var(--blue)'),
     dxKpi('แจ้งปัญหายังไม่แก้', repOpen, `จากทั้งหมด ${reports.length}`, repOpen?'var(--amber)':'var(--green)')
   ]);
