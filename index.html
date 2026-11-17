@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.05
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 20:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.06
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 21:05 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.05</title>
+<title>F1 Service — v12.06</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1518,7 +1518,7 @@ setTimeout(function(){
             <select id="claims-filter-status">
               <option value="">ทั้งหมด</option>
               <option value="pending">ยังไม่เคลม</option>
-              <option value="draft">Draft (ได้ SVO แล้ว ยังไม่ส่ง)</option>
+              <option value="draft">Draft</option>
               <option value="claimed">รออะไหล่เคลม</option>
               <option value="received">เสร็จสิ้น</option>
               <option value="rejected">ถูกปฏิเสธ</option>
@@ -2659,8 +2659,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.05";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 20:50 น. เวลาไทย";
+const APP_VERSION = "12.06";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 21:05 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4889,6 +4889,8 @@ async function applyClaimsSheetFormatting(spreadsheetId, gid, numCols, isNewTab=
 // buildClaimSheetRows: คืน array of arrays (1 part = 1 แถว) — ถ้าไม่มี parts เลยให้คืน 1 แถวแบบไม่มี part
 // summaryImageUrl: URL ของรูปสรุปที่อัปโหลดไว้ใน Drive (ใส่ในแถวแรกเท่านั้น)
 // หัวตาราง 19 คอลัมน์: วันที่พบปัญหา | วันที่เคลม | ผู้เคลม | สถานที่ | Product | รุ่น | S/N | แจ้งอาการเสีย | Part number | Part name | จำนวนอะไหล่ | Service Order | Counter Test | เลขใบยืม | ช่างส่งคืน | ได้รับจากผู้ผลิต | ส่งคืนผู้ผลิต | รูปสรุปบันทึกเคลม | ลิงก์โฟลเดอร์ไฟล์แนบใน Drive
+// v12.05 — ต้องกรอก "วันที่เคลม" ก่อนจบเคส: รายการเคลมทุกอัน + รายการแจ้งปัญหาที่มีอะไหล่/เลข Service Order (แจ้งปัญหาล้วนๆ ไม่ต้อง)
+function claimDateRequired(c){ return (c.type||'claim')==='claim' || !!c.serviceOrderNo || (c.parts||[]).some(p=>p && (p.partNumber||p.partName)); }
 // v12.03 — ข้อความ "สถานะจบเคส" ในชีต: เสร็จสิ้น / ถูกปฏิเสธ / ยกเลิก (+ เหตุผลถ้ามี)
 function claimCloseStatusText(c){ const l = claimStatusInfo(c.status).label; return c.closeReason ? `${l} — ${c.closeReason}` : l; }
 function buildClaimSheetRows(c, summaryImageUrl){
@@ -4925,12 +4927,12 @@ function buildClaimSheetRows(c, summaryImageUrl){
 }
 // buildReportSheetRows: เหมือน buildClaimSheetRows แต่คอลัมน์ชุดเล็กกว่า (ใช้กับ type==='report' — ไม่มีเลขใบยืม/ช่างส่งคืน/ได้รับจากผู้ผลิต/ส่งคืนผู้ผลิต เพราะไม่ใช่การเคลมกับผู้ผลิตจริง)
 // หัวตาราง 15 คอลัมน์: วันที่พบปัญหา | วันที่บันทึก | ผู้แจ้ง | สถานที่ | Product | รุ่น | S/N | Error message/อาการเสีย | Part number | Part name | จำนวนอะไหล่ | Counter Test | รูปสรุป | ลิงก์โฟลเดอร์ไฟล์แนบ
-const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่บันทึก','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส'];
+const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่เคลม','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส'];
 function buildReportSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}];
   const sharedFirst = [
     (isoToDDMMYYYY(c.problemDate)||'') ? `'${isoToDDMMYYYY(c.problemDate)}` : '',
-    `'${bangkokDateDDMMYYYYSlash()}`,
+    (isoToDDMMYYYY(c.claimDate)||'') ? `'${isoToDDMMYYYY(c.claimDate)}` : '',   // วันที่เคลม (v12.05 — วันที่ Sup กรอกเอง ไม่ใช่วันที่ย้ายลงชีต)
     c.claimant||'', c.siteName||'', c.category||'', c.model||'', c.serialNumber||'', c.problem||'',
   ];
   return parts.map((p, i) => {
@@ -4952,7 +4954,7 @@ function claimsSheetTabLink(spreadsheetId, gid){
 // ย้ายเคลม 1 รายการไป Google Sheet (แท็บของผู้ดูแล Product ที่เคลมนี้สังกัดอยู่) แล้วลบออกจาก Firestore — ใช้ทั้งตอนเปลี่ยนสถานะเป็นสถานะจบเคส และตอนกดปุ่ม "ลองย้ายอีกครั้ง"
 async function archiveClaimToSheetAndDelete(c){
   // v12.05 — กันทุกทางเข้า (รวมปุ่ม "ย้ายไป Sheet เดี๋ยวนี้" ของเคสค้าง): เคลมต้องมี "วันที่เคลม" ที่ Sup กรอกก่อนย้ายลงชีต
-  if((c.type||'claim')==='claim' && !c.claimDate) throw new Error('ยังไม่ได้กรอก "วันที่เคลม" — กรอกในหน้ารายละเอียดเคลมแล้วบันทึกก่อน');
+  if(claimDateRequired(c) && !c.claimDate) throw new Error('ยังไม่ได้กรอก "วันที่เคลม" — กรอกในหน้ารายละเอียดเคลมแล้วบันทึกก่อน');
   showLoadingOverlay('กำลังบันทึกลง Google Sheet...');
   try{
     // 1) ใช้รูปสรุปที่ถ่ายไว้แล้ว (จาก updateSummaryImageForClaim ตอนเปลี่ยนสถานะ)
@@ -13842,7 +13844,7 @@ function renderClaimsDashboard(){
   $('claims-dashboard').innerHTML = `
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:2px 0 2px;">🔧 เคลมอะไหล่</div>
     <div class="stat-card cd-c3"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
-    <div class="stat-card cd-c3"><div class="label">Draft (ยังไม่ส่ง)</div><div class="value" style="color:#8b5cf6;">${count('draft')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${count('draft')}</div></div>
     <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
@@ -14124,9 +14126,9 @@ function openClaimDetail(id){
     ${c.type!=='report' ? `<div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>` : ''}
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
     ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
-    ${(c.type||'claim')==='claim' ? (canManage ? `<div class="meta-item"><div class="k">วันที่เคลม (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(c.claimDate||'')}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (c.claimDate ? `<div class="meta-item"><div class="k">วันที่เคลม</div><div class="v">${escapeHtml(dateTh(c.claimDate))}</div></div>` : '')) : ''}
+    ${true ? (canManage ? `<div class="meta-item"><div class="k">วันที่เคลม (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(c.claimDate||'')}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (c.claimDate ? `<div class="meta-item"><div class="k">วันที่เคลม</div><div class="v">${escapeHtml(dateTh(c.claimDate))}</div></div>` : '')) : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft (ได้ SVO แล้ว ยังไม่ส่ง)</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;">โดย ${escapeHtml(c.submitterName||'')} · ${c.createdAt?new Date(c.createdAt).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):''}</p>
@@ -14182,7 +14184,7 @@ function openClaimDetail(id){
       const prevStatus = c.status;
       if(CLAIM_TERMINAL_STATUSES.includes(newStatus)){
         // v12.05 — บังคับกรอก "วันที่เคลม" ก่อนจบเคส/ย้ายลง Google Sheet (เฉพาะรายการเคลม) — ถ้าเลือกวันที่ในช่องไว้แต่ยังไม่กดบันทึก ให้บันทึกให้เลย
-        if((c.type||'claim')==='claim' && !c.claimDate){
+        if(claimDateRequired(c) && !c.claimDate){
           const _cdEl = $('claim-detail-claimdate'); const _cd = _cdEl ? (_cdEl.value||'').trim() : '';
           if(!_cd){ showToast('⚠ กรุณากรอก "วันที่เคลม" ก่อนจบเคส (ช่องใต้เลข Service Order)'); $('claim-detail-status').value = prevStatus; if(_cdEl){ _cdEl.scrollIntoView({block:'center'}); _cdEl.style.borderColor='var(--red)'; } return; }
           try{ await fsUpdateClaim(c.id, { claimDate:_cd }); c.claimDate = _cd; }
@@ -21979,7 +21981,7 @@ async function dxRenderClaims(force){
   const nPend = open.filter(c=>c.status==='pending').length, nDraft = open.filter(c=>c.status==='draft').length, nClaimed = open.filter(c=>c.status==='claimed').length;
   let h = dxStamp(LIVE.on.claims ? 'ข้อมูลสด — เปลี่ยนแล้วอัปเดตทันที' : 'โหมดสำรอง — กด 🔄 เพื่อดึงใหม่', LIVE.on.claims) + dxKpis([
     dxKpi('ยังไม่เคลม', nPend, 'รอ Sup ดำเนินการ', nPend?'var(--amber)':'var(--green)'),
-    dxKpi('Draft (ได้ SVO ยังไม่ส่ง)', nDraft, 'รอ Sup กด Submit', '#8b5cf6'),
+    dxKpi('Draft', nDraft, 'รอ Sup กด Submit', '#8b5cf6'),
     dxKpi('เคลมแล้ว (รออะไหล่)', nClaimed, 'เคลมกับผู้ผลิตแล้ว', 'var(--blue)'),
     dxKpi('แจ้งปัญหายังไม่แก้', repOpen, `จากทั้งหมด ${reports.length}`, repOpen?'var(--amber)':'var(--green)')
   ]);
