@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.04
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 20:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.05
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 20:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.04</title>
+<title>F1 Service — v12.05</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2659,8 +2659,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.04";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 20:40 น. เวลาไทย";
+const APP_VERSION = "12.05";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 20:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4951,6 +4951,8 @@ function claimsSheetTabLink(spreadsheetId, gid){
 }
 // ย้ายเคลม 1 รายการไป Google Sheet (แท็บของผู้ดูแล Product ที่เคลมนี้สังกัดอยู่) แล้วลบออกจาก Firestore — ใช้ทั้งตอนเปลี่ยนสถานะเป็นสถานะจบเคส และตอนกดปุ่ม "ลองย้ายอีกครั้ง"
 async function archiveClaimToSheetAndDelete(c){
+  // v12.05 — กันทุกทางเข้า (รวมปุ่ม "ย้ายไป Sheet เดี๋ยวนี้" ของเคสค้าง): เคลมต้องมี "วันที่เคลม" ที่ Sup กรอกก่อนย้ายลงชีต
+  if((c.type||'claim')==='claim' && !c.claimDate) throw new Error('ยังไม่ได้กรอก "วันที่เคลม" — กรอกในหน้ารายละเอียดเคลมแล้วบันทึกก่อน');
   showLoadingOverlay('กำลังบันทึกลง Google Sheet...');
   try{
     // 1) ใช้รูปสรุปที่ถ่ายไว้แล้ว (จาก updateSummaryImageForClaim ตอนเปลี่ยนสถานะ)
@@ -14179,6 +14181,13 @@ function openClaimDetail(id){
       const newStatus = $('claim-detail-status').value;
       const prevStatus = c.status;
       if(CLAIM_TERMINAL_STATUSES.includes(newStatus)){
+        // v12.05 — บังคับกรอก "วันที่เคลม" ก่อนจบเคส/ย้ายลง Google Sheet (เฉพาะรายการเคลม) — ถ้าเลือกวันที่ในช่องไว้แต่ยังไม่กดบันทึก ให้บันทึกให้เลย
+        if((c.type||'claim')==='claim' && !c.claimDate){
+          const _cdEl = $('claim-detail-claimdate'); const _cd = _cdEl ? (_cdEl.value||'').trim() : '';
+          if(!_cd){ showToast('⚠ กรุณากรอก "วันที่เคลม" ก่อนจบเคส (ช่องใต้เลข Service Order)'); $('claim-detail-status').value = prevStatus; if(_cdEl){ _cdEl.scrollIntoView({block:'center'}); _cdEl.style.borderColor='var(--red)'; } return; }
+          try{ await fsUpdateClaim(c.id, { claimDate:_cd }); c.claimDate = _cd; }
+          catch(e){ showToast('⚠ บันทึกวันที่เคลมไม่สำเร็จ: '+e.message); $('claim-detail-status').value = prevStatus; return; }
+        }
         // v12.03 — ถูกปฏิเสธ/ยกเลิก: ถามเหตุผล (ไม่บังคับ) เก็บลงชีตคู่กับสถานะ — กด Cancel = ไม่เปลี่ยนสถานะ
         let closeReason = '';
         if(newStatus==='rejected' || newStatus==='cancelled'){
