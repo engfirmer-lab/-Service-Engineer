@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.07
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 23:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.08
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 23:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.07</title>
+<title>F1 Service — v12.08</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2659,8 +2659,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.07";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 23:10 น. เวลาไทย";
+const APP_VERSION = "12.08";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 23:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13853,6 +13853,7 @@ function renderClaimsDashboard(){
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
     <div class="stat-card cd-c3"><div class="label">ยังค้างอยู่ (ในแอป)</div><div class="value amber">${reports.length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แก้ไขแล้ว ${reportFixedCount} / ยังไม่แก้ไข ${reportUnfixedCount}</div></div>
+    <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${reports.filter(r=>r.status==='draft').length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แจ้งปัญหาที่ได้ SVO แล้ว ยังไม่ส่ง</div></div>
     ${canSeeSheet ? `<div class="stat-card cd-c3"><div class="label">จบเคสแล้ว (ปี <span id="report-done-yr">${yr}</span>)</div><div class="value green" id="report-done-count-val">${repCached !== undefined ? repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div></div>
     <div class="stat-card cd-c3"><div class="label">รวมทั้งหมด</div><div class="value" style="color:var(--blue);" id="report-total-val">${repCached !== undefined ? reports.length + repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">ค้าง + จบเคส</div></div>` : ''}
   `;
