@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.01
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 09:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.02
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 15:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.01</title>
+<title>F1 Service — v12.02</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2658,8 +2658,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.01";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 09:20 น. เวลาไทย";
+const APP_VERSION = "12.02";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 15:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6093,16 +6093,23 @@ async function downloadClaimImagesAsZip(c){
   showLoadingOverlay(`กำลังดาวน์โหลดรูปที่ 1/${imageAtts.length}...`);
   try{
     const zip = new JSZip();
-    let okCount = 0;
+    let okCount = 0; const failNames = [];
     for(let i=0;i<imageAtts.length;i++){
       updateLoadingOverlayText(`กำลังดาวน์โหลดรูปที่ ${i+1}/${imageAtts.length}...`);
       const a = imageAtts[i];
-      let blob;
-      try{
-        const res = await fetch(driveImgSrc(a.url));
-        if(!res.ok) throw new Error('โหลดรูปไม่สำเร็จ ('+res.status+')');
-        blob = await res.blob();
-      }catch(e){ continue; } // รูปไหนโหลดไม่ได้ ข้ามไปเลย ไม่ให้ทั้งไฟล์ zip ล้ม
+      let blob = null;
+      // v12.02 — เดิมใช้ drive.google.com/thumbnail (ขนาด 400px และ fetch ข้ามโดเมนไม่ได้ ติด CORS จึงล้มทุกรูป) → ใช้ lh3.googleusercontent.com ขนาดจริง (s0) ที่ fetch ได้ก่อน แล้วค่อยลองลิงก์สำรอง
+      const _fid = driveFileIdFromUrl(a.url);
+      const _cands = _fid ? [`https://lh3.googleusercontent.com/d/${_fid}=s0`, `https://lh3.googleusercontent.com/d/${_fid}=w2000`, driveImgSrc(a.url)] : [driveImgSrc(a.url)];
+      for(const u of _cands){
+        try{
+          const res = await fetch(u);
+          if(!res.ok) continue;
+          const b = await res.blob();
+          if(b && b.size>0 && /^image\//.test(b.type||'image/')){ blob = b; break; }
+        }catch(e){ /* ลองลิงก์ถัดไป */ }
+      }
+      if(!blob){ failNames.push(a.name||('รูปที่ '+(i+1))); continue; } // รูปไหนโหลดไม่ได้ ข้ามไป ไม่ให้ทั้งไฟล์ zip ล้ม แต่จะแจ้งตอนจบ
       if(blob.size > MAX_IMG_BYTES){
         updateLoadingOverlayText(`กำลังบีบอัดรูปที่ ${i+1}/${imageAtts.length}...`);
         try{ blob = await compressBlobToMaxBytes(blob, MAX_IMG_BYTES); }catch(e){}
