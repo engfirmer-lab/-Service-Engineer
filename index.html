@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.03
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 18:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.04
+  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 20:40 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.03</title>
+<title>F1 Service — v12.04</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2659,8 +2659,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.03";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 18:10 น. เวลาไทย";
+const APP_VERSION = "12.04";
+const APP_UPDATED_AT = "17 พฤศจิกายน 2569 20:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4895,7 +4895,7 @@ function buildClaimSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}]; // ถ้าไม่มี part ให้มี 1 แถวว่าง
   const sharedFirst = [
     (isoToDDMMYYYY(c.problemDate)||'') ? `'${isoToDDMMYYYY(c.problemDate)}` : '',   // วันที่พบปัญหา (prefix ' กันไม่ให้ Sheets ตีความวันที่สลับ MM/DD)
-    `'${bangkokDateDDMMYYYYSlash()}`,    // วันที่เคลม (วันที่ archive)
+    (isoToDDMMYYYY(c.claimDate)||'') ? `'${isoToDDMMYYYY(c.claimDate)}` : '',   // วันที่เคลม (v12.04 — วันที่ Sup กรอกเอง; เดิมเป็นวันที่ archive)
     c.claimant||'',                      // ผู้เคลม
     c.siteName||'',                      // สถานที่
     c.category||'',                      // Product
@@ -13943,7 +13943,8 @@ const CLAIMS_COLUMNS = [
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
   { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
-  { key:'fixDate', label:'วันที่เคลม', getValue:c=>dateTh(c.fixDate)||'-' },
+  { key:'fixDate', label:'วันที่แก้ไข', getValue:c=>dateTh(c.fixDate)||'-' },
+  { key:'claimDate', label:'วันที่เคลม', getValue:c=>dateTh(c.claimDate)||'-' }, // v12.04 — วันที่ Sup กรอกเองตอนทำเรื่องเคลม (แยกจากวันที่แก้ไข)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
   { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label },
 ];
@@ -14052,6 +14053,7 @@ function renderClaimsView(){
       <td style="white-space:nowrap;">${partNames}</td>
       <td class="chk" style="white-space:nowrap;">${partCounts}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.fixDate)||'-')}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.claimDate)||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
       <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
     </tr>`;
@@ -14120,6 +14122,7 @@ function openClaimDetail(id){
     ${c.type!=='report' ? `<div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>` : ''}
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
     ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
+    ${(c.type||'claim')==='claim' ? (canManage ? `<div class="meta-item"><div class="k">วันที่เคลม (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(c.claimDate||'')}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (c.claimDate ? `<div class="meta-item"><div class="k">วันที่เคลม</div><div class="v">${escapeHtml(dateTh(c.claimDate))}</div></div>` : '')) : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
       ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft (ได้ SVO แล้ว ยังไม่ส่ง)</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option><option value="cancelled"${c.status==='cancelled'?' selected':''}>ยกเลิก</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
@@ -14163,6 +14166,15 @@ function openClaimDetail(id){
       }
       catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
     });
+    if($('claim-detail-claimdate-save')){
+      $('claim-detail-claimdate-save').addEventListener('click', async ()=>{
+        const cd = ($('claim-detail-claimdate').value||'').trim();
+        try{
+          await fsUpdateClaim(c.id, { claimDate: cd }); c.claimDate = cd;
+          renderClaimsView(); showToast(cd ? '✓ บันทึกวันที่เคลมแล้ว' : '✓ ล้างวันที่เคลมแล้ว'); openClaimDetail(c.id);
+        }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+      });
+    }
     $('claim-detail-status').addEventListener('change', async ()=>{
       const newStatus = $('claim-detail-status').value;
       const prevStatus = c.status;
