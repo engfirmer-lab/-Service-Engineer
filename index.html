@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.13
-  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 11:20 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.14
+  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 11:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.13</title>
+<title>F1 Service — v12.14</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -907,6 +907,15 @@ html:has(#view-examadmin:not([style*="none"])),html:has(#view-exam:not([style*="
 .f1-fs-bar{display:flex;align-items:center;gap:10px;position:sticky;top:0;left:0;z-index:5;background:var(--bg,#fff);padding:10px 0;margin-bottom:6px;border-bottom:1px solid var(--border);}
 html.f1-fs-lock,html.f1-fs-lock body{overflow:hidden;overscroll-behavior:contain;}
 
+/* v12.14 — ปุ่ม ⛶ ขยาย/🗗 ย่อ แบบเดียวกันทุกตาราง: ปุ่มย่ออยู่ขวาบนเสมอ */
+.f1-tfs-bar{display:flex;justify-content:flex-end;margin:0 0 4px;}
+.f1-tfs-on{position:fixed !important;top:48px;left:0;right:0;bottom:0;z-index:300;background:var(--bg,#fff);overflow:auto !important;max-height:none !important;border:none !important;border-radius:0 !important;margin:0 !important;padding:0 10px 16px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.f1-tfs-top{position:fixed;top:0;left:0;right:0;height:48px;z-index:301;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;background:var(--bg,#fff);border-bottom:1px solid var(--border);}
+.f1-tfs-top b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.f1-tfs-top .btn{flex:none;}
+.f1-tfs-on #eng-cert-matrix thead th{top:0 !important;}
+.f1-tfs-on .f1-stwrap{max-height:none !important;overflow:visible !important;}
+.f1-fs-bar{flex-direction:row-reverse;justify-content:space-between;}
 /* v10.63 ล็อกคอลัมน์ Model ของตารางเอกสาร (เลื่อนแนวนอนแล้วยังเห็นชื่อรุ่น) */
 #sup-doc-matrix th:nth-child(2),#sup-doc-matrix td:nth-child(2){position:sticky;left:0;z-index:3;background:var(--panel);box-shadow:1px 0 0 var(--border);}
 #sup-doc-matrix thead th:nth-child(2){z-index:7;}
@@ -2667,8 +2676,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.13";
-const APP_UPDATED_AT = "18 พฤศจิกายน 2569 11:20 น. เวลาไทย";
+const APP_VERSION = "12.14";
+const APP_UPDATED_AT = "18 พฤศจิกายน 2569 11:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -5505,7 +5514,7 @@ function wirePanelHideToggle(btnId, bodyId, storageKey, defaultHidden){
   btn.addEventListener('click', ()=>{
     hidden = !hidden;
     try{ localStorage.setItem(storageKey, hidden?'1':'0'); }catch(e){}
-    apply(); setFs(!hidden);
+    apply();
   });
 }
 wirePanelHideToggle('eng-cert-hide-btn', 'eng-cert-body', 'hide_eng_cert_v2', true);
@@ -23319,6 +23328,57 @@ async function rpEditSave(){
   try{ new MutationObserver(run).observe(document.body, {childList:true, subtree:true}); }catch(e){}
   run();
   window.f1StickyHeads = apply;
+})();
+
+// v12.14 — ปุ่ม "⛶ ขยาย" ให้ทุกตารางข้อมูล (≥4 คอลัมน์) · เต็มจอแล้วมีปุ่ม "🗗 ย่อ" ขวาบนเสมอ · ตารางที่ render ใหม่จะได้ปุ่มเองอัตโนมัติ
+(function(){
+  const SKIP = '.modal,.modal-overlay,#manual-modal,#view-manual,.fullscreen-panel,.f1-tfs-on';
+  let openC = null, topEl = null;
+  function titleFor(bar){
+    const pb = bar.closest('.panel-block,.card,section') || document;
+    const h = pb.querySelector('h2,h3'); return (h && h.textContent.trim()) || 'ตาราง';
+  }
+  function closeFs(){
+    if(!openC) return;
+    openC.classList.remove('f1-tfs-on'); if(topEl) topEl.remove(); topEl = null;
+    document.documentElement.classList.remove('f1-fs-lock');
+    const c = openC; openC = null; try{ c.scrollTop = 0; }catch(e){}
+  }
+  function openFs(c, title){
+    if(openC) closeFs();
+    openC = c; c.classList.add('f1-tfs-on');
+    topEl = document.createElement('div'); topEl.className = 'f1-tfs-top';
+    topEl.innerHTML = '<b></b><button type="button" class="btn btn-ghost btn-sm btn-min">🗗 ย่อ</button>';
+    topEl.querySelector('b').textContent = title;
+    topEl.querySelector('button').addEventListener('click', closeFs);
+    document.body.appendChild(topEl);
+    document.documentElement.classList.add('f1-fs-lock'); c.scrollTop = 0;
+  }
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && openC) closeFs(); });
+  function apply(){
+    // เก็บกวาดปุ่มกำพร้า (กรอบตารางถูก render ใหม่ไปแล้ว)
+    document.querySelectorAll('.f1-tfs-bar').forEach(b=>{ const n = b.nextElementSibling; if(!n || !n.hasAttribute('data-f1tfs')) b.remove(); });
+    if(openC && !document.body.contains(openC)) closeFs();
+    document.querySelectorAll('table').forEach(t=>{
+      try{
+        if(t.closest(SKIP)) return;
+        const first = t.querySelector('tr'); if(!first || first.children.length < 4) return;
+        let c = t.parentElement; if(!c) return;
+        if(c.hasAttribute('data-f1tfs')) return;
+        if(c.children.length > 1 || c === document.body){ // ปนกับเนื้อหาอื่น → ห่อตารางด้วยกรอบของมันเอง
+          const w = document.createElement('div'); w.className = 'f1-stwrap'; c.insertBefore(w, t); w.appendChild(t); c = w;
+        }
+        c.setAttribute('data-f1tfs','1');
+        const bar = document.createElement('div'); bar.className = 'f1-tfs-bar';
+        bar.innerHTML = '<button type="button" class="btn btn-ghost btn-sm">⛶ ขยาย</button>';
+        c.parentElement.insertBefore(bar, c);
+        bar.querySelector('button').addEventListener('click', ()=> openFs(c, titleFor(bar)));
+      }catch(e){}
+    });
+  }
+  let tm = null; const run = ()=>{ clearTimeout(tm); tm = setTimeout(apply, 250); };
+  try{ new MutationObserver(run).observe(document.body, {childList:true, subtree:true}); }catch(e){}
+  run();
 })();
 </script>
 
