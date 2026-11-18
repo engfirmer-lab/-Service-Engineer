@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.11
-  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 10:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.12
+  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 11:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.11</title>
+<title>F1 Service — v12.12</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1389,7 +1389,7 @@ setTimeout(function(){
         <button data-doctype="service_manual" class="active">📘 Service Manual</button>
         <button data-doctype="spare_part">🔧 Spare Part</button>
         <button data-doctype="install_checklist">📋 Install</button>
-        <button data-doctype="refurbish_checklist">♻️ Refurbish</button>
+        <button data-doctype="refurbish_checklist">♻️ Refur &amp; Performance</button>
         <button data-doctype="pm_checklist">🗓️ PM</button>
         <button data-doctype="protocol">📜 Protocol</button>
         <button data-doctype="diagram">📐 Diagram</button>
@@ -1565,6 +1565,8 @@ setTimeout(function(){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
         <button class="btn btn-primary btn-sm" id="doclink-list-add-btn">+ เพิ่มเอกสาร</button>
         <button class="btn btn-ghost btn-sm" id="doclink-list-move-btn" style="display:none;">↔ ย้ายที่เลือก</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-list-nodoc-btn" style="display:none;">🚫 ไม่มีเอกสารนี้</button>
+        <button class="btn btn-ghost btn-sm" id="doclink-list-nodoc-clear-btn" style="display:none;">↩ ยกเลิกการระบุว่าไม่มี</button>
       </div>
     </div>
   </div>
@@ -2665,8 +2667,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.11";
-const APP_UPDATED_AT = "18 พฤศจิกายน 2569 10:50 น. เวลาไทย";
+const APP_VERSION = "12.12";
+const APP_UPDATED_AT = "18 พฤศจิกายน 2569 11:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2983,7 +2985,7 @@ function ensureDocsLoaded(){
     await initFirebase();
     const items = await fsLoadDocumentsSmart(window._firebaseSdk);
     const have = new Set((DATA.documents||[]).map(d=>d.id));
-    items.forEach(x=>{ if(!have.has(x.id)) DATA.documents.push(x); });
+    items.forEach(x=>{ if(have.has(x.id)) return; if(x.noDoc) docMissingAdd(x); else DATA.documents.push(x); });
     _docsLoaded = true;
   })();
   _docsLoading.then(()=>{ _docsLoading = null; }, ()=>{ _docsLoading = null; });
@@ -3088,7 +3090,7 @@ const DOC_TYPES = [
   {key:'service_manual', label:'Service Manual', icon:'📘'},
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
-  {key:'refurbish_checklist', label:'Refurbish Checklist', icon:'♻️'},
+  {key:'refurbish_checklist', label:'Refur & Performance Checklist', icon:'♻️'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
   {key:'protocol', label:'Protocol', icon:'📜'},
   {key:'diagram', label:'Diagram', icon:'📐'},
@@ -3114,10 +3116,27 @@ function subtypeLabel(docType, subtypeKey){ const list = subtypesFor(docType); c
 const COVERAGE_COLUMNS = DOC_TYPES.flatMap(dt=> docTypeHasSubtypes(dt.key)
   ? SUBTYPES_MAP[dt.key].map(s=>({key:`${dt.key}_${s.key}`, label:`${dt.label}-${s.label}`, icon:dt.icon, docType:dt.key, subtype:s.key}))
   : [dt]); // v11.46 — เรียงตามลำดับ DOC_TYPES (เอกสาร Training อยู่ก่อน Video-Training)
+// v12.12 — "ไม่มีเอกสาร": เก็บเป็นเอกสารพิเศษใน collection documents (noDoc:true + เหตุผล) แต่แยกออกจาก DATA.documents เพื่อไม่ให้ไปโผล่เป็นลิงก์
+const NODOC_REASONS = [
+  {key:'no_from_vendor', label:'ขอผู้ผลิตแล้วไม่มีให้'},
+  {key:'discontinued', label:'เครื่องยกเลิกทำตลาด (รุ่นเก่า)'},
+  {key:'other', label:'อื่นๆ (กรอกเอง)'},
+];
+let DOC_MISSING = [];
+function docMissingAdd(x){ if(!DOC_MISSING.some(m=>m.id===x.id)) DOC_MISSING.push(x); }
+function findNoDoc(category, model, docType, sub){
+  return DOC_MISSING.find(m=>m.category===category && m.model===model && m.docType===docType && (!docTypeHasSubtypes(docType) || (m.videoSubtype||'')===(sub||''))) || null;
+}
+function noDocReasonText(m){ if(!m) return ''; const r = NODOC_REASONS.find(x=>x.key===m.noDocReasonKey); return m.noDocReasonKey==='other' ? ('อื่นๆ: '+(m.noDocReasonText||'-')) : (r?r.label:(m.noDocReasonText||'-')); }
 function hasCoverageDoc(colKey, category, model){
   const col = COVERAGE_COLUMNS.find(c=>c.key===colKey);
   if(col && col.subtype) return DATA.documents.some(d=>d.docType===col.docType && d.videoSubtype===col.subtype && d.category===category && d.model===model);
   return DATA.documents.some(d=>d.docType===colKey && d.category===category && d.model===model);
+}
+function isCoverageNoDoc(colKey, category, model){
+  if(hasCoverageDoc(colKey, category, model)) return false;
+  const col = COVERAGE_COLUMNS.find(c=>c.key===colKey);
+  return col && col.subtype ? !!findNoDoc(category, model, col.docType, col.subtype) : !!findNoDoc(category, model, colKey, '');
 }
 function docTypeLabel(key){ const d = DOC_TYPES.find(x=>x.key===key); return d ? d.icon+' '+d.label : key; }
 
@@ -3781,6 +3800,7 @@ async function loadData(){
       sdk.getDoc(sdk.doc(db,'meta','supProducts')),
       sdk.getDoc(sdk.doc(db,'meta','categoryVersions')),
     ]);
+    DOC_MISSING = [];
     DATA = { errors: [], documents: [], proposals: [], pendingErrors: [], claims: [], claimNotices: [], categories: {}, owners: { categoryOwners:{}, modelOverrides:{} }, claimsSheetMeta: { spreadsheetId:null, tabs:{} }, profilesSheetMeta: { spreadsheetId:null, tabs:{} } };
     // ลิงก์/gid ของแต่ละแท็บใน Google Sheet บันทึกเคลมที่จบเคสแล้ว (แยกแท็บตามผู้ดูแล Product) — แคชไว้กันต้องยิง Sheets API ทุกครั้งที่เปิดหน้ารายการเคลม
     // สำคัญ: อ่านแยกจาก Promise.all ก้อนบนโดยตั้งใจ และดักด้วย try/catch ของตัวเอง — เอกสาร meta/claimsSheet เป็นเอกสารใหม่ (เพิ่งเพิ่มทีหลัง) ถ้า Firestore Rules ของโปรเจกต์ยังไม่ได้อนุญาตให้อ่านเอกสารนี้ (ยังไม่ได้แก้ Rules ตาม path ใหม่)
@@ -3822,7 +3842,7 @@ async function loadData(){
       own[0].forEach(x=> DATA.proposals.push(x)); own[1].forEach(x=> DATA.pendingErrors.push(x)); own[2].forEach(x=> DATA.claims.push(x));
       _liteRefAt = Date.now();
     }
-    if(docsSnap){ docsSnap.forEach(x=> DATA.documents.push(x)); _docsLoaded = true; } else { _docsLoaded = false; }
+    if(docsSnap){ docsSnap.forEach(x=>{ if(x.noDoc) docMissingAdd(x); else DATA.documents.push(x); }); _docsLoaded = true; } else { _docsLoaded = false; }
      // v11.30 — docsSnap เป็นรายการ (จากแคชในเครื่องหรือจากเซิร์ฟเวอร์) ไม่ใช่ snapshot
     propArr.forEach(x=> DATA.proposals.push(x));
     pendArr.forEach(x=> DATA.pendingErrors.push(x));
@@ -9942,6 +9962,15 @@ function bindDocOpenButtons(){
       if(doc.method==='link'){ const _u = safeHttpUrl(doc.url); if(_u) window.open(_u, '_blank', 'noopener'); else showToast('⚠ ลิงก์ไม่ถูกต้อง (รองรับเฉพาะ http/https)'); } else{ showToast('🖨 จำลอง: กำลังเปิดไฟล์ "'+doc.fileName+'"'); } });
   });
 }
+// v12.12 — หัวข้อที่ Sup ระบุว่า "ไม่มีเอกสาร" (แสดงเมื่อเลือกรุ่นแล้ว)
+function engNoDocHtml(){
+  if(docFilterCategory==='all') return '';
+  const items = DOC_MISSING.filter(m=>m.category===docFilterCategory && (docFilterModel==='all' || m.model===docFilterModel));
+  if(!items.length) return '';
+  const order = k=>COVERAGE_COLUMNS.findIndex(c=>c.key===(docTypeHasSubtypes(k.docType)?k.docType+'_'+k.videoSubtype:k.docType));
+  return `<div style="margin:14px 0 0;padding:10px 12px;border:1px dashed var(--border);border-radius:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">🚫 หัวข้อที่ไม่มีเอกสาร</div>` +
+    items.sort((a,b)=>order(a)-order(b)).map(m=>{ const lbl = docTypeHasSubtypes(m.docType) ? docTypeLabel(m.docType)+' - '+subtypeLabel(m.docType,m.videoSubtype) : docTypeLabel(m.docType); return `<div style="font-size:12.5px;margin-bottom:4px;"><b>${escapeHtml(lbl)}</b>${docFilterModel==='all'?` <span style="color:var(--text-faint);">(${escapeHtml(m.model)})</span>`:''} — ${escapeHtml(noDocReasonText(m))}</div>`; }).join('') + `</div>`;
+}
 function renderEngDocResults(){
   // v11.62 — เลือก Product/รุ่น (หรือพิมพ์ค้นหา) แล้วเห็นเอกสารทุกหัวข้อของรุ่นนั้นแบบจัดกลุ่ม · พับทุกกลุ่มไว้ก่อน กดเปิดดูเอง
   const list = $('doc-results-list');
@@ -9961,7 +9990,7 @@ function renderEngDocResults(){
   if(docFilterCategory!=='all') filtered = filtered.filter(d=>d.category===docFilterCategory);
   if(docFilterModel!=='all') filtered = filtered.filter(d=>d.model===docFilterModel);
   if(docQuery) filtered = filtered.filter(d=>[d.title,d.category,d.model].join(' ').toLowerCase().includes(docQuery.toLowerCase()));
-  if(filtered.length===0){ $('doc-result-count').textContent = 'พบ 0 เอกสาร'; list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>`; return; }
+  if(filtered.length===0){ $('doc-result-count').textContent = 'พบ 0 เอกสาร'; list.innerHTML = `<div class="empty"><div class="empty-icon">?</div><h3>ไม่พบผลลัพธ์</h3><p>ลองค้นด้วยคำอื่น หรือล้างตัวกรอง</p></div>` + engNoDocHtml(); return; }
   const colOf = d=> docTypeHasSubtypes(d.docType) ? d.docType+'_'+d.videoSubtype : d.docType;
   const groups = COVERAGE_COLUMNS.map(c=>({ c, items: filtered.filter(d=>colOf(d)===c.key).sort((x,y)=>y.uploadedAt-x.uploadedAt) })).filter(g=>g.items.length);
   const known = new Set(groups.flatMap(g=>g.items.map(d=>d.id)));
@@ -9970,6 +9999,7 @@ function renderEngDocResults(){
   const openAll = false; // v11.63 — พับทุกกลุ่มไว้ก่อน กดเปิดดูเอง
   $('doc-result-count').innerHTML = `พบ ${filtered.length} เอกสาร · ${groups.length} หัวข้อ` + (groups.length>1 ? ` <button type="button" class="btn btn-ghost btn-sm" id="doc-grp-all" style="margin-left:8px;">${openAll?'พับทั้งหมด':'เปิดทั้งหมด'}</button>` : '');
   list.innerHTML = groups.map(g=>`<details class="doc-group" ${openAll?'open':''} style="margin:0 0 10px;"><summary style="cursor:pointer;font-weight:700;font-size:14px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--panel-alt);list-style:none;display:flex;justify-content:space-between;align-items:center;"><span>${g.c.icon} ${escapeHtml(g.c.label)}</span><span style="font-size:12px;color:var(--text-faint);font-weight:600;">${g.items.length} ไฟล์ ▾</span></summary><div style="margin-top:8px;">${g.items.map(docCard).join('')}</div></details>`).join('');
+  list.insertAdjacentHTML('beforeend', engNoDocHtml());
   const tb = $('doc-grp-all'); if(tb) tb.addEventListener('click', ()=>{ const ds = list.querySelectorAll('details.doc-group'); const open = tb.textContent.trim()==='เปิดทั้งหมด'; ds.forEach(x=>{ x.open = open; }); tb.textContent = open ? 'พับทั้งหมด' : 'เปิดทั้งหมด'; });
   bindDocOpenButtons();
 }
@@ -11099,10 +11129,12 @@ function renderSupDocMatrix(){
     html += `<tr><td class="mono" style="color:var(--text-faint);">${escapeHtml(category)}</td><td><strong>${escapeHtml(model)}</strong></td>`;
     MATRIX_COLUMNS.forEach(col=>{
       const docs = findMatrixDocs(category, model, col.key, col.videoSubtype);
+      const nd = docs.length===0 ? findNoDoc(category, model, col.key, col.videoSubtype) : null;
       const cellKey = `${escapeHtml(category)}|${escapeHtml(model)}|${col.key}|${col.videoSubtype||''}`;
       html += docs.length>0
         ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="มี ${docs.length} ลิงก์ — กดเพื่อดูทั้งหมด" style="background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--green);font-weight:700;">✅ ${docs.length}</button></td>`
-        : `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="กดเพื่อใส่ลิงก์" style="background:none;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;">➕</button></td>`;
+        : (nd ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="ไม่มีเอกสาร — ${escapeHtml(noDocReasonText(nd))}" style="background:rgba(120,120,120,.12);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-faint);padding:2px 8px;">🚫 ไม่มี</button></td>`
+        : `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="กดเพื่อใส่ลิงก์" style="background:none;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;">➕</button></td>`);
     });
     html += `</tr>`;
   });
@@ -11132,7 +11164,14 @@ function renderDocLinkListItems(){
   const { category, model, docType, videoSubtype } = doclinkListContext;
   const docs = findMatrixDocs(category, model, docType, videoSubtype);
   const wrap = $('doclink-list-items');
-  wrap.innerHTML = docs.length===0
+  const nd = docs.length===0 ? findNoDoc(category, model, docType, videoSubtype) : null;
+  const ndBtn = $('doclink-list-nodoc-btn');
+  if(ndBtn) ndBtn.style.display = docs.length===0 ? '' : 'none';
+  if(ndBtn) ndBtn.textContent = nd ? '✏️ แก้ไขเหตุผลที่ไม่มี' : '🚫 ไม่มีเอกสารนี้';
+  const ndClr = $('doclink-list-nodoc-clear-btn'); if(ndClr) ndClr.style.display = nd ? '' : 'none';
+  wrap.innerHTML = nd
+    ? `<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:rgba(120,120,120,.08);"><div style="font-size:13px;font-weight:600;">🚫 ไม่มีเอกสารนี้</div><div style="font-size:12.5px;margin-top:4px;">เหตุผล: ${escapeHtml(noDocReasonText(nd))}</div><div style="font-size:11px;color:var(--text-faint);margin-top:4px;">ระบุโดย ${escapeHtml(nd.noDocBy||'-')} · ${nd.uploadedAt?new Date(nd.uploadedAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):''}</div></div>`
+    : docs.length===0
     ? `<p style="font-size:12px;color:var(--text-faint);">ยังไม่มีลิงก์ในช่องนี้</p>`
     : docs.map(d=>`<div class="admin-row">
         <label style="display:flex;align-items:center;padding-right:6px;flex-shrink:0;" title="เลือกเพื่อย้าย"><input type="checkbox" class="dlm-chk" value="${d.id}"></label>
@@ -11281,6 +11320,47 @@ $('doclink-list-add-btn').addEventListener('click', ()=>{
   if(!doclinkListContext) return;
   const { category, model, docType, videoSubtype } = doclinkListContext;
   openDocLinkModal(category, model, docType, videoSubtype, null);
+});
+// v12.12 — ระบุว่า "ไม่มีเอกสาร" พร้อมเหตุผล
+function openNoDocReasonModal(){
+  if(!doclinkListContext) return;
+  const { category, model, docType, videoSubtype } = doclinkListContext;
+  const ex = findNoDoc(category, model, docType, videoSubtype);
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const cur = ex ? ex.noDocReasonKey : 'no_from_vendor';
+  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:400px;width:100%;">
+    <p style="font-size:14.5px;font-weight:600;margin:0 0 4px;">🚫 ไม่มีเอกสารนี้</p>
+    <p style="font-size:12px;color:var(--text-faint);margin:0 0 12px;">${escapeHtml(category)} · ${escapeHtml(model)} · ${escapeHtml(docTypeHasSubtypes(docType)?subtypeLabel(docType, videoSubtype):docTypeLabel(docType))}</p>
+    ${NODOC_REASONS.map(r=>`<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:8px;cursor:pointer;"><input type="radio" name="nd-reason" value="${r.key}" ${r.key===cur?'checked':''}> ${escapeHtml(r.label)}</label>`).join('')}
+    <input type="text" id="nd-other" placeholder="ระบุเหตุผล" value="${ex&&ex.noDocReasonKey==='other'?escapeHtml(ex.noDocReasonText||''):''}" style="width:100%;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);margin:2px 0 12px;display:none;">
+    <div style="display:flex;gap:8px;"><button id="nd-go" class="btn btn-primary btn-sm" style="flex:1;">บันทึก</button><button id="nd-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button></div></div>`;
+  document.body.appendChild(ov);
+  const upd = ()=>{ ov.querySelector('#nd-other').style.display = ov.querySelector('input[name=nd-reason]:checked').value==='other' ? '' : 'none'; };
+  ov.querySelectorAll('input[name=nd-reason]').forEach(r=>r.addEventListener('change', upd)); upd();
+  ov.querySelector('#nd-cancel').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#nd-go').addEventListener('click', async ()=>{
+    const key = ov.querySelector('input[name=nd-reason]:checked').value;
+    const txt = ov.querySelector('#nd-other').value.trim();
+    if(key==='other' && !txt){ showToast('กรุณากรอกเหตุผล'); return; }
+    ov.remove();
+    const f = { category, model, docType, noDoc:true, noDocReasonKey:key, noDocReasonText: key==='other'?txt:'', noDocBy: (typeof currentSupIdentity!=='undefined'&&currentSupIdentity)||'', title:'', method:'none', url:'', uploadedAt: Date.now() };
+    if(docTypeHasSubtypes(docType)) f.videoSubtype = videoSubtype || '';
+    try{
+      if(ex){ await fsUpdateDocument(ex.id, f); Object.assign(ex, f); }
+      else { const id = await fsAddDocument(f); docMissingAdd({ id, ...f }); }
+    }catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); return; }
+    showToast('✓ บันทึกแล้ว: ไม่มีเอกสาร'); renderDocLinkListItems(); renderSupDocMatrix();
+  });
+}
+$('doclink-list-nodoc-btn').addEventListener('click', openNoDocReasonModal);
+$('doclink-list-nodoc-clear-btn').addEventListener('click', async ()=>{
+  if(!doclinkListContext) return;
+  const { category, model, docType, videoSubtype } = doclinkListContext;
+  const ex = findNoDoc(category, model, docType, videoSubtype); if(!ex) return;
+  try{ await fsDeleteDocument(ex.id); }catch(e){ showToast('⚠ ไม่สำเร็จ: '+e.message); return; }
+  DOC_MISSING = DOC_MISSING.filter(m=>m.id!==ex.id);
+  showToast('✓ ยกเลิกการระบุว่าไม่มีแล้ว'); renderDocLinkListItems(); renderSupDocMatrix();
 });
 
 /* ===================== Modal ใส่/แก้ไข เอกสาร 1 รายการ (วางลิงก์ หรือ อัปโหลดไฟล์) ===================== */
@@ -14831,9 +14911,10 @@ function renderMgrView(){
       const colIdx = ci+2;
       if(hiddenDoc.has(colIdx)) return;
       const have = models.filter(({category,model})=>hasCoverageDoc(t.key, category, model)).length;
-      const total = models.length;
+      const nodoc = models.filter(({category,model})=>isCoverageNoDoc(t.key, category, model)).length; // v12.12 — ระบุว่า "ไม่มี" แล้ว ไม่นับเป็นขาด
+      const total = models.length - nodoc;
       const color = total===0 ? 'var(--text-faint)' : (have===total ? 'var(--green)' : (have===0 ? 'var(--red)' : 'var(--amber)'));
-      dhtml += `<td class="frac" style="color:${color};">${have}/${total}</td>`;
+      dhtml += `<td class="frac" style="color:${color};" ${nodoc?`title="ไม่มีเอกสาร ${nodoc} รุ่น (ระบุเหตุผลแล้ว)"`:''}>${have}/${total}${nodoc?` <span style="font-size:10px;color:var(--text-faint);">(ไม่มี ${nodoc})</span>`:''}</td>`;
     });
     dhtml += `</tr>`;
   });
