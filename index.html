@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.10
-  อัปเดตล่าสุด   : 17 พฤศจิกายน 2569 23:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.11
+  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 10:50 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.10</title>
+<title>F1 Service — v12.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1514,6 +1514,13 @@ setTimeout(function(){
       </div>
       <div class="panel-block" id="claims-filter-block">
         <div class="form-grid two">
+          <div class="field-wrap"><label>ประเภท</label>
+            <select id="claims-filter-type">
+              <option value="">ทั้งหมด</option>
+              <option value="claim">🔧 เคลมอะไหล่</option>
+              <option value="report">⚠️ แจ้งปัญหา</option>
+            </select>
+          </div>
           <div class="field-wrap"><label>สถานะ</label>
             <select id="claims-filter-status">
               <option value="">ทั้งหมด</option>
@@ -1528,7 +1535,7 @@ setTimeout(function(){
         </div>
       </div>
       <div class="panel-block">
-        <h2 id="claims-list-title">รายการเคลม</h2>
+        <h2 id="claims-list-title">รายการเคลม/แจ้งปัญหา</h2>
         <div id="claims-list"></div>
       </div>
       <!-- ลิงก์ Google Sheet ประวัติเคลมที่เสร็จแล้ว — ค้างไว้ถาวรที่ล่างสุดของหน้า เหมือนลิงก์เช็ค Database ให้กดเข้าไปดูได้ตลอดเวลา -->
@@ -2658,8 +2665,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.10";
-const APP_UPDATED_AT = "17 พฤศจิกายน 2569 23:50 น. เวลาไทย";
+const APP_VERSION = "12.11";
+const APP_UPDATED_AT = "18 พฤศจิกายน 2569 10:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13944,6 +13951,7 @@ function renderClaimsSheetHistoryLink(){
 }
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
+  { key:'type', label:'ประเภท', getValue:c=>claimTypeLabel(c) },
   { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
   { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
   { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
@@ -14023,6 +14031,9 @@ document.addEventListener('click', (e)=>{
   if(claimsOpenFilterCol && !e.target.closest('.col-filter-dropdown') && !e.target.closest('[data-filterbtn]')) closeColumnFilterDropdowns();
 });
 
+// v12.11 — ประเภทรายการ: เคลมอะไหล่ / แจ้งปัญหา (เอกสารเก่าที่ไม่มี type = เคลม)
+function claimTypeLabel(c){ return (c && c.type==='report') ? 'แจ้งปัญหา' : 'เคลมอะไหล่'; }
+function claimTypeBadge(c){ const r=(c&&c.type==='report'); const col=r?'#d97706':'#2563eb'; return `<span style="font-size:11px;font-weight:600;color:${col};background:${col}1a;padding:2px 8px;border-radius:6px;">${r?'⚠️ แจ้งปัญหา':'🔧 เคลมอะไหล่'}</span>`; }
 function renderClaimsView(){
   claimsOpenFilterCol = null; // ตารางถูกสร้างใหม่ทั้งก้อนทุกครั้งที่ render — ดรอปดาวน์ตัวกรอง (ถ้าเปิดค้างอยู่) จะหายไปจาก DOM ไปด้วย ต้องล้างสถานะนี้กันค้าง
   $('claims-identity-wrap').style.display = 'none'; // v9.18 — ซ้ำกับช่อง "คุณคือ" ด้านบน ตัดออก
@@ -14032,6 +14043,8 @@ function renderClaimsView(){
   const search = ($('claims-filter-search').value||'').toLowerCase().trim();
   let claims = myVisibleClaims().slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   if(statusFilter) claims = claims.filter(c=>c.status===statusFilter);
+  const typeFilter = $('claims-filter-type').value;
+  if(typeFilter) claims = claims.filter(c=>(typeFilter==='report') === (c.type==='report'));
   if(search) claims = claims.filter(c=>
     (c.siteName||'').toLowerCase().includes(search) ||
     (c.model||'').toLowerCase().includes(search) ||
@@ -14040,9 +14053,9 @@ function renderClaimsView(){
   );
   const claimsBeforeColumnFilters = claims; // ใช้คำนวณตัวเลือกในดรอปดาวน์ของแต่ละคอลัมน์ (นับจากที่ผ่านตัวกรองด้านบน/คอลัมน์อื่นแล้ว)
   CLAIMS_COLUMNS.forEach(col=>{ claims = claims.filter(c=>claimColumnMatchesFilter(c, col)); });
-  $('claims-list-title').textContent = isSuperAdmin() ? `รายการเคลมทั้งหมด (${claims.length})` : isEditor() ? `รายการเคลม Product ที่ดูแล (${claims.length})` : `เคลมที่คุณบันทึกไว้ (${claims.length})`;
+  $('claims-list-title').textContent = isSuperAdmin() ? `รายการเคลม/แจ้งปัญหาทั้งหมด (${claims.length})` : isEditor() ? `รายการเคลม/แจ้งปัญหา Product ที่ดูแล (${claims.length})` : `เคลม/แจ้งปัญหาที่คุณบันทึกไว้ (${claims.length})`;
   const list = $('claims-list');
-  if(claims.length===0 && Object.keys(claimsColumnFilters).length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายการเคลม</p>`; return; }
+  if(claims.length===0 && Object.keys(claimsColumnFilters).length===0){ list.innerHTML = `<p style="font-size:12.5px;color:var(--text-faint);">ยังไม่มีรายการเคลม/แจ้งปัญหา</p>`; return; }
   const rowsHtml = claims.map(c=>{
     const st = claimStatusInfo(c.status);
     const parts = (c.parts&&c.parts.length) ? c.parts : [{partNumber:'-',partName:'-',qty:'-'}];
@@ -14052,6 +14065,7 @@ function renderClaimsView(){
     const symptomFull = c.problem||'';
     const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
     return `<tr data-claimrow="${c.id}">
+      <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
@@ -14082,6 +14096,7 @@ function renderClaimsView(){
   list.querySelectorAll('[data-filterbtn]').forEach(el=>el.addEventListener('click', (e)=>{ e.stopPropagation(); openColumnFilterDropdown(el.getAttribute('data-filterbtn'), claimsBeforeColumnFilters); }));
 }
 $('claims-filter-status').addEventListener('change', renderClaimsView);
+$('claims-filter-type').addEventListener('change', renderClaimsView);
 $('claims-filter-search').addEventListener('input', renderClaimsView);
 
 function openClaimDetail(id){
