@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.15
-  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 12:05 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.16
+  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 23:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.15</title>
+<title>F1 Service — v12.16</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2676,8 +2676,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.15";
-const APP_UPDATED_AT = "18 พฤศจิกายน 2569 12:05 น. เวลาไทย";
+const APP_VERSION = "12.16";
+const APP_UPDATED_AT = "18 พฤศจิกายน 2569 23:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -13403,7 +13403,24 @@ async function f1ClaimSave(){
     const symptomShort = claimDraft.problem.slice(0, 40);
     const claimFolderName = sanitizeFolderName(`${bangkokDateDDMMYYYY()}_${claimDraft.claimant}_${claimDraft.siteName}_${claimDraft.model}_${symptomShort}`);
     let folderId;
+    // v12.16 — แก้เคลมที่ไม่ยุ่งกับ Drive (ไม่เพิ่ม/ลบไฟล์ ไม่เปลี่ยนผู้ดูแล Product) → บันทึกลง Firestore ได้เลย ไม่ต้องรอขอสิทธิ์ Google Drive (เดิมหน้าต่างขอสิทธิ์ถูกบล็อก/token หมดอายุ ทำให้แก้แค่วันที่ก็บันทึกไม่ได้)
+    let _skipDrive = false, _claimSummarySkipped = false;
     if(claimEditingId){
+      try{
+        const _oc = DATA.claims.find(x=>x.id===claimEditingId);
+        const _fid = _oc && _oc.driveFolderUrl && (_oc.driveFolderUrl.match(/\/folders\/([A-Za-z0-9_-]+)/)||[])[1];
+        if(_fid){
+          const _noPending = CLAIM_ATTACHMENT_GROUPS.every(g=>(claimDraft.attachments[g.key]||[]).every(a=>!a.pending));
+          const _sameOwner = ownerOf(_oc.category||'', _oc.model||'') === ownerOf(claimDraft.category, claimDraft.model);
+          const _newUrls = new Set(CLAIM_ATTACHMENT_GROUPS.flatMap(g=>(claimDraft.attachments[g.key]||[]).map(a=>a.url).filter(Boolean)));
+          const _noRemoved = CLAIM_ATTACHMENT_GROUPS.flatMap(g=>((_oc.attachments||{})[g.key]||[]).map(a=>a.url).filter(Boolean)).every(u=>_newUrls.has(u));
+          if(_noPending && _sameOwner && _noRemoved){ _skipDrive = true; folderId = _fid; }
+        }
+      }catch(_){ _skipDrive = false; }
+    }
+    if(_skipDrive){
+      // ใช้โฟลเดอร์เดิมตามเดิม ไม่แตะ Drive
+    } else if(claimEditingId){
       // แก้ไขเคลม: ใช้โฟลเดอร์เดิม — ถ้า Product เปลี่ยนให้ย้ายโฟลเดอร์ ไม่สร้างใหม่ (กันไฟล์ตกค้างใน Drive)
       const oldClaim = DATA.claims.find(x=>x.id===claimEditingId);
       const existingFolderUrl = oldClaim && oldClaim.driveFolderUrl;
@@ -13477,6 +13494,9 @@ async function f1ClaimSave(){
         const oldAtts = CLAIM_ATTACHMENT_GROUPS.flatMap(g=>(oldClaim.attachments[g.key]||[]));
         orphanIdsAfterSave = oldAtts.map(a=>a.driveFileId || extractDriveFileId(a.url||'')).filter(f=>f && !newFileIds.has(f));
       }
+      // v12.16 — ถ้าข้ามขั้น Drive และยังไม่มี token → ล้าง summaryImageUrl เพื่อให้ถ่ายรูปสรุปใหม่ตอนย้ายเข้า Sheet (กันรูปเก่าที่วันที่ไม่ตรง)
+      const _tokOkEdit = !!(driveAccessToken && Date.now() < driveTokenExpiry - 3*60*1000) || driveTokenRestore();
+      if(_skipDrive && !_tokOkEdit) fields.summaryImageUrl = '';
       await fsUpdateClaim(claimEditingId, fields);
       _claimDbSaved = true; // v11.77 — บันทึกขึ้น Firestore แล้ว: ล้างรายการค้างส่งของเคลมนี้ (ถ้ามี)
       try{ await f1ObDel('obe_'+claimEditingId); if(claimOutboxId && claimOutboxId!=='obe_'+claimEditingId) await f1ObDel(claimOutboxId); }catch(_){} claimOutboxId = null; try{ f1ObRefreshPill(); }catch(_){}
@@ -13488,7 +13508,9 @@ async function f1ClaimSave(){
       }
       const c = DATA.claims.find(x=>x.id===claimEditingId); if(c) Object.assign(c, fields);
       // อัปเดตรูปสรุปเมื่อแก้ไขเคลม — ⚠ +1 Firestore write
-      try{ await updateSummaryImageForClaim({ id:claimEditingId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (แก้ไขเคลม) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
+      if(_skipDrive && !_tokOkEdit){ _claimSummarySkipped = true; } else {
+        try{ await updateSummaryImageForClaim({ id:claimEditingId, ...fields }); } catch(imgErr){ console.warn('สร้างรูปสรุป (แก้ไขเคลม) ไม่สำเร็จ (ไม่กระทบหลัก):', imgErr.message); }
+      }
     } else {
       fields.status = 'pending'; fields.createdAt = Date.now(); fields.serviceOrderNo = '';
       const newId = await fsAddClaim(fields);
@@ -13503,7 +13525,7 @@ async function f1ClaimSave(){
     $('claim-modal').classList.remove('show');
     renderClaimsView();
     renderEngMyClaimsList();
-    if(_f1ObQuiet) showToast('✓ ส่งเคลมที่ค้างไว้สำเร็จแล้ว'); else showClaimSuccessSummary(fields);
+    if(_f1ObQuiet) showToast('✓ ส่งเคลมที่ค้างไว้สำเร็จแล้ว'); else { showClaimSuccessSummary(fields); if(_claimSummarySkipped) showToast('ℹ บันทึกแล้ว — รูปสรุปจะอัปเดตตอนย้ายเข้า Sheet'); }
   }catch(e){
     f1TrackStop(); let _rbN = 0; try{ _rbN = await f1RollbackCreated(); }catch(_){}
     let _obSaved=false; if(!_claimDbSaved){ try{ await f1ObEnqueueClaim(); _obSaved=true; }catch(_){} }
