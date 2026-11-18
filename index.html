@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.12
-  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 11:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.13
+  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 11:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.12</title>
+<title>F1 Service — v12.13</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2667,8 +2667,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.12";
-const APP_UPDATED_AT = "18 พฤศจิกายน 2569 11:10 น. เวลาไทย";
+const APP_VERSION = "12.13";
+const APP_UPDATED_AT = "18 พฤศจิกายน 2569 11:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -11133,7 +11133,7 @@ function renderSupDocMatrix(){
       const cellKey = `${escapeHtml(category)}|${escapeHtml(model)}|${col.key}|${col.videoSubtype||''}`;
       html += docs.length>0
         ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="มี ${docs.length} ลิงก์ — กดเพื่อดูทั้งหมด" style="background:none;border:none;cursor:pointer;font-size:12.5px;color:var(--green);font-weight:700;">✅ ${docs.length}</button></td>`
-        : (nd ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="ไม่มีเอกสาร — ${escapeHtml(noDocReasonText(nd))}" style="background:rgba(120,120,120,.12);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;color:var(--text-faint);padding:2px 8px;">🚫 ไม่มี</button></td>`
+        : (nd ? `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="ไม่มีเอกสาร — ${escapeHtml(noDocReasonText(nd))}" style="background:rgba(120,120,120,.12);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;padding:0;">🚫</button></td>`
         : `<td class="chk"><button class="doc-matrix-cell" data-cell="${cellKey}" title="กดเพื่อใส่ลิงก์" style="background:none;border:1px dashed var(--border);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text-faint);width:28px;height:24px;">➕</button></td>`);
     });
     html += `</tr>`;
@@ -14914,7 +14914,7 @@ function renderMgrView(){
       const nodoc = models.filter(({category,model})=>isCoverageNoDoc(t.key, category, model)).length; // v12.12 — ระบุว่า "ไม่มี" แล้ว ไม่นับเป็นขาด
       const total = models.length - nodoc;
       const color = total===0 ? 'var(--text-faint)' : (have===total ? 'var(--green)' : (have===0 ? 'var(--red)' : 'var(--amber)'));
-      dhtml += `<td class="frac" style="color:${color};" ${nodoc?`title="ไม่มีเอกสาร ${nodoc} รุ่น (ระบุเหตุผลแล้ว)"`:''}>${have}/${total}${nodoc?` <span style="font-size:10px;color:var(--text-faint);">(ไม่มี ${nodoc})</span>`:''}</td>`;
+      dhtml += `<td class="frac" style="color:${color};" ${nodoc?`title="ไม่มีเอกสาร ${nodoc} รุ่น (ระบุเหตุผลแล้ว)"`:''}>${have}/${total}${nodoc?``:''}</td>`;
     });
     dhtml += `</tr>`;
   });
