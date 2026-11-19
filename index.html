@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.25
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 11:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.26
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 11:45 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.25</title>
+<title>F1 Service — v12.26</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2714,8 +2714,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.25";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 11:30 น. เวลาไทย";
+const APP_VERSION = "12.26";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 11:45 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14132,6 +14132,7 @@ const CLAIMS_COLUMNS = [
   { key:'openDate', label:'วันที่ทำเคลม/เปิดเคส', getValue:c=>dateTh(c.openDate)||'-' }, // v12.19 — Sup กรอกเอง
   { key:'closeDate', label:'วันที่ได้รับอะไหล่/จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
+  { key:'note', label:'หมายเหตุ', getValue:c=>c.note||'-' }, // v12.26
 ];
 let claimsColumnFilters = {}; // { columnKey: Set<string> } — คีย์ไม่มี/ไม่มีอยู่ = ไม่กรองคอลัมน์นั้น (แสดงทุกค่า)
 let claimsOpenFilterCol = null;
@@ -14250,6 +14251,7 @@ function renderClaimsView(){
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.openDate)||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(closeDateOf(c))||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
+      <td style="min-width:160px;max-width:260px;white-space:normal;" title="${escapeHtml(c.note||'')}"><div class="clamp2">${escapeHtml(c.note||'-')}</div></td>
     </tr>`;
   }).join('');
   const headHtml = CLAIMS_COLUMNS.map(col=>{
@@ -22268,6 +22270,7 @@ function mgrRenderAllClaims(){
       <td style="white-space:nowrap;">${escapeHtml(dateTh(c.openDate)||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(dateTh(closeDateOf(c))||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
+      <td style="min-width:160px;max-width:260px;white-space:normal;" title="${escapeHtml(c.note||'')}"><div class="clamp2">${escapeHtml(c.note||'-')}</div></td>
     </tr>`;
   }).join('');
   list.innerHTML=`<div class="claims-table-wrap"><table id="mgr-claims-table"><thead><tr>${head.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${body||`<tr><td colspan="${head.length}" style="text-align:center;color:var(--text-faint);">ไม่พบรายการ</td></tr>`}</tbody></table></div>`;
@@ -22282,7 +22285,7 @@ $('mgr-claims-export-btn').addEventListener('click',()=>{
   const data=rows.map(({c,sup})=>{
     const o={'Sup เจ้าของ':sup};
     CLAIMS_COLUMNS.forEach(col=>{ o[col.label]=j(col.getValue(c)); });
-    o['หมายเหตุ']=c.note||''; o['สถานะจบเคส/เหตุผล']=c.closeReason||'';
+    o['สถานะจบเคส/เหตุผล']=c.closeReason||'';
     return o;
   });
   const wb=XLSX.utils.book_new();
