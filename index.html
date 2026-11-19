@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.34
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.35
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.34</title>
+<title>F1 Service — v12.35</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2732,8 +2732,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.34";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:00 น. เวลาไทย";
+const APP_VERSION = "12.35";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4129,7 +4129,7 @@ async function fsUpdateProposal(id, fields){ showLoadingOverlay('กำลัง
 async function fsAddPendingError(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await sdk.addDoc(sdk.collection(db,'pendingErrors'), fields); return ref.id; }finally{ hideLoadingOverlay(); } }
 async function fsUpdatePendingError(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await sdk.updateDoc(sdk.doc(db,'pendingErrors',id), fields); }finally{ hideLoadingOverlay(); } }
 async function fsAddDocument(fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; const ref = await exWithTimeout(sdk.addDoc(sdk.collection(db,'documents'), fields), 30000, 'การบันทึกเอกสาร'); await fsBumpDocsVersion(); return ref.id; }finally{ hideLoadingOverlay(); } }
-async function fsUpdateDocument(id, fields){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await exWithTimeout(sdk.updateDoc(sdk.doc(db,'documents',id), fields), 30000, 'การบันทึกเอกสาร'); await fsBumpDocsVersion(); }finally{ hideLoadingOverlay(); } }
+async function fsUpdateDocument(id, fields, noBump){ showLoadingOverlay('กำลังบันทึก...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await exWithTimeout(sdk.updateDoc(sdk.doc(db,'documents',id), fields), 30000, 'การบันทึกเอกสาร'); if(!noBump) await fsBumpDocsVersion(); }finally{ hideLoadingOverlay(); } }
 async function fsDeleteDocument(id){ showLoadingOverlay('กำลังลบ...'); try{ await initFirebase(); const sdk=window._firebaseSdk; await exWithTimeout(sdk.deleteDoc(sdk.doc(db,'documents',id)), 30000, 'การลบรายการ'); await fsBumpDocsVersion(); dxInvalidate(); }finally{ hideLoadingOverlay(); } }
 /* ===================== v9.34 — ซิงก์สด (อ่านเฉพาะรายการที่เปลี่ยน) + ตัวตรวจเทียบข้อมูล ===================== */
 // เดิม: ทุกครั้งที่ใครแก้เคลม ทุกเครื่องที่เปิดแอปค้างไว้อ่านเคลม "ทั้ง collection" ใหม่ (จำนวนเครื่อง × จำนวนเคลม)
@@ -11370,9 +11370,10 @@ async function execDocMove(docs, dCat, dModel, dType, dSub){
         catch(e){ failedFids.add(fid); failed.push(d); lastErr = e.message; console.warn('ย้ายไฟล์ Drive ไม่สำเร็จ — คงเอกสารไว้ที่เดิม', e); continue; }
       }
       const fields = { category:dCat, model:dModel, docType:dType, videoSubtype: hasSub ? dSub : null };
-      await fsUpdateDocument(d.id, fields);
+      await fsUpdateDocument(d.id, fields, true); // v12.35 — ไม่ bump ทีละรายการ (ช้า/ค้างเมื่อโควตาใกล้เต็ม) bump ครั้งเดียวตอนจบ
       Object.assign(d, fields); moved++;
     }
+    if(moved){ try{ fsBumpDocsVersion().catch(()=>{}); }catch(_){} } // v12.35 — ไม่รอผล ไม่ให้หน้าจอค้าง
     try{ fsWriteLog(`ย้ายเอกสาร ${moved} รายการ → ${dCat} · ${dModel} · ${typeLabel}`+(failed.length?` (ไม่สำเร็จ ${failed.length})`:'')); }catch(_){}
     try{ dxInvalidate(); }catch(_){}
   }catch(e){
