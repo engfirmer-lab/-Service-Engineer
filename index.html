@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.21
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:35 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.22
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.21</title>
+<title>F1 Service — v12.22</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -159,18 +159,29 @@
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
   #claims-table{min-width:0;font-size:12px;border-collapse:collapse;}
+  #mgr-claims-table{min-width:0;font-size:12px;border-collapse:collapse;}
   #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:normal;line-height:1.25;padding:6px 6px;font-size:10px;}
+  #mgr-claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:normal;line-height:1.25;padding:6px 6px;font-size:10px;}
   #claims-table tbody tr{cursor:pointer;}
+  #mgr-claims-table tbody tr{cursor:pointer;}
   #claims-table td{font-size:12px;padding:5px 6px;}
+  #mgr-claims-table td{font-size:12px;padding:5px 6px;}
   /* v12.20 — ตารางกะทัดรัด + แถวสลับเข้ม/อ่อน · อาการ/ชื่อ รพ. ขึ้นได้สูงสุด 2 บรรทัด */
   #claims-table thead th{background:color-mix(in srgb, var(--amber) 26%, var(--panel));color:var(--text);font-weight:700;border-bottom:2px solid var(--amber);}
+  #mgr-claims-table thead th{background:color-mix(in srgb, var(--amber) 26%, var(--panel));color:var(--text);font-weight:700;border-bottom:2px solid var(--amber);}
   #claims-table tbody tr:nth-child(odd) td{background:var(--panel);}
+  #mgr-claims-table tbody tr:nth-child(odd) td{background:var(--panel);}
   #claims-table tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--text) 7%, var(--panel));}
+  #mgr-claims-table tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--text) 7%, var(--panel));}
   #claims-table tbody tr:hover td{background:color-mix(in srgb, var(--amber) 16%, var(--panel));}
+  #mgr-claims-table tbody tr:hover td{background:color-mix(in srgb, var(--amber) 16%, var(--panel));}
   #claims-table .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;line-height:1.35;}
+  #mgr-claims-table .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;line-height:1.35;}
   /* เส้นตารางแบบ Excel — ขีดเส้นทั้งแถวและคอลัมน์ให้เห็นชัดเจน (ไม่ใช่แค่เส้นใต้แถวแบบตารางทั่วไปในแอป) */
   #claims-table th, #claims-table td{border:1px solid var(--border);}
+  #mgr-claims-table th, #mgr-claims-table td{border:1px solid var(--border);}
   #claims-table{border:1px solid var(--border);}
+  #mgr-claims-table{border:1px solid var(--border);}
   /* ป๊อปอัพรายละเอียดเคลม — แสดงเต็มหน้าจอ เพื่อให้เห็นข้อมูล/รูปภาพครบโดยไม่ต้องเลื่อนซ้อนสองชั้น */
   #claim-detail-modal{padding:0;}
   /* เดิมใช้ height:100vh + flex centering ของ .modal-overlay ทำให้บนมือถือ (แถบที่อยู่/แถบเครื่องมือของเบราว์เซอร์ย่อ-ขยายได้) เกิดความคลาดเคลื่อนระหว่าง 100vh กับพื้นที่จอที่เห็นจริง ทำให้เนื้อหาบนสุด/ล่างสุดถูกดันเลื่อนออกนอกจอและเข้าไม่ถึง (เลื่อนไม่ได้จริง) — แก้โดยให้ .modal ของหน้านี้ปักหมุดเต็มจอเองด้วย position:fixed;inset:0 แยกออกจาก flex layout ของ overlay ไปเลย จะได้ยึดตามพื้นที่จอที่เห็นจริงเสมอ ไม่พึ่ง vh */
@@ -2221,6 +2232,17 @@ setTimeout(function(){
         <p class="panel-sub">จำนวนเคลม/แจ้งปัญหา · แนวโน้มรายเดือน · รุ่น/อะไหล่/อาการที่พบบ่อย</p>
         <div id="dx-claims-body"></div>
       </div>
+      <div class="panel-block" id="mgr-claims-all-block">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><h2 style="margin:0;" id="mgr-claims-all-title">📋 รายการเคลม/แจ้งปัญหา (ทุก Sup)</h2><button class="btn btn-primary btn-sm" id="mgr-claims-export-btn">⬇ Export Excel</button></div>
+        <p class="panel-sub">รวมข้อมูลของทุก Sup ไว้ที่เดียว · กดแถวเพื่อดูรายละเอียด · Export ตามตัวกรองที่เลือก</p>
+        <div class="filters-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+          <div class="field-wrap"><label>Sup เจ้าของ</label><select id="mgr-claims-f-sup"><option value="">ทุก Sup</option></select></div>
+          <div class="field-wrap"><label>ประเภท</label><select id="mgr-claims-f-type"><option value="">ทั้งหมด</option><option value="claim">🔧 เคลมอะไหล่</option><option value="report">⚠️ แจ้งปัญหา</option></select></div>
+          <div class="field-wrap"><label>สถานะ</label><select id="mgr-claims-f-status"><option value="">ทั้งหมด</option><option value="pending">ยังไม่เคลม</option><option value="draft">Draft</option><option value="claimed">รออะไหล่เคลม</option><option value="received">เสร็จสิ้น</option><option value="rejected">ถูกปฏิเสธ</option><option value="cancelled">ยกเลิก</option></select></div>
+          <div class="field-wrap"><label>ค้นหา</label><input type="text" id="mgr-claims-f-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
+        </div>
+        <div id="mgr-claims-all-list"></div>
+      </div>
     </div>
 
     <div id="mgr-sub-return" style="display:none;">
@@ -2683,8 +2705,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.21";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:35 น. เวลาไทย";
+const APP_VERSION = "12.22";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -22195,7 +22217,71 @@ async function dxRenderClaims(force){
     + `<div>${dxH('🔩 อะไหล่ที่เคลมบ่อยสุด','รวมทุกรายการในระบบ')}${dxBars(dxTop(byPart,10),'var(--blue)')}</div>`
     + `<div>${dxH('⚠ อาการที่พบบ่อย','ตามข้อความช่อง "ปัญหาที่พบ"')}${dxBars(dxTop(byProb,10),'var(--red)')}</div></div>`;
   dxBody('dx-claims-body', h);
+  try{ mgrRenderAllClaims(); }catch(e){ console.warn(e); }
 }
+
+/* v12.22 — ตารางรายการเคลม/แจ้งปัญหา รวมทุก Sup (แดชบอร์ด Manager) + Export Excel */
+function mgrClaimsAllFiltered(){
+  const fs=$('mgr-claims-f-sup').value, ft=$('mgr-claims-f-type').value, fst=$('mgr-claims-f-status').value;
+  const q=($('mgr-claims-f-search').value||'').toLowerCase().trim();
+  let a=(DATA.claims||[]).map(c=>({c, sup:ownerOf(c.category,c.model)}));
+  if(fs) a=a.filter(x=>x.sup===fs);
+  if(ft) a=a.filter(x=>(ft==='report')===(x.c.type==='report'));
+  if(fst) a=a.filter(x=>x.c.status===fst);
+  if(q) a=a.filter(x=>{const c=x.c; return (c.siteName||'').toLowerCase().includes(q)||(c.model||'').toLowerCase().includes(q)||(c.serialNumber||'').toLowerCase().includes(q)||(c.serviceOrderNo||'').toLowerCase().includes(q)||(c.parts||[]).some(p=>(p.partNumber||'').toLowerCase().includes(q)||(p.partName||'').toLowerCase().includes(q));});
+  return a.sort((x,y)=>(y.c.createdAt||0)-(x.c.createdAt||0));
+}
+function mgrRenderAllClaims(){
+  const list=$('mgr-claims-all-list'); if(!list) return;
+  const selSup=$('mgr-claims-f-sup'); const cur=selSup.value;
+  const sups=Array.from(new Set((DATA.claims||[]).map(c=>ownerOf(c.category,c.model)))).sort((a,b)=>a.localeCompare(b,'th'));
+  selSup.innerHTML='<option value="">ทุก Sup</option>'+sups.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
+  selSup.value=sups.includes(cur)?cur:'';
+  const rows=mgrClaimsAllFiltered();
+  $('mgr-claims-all-title').textContent=`📋 รายการเคลม/แจ้งปัญหา (ทุก Sup) (${rows.length})`;
+  const head=['Sup เจ้าของ'].concat(CLAIMS_COLUMNS.map(c=>c.label));
+  const body=rows.map(({c,sup})=>{
+    const st=claimStatusInfo(c.status);
+    const multi=f=>(c.parts&&c.parts.length?c.parts:[{}]).map(p=>escapeHtml(f(p))).join('<br>');
+    return `<tr data-mclaim="${c.id}">
+      <td style="white-space:nowrap;font-weight:600;">${escapeHtml(sup)}</td>
+      <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span></td>
+      <td style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
+      <td style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(claimantShort(c))}</td>
+      <td style="max-width:190px;white-space:normal;"><div class="clamp2">${escapeHtml(c.siteName||'-')}</div></td>
+      <td style="white-space:nowrap;">${escapeHtml(c.model||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(c.serialNumber||'-')}</td>
+      <td style="min-width:240px;max-width:360px;white-space:normal;" title="${escapeHtml(c.problem||'')}"><div class="clamp2">${escapeHtml(c.problem||'-')}</div></td>
+      <td style="white-space:nowrap;">${multi(p=>p.partNumber||'-')}</td>
+      <td style="white-space:nowrap;">${multi(p=>p.partName||'-')}</td>
+      <td style="white-space:nowrap;">${multi(p=>qtyInt(p.qty||p.count))}</td>
+      <td style="white-space:nowrap;">${escapeHtml(dateTh(c.openDate)||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(dateTh(closeDateOf(c))||'-')}</td>
+      <td style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
+    </tr>`;
+  }).join('');
+  list.innerHTML=`<div class="claims-table-wrap"><table id="mgr-claims-table"><thead><tr>${head.map(h=>`<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${body||`<tr><td colspan="${head.length}" style="text-align:center;color:var(--text-faint);">ไม่พบรายการ</td></tr>`}</tbody></table></div>`;
+  list.querySelectorAll('[data-mclaim]').forEach(el=>el.addEventListener('click',()=>openClaimDetail(el.getAttribute('data-mclaim'))));
+}
+['mgr-claims-f-sup','mgr-claims-f-type','mgr-claims-f-status'].forEach(i=>$(i).addEventListener('change',mgrRenderAllClaims));
+$('mgr-claims-f-search').addEventListener('input',mgrRenderAllClaims);
+$('mgr-claims-export-btn').addEventListener('click',()=>{
+  const rows=mgrClaimsAllFiltered();
+  if(!rows.length){ showToast('ไม่มีรายการให้ Export'); return; }
+  const j=v=>Array.isArray(v)?v.join('\n'):v;
+  const data=rows.map(({c,sup})=>{
+    const o={'Sup เจ้าของ':sup};
+    CLAIMS_COLUMNS.forEach(col=>{ o[col.label]=j(col.getValue(c)); });
+    o['หมายเหตุ']=c.note||''; o['สถานะจบเคส/เหตุผล']=c.closeReason||'';
+    return o;
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),'เคลม-แจ้งปัญหา');
+  XLSX.writeFile(wb,`claims-all-sup-${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast(`⬇ Export ${data.length} รายการแล้ว`);
+});
 
 
 /* ---------- อะไหล่ส่งคืน Office: ส่งทั้งหมด / รับแล้ว / รอตรวจรับ ---------- */
