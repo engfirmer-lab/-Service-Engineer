@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.30
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 12:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.31
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 13:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.30</title>
+<title>F1 Service — v12.31</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1163,6 +1163,15 @@ body.tr-noscroll{overflow:hidden;}
 .tr-tsel{padding-left:6px;padding-right:2px;}
 .tr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;}
 .tr-chip{min-height:38px;font-size:12.5px;padding:4px 10px;}
+.tr-ihead,.tr-irow{display:grid;grid-template-columns:160px minmax(0,1.4fr) minmax(0,1fr) 34px;gap:6px;align-items:center;}
+.tr-ihead{font-size:11px;font-weight:700;color:var(--text-dim);padding:6px 0 2px;}
+.tr-irow{padding:3px 0;border-top:1px solid var(--border);}
+.tr-irow-t{display:flex;gap:3px;align-items:center;}
+.tr-irow-t .tr-tsel{flex:1;min-width:0;padding-left:4px;padding-right:0;}
+.tr-irow .tr-in{min-width:0;margin:0;}
+.tr-irow.brk{background:rgba(253,224,71,.20);border-radius:6px;}
+.tr-irow .tr-sq{padding:4px 0;min-height:34px;}
+@media (max-width:640px){ .tr-ihead{display:none;} .tr-irow{grid-template-columns:minmax(0,1fr) 34px;padding:6px 0;} .tr-irow-t{grid-column:1;} .tr-irow .tr-sq{grid-column:2;grid-row:1;} .tr-irow .tr-in{grid-column:1 / -1;} }
 
 
 /* v9.86 มือถือ: แถบบนไม่ล้นจอ — ปุ่มปฏิทิน/แท็บมุมมองลงบรรทัดใหม่ */
@@ -2722,8 +2731,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.30";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 12:40 น. เวลาไทย";
+const APP_VERSION = "12.31";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 13:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -19626,16 +19635,19 @@ function traTimeSel(di, ii, k, cur){
 }
 function traScheduleHtml(){
   const F = TRA.form;
-  let h = `<div class="tr-fs"><b>ตารางเรียนรายวัน</b><div class="ex-hint">กดปุ่มลัดเพื่อเพิ่มช่วงเวลา (เช้า / พักเที่ยง / บ่าย) แล้วพิมพ์หัวข้อ — เวลาเลือกจากรายการ ทีละ 30 นาที</div>
+  let h = `<div class="tr-fs"><b>ตารางเรียนรายวัน</b><div class="ex-hint">1 แถว = 1 ช่วงเวลา · กด ⚡ เพื่อเติมเช้า/พักเที่ยง/บ่าย อัตโนมัติ แล้วพิมพ์หัวข้อกับสื่อ</div>
     <div class="ex-act"><button class="btn btn-ghost" data-tr="f_std_all">⚡ ใส่เวลามาตรฐานทุกวัน (09-12 · พัก · 13-17)</button></div>`;
   F.days.forEach((d,di)=>{
     h += `<div class="tr-dayed"><div class="tr-dayed-h"><b>วันที่ ${di+1}</b><input class="tr-in" type="date" data-tr="f_dday" data-di="${di}" value="${trH(d.date)}"><button class="btn btn-ghost tr-sq" data-tr="f_day_del" data-di="${di}" aria-label="ลบวันนี้">🗑</button></div>
-      <div class="tr-chips"><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="am">＋ 09:00-12:00</button><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="lunch">🍽 พักเที่ยง</button><button class="btn btn-ghost tr-chip" data-tr="f_preset" data-di="${di}" data-v="pm">＋ 13:00-17:00</button><button class="btn btn-ghost tr-chip" data-tr="f_it_add" data-di="${di}">＋ เวลาอื่น</button></div>`;
+      <div class="tr-ihead"><span>เวลา</span><span>หัวข้อ</span><span>สื่อ</span><span></span></div>`;
     d.items.forEach((it,ii)=>{
-      h += `<div class="tr-ited${/lunch|พักเที่ยง/i.test(it.content)?' brk':''}"><div class="tr-ited-t">${traTimeSel(di,ii,'timeFrom',it.timeFrom)}<span>–</span>${traTimeSel(di,ii,'timeTo',it.timeTo)}<button class="btn btn-ghost tr-sq" data-tr="f_it_del" data-di="${di}" data-ii="${ii}" aria-label="ลบหัวข้อ">✕</button></div>
-        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="content" value="${trH(it.content)}" placeholder="หัวข้อการอบรม">
-        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="media" value="${trH(it.media)}" placeholder="สื่อ เช่น Power Point / Machine"></div>`;
+      const brk = /lunch|พักเที่ยง/i.test(it.content);
+      h += `<div class="tr-irow${brk?' brk':''}"><div class="tr-irow-t">${traTimeSel(di,ii,'timeFrom',it.timeFrom)}<span>–</span>${traTimeSel(di,ii,'timeTo',it.timeTo)}</div>
+        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="content" value="${trH(it.content)}" placeholder="หัวข้อ" aria-label="หัวข้อ">
+        <input class="tr-in" type="text" data-tr="f_dit" data-di="${di}" data-ii="${ii}" data-k="media" value="${trH(it.media)}" placeholder="สื่อ" aria-label="สื่อ">
+        <button class="btn btn-ghost tr-sq" data-tr="f_it_del" data-di="${di}" data-ii="${ii}" aria-label="ลบแถว">✕</button></div>`;
     });
+    h += `<div class="tr-chips"><button class="btn btn-ghost tr-chip" data-tr="f_it_add" data-di="${di}">＋ เพิ่มช่วงเวลา</button><button class="btn btn-ghost tr-chip" data-tr="f_std_day" data-di="${di}">⚡ เติมเวลามาตรฐาน (เฉพาะวันนี้)</button></div>`;
     h += `</div>`;
   });
   h += `<div class="ex-act"><button class="btn btn-ghost" data-tr="f_day_add">＋ เพิ่มวัน</button><button class="btn btn-ghost" data-tr="f_day_range">📅 สร้างวันตามช่วงวันที่</button><button class="btn btn-ghost" data-tr="f_copy">⎘ คัดลอกตารางจากงานก่อนหน้า</button></div></div>`;
@@ -19982,6 +19994,7 @@ function trOnEvent(e){
       showLoadingOverlay('กำลังบันทึก...'); examApi('trSetRegMode', { sessionId:TRA.g.session.sessionId, mode:v }).then(()=>{ hideLoadingOverlay(); TRA.queue = null; TR.data = null; showToast('✓ '+lab+'แล้ว'); return traReload(true); }).catch(er=>{ hideLoadingOverlay(); alert(er.message); }); } return;
     case 'f_preset': traAddPreset(num('data-di'), v); traRenderForm(); return;
     case 'f_std_all': traStdAll(); traRenderForm(); return;
+    case 'f_std_day': { const di=num('data-di'), d=TRA.form.days[di]; if(d.items.every(i=>!String(i.content).trim() && !String(i.media).trim())) d.items=[]; ['am','lunch','pm'].forEach(v=>traAddPreset(di,v)); traRenderForm(); return; }
     case 'f_day_add': traFormAddDay(); return;
     case 'f_day_range': traFormDayRange(); return;
     case 'f_day_del': TRA.form.days.splice(num('data-di'),1); traRenderForm(); return;
