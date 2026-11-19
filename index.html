@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.31
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 13:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.32
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 13:15 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.31</title>
+<title>F1 Service — v12.32</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2731,8 +2731,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.31";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 13:00 น. เวลาไทย";
+const APP_VERSION = "12.32";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 13:15 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -22303,17 +22303,24 @@ $('mgr-claims-f-search').addEventListener('input',mgrRenderAllClaims);
 $('mgr-claims-export-btn').addEventListener('click',()=>{
   const rows=mgrClaimsAllFiltered();
   if(!rows.length){ showToast('ไม่มีรายการให้ Export'); return; }
-  const j=v=>Array.isArray(v)?v.join('\n'):v;
-  const data=rows.map(({c,sup})=>{
-    const o={'Sup เจ้าของ':supNick(sup)};
-    CLAIMS_COLUMNS.forEach(col=>{ o[col.label]=j(col.getValue(c)); });
-    o['สถานะจบเคส/เหตุผล']=c.closeReason||'';
-    return o;
+  // v12.32 — รูปแบบตามที่ Jackky กำหนด: 13 คอลัมน์ · อะไหล่ 1 รายการ = 1 แถว · เรียงใหม่→เก่า
+  const heads=['วันที่รับแจ้ง','วันที่พบปัญหา','ชื่อผู้แจ้ง','ชื่อ รพ.','รุ่น','S/N','อาการ','Part Number','Part Name','จำนวน','วันที่เปิดเคส','Service Order','หมายเหตุ'];
+  const aoa=[heads];
+  rows.forEach(({c})=>{
+    const base1=[c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'', dateTh(c.problemDate)||'', claimantShort(c)==='-'?'':claimantShort(c), c.siteName||'', c.model||'', c.serialNumber||'', c.problem||''];
+    const base2=[dateTh(c.openDate)||'', c.serviceOrderNo||'', c.note||''];
+    const parts=(c.parts&&c.parts.length)?c.parts:[{}];
+    parts.forEach(pt=>{
+      const q=parseFloat(pt.qty||pt.count);
+      aoa.push(base1.concat([pt.partNumber||'', pt.partName||'', isFinite(q)?Math.trunc(q):''], base2));
+    });
   });
   const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(data),'เคลม-แจ้งปัญหา');
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[12,12,12,38,11,18,40,18,34,8,13,16,28].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,'เคลม-แจ้งปัญหา');
   XLSX.writeFile(wb,`claims-all-sup-${new Date().toISOString().slice(0,10)}.xlsx`);
-  showToast(`⬇ Export ${data.length} รายการแล้ว`);
+  showToast(`⬇ Export ${aoa.length-1} แถวแล้ว`);
 });
 
 
