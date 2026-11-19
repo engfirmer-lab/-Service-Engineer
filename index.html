@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.18
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 09:40 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.19
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.18</title>
+<title>F1 Service — v12.19</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2677,8 +2677,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.18";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 09:40 น. เวลาไทย";
+const APP_VERSION = "12.19";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -4696,7 +4696,7 @@ async function googleApiErrorMessage(res){
    สเปรดชีตกลาง 1 ไฟล์ แต่แยกเป็น "แท็บ" (sheet tab) ย่อยตามผู้ดูแล Product — เคลมของ Product ไหน ใครเป็นผู้ดูแล Product นั้น (ownerOf) แถวจะถูกเก็บไว้ในแท็บของคนนั้น
    ทำให้แต่ละ Sup Product เปิดดูประวัติเคลมที่จบแล้วของ Product ตัวเองได้ตรงๆ โดยไม่ปนกับ Product คนอื่น */
 const CLAIMS_SHEET_NAME = 'บันทึกเคลมอะไหล่ (จบเคสแล้ว)';
-const CLAIMS_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่ได้รับอะไหล่/จบเคส','ผู้เคลม','สถานที่','Product','รุ่น','S/N','แจ้งอาการเสีย','Part number','Part name','จำนวนอะไหล่','Service Order','Counter Test','เลขใบยืม','ช่างส่งคืน','ได้รับจากผู้ผลิต','ส่งคืนผู้ผลิต','รูปสรุปบันทึกเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส','หมายเหตุ'];
+const CLAIMS_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่ได้รับอะไหล่/จบเคส','ผู้เคลม','สถานที่','Product','รุ่น','S/N','แจ้งอาการเสีย','Part number','Part name','จำนวนอะไหล่','Service Order','Counter Test','เลขใบยืม','ช่างส่งคืน','ได้รับจากผู้ผลิต','ส่งคืนผู้ผลิต','รูปสรุปบันทึกเคลม','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส','หมายเหตุ','วันที่ทำเคลม/เปิดเคส'];
 let _claimsSheetIdCache = null;
 let _claimsSheetInFlight = null;
 // บันทึก spreadsheetId + gid ของแต่ละแท็บ ลง Firestore (meta/claimsSheet) กันต้องยิง Sheets API ค้นหาใหม่ทุกครั้ง — ไม่ critical ถ้าเขียนไม่สำเร็จ (แค่แคชหาย ต้องหาใหม่รอบหน้า ไม่กระทบข้อมูลเคลม)
@@ -4962,13 +4962,14 @@ function buildClaimSheetRows(c, summaryImageUrl){
       safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',  // ลิงก์โฟลเดอร์ไฟล์แนบใน Drive (ใช้ ; สำหรับ Sheets ภาษาไทย)
       claimCloseStatusText(c),           // สถานะจบเคส (v12.03)
       c.note||'',                        // หมายเหตุ (v12.15)
-    ] : ['','','','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
+      (isoToDDMMYYYY(c.openDate)||'') ? `'${isoToDDMMYYYY(c.openDate)}` : '',   // วันที่ทำเคลม/เปิดเคส (v12.19)
+    ] : ['','','','','','','','','','',''];       // แถวถัดไป: ว่างทั้งหมดยกเว้น part cols
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
 }
 // buildReportSheetRows: เหมือน buildClaimSheetRows แต่คอลัมน์ชุดเล็กกว่า (ใช้กับ type==='report' — ไม่มีเลขใบยืม/ช่างส่งคืน/ได้รับจากผู้ผลิต/ส่งคืนผู้ผลิต เพราะไม่ใช่การเคลมกับผู้ผลิตจริง)
 // หัวตาราง 15 คอลัมน์: วันที่พบปัญหา | วันที่บันทึก | ผู้แจ้ง | สถานที่ | Product | รุ่น | S/N | Error message/อาการเสีย | Part number | Part name | จำนวนอะไหล่ | Counter Test | รูปสรุป | ลิงก์โฟลเดอร์ไฟล์แนบ
-const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่ได้รับอะไหล่/จบเคส','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส','หมายเหตุ'];
+const REPORT_SHEET_HEADERS = ['วันที่พบปัญหา','วันที่ได้รับอะไหล่/จบเคส','ผู้แจ้ง','สถานที่','Product','รุ่น','S/N','Error message/อาการเสีย','Part number','Part name','จำนวนอะไหล่','Counter Test','รูปสรุป','ลิงก์โฟลเดอร์ไฟล์แนบใน Drive','สถานะจบเคส','หมายเหตุ','วันที่ทำเคลม/เปิดเคส'];
 function buildReportSheetRows(c, summaryImageUrl){
   const parts = (c.parts && c.parts.length > 0) ? c.parts : [{}];
   const sharedFirst = [
@@ -4984,7 +4985,8 @@ function buildReportSheetRows(c, summaryImageUrl){
       safeHttpUrl(c.driveFolderUrl) ? `=HYPERLINK("${safeHttpUrl(c.driveFolderUrl).replace(/"/g,'%22')}";"ไฟล์แนบ")` : '',
       claimCloseStatusText(c),
       c.note||'',                        // หมายเหตุ (v12.15)
-    ] : ['','','','',''];
+      (isoToDDMMYYYY(c.openDate)||'') ? `'${isoToDDMMYYYY(c.openDate)}` : '',   // วันที่ทำเคลม/เปิดเคส (v12.19)
+    ] : ['','','','','',''];
     return [...sharedFirst, ...partCols, ...sharedLast];
   });
 }
@@ -14081,7 +14083,7 @@ function renderClaimsSheetHistoryLink(){
 const CLAIMS_COLUMNS = [
   { key:'type', label:'ประเภท', getValue:c=>claimTypeLabel(c) },
   { key:'status', label:'สถานะ', getValue:c=>claimStatusInfo(c.status).label }, // v12.17 — ย้ายมาต่อจากประเภท
-  { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
+  { key:'createdAt', label:'วันที่รับแจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
   { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
   { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
   { key:'siteName', label:'ชื่อ รพ.', getValue:c=>c.siteName||'-' },
@@ -14091,6 +14093,7 @@ const CLAIMS_COLUMNS = [
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
   { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
+  { key:'openDate', label:'วันที่ทำเคลม/เปิดเคส', getValue:c=>dateTh(c.openDate)||'-' }, // v12.19 — Sup กรอกเอง
   { key:'closeDate', label:'วันที่ได้รับอะไหล่/จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
 ];
@@ -14205,6 +14208,7 @@ function renderClaimsView(){
       <td class="frac" style="white-space:nowrap;">${partNumbers}</td>
       <td style="white-space:nowrap;">${partNames}</td>
       <td class="chk" style="white-space:nowrap;">${partCounts}</td>
+      <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.openDate)||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(closeDateOf(c))||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
     </tr>`;
@@ -14273,6 +14277,7 @@ function openClaimDetail(id){
     ${c.type!=='report' ? `<div class="meta-item"><div class="k">เลขที่ใบยืม</div><div class="v">${escapeHtml(c.loanSlipNo||'-')}</div></div>` : ''}
     <div style="margin:10px 0;">${attGroupsHtml||'<p style="font-size:12px;color:var(--text-faint);">ไม่มีไฟล์แนบ</p>'}</div>
     ${canManage ? `<div class="meta-item"><div class="k">เลข Service Order</div><div class="v"><div style="display:flex;gap:6px;"><input type="text" id="claim-detail-svo" value="${escapeHtml(c.serviceOrderNo||'')}" placeholder="ยังไม่มีเลข Service Order" style="${c.serviceOrderNo?'':'border-color:var(--amber);background:rgba(232,163,61,.08);'}flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-svo-save">บันทึก</button></div></div></div>` : ''}
+    ${canManage ? `<div class="meta-item"><div class="k">วันที่ทำเคลม/เปิดเคส (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-opendate" value="${escapeHtml(c.openDate||'')}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-opendate-save">บันทึก</button></div></div></div>` : (c.openDate ? `<div class="meta-item"><div class="k">วันที่ทำเคลม/เปิดเคส</div><div class="v">${escapeHtml(dateTh(c.openDate))}</div></div>` : '')}
     ${true ? (canManage ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(closeDateOf(c))}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (closeDateOf(c) ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส</div><div class="v">${escapeHtml(dateTh(closeDateOf(c)))}</div></div>` : '')) : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
       ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option></select>`
@@ -14319,6 +14324,13 @@ function openClaimDetail(id){
       }
       catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
     });
+    if($('claim-detail-opendate-save')){
+      $('claim-detail-opendate-save').addEventListener('click', async ()=>{
+        const od = ($('claim-detail-opendate').value||'').trim();
+        try{ await fsUpdateClaim(c.id, { openDate: od }); c.openDate = od; renderClaimsView(); showToast(od ? '✓ บันทึกวันที่ทำเคลม/เปิดเคสแล้ว' : '✓ ล้างวันที่ทำเคลม/เปิดเคสแล้ว'); }
+        catch(e){ showToast('⚠ บันทึกไม่สำเร็จ: '+e.message); }
+      });
+    }
     if($('claim-detail-claimdate-save')){
       $('claim-detail-claimdate-save').addEventListener('click', async ()=>{
         const cd = ($('claim-detail-claimdate').value||'').trim();
