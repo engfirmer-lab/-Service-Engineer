@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.35
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.36
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:55 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.35</title>
+<title>F1 Service — v12.36</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2732,8 +2732,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.35";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:10 น. เวลาไทย";
+const APP_VERSION = "12.36";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:55 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -11354,15 +11354,16 @@ async function execDocMove(docs, dCat, dModel, dType, dSub){
   const fidsToMove = Array.from(fids).filter(fid=> !DATA.documents.some(x=>!todoIds.has(x.id) && x.url && extractDriveFileId(x.url)===fid));
   // v11.54 — ย้ายไฟล์ใน Drive "ก่อน" แล้วค่อยย้ายในแอพ: ถ้า Drive ย้ายไม่สำเร็จ (หรือเกินเวลา) เอกสารนั้นจะคงอยู่ที่เดิมทั้งแอพและ Drive (ไม่ให้ข้อมูลสองที่ไม่ตรงกัน)
   let moved = 0; const failed = [], movedFids = new Set(), failedFids = new Set(); let lastErr = '';
+  showLoadingOverlay('กำลังย้าย...'); // v12.36 — เปิด overlay ครั้งเดียว (ตัวนับ _loadingCount: เดิมเรียก show ซ้ำหลายครั้งแต่ hide ครั้งเดียว → ค้าง)
   try{
     let folderId = null;
     if(fidsToMove.length){
-      showLoadingOverlay('กำลังเตรียมโฟลเดอร์ปลายทางใน Drive...');
+      updateLoadingOverlayText('กำลังเตรียมโฟลเดอร์ปลายทางใน Drive...');
       try{ folderId = await exWithTimeout(ensureDocumentFolderPath(dCat, dModel, typeLabel), 60000, 'สร้างโฟลเดอร์ปลายทาง'); }catch(e){ lastErr = e.message; console.warn('สร้างโฟลเดอร์ปลายทางไม่สำเร็จ', e); }
     }
     for(let i=0;i<todo.length;i++){
       const d = todo[i];
-      showLoadingOverlay(`กำลังย้าย ${i+1}/${todo.length}...`);
+      updateLoadingOverlayText(`กำลังย้าย ${i+1}/${todo.length}...`);
       const fid = d.url ? extractDriveFileId(d.url) : null;
       if(fid && fidsToMove.includes(fid) && !movedFids.has(fid)){
         if(failedFids.has(fid) || !folderId){ failed.push(d); continue; }
