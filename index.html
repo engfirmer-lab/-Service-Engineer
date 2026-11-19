@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.29
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 12:25 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.30
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 12:40 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.29</title>
+<title>F1 Service — v12.30</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1567,9 +1567,9 @@ setTimeout(function(){
           <div class="field-wrap"><label>สถานะ</label>
             <select id="claims-filter-status">
               <option value="">ทั้งหมด</option>
-              <option value="pending">ยังไม่เคลม</option>
+              <option value="pending">รอเคลม</option>
               <option value="draft">Draft</option>
-              <option value="claimed">รออะไหล่เคลม</option>
+              <option value="claimed">รออะไหล่</option>
               <option value="received">เสร็จสิ้น</option>
               <option value="rejected">ถูกปฏิเสธ</option>
             </select>
@@ -2255,7 +2255,7 @@ setTimeout(function(){
         <div class="filters-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
           <div class="field-wrap"><label>Sup เจ้าของ</label><select id="mgr-claims-f-sup"><option value="">ทุก Sup</option></select></div>
           <div class="field-wrap"><label>ประเภท</label><select id="mgr-claims-f-type"><option value="">ทั้งหมด</option><option value="claim">🔧 เคลมอะไหล่</option><option value="report">⚠️ แจ้งปัญหา</option></select></div>
-          <div class="field-wrap"><label>สถานะ</label><select id="mgr-claims-f-status"><option value="">ทั้งหมด</option><option value="pending">ยังไม่เคลม</option><option value="draft">Draft</option><option value="claimed">รออะไหล่เคลม</option><option value="received">เสร็จสิ้น</option><option value="rejected">ถูกปฏิเสธ</option><option value="cancelled">ยกเลิก</option></select></div>
+          <div class="field-wrap"><label>สถานะ</label><select id="mgr-claims-f-status"><option value="">ทั้งหมด</option><option value="pending">รอเคลม</option><option value="draft">Draft</option><option value="claimed">รออะไหล่</option><option value="received">เสร็จสิ้น</option><option value="rejected">ถูกปฏิเสธ</option><option value="cancelled">ยกเลิก</option></select></div>
           <div class="field-wrap"><label>ค้นหา</label><input type="text" id="mgr-claims-f-search" placeholder="สถานที่, รุ่น, S/N, Part number..."></div>
         </div>
         <div id="mgr-claims-all-list"></div>
@@ -2722,8 +2722,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.29";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 12:25 น. เวลาไทย";
+const APP_VERSION = "12.30";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 12:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -9714,7 +9714,7 @@ async function renderNotifList(){
           ${partInfo ? `<div style="font-size:11px;color:var(--text-faint);margin-top:2px;">📦 ${partInfo}</div>` : ''}
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
             <span style="font-size:11px;color:var(--text-faint);">โดย: ${escapeHtml(c.submitterName||'-')}</span>
-            <span style="color:var(--amber);font-weight:600;font-size:11.5px;">ยังไม่เคลม →</span>
+            <span style="color:var(--amber);font-weight:600;font-size:11.5px;">รอเคลม →</span>
           </div>
         </div>`;
       }).join('');
@@ -12229,9 +12229,9 @@ $('add-sup-name-btn').addEventListener('click', async ()=>{
 });
 /* ===================== เคลมอะไหล่ ===================== */
 const CLAIM_STATUS = [
-  {key:'pending', label:'ยังไม่เคลม', color:'var(--amber)'},
+  {key:'pending', label:'รอเคลม', color:'var(--amber)'},
   {key:'draft', label:'Draft', color:'#8b5cf6'}, // v12.03 — ได้เลข Service Order แล้ว แต่ยังไม่ได้กด Submit ส่งให้ผู้ผลิต/ต่างประเทศ
-  {key:'claimed', label:'รออะไหล่เคลม', color:'var(--blue)'},
+  {key:'claimed', label:'รออะไหล่', color:'var(--blue)'},
   {key:'received', label:'เสร็จสิ้น', color:'var(--green)'},
   {key:'rejected', label:'ถูกปฏิเสธ', color:'var(--red)'},
   {key:'cancelled', label:'ยกเลิก', color:'var(--text-faint)'},
@@ -14029,14 +14029,14 @@ function renderClaimsDashboard(){
     : `<div class="stat-card cd-c3"><div class="label">เสร็จสิ้น (ในแอป)</div><div class="value green">${count('received')}</div></div>`;
   $('claims-dashboard').innerHTML = `
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:2px 0 2px;">🔧 เคลมอะไหล่</div>
-    <div class="stat-card cd-c3"><div class="label">ยังไม่เคลม</div><div class="value amber">${count('pending')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">รอเคลม</div><div class="value amber">${count('pending')}</div></div>
     <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${count('draft')}</div></div>
     <div class="stat-card cd-c3"><div class="label">ถูกปฏิเสธ</div><div class="value" style="color:var(--red);">${count('rejected')}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">ยังค้างในแอป</div></div>
-    <div class="stat-card cd-c3"><div class="label">รออะไหล่เคลม</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
+    <div class="stat-card cd-c3"><div class="label">รออะไหล่</div><div class="value" style="color:var(--blue);">${count('claimed')}</div></div>
     ${doneCell}
     <div style="grid-column:1/-1;font-size:12.5px;font-weight:700;color:var(--text-faint);margin:10px 0 2px;">📋 แจ้งปัญหา</div>
     <div class="stat-card cd-c3"><div class="label">ยังค้างอยู่ (ในแอป)</div><div class="value amber">${reports.length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แก้ไขแล้ว ${reportFixedCount} / ยังไม่แก้ไข ${reportUnfixedCount}</div></div>
-    <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${reports.filter(r=>r.status==='draft').length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แจ้งปัญหาที่ได้ SVO แล้ว ยังไม่ส่ง</div></div>
+    <div class="stat-card cd-c3"><div class="label">Draft</div><div class="value" style="color:#8b5cf6;">${reports.filter(r=>r.status==='draft').length}</div></div>
     <div class="stat-card cd-c3"><div class="label">ถูกปฏิเสธ</div><div class="value" style="color:var(--red);">${reports.filter(r=>r.status==='rejected').length}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">แจ้งปัญหา · ยังค้างในแอป</div></div>
     ${canSeeSheet ? `<div class="stat-card cd-c3"><div class="label">จบเคสแล้ว (ปี <span id="report-done-yr">${yr}</span>)</div><div class="value green" id="report-done-count-val">${repCached !== undefined ? repCached : '...'}</div><div class="cd-sub" style="font-size:10.5px;color:var(--text-faint);margin-top:2px;">จาก Google Sheet</div></div>` : ''}
   `;
@@ -14329,7 +14329,7 @@ function openClaimDetail(id){
     ${canManage ? `<div class="meta-item"><div class="k">วันที่ทำเคลม/เปิดเคส (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-opendate" value="${escapeHtml(c.openDate||'')}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-opendate-save">บันทึก</button></div></div></div>` : (c.openDate ? `<div class="meta-item"><div class="k">วันที่ทำเคลม/เปิดเคส</div><div class="v">${escapeHtml(dateTh(c.openDate))}</div></div>` : '')}
     ${true ? (canManage ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส (Sup กรอกเอง)</div><div class="v"><div style="display:flex;gap:6px;"><input type="date" id="claim-detail-claimdate" value="${escapeHtml(closeDateOf(c))}" style="flex:1;"><button class="btn btn-ghost btn-sm" id="claim-detail-claimdate-save">บันทึก</button></div></div></div>` : (closeDateOf(c) ? `<div class="meta-item"><div class="k">วันที่ได้รับอะไหล่/จบเคส</div><div class="v">${escapeHtml(dateTh(closeDateOf(c)))}</div></div>` : '')) : ''}
     <div class="meta-item"><div class="k">สถานะ</div><div class="v">
-      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>ยังไม่เคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่เคลม</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option></select>`
+      ${canManage ? `<select id="claim-detail-status"><option value="pending"${c.status==='pending'?' selected':''}>รอเคลม</option><option value="draft"${c.status==='draft'?' selected':''}>Draft</option><option value="claimed"${c.status==='claimed'?' selected':''}>รออะไหล่</option><option value="received"${c.status==='received'?' selected':''}>เสร็จสิ้น</option><option value="rejected"${c.status==='rejected'?' selected':''}>ถูกปฏิเสธ</option></select>`
       : `<span style="color:${st.color};font-weight:600;">${st.label}</span>`}
     </div></div>
     ${canManage ? `<div class="meta-item"><div class="k">หมายเหตุ</div><div class="v"><div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="claim-detail-note" rows="2" placeholder="หมายเหตุ (ถ้ามี)" style="flex:1;resize:vertical;">${escapeHtml(c.note||'')}</textarea><button class="btn btn-ghost btn-sm" id="claim-detail-note-save">บันทึก</button></div></div></div>` : (c.note ? `<div class="meta-item"><div class="k">หมายเหตุ</div><div class="v" style="white-space:pre-wrap;">${escapeHtml(c.note)}</div></div>` : '')}
@@ -22205,7 +22205,7 @@ async function dxRenderClaims(force){
   const repOpen = reports.filter(r=>!r.fixDate).length;
   const nPend = open.filter(c=>c.status==='pending').length, nDraft = open.filter(c=>c.status==='draft').length, nClaimed = open.filter(c=>c.status==='claimed').length;
   let h = dxStamp(LIVE.on.claims ? 'ข้อมูลสด — เปลี่ยนแล้วอัปเดตทันที' : 'โหมดสำรอง — กด 🔄 เพื่อดึงใหม่', LIVE.on.claims) + dxKpis([
-    dxKpi('ยังไม่เคลม', nPend, 'รอ Sup ดำเนินการ', nPend?'var(--amber)':'var(--green)'),
+    dxKpi('รอเคลม', nPend, 'รอ Sup ดำเนินการ', nPend?'var(--amber)':'var(--green)'),
     dxKpi('Draft', nDraft, 'รอ Sup กด Submit', '#8b5cf6'),
     dxKpi('เคลมแล้ว (รออะไหล่)', nClaimed, 'เคลมกับผู้ผลิตแล้ว', 'var(--blue)'),
     dxKpi('แจ้งปัญหายังไม่แก้', repOpen, `จากทั้งหมด ${reports.length}`, repOpen?'var(--amber)':'var(--green)')
@@ -22217,7 +22217,7 @@ async function dxRenderClaims(force){
   claims.forEach(c=>{ const r = ow(c); if(c.status==='pending'){ r.pending++; } else if(c.status==='claimed'){ r.claimed++; } else if(c.status==='received'){ r.received++; } else r.other++; });
   reports.forEach(c=>{ if(!c.fixDate) ow(c).rep++; });
   const orows = Object.keys(owners).sort((a,b)=>a.localeCompare(b,'th')).map(k=>{ const r=owners[k]; return [escapeHtml(k), r.pending, r.claimed, r.received, r.other, r.rep]; });
-  h += dxH('👤 แยกตามผู้ดูแล (Sup Product)') + dxTable(['ผู้ดูแล','ยังไม่เคลม','เคลมแล้ว (รออะไหล่)','เสร็จสิ้น','ปฏิเสธ/ยกเลิก','แจ้งปัญหายังไม่แก้'], orows);
+  h += dxH('👤 แยกตามผู้ดูแล (Sup Product)') + dxTable(['ผู้ดูแล','รอเคลม','เคลมแล้ว (รออะไหล่)','เสร็จสิ้น','ปฏิเสธ/ยกเลิก','แจ้งปัญหายังไม่แก้'], orows);
   // รายเดือน
   const months = []; const now = new Date();
   for(let i=5;i>=0;i--){ const d = new Date(now.getFullYear(), now.getMonth()-i, 1); months.push({ key:d.getFullYear()+'-'+d.getMonth(), label:d.toLocaleDateString('th-TH',{month:'short',year:'2-digit'}), c:0, r:0 }); }
@@ -22233,7 +22233,7 @@ async function dxRenderClaims(force){
   h += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;">`
     + `<div>${dxH('🔧 รุ่นที่เคลม/แจ้งบ่อยสุด','10 อันดับแรก')}${dxBars(dxTop(byModel,10))}</div>`
     + `<div>${dxH('🔩 อะไหล่ที่เคลมบ่อยสุด','รวมทุกรายการในระบบ')}${dxBars(dxTop(byPart,10),'var(--blue)')}</div>`
-    + `<div>${dxH('⚠ อาการที่พบบ่อย','ตามข้อความช่อง "ปัญหาที่พบ"')}${dxBars(dxTop(byProb,10),'var(--red)')}</div></div>`;
+    + `</div>`; // v12.30 เอา "อาการที่พบบ่อย" ออก (ข้อความอิสระ สถิติไม่แม่น)
   dxBody('dx-claims-body', h);
   try{ mgrRenderAllClaims(); }catch(e){ console.warn(e); }
 }
