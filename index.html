@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.28
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 12:10 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.29
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 12:25 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.28</title>
+<title>F1 Service — v12.29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2722,8 +2722,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.28";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 12:10 น. เวลาไทย";
+const APP_VERSION = "12.29";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 12:25 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14137,8 +14137,8 @@ const CLAIMS_COLUMNS = [
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
   { key:'partCount', label:'จำนวน', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>qtyInt(p.qty||p.count)):['-']) },
-  { key:'openDate', label:'วันที่ทำเคลม/เปิดเคส', getValue:c=>dateTh(c.openDate)||'-' }, // v12.19 — Sup กรอกเอง
-  { key:'closeDate', label:'วันที่ได้รับอะไหล่/จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
+  { key:'openDate', label:'วันที่เปิดเคส', getValue:c=>dateTh(c.openDate)||'-' }, // v12.19 — Sup กรอกเอง
+  { key:'closeDate', label:'วันที่จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
   { key:'note', label:'หมายเหตุ', getValue:c=>c.note||'-' }, // v12.26
 ];
@@ -14212,7 +14212,7 @@ document.addEventListener('click', (e)=>{
 function claimantShort(c){ return String((c&&c.claimant)||'-').split(/\s+[-–—]\s+/)[0].trim() || '-'; }
 function qtyInt(v){ const n = parseFloat(v); return (v!==undefined && v!==null && v!=='' && isFinite(n)) ? String(Math.trunc(n)) : '-'; }
 function claimTypeLabel(c){ return (c && c.type==='report') ? 'แจ้งปัญหา' : 'เคลมอะไหล่'; }
-function claimTypeBadge(c){ const r=(c&&c.type==='report'); const col=r?'#d97706':'#2563eb'; return `<span style="font-size:11px;font-weight:600;color:${col};background:${col}1a;padding:2px 8px;border-radius:6px;">${r?'⚠️ แจ้งปัญหา':'🔧 เคลมอะไหล่'}</span>`; }
+function claimTypeBadge(c){ const r=(c&&c.type==='report'); const col=r?'#d97706':'#2563eb'; return `<span style="font-size:11px;font-weight:700;color:${col};white-space:nowrap;">${r?'แจ้งปัญหา':'เคลมอะไหล่'}</span>`; } // v12.29 ตัวอักษรล้วน ไม่มีสัญลักษณ์
 function renderClaimsView(){
   claimsOpenFilterCol = null; // ตารางถูกสร้างใหม่ทั้งก้อนทุกครั้งที่ render — ดรอปดาวน์ตัวกรอง (ถ้าเปิดค้างอยู่) จะหายไปจาก DOM ไปด้วย ต้องล้างสถานะนี้กันค้าง
   $('claims-identity-wrap').style.display = 'none'; // v9.18 — ซ้ำกับช่อง "คุณคือ" ด้านบน ตัดออก
@@ -14245,7 +14245,7 @@ function renderClaimsView(){
     const symptomShort = escapeHtml(symptomFull||'-');
     return `<tr data-claimrow="${c.id}">
       <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
-      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span></td>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:1px 6px;border-radius:999px;white-space:nowrap;">${st.label}</span></td>
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
       <td style="white-space:nowrap;" title="${escapeHtml(c.claimant||'')}">${escapeHtml(claimantShort(c))}</td>
@@ -22239,6 +22239,7 @@ async function dxRenderClaims(force){
 }
 
 /* v12.22 — ตารางรายการเคลม/แจ้งปัญหา รวมทุก Sup (แดชบอร์ด Manager) + Export Excel */
+function supNick(n){ const m=String(n||'').match(/\(([^)]+)\)/); return (m?m[1]:String(n||'-')).trim(); }
 function mgrClaimsAllFiltered(){
   const fs=$('mgr-claims-f-sup').value, ft=$('mgr-claims-f-type').value, fst=$('mgr-claims-f-status').value;
   const q=($('mgr-claims-f-search').value||'').toLowerCase().trim();
@@ -22253,7 +22254,7 @@ function mgrRenderAllClaims(){
   const list=$('mgr-claims-all-list'); if(!list) return;
   const selSup=$('mgr-claims-f-sup'); const cur=selSup.value;
   const sups=Array.from(new Set((DATA.claims||[]).map(c=>ownerOf(c.category,c.model)))).sort((a,b)=>a.localeCompare(b,'th'));
-  selSup.innerHTML='<option value="">ทุก Sup</option>'+sups.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
+  selSup.innerHTML='<option value="">ทุก Sup</option>'+sups.map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(supNick(x))}</option>`).join('');
   selSup.value=sups.includes(cur)?cur:'';
   const rows=mgrClaimsAllFiltered();
   $('mgr-claims-all-title').textContent=`📋 รายการเคลม/แจ้งปัญหา (ทุก Sup) (${rows.length})`;
@@ -22262,7 +22263,7 @@ function mgrRenderAllClaims(){
     const st=claimStatusInfo(c.status);
     const multi=f=>(c.parts&&c.parts.length?c.parts:[{}]).map(p=>escapeHtml(f(p))).join('<br>');
     return `<tr data-mclaim="${c.id}">
-      <td style="white-space:nowrap;font-weight:600;">${escapeHtml(sup)}</td>
+      <td style="white-space:nowrap;font-weight:600;" title="${escapeHtml(sup)}">${escapeHtml(supNick(sup))}</td>
       <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
       <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span></td>
       <td style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
@@ -22291,7 +22292,7 @@ $('mgr-claims-export-btn').addEventListener('click',()=>{
   if(!rows.length){ showToast('ไม่มีรายการให้ Export'); return; }
   const j=v=>Array.isArray(v)?v.join('\n'):v;
   const data=rows.map(({c,sup})=>{
-    const o={'Sup เจ้าของ':sup};
+    const o={'Sup เจ้าของ':supNick(sup)};
     CLAIMS_COLUMNS.forEach(col=>{ o[col.label]=j(col.getValue(c)); });
     o['สถานะจบเคส/เหตุผล']=c.closeReason||'';
     return o;
