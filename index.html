@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.16
-  อัปเดตล่าสุด   : 18 พฤศจิกายน 2569 23:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.17
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 09:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.16</title>
+<title>F1 Service — v12.17</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1669,10 +1669,11 @@ setTimeout(function(){
       <h3 id="claim-modal-title">บันทึกเคลม/แจ้งปัญหาใหม่</h3>
       <!-- pre-step: เลือกแนบใบงาน Factorium เพื่อดึงข้อมูลอัตโนมัติ หรือกรอกเอง -->
       <div id="claim-prestep-wrap" style="display:none;margin-bottom:14px;">
-        <div style="font-size:12.5px;color:var(--fg2);margin-bottom:8px;">มีใบงาน Factorium (PDF)? แนบเพื่อเติมข้อมูลให้อัตโนมัติ — ไฟล์ใบงานจะอยู่ช่องแนบอันสุดท้าย · ถ้ากรอกข้อมูลเอง จะแนบใบงานที่ท้ายฟอร์มหรือไม่แนบก็ได้</div>
+        <div id="claim-prestep-hint" style="font-size:12.5px;color:var(--fg2);margin-bottom:8px;">มีใบงาน Factorium (PDF)? แนบเพื่อเติมข้อมูลให้อัตโนมัติ — ไฟล์ใบงานจะอยู่ช่องแนบอันสุดท้าย · ถ้ากรอกข้อมูลเอง จะแนบใบงานที่ท้ายฟอร์มหรือไม่แนบก็ได้</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button type="button" class="btn btn-primary btn-sm" id="claim-prestep-pdf-btn">📎 แนบใบงาน (Factorium) เพื่อดึงข้อมูลอัตโนมัติ</button>
           <button type="button" class="btn btn-ghost btn-sm" id="claim-prestep-manual-btn">✏️ กรอกข้อมูลเอง</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="claim-prestep-report-btn" style="display:none;">⚠️ ยังไม่มีใบงาน → แจ้งปัญหา</button>
         </div>
         <input type="file" id="claim-prestep-pdf-input" accept="application/pdf,.pdf" style="display:none;">
         <div id="claim-prestep-status" style="font-size:12px;color:var(--fg2);margin-top:8px;"></div>
@@ -2676,8 +2677,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.16";
-const APP_UPDATED_AT = "18 พฤศจิกายน 2569 23:30 น. เวลาไทย";
+const APP_VERSION = "12.17";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 09:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -12204,7 +12205,11 @@ const CLAIM_ATTACHMENT_GROUPS = [
   {key:'jobSheet', label:'ใบงาน Factorium', required:false}, // v11.35 — อยู่อันสุดท้ายเสมอ · บังคับเฉพาะรายการใหม่ (รายการเก่าที่เปิดแก้ไขไม่ถูกบังคับ)
 ];
 // v11.35 — หมวดนี้บังคับแนบไหม (รายการเก่าที่เปิดมาแก้ไขไม่ถูกบังคับหมวด newOnly)
-function claimGroupRequired(g){ return !!g.required && !(g.newOnly && claimEditingId); }
+function claimGroupRequired(g){
+  // v12.17 — เคลมอะไหล่ใหม่: บังคับแนบใบงาน Factorium (รายการเก่าที่เปิดแก้ไข/แจ้งปัญหา ไม่ถูกบังคับ)
+  if(g.key==='jobSheet' && !claimEditingId && claimDraft && claimDraft.type==='claim') return true;
+  return !!g.required && !(g.newOnly && claimEditingId);
+}
 function claimEnsureAtt(){ if(!claimDraft) return; if(!claimDraft.attachments || Array.isArray(claimDraft.attachments)) claimDraft.attachments = emptyClaimAttachments(); CLAIM_ATTACHMENT_GROUPS.forEach(g=>{ if(!Array.isArray(claimDraft.attachments[g.key])) claimDraft.attachments[g.key] = []; }); }
 function emptyClaimAttachments(){ const o={}; CLAIM_ATTACHMENT_GROUPS.forEach(g=>o[g.key]=[]); return o; }
 
@@ -12626,6 +12631,15 @@ function applyClaimModalTypeUI(type){
   if(solutionLbl) solutionLbl.innerHTML = 'วิธีการแก้ไข' + (isReport?'':' <span style="color:var(--red);">*</span>');
   const loanWrap = $('claim-f-loan-wrap');
   if(loanWrap) loanWrap.style.display = isReport ? 'none' : '';
+  // v12.17 — เคลมอะไหล่ใหม่: ต้องแนบใบงาน Factorium เท่านั้น (ไม่มีกรอกเอง) · ไม่มีใบงาน/เคลมด่วน → แจ้งปัญหา
+  try{
+    const mb = $('claim-prestep-manual-btn'), rb = $('claim-prestep-report-btn'), hint = $('claim-prestep-hint');
+    if(mb) mb.style.display = isReport ? '' : 'none';
+    if(rb) rb.style.display = isReport ? 'none' : '';
+    if(hint) hint.innerHTML = isReport
+      ? 'มีใบงาน Factorium (PDF)? แนบเพื่อเติมข้อมูลให้อัตโนมัติ — ไฟล์ใบงานจะอยู่ช่องแนบอันสุดท้าย · ถ้ากรอกข้อมูลเอง จะแนบใบงานที่ท้ายฟอร์มหรือไม่แนบก็ได้'
+      : '<b>เคลมอะไหล่ต้องแนบใบงาน Factorium (PDF)</b> — ระบบดึงข้อมูลจากใบงานให้อัตโนมัติ<br><span style="color:var(--text-faint);">ยังไม่มีใบงาน (เช่นยังปิดงานไม่ได้) หรือต้องการเคลมอะไหล่ด่วนโดยไม่มีใบงาน → ใช้ "แจ้งปัญหา" แทน</span>';
+  }catch(_){}
 }
 // ตัวเลือกวันที่ในฟอร์มเคลม — บังคับแสดงเป็นปี ค.ศ. (Gregorian) เสมอ ไม่แปลงเป็น พ.ศ. ตามภาษาเครื่อง (ปัญหาที่ input type=date ของเบราว์เซอร์บางตัวบนมือถือไทยทำ)
 let claimProblemDatePicker = null, claimFixDatePicker = null;
@@ -13259,6 +13273,7 @@ $('claim-prestep-manual-btn').addEventListener('click', ()=>{
   $('claim-form-fields-wrap').style.display = '';
 });
 $('claim-prestep-pdf-btn').addEventListener('click', ()=>{ $('claim-prestep-pdf-input').click(); });
+$('claim-prestep-report-btn').addEventListener('click', ()=>{ try{ closeClaimModalWithGuard(); }catch(_){} setTimeout(()=>openClaimModal(null,'report'), 150); });
 $('claim-prestep-pdf-input').addEventListener('change', async (e)=>{
   const file = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -14065,6 +14080,7 @@ function renderClaimsSheetHistoryLink(){
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
   { key:'type', label:'ประเภท', getValue:c=>claimTypeLabel(c) },
+  { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label }, // v12.17 — ย้ายมาต่อจากประเภท
   { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
   { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
   { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
@@ -14077,7 +14093,6 @@ const CLAIMS_COLUMNS = [
   { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
   { key:'closeDate', label:'วันที่ได้รับอะไหล่/จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
-  { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label },
 ];
 let claimsColumnFilters = {}; // { columnKey: Set<string> } — คีย์ไม่มี/ไม่มีอยู่ = ไม่กรองคอลัมน์นั้น (แสดงทุกค่า)
 let claimsOpenFilterCol = null;
@@ -14179,6 +14194,7 @@ function renderClaimsView(){
     const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
     return `<tr data-claimrow="${c.id}">
       <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
@@ -14191,7 +14207,6 @@ function renderClaimsView(){
       <td class="chk" style="white-space:nowrap;">${partCounts}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(closeDateOf(c))||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serviceOrderNo||'-')}</td>
-      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
     </tr>`;
   }).join('');
   const headHtml = CLAIMS_COLUMNS.map(col=>{
