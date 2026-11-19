@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.22
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:55 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.23
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 11:10 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.22</title>
+<title>F1 Service — v12.23</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -158,6 +158,15 @@
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
+  /* v12.23 — การ์ดสรุปสถานะเคลม: เล็กและกระชับ 5 ใบต่อแถว */
+  #claims-dashboard{display:grid !important;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;}
+  #claims-dashboard > div[style*="grid-column:1/-1"]{font-size:11.5px !important;margin:2px 0 0 !important;}
+  #claims-dashboard .stat-card{padding:6px 10px;min-width:0;border-radius:8px;}
+  #claims-dashboard .stat-card .label{font-size:11px;line-height:1.2;margin:0 0 2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  #claims-dashboard .stat-card .value{font-size:20px;line-height:1.1;}
+  #claims-dashboard .stat-card .cd-sub{font-size:9.5px !important;margin-top:0 !important;line-height:1.2;}
+  #claims-dashboard .cd-c3,#claims-dashboard .cd-c2{grid-column:auto;}
+  @media (max-width:760px){ #claims-dashboard{grid-template-columns:repeat(3,minmax(0,1fr));} }
   #claims-table{min-width:0;font-size:12px;border-collapse:collapse;}
   #mgr-claims-table{min-width:0;font-size:12px;border-collapse:collapse;}
   #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:normal;line-height:1.25;padding:6px 6px;font-size:10px;}
@@ -2705,8 +2714,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.22";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:55 น. เวลาไทย";
+const APP_VERSION = "12.23";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 11:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
