@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.33
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 13:50 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.34
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:00 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.33</title>
+<title>F1 Service — v12.34</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1442,7 +1442,7 @@ setTimeout(function(){
         <button data-doctype="spare_part">🔧 Spare Part</button>
         <button data-doctype="install_manual">📖 Install Manual</button>
         <button data-doctype="install_checklist">📋 Install</button>
-        <button data-doctype="refurbish_checklist">♻️ Refur &amp; Performance</button>
+        <button data-doctype="refurbish_checklist">♻️ QC Checklist</button>
         <button data-doctype="pm_checklist">🗓️ PM</button>
         <button data-doctype="protocol">📜 Protocol</button>
         <button data-doctype="diagram">📐 Diagram</button>
@@ -2732,8 +2732,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.33";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 13:50 น. เวลาไทย";
+const APP_VERSION = "12.34";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:00 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -3156,7 +3156,7 @@ const DOC_TYPES = [
   {key:'spare_part', label:'Spare Part', icon:'🔧'},
   {key:'install_manual', label:'Install Manual', icon:'📖'}, // v12.33
   {key:'install_checklist', label:'Install Checklist', icon:'📋'},
-  {key:'refurbish_checklist', label:'Refur & Performance Checklist', icon:'♻️'},
+  {key:'refurbish_checklist', label:'QC Checklist', icon:'♻️'},
   {key:'pm_checklist', label:'PM Checklist', icon:'🗓️'},
   {key:'protocol', label:'Protocol', icon:'📜'},
   {key:'diagram', label:'Diagram', icon:'📐'},
