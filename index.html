@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.19
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:00 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.20
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 10:20 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.19</title>
+<title>F1 Service — v12.20</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -158,10 +158,15 @@
   #sup-doc-matrix thead th{ position:sticky; top:0; background:var(--panel); z-index:5; box-shadow:0 1px 0 var(--border); }
   /* ตารางรายการเคลม สไตล์ Excel — เลื่อนแนวนอน/แนวตั้งได้ในตัว หัวตารางติดด้านบนเสมอ */
   .claims-table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--border);border-radius:8px;}
-  #claims-table{min-width:1150px;font-size:12.5px;border-collapse:collapse;}
-  #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:nowrap;}
+  #claims-table{min-width:0;font-size:12px;border-collapse:collapse;}
+  #claims-table thead th{position:sticky;top:0;background:var(--panel);z-index:5;white-space:normal;line-height:1.25;padding:6px 6px;font-size:10px;}
   #claims-table tbody tr{cursor:pointer;}
-  #claims-table td{font-size:12.5px;}
+  #claims-table td{font-size:12px;padding:5px 6px;}
+  /* v12.20 — ตารางกะทัดรัด + แถวสลับเข้ม/อ่อน · อาการ/ชื่อ รพ. ขึ้นได้สูงสุด 2 บรรทัด */
+  #claims-table tbody tr:nth-child(odd) td{background:var(--panel);}
+  #claims-table tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--text) 7%, var(--panel));}
+  #claims-table tbody tr:hover td{background:color-mix(in srgb, var(--amber) 16%, var(--panel));}
+  #claims-table .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;line-height:1.35;}
   /* เส้นตารางแบบ Excel — ขีดเส้นทั้งแถวและคอลัมน์ให้เห็นชัดเจน (ไม่ใช่แค่เส้นใต้แถวแบบตารางทั่วไปในแอป) */
   #claims-table th, #claims-table td{border:1px solid var(--border);}
   #claims-table{border:1px solid var(--border);}
@@ -2677,8 +2682,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.19";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:00 น. เวลาไทย";
+const APP_VERSION = "12.20";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 10:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14085,14 +14090,14 @@ const CLAIMS_COLUMNS = [
   { key:'status', label:'สถานะ', getValue:c=>claimStatusInfo(c.status).label }, // v12.17 — ย้ายมาต่อจากประเภท
   { key:'createdAt', label:'วันที่รับแจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
   { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
-  { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
+  { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>claimantShort(c) },
   { key:'siteName', label:'ชื่อ รพ.', getValue:c=>c.siteName||'-' },
   { key:'model', label:'รุ่น', getValue:c=>c.model||'-' },
   { key:'serialNumber', label:'S/N', getValue:c=>c.serialNumber||'-' },
   { key:'problem', label:'อาการ', getValue:c=>c.problem||'-' },
   { key:'partNumber', label:'Part Number', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partNumber||'-'):['-']) },
   { key:'partName', label:'Part Name', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>p.partName||'-'):['-']) },
-  { key:'partCount', label:'จำนวน (ชิ้น)', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>(p.qty||p.count||'-').toString()):['-']) },
+  { key:'partCount', label:'จำนวน', getValue:c=>(c.parts&&c.parts.length?c.parts.map(p=>qtyInt(p.qty||p.count)):['-']) },
   { key:'openDate', label:'วันที่ทำเคลม/เปิดเคส', getValue:c=>dateTh(c.openDate)||'-' }, // v12.19 — Sup กรอกเอง
   { key:'closeDate', label:'วันที่ได้รับอะไหล่/จบเคส', getValue:c=>dateTh(closeDateOf(c))||'-' }, // v12.07 — วันที่ Sup กรอกตอนจบเคส (เอาวันที่แก้ไขออกจากตารางแล้ว)
   { key:'serviceOrderNo', label:'Service Order', getValue:c=>c.serviceOrderNo||'-' },
@@ -14163,6 +14168,9 @@ document.addEventListener('click', (e)=>{
 });
 
 // v12.11 — ประเภทรายการ: เคลมอะไหล่ / แจ้งปัญหา (เอกสารเก่าที่ไม่มี type = เคลม)
+// v12.20 — ชื่อผู้แจ้งเฉพาะชื่อ (ตัดเขต/ต่อท้าย เช่น "ตุ๊ก - เหนือบน" → "ตุ๊ก") · จำนวนเป็นจำนวนเต็ม ไม่มีทศนิยม
+function claimantShort(c){ return String((c&&c.claimant)||'-').split(/\s+[-–—]\s+/)[0].trim() || '-'; }
+function qtyInt(v){ const n = parseFloat(v); return (v!==undefined && v!==null && v!=='' && isFinite(n)) ? String(Math.trunc(n)) : '-'; }
 function claimTypeLabel(c){ return (c && c.type==='report') ? 'แจ้งปัญหา' : 'เคลมอะไหล่'; }
 function claimTypeBadge(c){ const r=(c&&c.type==='report'); const col=r?'#d97706':'#2563eb'; return `<span style="font-size:11px;font-weight:600;color:${col};background:${col}1a;padding:2px 8px;border-radius:6px;">${r?'⚠️ แจ้งปัญหา':'🔧 เคลมอะไหล่'}</span>`; }
 function renderClaimsView(){
@@ -14192,19 +14200,19 @@ function renderClaimsView(){
     const parts = (c.parts&&c.parts.length) ? c.parts : [{partNumber:'-',partName:'-',qty:'-'}];
     const partNumbers = parts.map(p=>escapeHtml(p.partNumber||'-')).join('<br>');
     const partNames = parts.map(p=>escapeHtml(p.partName||'-')).join('<br>');
-    const partCounts = parts.map(p=>escapeHtml((p.qty||p.count||'-').toString())).join('<br>');
+    const partCounts = parts.map(p=>escapeHtml(qtyInt(p.qty||p.count))).join('<br>');
     const symptomFull = c.problem||'';
-    const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
+    const symptomShort = escapeHtml(symptomFull||'-');
     return `<tr data-claimrow="${c.id}">
       <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
       <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span></td>
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
-      <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
-      <td style="white-space:nowrap;">${escapeHtml(c.siteName||'-')}</td>
+      <td style="white-space:nowrap;" title="${escapeHtml(c.claimant||'')}">${escapeHtml(claimantShort(c))}</td>
+      <td style="max-width:190px;white-space:normal;" title="${escapeHtml(c.siteName||'')}"><div class="clamp2">${escapeHtml(c.siteName||'-')}</div></td>
       <td style="white-space:nowrap;">${escapeHtml(c.model||'-')}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(c.serialNumber||'-')}</td>
-      <td style="max-width:240px;white-space:normal;" title="${escapeHtml(symptomFull)}">${symptomShort}</td>
+      <td style="min-width:240px;max-width:360px;white-space:normal;" title="${escapeHtml(symptomFull)}"><div class="clamp2">${symptomShort}</div></td>
       <td class="frac" style="white-space:nowrap;">${partNumbers}</td>
       <td style="white-space:nowrap;">${partNames}</td>
       <td class="chk" style="white-space:nowrap;">${partCounts}</td>
