@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.17
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 09:30 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.18
+  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 09:40 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.17</title>
+<title>F1 Service — v12.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2677,8 +2677,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.17";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 09:30 น. เวลาไทย";
+const APP_VERSION = "12.18";
+const APP_UPDATED_AT = "19 พฤศจิกายน 2569 09:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -14080,7 +14080,7 @@ function renderClaimsSheetHistoryLink(){
 // นิยามคอลัมน์ของตารางเคลม — getValue คืนค่าดิบ (string หรือ array ของ string ถ้า 1 เคลมมีได้หลายค่า เช่น Part หลายแถว) ใช้ทั้งสร้างตัวเลือกกรองและกรองจริง
 const CLAIMS_COLUMNS = [
   { key:'type', label:'ประเภท', getValue:c=>claimTypeLabel(c) },
-  { key:'status', label:'สถานะ/การจัดการ', getValue:c=>claimStatusInfo(c.status).label }, // v12.17 — ย้ายมาต่อจากประเภท
+  { key:'status', label:'สถานะ', getValue:c=>claimStatusInfo(c.status).label }, // v12.17 — ย้ายมาต่อจากประเภท
   { key:'createdAt', label:'วันที่แจ้ง', getValue:c=>c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-' },
   { key:'problemDate', label:'วันที่พบปัญหา', getValue:c=>dateTh(c.problemDate)||'-' },
   { key:'claimant', label:'ชื่อผู้แจ้ง', getValue:c=>c.claimant||'-' },
@@ -14194,7 +14194,7 @@ function renderClaimsView(){
     const symptomShort = escapeHtml(symptomFull.length>60 ? symptomFull.slice(0,60)+'…' : (symptomFull||'-'));
     return `<tr data-claimrow="${c.id}">
       <td style="white-space:nowrap;">${claimTypeBadge(c)}</td>
-      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span> <button class="btn btn-ghost btn-sm" data-managebtn="${c.id}" style="margin-left:6px;padding:3px 9px;font-size:11px;">จัดการ</button></td>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${st.color};border:1px solid ${st.color};padding:2px 8px;border-radius:999px;">${st.label}</span></td>
       <td class="frac" style="white-space:nowrap;">${c.createdAt?new Date(c.createdAt).toLocaleDateString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}</td>
       <td class="frac" style="white-space:nowrap;">${escapeHtml(dateTh(c.problemDate)||'-')}</td>
       <td style="white-space:nowrap;">${escapeHtml(c.claimant||'-')}</td>
@@ -14219,8 +14219,7 @@ function renderClaimsView(){
       <tbody>${rowsHtml || `<tr><td colspan="${CLAIMS_COLUMNS.length}" style="text-align:center;color:var(--text-faint);">ไม่พบรายการที่ตรงกับตัวกรอง</td></tr>`}</tbody>
     </table>
   </div>`;
-  list.querySelectorAll('[data-claimrow]').forEach(el=>el.addEventListener('click', (e)=>{ if(e.target.closest('[data-managebtn]')) return; openClaimDetail(el.getAttribute('data-claimrow')); }));
-  list.querySelectorAll('[data-managebtn]').forEach(el=>el.addEventListener('click', (e)=>{ e.stopPropagation(); openClaimDetail(el.getAttribute('data-managebtn')); }));
+  list.querySelectorAll('[data-claimrow]').forEach(el=>el.addEventListener('click', (e)=>{ openClaimDetail(el.getAttribute('data-claimrow')); }));
   list.querySelectorAll('[data-filterbtn]').forEach(el=>el.addEventListener('click', (e)=>{ e.stopPropagation(); openColumnFilterDropdown(el.getAttribute('data-filterbtn'), claimsBeforeColumnFilters); }));
 }
 $('claims-filter-status').addEventListener('change', renderClaimsView);
