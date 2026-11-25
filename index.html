@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.40</title>
+<title>F1 Service — v12.41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2223,17 +2223,29 @@ setTimeout(function(){
 
     <!-- Sub-tab bar (v8.36) -->
     <div id="mgr-subtabs" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;">
-      <button class="btn btn-ghost btn-sm active" data-mgrtab="summary" style="white-space:nowrap;">📊 สรุปข้อมูล</button>
+      <button class="btn btn-ghost btn-sm active" data-mgrtab="summary" style="white-space:nowrap;">📈 KPI Product</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="claims" style="white-space:nowrap;">🔧 เคลม</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="usage" style="white-space:nowrap;">🩺 Troubleshoot</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="return" style="white-space:nowrap;">📦 อะไหล่คืน</button>
-      <button class="btn btn-ghost btn-sm" data-mgrtab="cert" style="white-space:nowrap;">🎓 Certificate</button>
+      <button class="btn btn-ghost btn-sm" data-mgrtab="cert" style="white-space:nowrap;">🎓 KPI Certificate</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="people" style="white-space:nowrap;">👥 ผู้ใช้งาน</button>
       <button class="btn btn-ghost btn-sm" data-mgrtab="pending" style="white-space:nowrap;">🔔 งานค้างทั้งหมด <span class="badge-count" id="mgr-pending-total-badge" style="display:none;margin-left:4px;">0</span></button>
     </div>
 
     <!-- Sub-page 1: สรุปข้อมูล -->
     <div id="mgr-sub-summary">
+      <!-- v12.41 — KPI Product: ความครบถ้วนเอกสารตามเกณฑ์ที่ Manager ตั้ง -->
+      <div class="panel-block" id="pkpi-block">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div><h2 style="margin:0;">📈 KPI Product</h2><p class="panel-sub" style="margin-top:2px;">ความครบถ้วนของเอกสารรายรุ่น แยกตาม Sup Product</p></div>
+          <button class="btn btn-ghost btn-sm" id="pkpi-open" style="display:none;">⚙️ ตั้งเกณฑ์ KPI</button>
+        </div>
+        <div id="pkpi-set" style="display:none;border:1px solid var(--amber);border-radius:8px;padding:12px;margin:10px 0;"></div>
+        <div id="pkpi-crit" style="font-size:12.5px;color:var(--text-dim);background:var(--panel-alt);border-radius:8px;padding:8px 10px;margin:10px 0;line-height:1.7;"></div>
+        <div id="pkpi-cards" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;"></div>
+        <div style="overflow-x:auto;"><table id="pkpi-table"></table></div>
+        <div id="pkpi-detail"></div>
+      </div>
       <!-- ข้อมูล Troubleshoot — แสดงทันที ไม่ต้องกดดู -->
       <div class="panel-block">
         <h2>📊 ข้อมูล Troubleshoot</h2>
@@ -2735,8 +2747,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.40";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 14:30 น. เวลาไทย";
+const APP_VERSION = "12.41";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 15:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -6595,11 +6607,11 @@ const MAINTENANCE_MODE_LIST = [
   { key:'trainadmin',    label:'📅 จัดการตารางเทรน (อัปโหลดรูป/ไฟล์ผู้ผลิต)', up:true },
   { head:'📊 Dashboard' },
   { key:'mgr', label:'📊 Dashboard ทั้งหมด', children:[
-    { key:'mgr:summary', label:'ภาพรวม' },
+    { key:'mgr:summary', label:'KPI Product' },
     { key:'mgr:claims',  label:'เคลม' },
     { key:'mgr:usage',   label:'Troubleshoot' },
     { key:'mgr:return',  label:'อะไหล่คืน' },
-    { key:'mgr:cert',    label:'Certificate' },
+    { key:'mgr:cert',    label:'KPI Certificate' },
     { key:'mgr:people',  label:'ผู้ใช้งาน' },
     { key:'mgr:pending', label:'งานค้าง' },
   ]},
@@ -8931,13 +8943,15 @@ const NAVX = [
     { t:'📅 จัดการตารางเทรน',      m:'trainadmin', k:'mg_train', cap:'s' }
   ]},
   { id:'dash', label:'📊 Dashboard', lvl:'editor', items:[
-    { t:'ภาพรวม',        m:'mgr', mtab:'summary', k:'d_sum',     cap:'s' },
     { t:'เคลม',          m:'mgr', mtab:'claims',  k:'d_claims',  cap:'s' },
     { t:'Troubleshoot',  m:'mgr', mtab:'usage',   k:'d_usage',   cap:'s' },
     { t:'อะไหล่คืน',      m:'mgr', mtab:'return',  k:'d_return',  cap:'s' },
-    { t:'Certificate',   m:'mgr', mtab:'cert',    k:'d_cert',    cap:'s' },
     { t:'ผู้ใช้งาน',      m:'mgr', mtab:'people',  k:'d_people',  cap:'s' },
     { t:'งานค้าง',        m:'mgr', mtab:'pending', k:'d_pending', cap:'s' }
+  ]},
+  { id:'kpi', label:'📈 KPI', lvl:'editor', items:[
+    { t:'KPI Product',     m:'mgr', mtab:'summary', k:'d_sum',  cap:'s' },
+    { t:'KPI Certificate', m:'mgr', mtab:'cert',    k:'d_cert', cap:'s' }
   ]},
   { id:'sys', label:'⚙️ ระบบ', lvl:'editor', items:[
     { t:'🔐 สิทธิ์ผู้ใช้',       m:'settings', stab:'access',  k:'sys_access', cap:'s' },
@@ -15025,6 +15039,91 @@ function renderMgrColsPanel(panelId, key, colNames, onChange){
 $('mgr-table-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-table-cols-panel'); p.style.display = p.style.display==='none'?'block':'none'; });
 $('mgr-doc-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-doc-cols-panel'); p.style.display = p.style.display==='none'?'block':'none'; });
 
+
+/* ===================== v12.41 — KPI Product (เกณฑ์เอกสารที่ Manager กำหนดเอง) ===================== */
+const PKPI_DEFAULT = { docs:['service_manual','pm_checklist','install_checklist'], thr:80 };
+let pkpiCfg = JSON.parse(JSON.stringify(PKPI_DEFAULT)), pkpiLoaded = false, pkpiSel = null, pkpiEdit = null;
+async function pkpiLoad(){
+  if(pkpiLoaded) return; pkpiLoaded = true;
+  try{
+    await initFirebase(); const sdk = window._firebaseSdk;
+    const snap = await sdk.getDoc(sdk.doc(db,'meta','productKpi'));
+    if(snap.exists()){
+      const d = snap.data(), keys = COVERAGE_COLUMNS.map(c=>c.key);
+      const docs = (d.docs||[]).filter(k=>keys.includes(k)), thr = Number(d.thr);
+      if(docs.length && thr>0 && thr<=100) pkpiCfg = { docs, thr };
+    }
+  }catch(e){ console.warn('โหลดเกณฑ์ KPI Product ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
+  try{ pkpiRender(); }catch(_){}
+}
+function pkpiModels(sp){
+  const list = [];
+  Object.entries(DATA.categories||{}).sort(([a],[b])=>naturalSort(a,b)).forEach(([cat,models])=>{ [...models].sort(naturalSort).forEach(m=>{ if(ownerOf(cat,m)===sp) list.push({category:cat, model:m}); }); });
+  return list;
+}
+function pkpiScore(sp, cfg){
+  const models = pkpiModels(sp);
+  const detail = models.map(({category,model})=>{
+    const need = cfg.docs.filter(k=>!isCoverageNoDoc(k, category, model));
+    const miss = need.filter(k=>!hasCoverageDoc(k, category, model));
+    return { model, need: need.length, miss };
+  });
+  const full = detail.filter(d=>!d.miss.length).length;
+  return { n:models.length, full, pct: models.length ? full/models.length*100 : null, detail };
+}
+function pkpiColLabel(k){ const c = COVERAGE_COLUMNS.find(x=>x.key===k); return c ? c.label : k; }
+function pkpiRender(){
+  const box = $('pkpi-block'); if(!box || !DATA || !DATA.categories) return;
+  if(!pkpiLoaded){ pkpiLoad(); }
+  const cfg = pkpiCfg, canEdit = isSuperAdmin() && !isCEOReal();
+  $('pkpi-open').style.display = canEdit ? '' : 'none';
+  $('pkpi-crit').innerHTML = `เกณฑ์เอกสาร: <b>${cfg.docs.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</b><br>วิธีคิด: รุ่นนับว่า “ครบ” เมื่อมีเอกสารครบทุกประเภทที่เลือก (รุ่นที่ระบุ “ไม่มีเอกสาร” แล้วไม่นับเป็นขาด) · ผ่านเมื่อ % รุ่นที่ครบ ≥ <b>${cfg.thr}%</b>`;
+  const rows = SUP_PRODUCTS.map(sp=>({ sp, r:pkpiScore(sp, cfg) })).filter(x=>x.r.n>0);
+  const pass = rows.filter(x=>x.r.pct>=cfg.thr).length;
+  const avg = rows.length ? rows.reduce((a,x)=>a+x.r.pct,0)/rows.length : 0;
+  const card = (v,t,c)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--panel-alt);"><b class="mono" style="font-size:19px;${c?'color:'+c+';':''}">${v}</b><div style="font-size:11.5px;color:var(--text-dim);">${t}</div></div>`;
+  $('pkpi-cards').innerHTML = card(rows.length,'Sup ที่ประเมิน')+card(pass,'ผ่านเกณฑ์','var(--green)')+card(rows.length-pass,'ยังไม่ผ่าน','var(--red)')+card(avg.toFixed(0)+'%','เฉลี่ยรวม');
+  $('pkpi-table').innerHTML = `<thead><tr><th>Sup Product</th><th>รุ่นที่ดูแล</th><th>รุ่นที่ครบ</th><th>% ตามเกณฑ์</th><th>ผล</th></tr></thead><tbody>` + rows.map(({sp,r})=>{
+    const ok = r.pct>=cfg.thr;
+    return `<tr data-pk="${escapeHtml(sp)}" style="cursor:pointer;${pkpiSel===sp?'background:var(--panel-alt);':''}"><td><strong>${escapeHtml(supNick(sp))}</strong></td><td class="mono">${r.n}</td><td class="mono">${r.full}/${r.n}</td>
+      <td><span style="display:inline-block;width:80px;height:7px;background:var(--panel-alt);border:1px solid var(--border);border-radius:4px;vertical-align:middle;margin-right:8px;overflow:hidden;"><i style="display:block;height:100%;width:${r.pct.toFixed(0)}%;background:${ok?'var(--green)':'var(--red)'};"></i></span><span class="mono">${r.pct.toFixed(0)}%</span></td>
+      <td style="color:${ok?'var(--green)':'var(--red)'};font-weight:600;">${ok?'✓ ผ่าน':'✗ ไม่ผ่าน'}</td></tr>`;
+  }).join('') + (rows.length?'':'<tr><td colspan="5" style="color:var(--text-faint);">ยังไม่มีรุ่นที่มีเจ้าของดูแล</td></tr>') + '</tbody>';
+  $('pkpi-table').querySelectorAll('tr[data-pk]').forEach(tr=>tr.onclick=()=>{ pkpiSel = pkpiSel===tr.dataset.pk ? null : tr.dataset.pk; pkpiRender(); });
+  const cur = rows.find(x=>x.sp===pkpiSel);
+  $('pkpi-detail').innerHTML = cur ? `<div style="margin-top:10px;border:1px dashed var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;"><b>${escapeHtml(supNick(cur.sp))}</b> — รุ่นที่ยังไม่ครบ<div style="margin-top:6px;">` + (cur.r.detail.filter(d=>d.miss.length).map(d=>`<div style="padding:3px 0;"><span class="mono" style="display:inline-block;min-width:110px;">${escapeHtml(d.model)}</span> <span style="color:var(--red);">ขาด: ${d.miss.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</span></div>`).join('') || '<span style="color:var(--green);">ครบทุกรุ่น 🎉</span>') + '</div></div>' : '';
+  if(pkpiEdit) pkpiRenderEdit();
+}
+function pkpiRenderEdit(){
+  const e = pkpiEdit, el = $('pkpi-set'); if(!e){ el.style.display='none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">⚙️ ตั้งเกณฑ์ KPI Product <span style="font-weight:400;font-size:11.5px;color:var(--text-faint);">(Manager / Super Admin)</span></div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">1) เลือกเอกสารที่นำมาคิด</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;margin-bottom:10px;">${COVERAGE_COLUMNS.map(c=>`<label style="display:flex;gap:7px;align-items:center;border:1px solid ${e.docs.includes(c.key)?'var(--green)':'var(--border)'};border-radius:7px;padding:6px 9px;font-size:12.5px;cursor:pointer;background:var(--panel-alt);"><input type="checkbox" data-pkdoc="${escapeHtml(c.key)}" ${e.docs.includes(c.key)?'checked':''}> ${c.icon} ${escapeHtml(c.label)}</label>`).join('')}</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">2) เกณฑ์ผ่าน</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;">ผ่านเมื่อ ≥ <input type="number" id="pkpi-thr" min="1" max="100" value="${e.thr}" style="width:72px;padding:4px 6px;"> %
+      <span style="flex:1"></span><button class="btn btn-ghost btn-sm" id="pkpi-cancel">ยกเลิก</button><button class="btn btn-primary btn-sm" id="pkpi-save">บันทึกเกณฑ์</button></div>
+    <div id="pkpi-err" style="color:var(--red);font-size:12px;margin-top:6px;"></div>`;
+  el.querySelectorAll('[data-pkdoc]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkdoc; e.docs = cb.checked ? [...new Set([...e.docs,k])] : e.docs.filter(x=>x!==k); e.thr = +$('pkpi-thr').value||e.thr; pkpiRender(); });
+  $('pkpi-cancel').onclick = ()=>{ pkpiEdit = null; $('pkpi-set').style.display='none'; };
+  $('pkpi-save').onclick = async ()=>{
+    const thr = Math.round(+$('pkpi-thr').value);
+    if(!e.docs.length){ $('pkpi-err').textContent = 'ต้องเลือกเอกสารอย่างน้อย 1 ประเภท'; return; }
+    if(!(thr>=1 && thr<=100)){ $('pkpi-err').textContent = 'เกณฑ์ผ่านต้องอยู่ระหว่าง 1–100%'; return; }
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      const keys = COVERAGE_COLUMNS.map(c=>c.key), docs = keys.filter(k=>e.docs.includes(k)); // เรียงตามลำดับ DOC_TYPES
+      await sdk.setDoc(sdk.doc(db,'meta','productKpi'), { docs, thr, updatedBy:myUserEmail||'', updatedAt:Date.now() });
+      pkpiCfg = { docs, thr }; pkpiEdit = null; $('pkpi-set').style.display='none';
+      try{ fsWriteLog('ตั้งเกณฑ์ KPI Product'); }catch(_){}
+      showToast('✅ บันทึกเกณฑ์ KPI แล้ว'); pkpiRender();
+    }catch(err){ $('pkpi-err').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
+  };
+}
+document.addEventListener('click', ev=>{
+  if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } pkpiEdit = pkpiEdit ? null : { docs:[...pkpiCfg.docs], thr:pkpiCfg.thr }; if(pkpiEdit) pkpiRender(); else $('pkpi-set').style.display='none'; }
+});
+
 function renderMgrView(){
   const rows = SUP_PRODUCTS.map(name=>{
     const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
@@ -15079,6 +15178,7 @@ function renderMgrView(){
   dhtml += `</tbody>`;
   $('mgr-doc-summary').innerHTML = dhtml;
   renderMgrColsPanel('mgr-doc-cols-panel', 'doc', docColNames, renderMgrView);
+  try{ pkpiRender(); }catch(e){ console.warn('KPI Product:', e); }
 }
 
 /* ===================== MANAGER: รายการรอดำเนินการ (v8.36) ===================== */
