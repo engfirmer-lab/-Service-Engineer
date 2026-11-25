@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.43</title>
+<title>F1 Service — v12.44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2246,6 +2246,16 @@ setTimeout(function(){
         <div style="overflow-x:auto;"><table id="pkpi-table"></table></div>
         <div id="pkpi-detail"></div>
       </div>
+        <div class="panel-block" id="tbkpi-block">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div><h2 style="margin:0;">🩺 KPI Troubleshoot</h2><p class="panel-sub" style="margin-top:2px;">จำนวน Error ที่ Sup กรอก → คะแนน</p></div>
+          <button class="btn btn-ghost btn-sm" id="tbkpi-open" style="display:none;">⚙️ ตั้งเกณฑ์ KPI</button>
+        </div>
+        <div id="tbkpi-set" style="display:none;border:1px solid var(--amber);border-radius:8px;padding:12px;margin:10px 0;"></div>
+        <div id="tbkpi-crit" style="font-size:12.5px;color:var(--text-dim);background:var(--panel-alt);border-radius:8px;padding:8px 10px;margin:10px 0;line-height:1.7;"></div>
+        <div style="overflow-x:auto;"><table id="tbkpi-table"></table></div>
+      </div>
+
       <!-- ข้อมูล Troubleshoot — แสดงทันที ไม่ต้องกดดู -->
       <div class="panel-block">
         <h2>📊 ข้อมูล Troubleshoot</h2>
@@ -2747,8 +2757,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.43";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 16:20 น. เวลาไทย";
+const APP_VERSION = "12.44";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 16:50 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15053,6 +15063,7 @@ async function pkpiLoad(){
     await initFirebase(); const sdk = window._firebaseSdk;
     const snap = await sdk.getDoc(sdk.doc(db,'meta','certKpi'));
     const p = snap.exists() ? snap.data().product : null;
+    try{ const t = snap.exists() ? snap.data().trbl : null; if(t && Array.isArray(t.bands)){ const nb = t.bands.map(r=>({min:Number(r.min),max:Number(r.max),score:Number(r.score)})); if(!tbCheck(nb)) tbCfg = { bands: nb }; } }catch(_){}
     if(p){
       const keys = COVERAGE_COLUMNS.map(c=>c.key);
       const docs = (p.docs||[]).filter(k=>keys.includes(k));
@@ -15061,6 +15072,7 @@ async function pkpiLoad(){
     }
   }catch(e){ console.warn('โหลดเกณฑ์ KPI Product ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
   try{ pkpiRender(); }catch(_){}
+  try{ tbRender(); }catch(_){}
 }
 function pkpiModels(sp){
   const list = [];
@@ -15151,6 +15163,72 @@ document.addEventListener('click', ev=>{
   if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } if(pkpiEdit){ pkpiEdit = null; $('pkpi-set').style.display='none'; pkpiRender(); } else { pkpiEdit = { docs:[...pkpiCfg.docs], excl:[...(pkpiCfg.excl||[])], bands:JSON.parse(JSON.stringify(pkpiCfg.bands)).sort((a,b)=>a.min-b.min) }; pkpiRender(); } }
 });
 
+/* ===================== v12.44 — KPI Troubleshoot (จำนวน Error ที่ Sup กรอก → คะแนน) ===================== */
+const TBKPI_BANDS_DEFAULT = [ {min:30,max:9999,score:5}, {min:24,max:29,score:4}, {min:18,max:23,score:3}, {min:12,max:17,score:2}, {min:6,max:11,score:1}, {min:0,max:5,score:0} ];
+let tbCfg = { bands: JSON.parse(JSON.stringify(TBKPI_BANDS_DEFAULT)) }, tbEdit = null;
+function tbCheck(bands){
+  if(!Array.isArray(bands) || !bands.length) return 'ยังไม่มีช่วงคะแนน';
+  const ok = v=> typeof v==='number' && isFinite(v);
+  const b = bands.slice().sort((x,y)=>x.min-y.min);
+  for(let i=0;i<b.length;i++){
+    const r = b[i];
+    if(!ok(r.min) || !ok(r.max) || !ok(r.score)) return 'ช่วงคะแนนมีช่องที่ยังไม่กรอก หรือไม่ใช่ตัวเลข';
+    if(!Number.isInteger(r.min) || !Number.isInteger(r.max)) return 'จำนวนต้องเป็นจำนวนเต็ม';
+    if(r.min<0 || r.min>r.max) return 'ช่วง '+r.min+'–'+r.max+' ไม่ถูกต้อง ("ตั้งแต่" ต้องไม่เกิน "ถึง")';
+    if(r.score<0) return 'คะแนนต้องไม่ติดลบ';
+    if(i===0 && r.min!==0) return 'ช่วงแรกต้องเริ่มที่ 0 (ขาด 0–'+(r.min-1)+')';
+    if(i>0){ const need = b[i-1].max+1; if(r.min<need) return 'ช่วง '+b[i-1].min+'–'+b[i-1].max+' ซ้อนกับ '+r.min+'–'+r.max; if(r.min>need) return 'ช่วงไม่ต่อเนื่อง ขาด '+need+'–'+(r.min-1); }
+  }
+  if(b[b.length-1].max<9999) return 'ช่วงสุดท้ายต้องเป็น “ขึ้นไป” (ใส่ถึง 9999)';
+  return '';
+}
+function tbScoreOf(n, cfg){ const b = cfg.bands.find(r=>n>=r.min && n<=r.max); return b ? b.score : 0; }
+function tbRange(r){ return r.max>=9999 ? r.min+' ขึ้นไป' : (r.min===r.max ? String(r.min) : r.min+'–'+r.max); }
+function tbRender(){
+  const box = $('tbkpi-block'); if(!box || !DATA || !DATA.errors) return;
+  const canEdit = isSuperAdmin() && !isCEOReal();
+  $('tbkpi-open').style.display = canEdit ? '' : 'none';
+  const cfg = (tbEdit && !tbCheck(tbEdit.bands)) ? { bands:tbEdit.bands } : tbCfg;
+  const mx = Math.max.apply(null, cfg.bands.map(r=>r.score));
+  $('tbkpi-crit').innerHTML = `วิธีคิด: นับจำนวน Error ที่ Sup กรอกไว้ (ยอดสะสม ณ ปัจจุบัน) · ${cfg.bands.slice().sort((a,b)=>b.min-a.min).map(r=>`${tbRange(r)} = <b>${r.score}</b>`).join(' · ')}`;
+  const rows = SUP_PRODUCTS.map(sp=>{ const n = DATA.errors.filter(e=>ownerOf(e.category,e.model)===sp).length; return { sp, n, score:tbScoreOf(n,cfg) }; });
+  $('tbkpi-table').innerHTML = `<thead><tr><th>Sup Product</th><th>Error ที่กรอก</th><th>คะแนน</th></tr></thead><tbody>` + rows.map(r=>{ const col = certKpiScoreColor(r.score,{bands:cfg.bands});
+    return `<tr><td><strong>${escapeHtml(supNick(r.sp))}</strong></td><td class="mono">${r.n}</td><td class="mono" style="color:${col};font-weight:700;font-size:15px;">${r.score}<span style="font-weight:400;font-size:11.5px;color:var(--text-faint);"> / ${mx}</span></td></tr>`; }).join('') + '</tbody>';
+  if(tbEdit && !tbEdit.skipForm) tbRenderEdit();
+}
+function tbRenderEdit(){
+  const e = tbEdit, el = $('tbkpi-set'); if(!e){ el.style.display='none'; return; }
+  el.style.display = 'block';
+  const inp = 'width:70px;border:1px solid var(--border);border-radius:6px;padding:4px 5px;font:inherit;background:var(--panel);color:inherit;text-align:center;';
+  const val = v=> (typeof v==='number' && isFinite(v)) ? v : '';
+  el.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">⚙️ ตั้งเกณฑ์ KPI Troubleshoot <span style="font-weight:400;font-size:11.5px;color:var(--text-faint);">(Manager / Super Admin)</span></div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">ช่วงจำนวน Error → คะแนน (ช่วงสุดท้ายใส่ “ถึง 9999” = ขึ้นไป)</div>
+    <table style="border-collapse:collapse;font-size:13px;"><tbody>${e.bands.map((r,i)=>`<tr data-i="${i}"><td style="padding:3px 6px;white-space:nowrap;">ตั้งแต่ <input class="tb-b" data-f="min" type="number" min="0" step="1" value="${val(r.min)}" style="${inp}"></td><td style="padding:3px 6px;white-space:nowrap;">ถึง <input class="tb-b" data-f="max" type="number" min="0" step="1" value="${val(r.max)}" style="${inp}"></td><td style="padding:3px 6px;white-space:nowrap;">= <input class="tb-b" data-f="score" type="number" min="0" step="any" value="${val(r.score)}" style="${inp}"> คะแนน</td><td><button class="btn btn-ghost btn-sm tb-del" data-i="${i}" title="ลบช่วงนี้">✕</button></td></tr>`).join('')}</tbody></table>
+    <div style="margin:6px 0;"><button class="btn btn-ghost btn-sm" id="tb-add">+ เพิ่มช่วง</button> <button class="btn btn-ghost btn-sm" id="tb-def">↺ ใช้ช่วงเริ่มต้น (30 = 5)</button></div>
+    <div id="tb-err" style="color:var(--red);font-size:12px;min-height:1em;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;"><button class="btn btn-primary btn-sm" id="tb-save">💾 บันทึกเกณฑ์</button><button class="btn btn-ghost btn-sm" id="tb-cancel">ยกเลิก</button></div>`;
+  el.querySelectorAll('.tb-b').forEach(i=>i.addEventListener('input',()=>{ const r = e.bands[+i.closest('tr').dataset.i]; r[i.dataset.f] = i.value==='' ? NaN : Number(i.value); $('tb-err').textContent = tbCheck(e.bands); e.skipForm = true; tbRender(); e.skipForm = false; }));
+  el.querySelectorAll('.tb-del').forEach(b=>b.onclick=()=>{ e.bands.splice(+b.dataset.i,1); tbRender(); });
+  $('tb-add').onclick = ()=>{ const mx = e.bands.length ? Math.max.apply(null, e.bands.map(r=>r.max).filter(Number.isFinite)) : -1; e.bands.push({ min: mx+1, max:9999, score:0 }); tbRender(); };
+  $('tb-def').onclick = ()=>{ e.bands = JSON.parse(JSON.stringify(TBKPI_BANDS_DEFAULT)).sort((a,b)=>a.min-b.min); tbRender(); };
+  $('tb-cancel').onclick = ()=>{ tbEdit = null; el.style.display='none'; tbRender(); };
+  $('tb-save').onclick = async ()=>{
+    const er = tbCheck(e.bands); if(er){ $('tb-err').textContent = er; return; }
+    const bands = e.bands.map(r=>({min:r.min,max:r.max,score:r.score})).sort((a,b)=>a.min-b.min);
+    const btn = $('tb-save'); btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { trbl:{ bands }, trblUpdatedBy:myUserEmail||'', trblUpdatedAt:Date.now() }, { merge:true });
+      tbCfg = { bands: bands.slice().reverse() }; tbEdit = null; el.style.display='none';
+      try{ fsWriteLog('ตั้งเกณฑ์ KPI Troubleshoot'); }catch(_){}
+      showToast('✅ บันทึกเกณฑ์ KPI แล้ว'); tbRender();
+    }catch(err){ btn.disabled = false; btn.textContent = '💾 บันทึกเกณฑ์'; $('tb-err').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
+  };
+}
+document.addEventListener('click', ev=>{
+  if(ev.target && ev.target.id==='tbkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } if(tbEdit){ tbEdit = null; $('tbkpi-set').style.display='none'; tbRender(); } else { tbEdit = { bands: JSON.parse(JSON.stringify(tbCfg.bands)).sort((a,b)=>a.min-b.min) }; tbRender(); } }
+});
+
 function renderMgrView(){
   const rows = SUP_PRODUCTS.map(name=>{
     const mine = DATA.errors.filter(e=>ownerOf(e.category,e.model)===name);
@@ -15206,6 +15284,7 @@ function renderMgrView(){
   $('mgr-doc-summary').innerHTML = dhtml;
   renderMgrColsPanel('mgr-doc-cols-panel', 'doc', docColNames, renderMgrView);
   try{ pkpiRender(); }catch(e){ console.warn('KPI Product:', e); }
+  try{ tbRender(); }catch(e){ console.warn('KPI Troubleshoot:', e); }
 }
 
 /* ===================== MANAGER: รายการรอดำเนินการ (v8.36) ===================== */
