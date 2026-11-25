@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.39</title>
+<title>F1 Service — v12.40</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2735,8 +2735,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.39";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 14:10 น. เวลาไทย";
+const APP_VERSION = "12.40";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 14:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -9664,6 +9664,7 @@ function notifGoReview(key){
 function notifGoAccess(reqId){
   $('notif-modal').classList.remove('show');
   try{ requestModeSwitch('settings'); if(currentMode!=='settings') return; switchSettingsSubTab('access'); }catch(e){ return; }
+  if(!reqId) return; // v12.40 — เปิดหน้าอย่างเดียว (ไม่ไฮไลต์รายการ)
   const hl = tries=>{
     const el = document.querySelector('#access-requests-list [data-reqrow="'+reqId+'"]');
     if(!el){ if(tries>0) setTimeout(()=>hl(tries-1), 300); else showToast('ไม่พบคำขอนี้แล้ว (อาจถูกอนุมัติ/ปฏิเสธไปแล้ว)'); return; }
@@ -22473,7 +22474,7 @@ async function dxRenderPeople(force){
   // คำขอสิทธิ์
   h += dxH('🔑 คำขอสิทธิ์เข้าระบบที่รออนุมัติ');
   if(DX.access===null) h += '<div style="color:var(--text-faint);font-size:12.5px;">ดูได้เฉพาะ Super Admin (ตามสิทธิ์ใน Firestore Rules)</div>';
-  else h += dxTable(['ชื่อ','อีเมล','ขอเมื่อ (วันก่อน)'], DX.access.map(a=>[escapeHtml(a.name||'-'), escapeHtml(a.email||'-'), dxAgeDays(a.requestedAt)]));
+  else h += `<div style="font-size:13px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">${DX.access.length ? `<b style="color:var(--amber)">${DX.access.length}</b> คำขอรออนุมัติ` : '<span style="color:var(--green)">ไม่มีคำขอค้าง</span>'}<button class="btn btn-ghost btn-sm" onclick="notifGoAccess()">🔐 ไปหน้า สิทธิ์ผู้ใช้ เพื่ออนุมัติ</button></div>`;
   // มีส่วนร่วมรายคน
   const people = _cdState.loaded ? cdCompute().people : [];
   const lc = x=>String(x||'').toLowerCase();
