@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.42</title>
+<title>F1 Service — v12.43</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2747,8 +2747,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.42";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 15:40 น. เวลาไทย";
+const APP_VERSION = "12.43";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 16:20 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15040,19 +15040,24 @@ $('mgr-table-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-ta
 $('mgr-doc-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-doc-cols-panel'); p.style.display = p.style.display==='none'?'block':'none'; });
 
 
-/* ===================== v12.41 — KPI Product (เกณฑ์เอกสารที่ Manager กำหนดเอง) ===================== */
-const PKPI_DEFAULT = { docs:['service_manual','pm_checklist','install_checklist'], thr:80, excl:[] }; // excl = รุ่นที่ไม่นำมาคิด (รูปแบบ 'หมวด||รุ่น')
+/* ===================== v12.41 — KPI Product (เกณฑ์เอกสารที่ Manager กำหนดเอง) · v12.43 ให้เป็นคะแนนตามช่วง % ===================== */
+const PKPI_BANDS_DEFAULT = [ {min:90,max:100,score:5}, {min:80,max:89,score:4}, {min:70,max:79,score:3}, {min:60,max:69,score:2}, {min:50,max:59,score:1}, {min:0,max:49,score:0} ];
+const PKPI_DEFAULT = { docs:['service_manual','pm_checklist','install_checklist'], excl:[], bands:PKPI_BANDS_DEFAULT }; // excl = รุ่นที่ไม่นำมาคิด ('หมวด||รุ่น')
 const pkKey = (c,m)=>c+'||'+m;
 let pkpiCfg = JSON.parse(JSON.stringify(PKPI_DEFAULT)), pkpiLoaded = false, pkpiSel = null, pkpiEdit = null;
+// เก็บในเอกสาร meta/certKpi (ฟิลด์ product) — เอกสารนี้ Firestore Rules อนุญาตให้ Manager เขียนอยู่แล้ว
+function pkpiBandsCheck(bands){ return certKpiCheck({ bands, wInt:50, wMan:50 }); }
 async function pkpiLoad(){
   if(pkpiLoaded) return; pkpiLoaded = true;
   try{
     await initFirebase(); const sdk = window._firebaseSdk;
-    const snap = await sdk.getDoc(sdk.doc(db,'meta','productKpi'));
-    if(snap.exists()){
-      const d = snap.data(), keys = COVERAGE_COLUMNS.map(c=>c.key);
-      const docs = (d.docs||[]).filter(k=>keys.includes(k)), thr = Number(d.thr);
-      if(docs.length && thr>0 && thr<=100) pkpiCfg = { docs, thr, excl:(d.excl||[]).map(String) };
+    const snap = await sdk.getDoc(sdk.doc(db,'meta','certKpi'));
+    const p = snap.exists() ? snap.data().product : null;
+    if(p){
+      const keys = COVERAGE_COLUMNS.map(c=>c.key);
+      const docs = (p.docs||[]).filter(k=>keys.includes(k));
+      const bands = (p.bands||[]).map(r=>({ min:Number(r.min), max:Number(r.max), score:Number(r.score) }));
+      if(docs.length) pkpiCfg = { docs, excl:(p.excl||[]).map(String), bands: pkpiBandsCheck(bands) ? JSON.parse(JSON.stringify(PKPI_BANDS_DEFAULT)) : bands };
     }
   }catch(e){ console.warn('โหลดเกณฑ์ KPI Product ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
   try{ pkpiRender(); }catch(_){}
@@ -15071,64 +15076,79 @@ function pkpiScore(sp, cfg){
     return { model, need: need.length, miss };
   });
   const full = detail.filter(d=>!d.miss.length).length;
-  return { n:models.length, full, pct: models.length ? full/models.length*100 : null, detail };
+  const pct = models.length ? full/models.length*100 : null;
+  const rp = pct===null ? null : Math.floor(pct + 1e-9); // ปัดลงเป็นจำนวนเต็มก่อนเทียบช่วง (เหมือน KPI Certificate)
+  const b = rp===null ? null : cfg.bands.find(r=>rp>=r.min && rp<=r.max);
+  return { n:models.length, full, pct, score: rp===null ? null : (b ? b.score : 0), detail };
 }
 function pkpiColLabel(k){ const c = COVERAGE_COLUMNS.find(x=>x.key===k); return c ? c.label : k; }
+function pkpiMax(cfg){ return Math.max.apply(null, cfg.bands.map(r=>r.score)); }
 function pkpiRender(){
   const box = $('pkpi-block'); if(!box || !DATA || !DATA.categories) return;
   if(!pkpiLoaded){ pkpiLoad(); }
-  const cfg = pkpiCfg, canEdit = isSuperAdmin() && !isCEOReal();
+  const cfg = pkpiEdit && !pkpiBandsCheck(pkpiEdit.bands) ? Object.assign({}, pkpiCfg, { docs:pkpiEdit.docs, excl:pkpiEdit.excl, bands:pkpiEdit.bands }) : (pkpiEdit ? Object.assign({}, pkpiCfg, { docs:pkpiEdit.docs, excl:pkpiEdit.excl }) : pkpiCfg);
+  const canEdit = isSuperAdmin() && !isCEOReal();
   $('pkpi-open').style.display = canEdit ? '' : 'none';
-  $('pkpi-crit').innerHTML = `เกณฑ์เอกสาร: <b>${cfg.docs.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</b><br>วิธีคิด: รุ่นนับว่า “ครบ” เมื่อมีเอกสารครบทุกประเภทที่เลือก (รุ่นที่ระบุ “ไม่มีเอกสาร” แล้วไม่นับเป็นขาด) · ผ่านเมื่อ % รุ่นที่ครบ ≥ <b>${cfg.thr}%</b>${(cfg.excl||[]).length?` · ไม่นับ <b>${cfg.excl.length}</b> รุ่น`:''}`;
+  const mx = pkpiMax(cfg);
+  $('pkpi-crit').innerHTML = `เกณฑ์เอกสาร: <b>${cfg.docs.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</b><br>วิธีคิด: รุ่นนับว่า “ครบ” เมื่อมีเอกสารครบทุกประเภทที่เลือก (รุ่นที่ระบุ “ไม่มีเอกสาร” แล้วไม่นับเป็นขาด) · คะแนนตามช่วง % รุ่นที่ครบ: ${cfg.bands.slice().sort((a,b)=>b.min-a.min).map(r=>`${r.min}–${r.max}% = <b>${r.score}</b>`).join(' · ')}${(cfg.excl||[]).length?` · ไม่นับ <b>${cfg.excl.length}</b> รุ่น`:''}`;
   const rows = SUP_PRODUCTS.map(sp=>({ sp, r:pkpiScore(sp, cfg) })).filter(x=>x.r.n>0);
-  const pass = rows.filter(x=>x.r.pct>=cfg.thr).length;
-  const avg = rows.length ? rows.reduce((a,x)=>a+x.r.pct,0)/rows.length : 0;
+  const avgS = rows.length ? rows.reduce((a,x)=>a+x.r.score,0)/rows.length : 0;
+  const avgP = rows.length ? rows.reduce((a,x)=>a+x.r.pct,0)/rows.length : 0;
   const card = (v,t,c)=>`<div style="border:1px solid var(--border);border-radius:8px;padding:6px 10px;background:var(--panel-alt);"><b class="mono" style="font-size:19px;${c?'color:'+c+';':''}">${v}</b><div style="font-size:11.5px;color:var(--text-dim);">${t}</div></div>`;
-  $('pkpi-cards').innerHTML = card(rows.length,'Sup ที่ประเมิน')+card(pass,'ผ่านเกณฑ์','var(--green)')+card(rows.length-pass,'ยังไม่ผ่าน','var(--red)')+card(avg.toFixed(0)+'%','เฉลี่ยรวม');
-  $('pkpi-table').innerHTML = `<thead><tr><th>Sup Product</th><th>รุ่นที่ดูแล</th><th>รุ่นที่ครบ</th><th>% ตามเกณฑ์</th><th>ผล</th></tr></thead><tbody>` + rows.map(({sp,r})=>{
-    const ok = r.pct>=cfg.thr;
+  $('pkpi-cards').innerHTML = card(rows.length,'Sup ที่ประเมิน')+card(mx,'คะแนนเต็ม')+card(avgS.toFixed(1),'คะแนนเฉลี่ย',certKpiScoreColor(Math.round(avgS),cfg))+card(avgP.toFixed(0)+'%','% ครบเฉลี่ย');
+  $('pkpi-table').innerHTML = `<thead><tr><th>Sup Product</th><th>รุ่นที่ดูแล</th><th>รุ่นที่ครบ</th><th>% ครบ</th><th>คะแนน</th></tr></thead><tbody>` + rows.map(({sp,r})=>{
+    const col = certKpiScoreColor(r.score, cfg);
     return `<tr data-pk="${escapeHtml(sp)}" style="cursor:pointer;${pkpiSel===sp?'background:var(--panel-alt);':''}"><td><strong>${escapeHtml(supNick(sp))}</strong></td><td class="mono">${r.n}</td><td class="mono">${r.full}/${r.n}</td>
-      <td><span style="display:inline-block;width:80px;height:7px;background:var(--panel-alt);border:1px solid var(--border);border-radius:4px;vertical-align:middle;margin-right:8px;overflow:hidden;"><i style="display:block;height:100%;width:${r.pct.toFixed(0)}%;background:${ok?'var(--green)':'var(--red)'};"></i></span><span class="mono">${r.pct.toFixed(0)}%</span></td>
-      <td style="color:${ok?'var(--green)':'var(--red)'};font-weight:600;">${ok?'✓ ผ่าน':'✗ ไม่ผ่าน'}</td></tr>`;
+      <td><span style="display:inline-block;width:80px;height:7px;background:var(--panel-alt);border:1px solid var(--border);border-radius:4px;vertical-align:middle;margin-right:8px;overflow:hidden;"><i style="display:block;height:100%;width:${r.pct.toFixed(0)}%;background:${col};"></i></span><span class="mono">${r.pct.toFixed(0)}%</span></td>
+      <td class="mono" style="color:${col};font-weight:700;font-size:15px;">${r.score}<span style="font-weight:400;font-size:11.5px;color:var(--text-faint);"> / ${mx}</span></td></tr>`;
   }).join('') + (rows.length?'':'<tr><td colspan="5" style="color:var(--text-faint);">ยังไม่มีรุ่นที่มีเจ้าของดูแล</td></tr>') + '</tbody>';
   $('pkpi-table').querySelectorAll('tr[data-pk]').forEach(tr=>tr.onclick=()=>{ pkpiSel = pkpiSel===tr.dataset.pk ? null : tr.dataset.pk; pkpiRender(); });
   const cur = rows.find(x=>x.sp===pkpiSel);
   $('pkpi-detail').innerHTML = cur ? `<div style="margin-top:10px;border:1px dashed var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;"><b>${escapeHtml(supNick(cur.sp))}</b> — รุ่นที่ยังไม่ครบ<div style="margin-top:6px;">` + (cur.r.detail.filter(d=>d.miss.length).map(d=>`<div style="padding:3px 0;"><span class="mono" style="display:inline-block;min-width:110px;">${escapeHtml(d.model)}</span> <span style="color:var(--red);">ขาด: ${d.miss.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</span></div>`).join('') || '<span style="color:var(--green);">ครบทุกรุ่น 🎉</span>') + '</div></div>' : '';
-  if(pkpiEdit) pkpiRenderEdit();
+  if(pkpiEdit && !pkpiEdit.busy && !pkpiEdit.skipForm) pkpiRenderEdit();
 }
 function pkpiRenderEdit(){
   const e = pkpiEdit, el = $('pkpi-set'); if(!e){ el.style.display='none'; return; }
   el.style.display = 'block';
+  const inp = 'width:64px;border:1px solid var(--border);border-radius:6px;padding:4px 5px;font:inherit;background:var(--panel);color:inherit;text-align:center;';
+  const val = v=> (typeof v==='number' && isFinite(v)) ? v : '';
   el.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">⚙️ ตั้งเกณฑ์ KPI Product <span style="font-weight:400;font-size:11.5px;color:var(--text-faint);">(Manager / Super Admin)</span></div>
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">1) เลือกเอกสารที่นำมาคิด</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;margin-bottom:10px;">${COVERAGE_COLUMNS.map(c=>`<label style="display:flex;gap:7px;align-items:center;border:1px solid ${e.docs.includes(c.key)?'var(--green)':'var(--border)'};border-radius:7px;padding:6px 9px;font-size:12.5px;cursor:pointer;background:var(--panel-alt);"><input type="checkbox" data-pkdoc="${escapeHtml(c.key)}" ${e.docs.includes(c.key)?'checked':''}> ${c.icon} ${escapeHtml(c.label)}</label>`).join('')}</div>
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">2) เลือกรุ่นที่นำมาคิด <span style="color:var(--text-faint);">(เอาติ๊กออก = ไม่นับรุ่นนั้น เช่น รุ่นเลิกขาย)</span></div>
     <div style="margin-bottom:10px;">${SUP_PRODUCTS.map(sp=>{ const ms = pkpiModels(sp); if(!ms.length) return ''; const off = ms.filter(x=>e.excl.includes(pkKey(x.category,x.model))).length;
       return `<details data-pksp="${escapeHtml(sp)}" style="border:1px solid var(--border);border-radius:7px;margin-bottom:5px;background:var(--panel-alt);"${(off||(e.open||[]).includes(sp))?' open':''}><summary style="padding:6px 10px;font-size:12.5px;cursor:pointer;"><b>${escapeHtml(supNick(sp))}</b> <span style="color:var(--text-faint);">นับ ${ms.length-off}/${ms.length} รุ่น</span></summary><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px;padding:4px 10px 8px;">${ms.map(x=>{ const k = pkKey(x.category,x.model); return `<label style="font-size:12px;display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" data-pkmodel="${escapeHtml(k)}" ${e.excl.includes(k)?'':'checked'}> ${escapeHtml(x.model)}</label>`; }).join('')}</div></details>`; }).join('')}</div>
-    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">3) เกณฑ์ผ่าน</div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;">ผ่านเมื่อ ≥ <input type="number" id="pkpi-thr" min="1" max="100" value="${e.thr}" style="width:72px;padding:4px 6px;"> %
-      <span style="flex:1"></span><button class="btn btn-ghost btn-sm" id="pkpi-cancel">ยกเลิก</button><button class="btn btn-primary btn-sm" id="pkpi-save">บันทึกเกณฑ์</button></div>
-    <div id="pkpi-err" style="color:var(--red);font-size:12px;margin-top:6px;"></div>`;
-  el.querySelectorAll('[data-pkdoc]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkdoc; e.docs = cb.checked ? [...new Set([...e.docs,k])] : e.docs.filter(x=>x!==k); e.thr = +$('pkpi-thr').value||e.thr; pkpiRender(); });
-  el.querySelectorAll('[data-pkmodel]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkmodel; e.excl = cb.checked ? e.excl.filter(x=>x!==k) : [...new Set([...e.excl,k])]; e.thr = +$('pkpi-thr').value||e.thr; pkpiRender(); });
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">3) ช่วง % รุ่นที่ครบ → คะแนน</div>
+    <table style="border-collapse:collapse;font-size:13px;"><tbody>${e.bands.map((r,i)=>`<tr data-i="${i}"><td style="padding:3px 6px;white-space:nowrap;">ตั้งแต่ <input class="pk-b" data-f="min" type="number" min="0" max="100" step="1" value="${val(r.min)}" style="${inp}"> %</td><td style="padding:3px 6px;white-space:nowrap;">ถึง <input class="pk-b" data-f="max" type="number" min="0" max="100" step="1" value="${val(r.max)}" style="${inp}"> %</td><td style="padding:3px 6px;white-space:nowrap;">= <input class="pk-b" data-f="score" type="number" min="0" step="any" value="${val(r.score)}" style="${inp}"> คะแนน</td><td><button class="btn btn-ghost btn-sm pk-del" data-i="${i}" title="ลบช่วงนี้">✕</button></td></tr>`).join('')}</tbody></table>
+    <div style="margin:6px 0;"><button class="btn btn-ghost btn-sm" id="pkpi-addband">+ เพิ่มช่วง</button> <button class="btn btn-ghost btn-sm" id="pkpi-defband">↺ ใช้ช่วงเริ่มต้น</button></div>
+    <div id="pkpi-err" style="color:var(--red);font-size:12px;min-height:1em;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;"><button class="btn btn-primary btn-sm" id="pkpi-save">💾 บันทึกเกณฑ์</button><button class="btn btn-ghost btn-sm" id="pkpi-cancel">ยกเลิก</button></div>`;
+  const live = ()=>{ const er = pkpiBandsCheck(e.bands); $('pkpi-err').textContent = er; return er; };
+  el.querySelectorAll('[data-pkdoc]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkdoc; e.docs = cb.checked ? [...new Set([...e.docs,k])] : e.docs.filter(x=>x!==k); pkpiRender(); });
+  el.querySelectorAll('[data-pkmodel]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkmodel; e.excl = cb.checked ? e.excl.filter(x=>x!==k) : [...new Set([...e.excl,k])]; pkpiRender(); });
   el.querySelectorAll('details[data-pksp]').forEach(d=>d.addEventListener('toggle',()=>{ const sp = d.dataset.pksp; e.open = (e.open||[]).filter(x=>x!==sp); if(d.open) e.open.push(sp); }));
-  $('pkpi-cancel').onclick = ()=>{ pkpiEdit = null; $('pkpi-set').style.display='none'; };
+  el.querySelectorAll('.pk-b').forEach(i=>i.addEventListener('input',()=>{ const tr = i.closest('tr'), r = e.bands[+tr.dataset.i]; r[i.dataset.f] = i.value==='' ? NaN : Number(i.value); live(); e.skipForm = true; pkpiRender(); e.skipForm = false; }));
+  el.querySelectorAll('.pk-del').forEach(b=>b.onclick=()=>{ e.bands.splice(+b.dataset.i,1); pkpiRender(); });
+  $('pkpi-addband').onclick = ()=>{ const mx = e.bands.length ? Math.max.apply(null, e.bands.map(r=>r.max).filter(Number.isFinite)) : -1; e.bands.push({ min: Math.min(100, mx+1), max:100, score:0 }); pkpiRender(); };
+  $('pkpi-defband').onclick = ()=>{ e.bands = JSON.parse(JSON.stringify(PKPI_BANDS_DEFAULT)); pkpiRender(); };
+  $('pkpi-cancel').onclick = ()=>{ pkpiEdit = null; $('pkpi-set').style.display='none'; pkpiRender(); };
   $('pkpi-save').onclick = async ()=>{
-    const thr = Math.round(+$('pkpi-thr').value);
     if(!e.docs.length){ $('pkpi-err').textContent = 'ต้องเลือกเอกสารอย่างน้อย 1 ประเภท'; return; }
-    if(!(thr>=1 && thr<=100)){ $('pkpi-err').textContent = 'เกณฑ์ผ่านต้องอยู่ระหว่าง 1–100%'; return; }
+    const er = live(); if(er) return;
+    const bands = e.bands.map(r=>({min:r.min,max:r.max,score:r.score})).sort((a,b)=>a.min-b.min);
+    const keys = COVERAGE_COLUMNS.map(c=>c.key), docs = keys.filter(k=>e.docs.includes(k)); // เรียงตามลำดับ DOC_TYPES
+    const btn = $('pkpi-save'); btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
     try{
       await initFirebase(); const sdk = window._firebaseSdk;
-      const keys = COVERAGE_COLUMNS.map(c=>c.key), docs = keys.filter(k=>e.docs.includes(k)); // เรียงตามลำดับ DOC_TYPES
-      await sdk.setDoc(sdk.doc(db,'meta','productKpi'), { docs, thr, excl:e.excl, updatedBy:myUserEmail||'', updatedAt:Date.now() });
-      pkpiCfg = { docs, thr, excl:[...e.excl] }; pkpiEdit = null; $('pkpi-set').style.display='none';
+      await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { product:{ docs, excl:e.excl, bands }, productUpdatedBy:myUserEmail||'', productUpdatedAt:Date.now() }, { merge:true });
+      pkpiCfg = { docs, excl:[...e.excl], bands: bands.slice().reverse() }; pkpiEdit = null; $('pkpi-set').style.display='none';
       try{ fsWriteLog('ตั้งเกณฑ์ KPI Product'); }catch(_){}
       showToast('✅ บันทึกเกณฑ์ KPI แล้ว'); pkpiRender();
-    }catch(err){ $('pkpi-err').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
+    }catch(err){ btn.disabled = false; btn.textContent = '💾 บันทึกเกณฑ์'; $('pkpi-err').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
   };
 }
 document.addEventListener('click', ev=>{
-  if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } pkpiEdit = pkpiEdit ? null : { docs:[...pkpiCfg.docs], thr:pkpiCfg.thr, excl:[...(pkpiCfg.excl||[])] }; if(pkpiEdit) pkpiRender(); else $('pkpi-set').style.display='none'; }
+  if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } if(pkpiEdit){ pkpiEdit = null; $('pkpi-set').style.display='none'; pkpiRender(); } else { pkpiEdit = { docs:[...pkpiCfg.docs], excl:[...(pkpiCfg.excl||[])], bands:JSON.parse(JSON.stringify(pkpiCfg.bands)).sort((a,b)=>a.min-b.min) }; pkpiRender(); } }
 });
 
 function renderMgrView(){
@@ -22678,7 +22698,7 @@ async function fsLoadCertKpi(){
 }
 async function fsSaveCertKpi(cfg){
   await initFirebase(); const sdk = window._firebaseSdk;
-  await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { wInt:cfg.wInt, wMan:cfg.wMan, bands:cfg.bands, groups:(cfg.groups||[]), updatedBy:myUserEmail||'', updatedAt:Date.now() });
+  await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { wInt:cfg.wInt, wMan:cfg.wMan, bands:cfg.bands, groups:(cfg.groups||[]), updatedBy:myUserEmail||'', updatedAt:Date.now() }, { merge:true }); // merge: ไม่ลบฟิลด์ product (KPI Product)
   certKpiCfg = cfg;
 }
 function certKpiPct(rI, rM, hI, hM, cfg){
