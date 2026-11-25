@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.44</title>
+<title>F1 Service — v12.45</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1547,7 +1547,7 @@ setTimeout(function(){
       <div class="panel-block">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
           <h2 style="margin:0;">เอกสารทั้งหมดที่ฉันดูแล</h2>
-          <button class="btn btn-ghost btn-sm" id="sup-doc-matrix-hide-btn">🙈 ซ่อน</button>
+          <span style="display:flex;gap:6px;"><button class="btn btn-ghost btn-sm" id="sup-bulk-nodoc-btn">🚫 ระบุไม่มีเอกสารหลายรายการ</button><button class="btn btn-ghost btn-sm" id="sup-doc-matrix-hide-btn">🙈 ซ่อน</button></span>
         </div>
         <div id="sup-doc-matrix-body">
           <p class="panel-sub">✅ มีลิงก์ (กดดู/แก้) · ➕ ยังไม่มี (กดใส่ลิงก์)</p>
@@ -2757,8 +2757,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.44";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 16:50 น. เวลาไทย";
+const APP_VERSION = "12.45";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 17:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -11342,6 +11342,60 @@ function renderDocLinkListItems(){
   }));
 }
 
+/* ===================== v12.45 — ระบุ "ไม่มีเอกสาร" หลายรายการทีเดียว ===================== */
+function openBulkNoDocModal(){
+  const models = dmOwnedModels(); if(!models.length){ showToast('ยังไม่มีรุ่นที่คุณดูแล'); return; }
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;';
+  const cellState = (m,c)=>{ if(findMatrixDocs(m.category,m.model,c.key,c.videoSubtype).length) return 'has'; return findNoDoc(m.category,m.model,c.key,c.videoSubtype) ? 'nodoc' : 'free'; };
+  const head = `<tr><th style="text-align:left;position:sticky;left:0;background:var(--card,#fff);">รุ่น</th>${MATRIX_COLUMNS.map((c,ci)=>`<th style="font-size:11px;white-space:nowrap;"><label style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;"><span>${c.icon} ${escapeHtml(c.label)}</span><input type="checkbox" class="bn-col" data-ci="${ci}" title="เลือกทั้งคอลัมน์"></label></th>`).join('')}</tr>`;
+  const body = models.map((m,mi)=>`<tr data-mi="${mi}"><td style="white-space:nowrap;position:sticky;left:0;background:var(--card,#fff);font-size:12.5px;"><label style="cursor:pointer;display:flex;gap:5px;align-items:center;"><input type="checkbox" class="bn-row" data-mi="${mi}" title="เลือกทั้งแถว"><b>${escapeHtml(m.model)}</b></label></td>${MATRIX_COLUMNS.map((c,ci)=>{ const st = cellState(m,c);
+    return `<td style="text-align:center;">${st==='free'?`<input type="checkbox" class="bn-cell" data-mi="${mi}" data-ci="${ci}">`:(st==='has'?'<span title="มีเอกสารแล้ว" style="color:var(--green);">✅</span>':'<span title="ระบุว่าไม่มีไว้แล้ว" style="color:var(--text-faint);">🚫</span>')}</td>`; }).join('')}</tr>`).join('');
+  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:18px;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column;gap:10px;">
+    <div><p style="font-size:14.5px;font-weight:600;margin:0 0 2px;">🚫 ระบุ “ไม่มีเอกสาร” หลายรายการ</p>
+    <p style="font-size:12px;color:var(--text-faint);margin:0;">ติ๊กช่องที่ไม่มีเอกสาร (ติ๊กทั้งแถว/คอลัมน์ได้) · ✅ มีเอกสารแล้ว · 🚫 ระบุไว้แล้ว</p></div>
+    <div style="overflow:auto;border:1px solid var(--border);border-radius:8px;flex:1;min-height:120px;"><table style="border-collapse:collapse;font-size:12.5px;width:100%;"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    <div style="font-size:13px;">${NODOC_REASONS.map((r,i)=>`<label style="display:inline-flex;gap:6px;align-items:center;margin-right:14px;cursor:pointer;"><input type="radio" name="bn-reason" value="${r.key}" ${i===0?'checked':''}> ${escapeHtml(r.label)}</label>`).join('')}
+      <input type="text" id="bn-other" placeholder="ระบุเหตุผล" style="display:none;margin-top:6px;width:100%;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);"></div>
+    <div style="display:flex;gap:8px;"><button id="bn-go" class="btn btn-primary btn-sm" style="flex:1;">บันทึก (0)</button><button id="bn-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button></div></div>`;
+  document.body.appendChild(ov);
+  const cells = ()=>Array.from(ov.querySelectorAll('.bn-cell'));
+  const upd = ()=>{ ov.querySelector('#bn-go').textContent = `บันทึก (${cells().filter(c=>c.checked).length})`;
+    ov.querySelector('#bn-other').style.display = ov.querySelector('input[name=bn-reason]:checked').value==='other' ? '' : 'none'; };
+  ov.querySelectorAll('.bn-col').forEach(c=>c.addEventListener('change', ()=>{ cells().filter(x=>x.dataset.ci===c.dataset.ci).forEach(x=>x.checked = c.checked); upd(); }));
+  ov.querySelectorAll('.bn-row').forEach(c=>c.addEventListener('change', ()=>{ cells().filter(x=>x.dataset.mi===c.dataset.mi).forEach(x=>x.checked = c.checked); upd(); }));
+  ov.addEventListener('change', upd);
+  ov.querySelector('#bn-cancel').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#bn-go').addEventListener('click', async ()=>{
+    const picked = cells().filter(c=>c.checked).map(c=>({ m:models[+c.dataset.mi], c:MATRIX_COLUMNS[+c.dataset.ci] }));
+    if(!picked.length){ showToast('ติ๊กเลือกช่องที่ไม่มีเอกสารก่อน'); return; }
+    const key = ov.querySelector('input[name=bn-reason]:checked').value, txt = ov.querySelector('#bn-other').value.trim();
+    if(key==='other' && !txt){ showToast('กรุณากรอกเหตุผล'); return; }
+    ov.remove();
+    showLoadingOverlay('กำลังบันทึก...');
+    let n = 0, err = '';
+    try{
+      await initFirebase(); const sdk = window._firebaseSdk;
+      for(let i=0;i<picked.length;i++){
+        const { m, c } = picked[i];
+        if(findNoDoc(m.category,m.model,c.key,c.videoSubtype)) continue;
+        updateLoadingOverlayText(`กำลังบันทึก ${i+1}/${picked.length}...`);
+        const f = { category:m.category, model:m.model, docType:c.key, noDoc:true, noDocReasonKey:key, noDocReasonText: key==='other'?txt:'', noDocBy:(typeof currentSupIdentity!=='undefined'&&currentSupIdentity)||'', title:'', method:'none', url:'', uploadedAt:Date.now() };
+        if(docTypeHasSubtypes(c.key)) f.videoSubtype = c.videoSubtype || '';
+        const ref = await exWithTimeout(sdk.addDoc(sdk.collection(db,'documents'), f), 30000, 'การบันทึกเอกสาร');
+        docMissingAdd({ id:ref.id, ...f }); n++;
+      }
+      if(n){ try{ fsBumpDocsVersion().catch(()=>{}); }catch(_){} }
+      try{ fsWriteLog(`ระบุไม่มีเอกสาร ${n} ช่อง`); }catch(_){}
+      try{ dxInvalidate(); }catch(_){}
+    }catch(e){ err = e.message||String(e); }
+    hideLoadingOverlay();
+    renderSupDocMatrix();
+    showToast(err ? `⚠ บันทึกได้ ${n}/${picked.length} ช่อง: ${err}` : `✓ ระบุไม่มีเอกสารแล้ว ${n} ช่อง`);
+  });
+}
+document.addEventListener('click', ev=>{ if(ev.target && ev.target.id==='sup-bulk-nodoc-btn') openBulkNoDocModal(); });
+
 /* ===================== v11.49 ย้ายเอกสาร ===================== */
 function dmOwnedModels(){
   const out = [];
@@ -11353,40 +11407,59 @@ function openDocMoveModal(ids){
   const docs = ids.map(id=>DATA.documents.find(d=>d.id===id)).filter(Boolean); if(!docs.length) return;
   const owned = dmOwnedModels(); if(!owned.length){ showToast('ยังไม่มีรุ่นที่คุณดูแล'); return; }
   const cats = Array.from(new Set(owned.map(x=>x.category)));
-  const f = docs[0];
   const ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-  const names = docs.slice(0,5).map(d=>`<div style="font-size:12.5px;word-break:break-all;">• ${escapeHtml(d.title)} <span style="color:var(--text-faint);">(${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${escapeHtml(dmDocLabel(d))})</span></div>`).join('') + (docs.length>5 ? `<div style="font-size:12px;color:var(--text-faint);">… และอีก ${docs.length-5} รายการ</div>` : '');
-  const selSty = 'width:100%;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px;';
-  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;">
-      <p style="font-size:14.5px;font-weight:600;margin:0 0 6px;">↔ ย้ายเอกสาร ${docs.length} รายการ</p>
-      <div style="margin-bottom:12px;">${names}</div>
-      <label style="font-size:12px;color:var(--text-faint);">ย้ายไปที่ Product</label>
-      <select id="dm-cat" style="${selSty}">${cats.map(c=>`<option value="${escapeHtml(c)}" ${c===f.category?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
-      <label style="font-size:12px;color:var(--text-faint);">รุ่น</label>
-      <select id="dm-model" style="${selSty}"></select>
-      <label style="font-size:12px;color:var(--text-faint);">หัวข้อเอกสาร</label>
-      <select id="dm-type" style="${selSty}">${MATRIX_COLUMNS.map(c=>`<option value="${c.key}|${c.videoSubtype||''}" ${(c.key===f.docType && (c.videoSubtype||'')===(f.videoSubtype||''))?'selected':''}>${c.icon} ${escapeHtml(c.label)}</option>`).join('')}</select>
-      <p style="font-size:11.5px;color:var(--text-faint);margin:0 0 12px;">ลิงก์เดิมยังใช้ได้ · ไฟล์ใน Google Drive จะย้ายตามไปโฟลเดอร์ใหม่เมื่อทำได้</p>
-      <div style="display:flex;gap:8px;">
-        <button id="dm-go" class="btn btn-primary btn-sm" style="flex:1;">ย้าย</button>
-        <button id="dm-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button>
-      </div></div>`;
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px;';
+  const selSty = 'font-size:12.5px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);min-width:0;max-width:100%;background:var(--card,#fff);color:inherit;';
+  const typeOpts = (d)=>MATRIX_COLUMNS.map(c=>`<option value="${c.key}|${c.videoSubtype||''}" ${(d && c.key===d.docType && (c.videoSubtype||'')===(d.videoSubtype||''))?'selected':''}>${c.icon} ${escapeHtml(c.label)}</option>`).join('');
+  const catOpts = (cur)=>cats.map(c=>`<option value="${escapeHtml(c)}" ${c===cur?'selected':''}>${escapeHtml(c)}</option>`).join('');
+  const modelOpts = (c, cur)=>owned.filter(x=>x.category===c).map(x=>`<option value="${escapeHtml(x.model)}" ${x.model===cur?'selected':''}>${escapeHtml(x.model)}</option>`).join('');
+  const multi = docs.length>1;
+  ov.innerHTML = `<div style="background:var(--card,#fff);border-radius:12px;padding:18px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;">
+      <p style="font-size:14.5px;font-weight:600;margin:0 0 4px;">↔ ย้ายเอกสาร ${docs.length} รายการ</p>
+      <p style="font-size:12px;color:var(--text-faint);margin:0 0 10px;">${multi?'กำหนดปลายทางของแต่ละรายการได้เอง (กระจายไปคนละรุ่น/หัวข้อได้) หรือใช้ช่องด้านบนตั้งทุกรายการพร้อมกัน':'เลือกปลายทางของเอกสาร'}</p>
+      ${multi?`<div style="border:1px dashed var(--border);border-radius:8px;padding:8px;margin-bottom:10px;">
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:5px;">ตั้งปลายทางเดียวกันให้ทุกรายการ</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <select id="dm-all-cat" style="${selSty}">${catOpts(docs[0].category)}</select>
+          <select id="dm-all-model" style="${selSty}">${modelOpts(docs[0].category, docs[0].model)}</select>
+          <select id="dm-all-type" style="${selSty}">${typeOpts(docs[0])}</select>
+          <button class="btn btn-ghost btn-sm" id="dm-all-apply">ใช้กับทุกรายการ</button>
+        </div></div>`:''}
+      <div id="dm-rows">${docs.map((d,i)=>`<div class="dm-row" data-i="${i}" style="border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:7px;">
+        <div style="font-size:12.5px;word-break:break-all;margin-bottom:5px;">• ${escapeHtml(d.title)} <span style="color:var(--text-faint);">(จาก ${escapeHtml(d.category)} · ${escapeHtml(d.model)} · ${escapeHtml(dmDocLabel(d))})</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;"><span style="font-size:12px;color:var(--text-faint);">→</span>
+          <select class="dm-cat" style="${selSty}">${catOpts(d.category)}</select>
+          <select class="dm-model" style="${selSty}">${modelOpts(d.category, d.model)}</select>
+          <select class="dm-type" style="${selSty}">${typeOpts(d)}</select></div></div>`).join('')}</div>
+      <p style="font-size:11.5px;color:var(--text-faint);margin:0 0 12px;">ลิงก์เดิมยังใช้ได้ · ไฟล์ใน Google Drive จะย้ายตามไปโฟลเดอร์ใหม่เมื่อไม่มีเอกสารอื่นอ้างถึงไฟล์เดียวกัน</p>
+      <div style="display:flex;gap:8px;"><button id="dm-go" class="btn btn-primary btn-sm" style="flex:1;">ย้าย</button><button id="dm-cancel" class="btn btn-ghost btn-sm" style="flex:1;">ยกเลิก</button></div></div>`;
   document.body.appendChild(ov);
-  const fillModels = ()=>{
-    const c = ov.querySelector('#dm-cat').value;
-    const ms = owned.filter(x=>x.category===c).map(x=>x.model);
-    ov.querySelector('#dm-model').innerHTML = ms.map(m=>`<option value="${escapeHtml(m)}" ${(c===f.category && m===f.model)?'selected':''}>${escapeHtml(m)}</option>`).join('');
-  };
-  fillModels();
-  ov.querySelector('#dm-cat').addEventListener('change', fillModels);
+  const rowCat = r=>r.querySelector('.dm-cat'), rowModel = r=>r.querySelector('.dm-model');
+  ov.querySelectorAll('.dm-row').forEach(r=>rowCat(r).addEventListener('change', ()=>{ rowModel(r).innerHTML = modelOpts(rowCat(r).value, null); }));
+  const allApply = ov.querySelector('#dm-all-apply');
+  if(allApply){
+    ov.querySelector('#dm-all-cat').addEventListener('change', ()=>{ ov.querySelector('#dm-all-model').innerHTML = modelOpts(ov.querySelector('#dm-all-cat').value, null); });
+    allApply.addEventListener('click', ()=>{
+      const c = ov.querySelector('#dm-all-cat').value, m = ov.querySelector('#dm-all-model').value, t = ov.querySelector('#dm-all-type').value;
+      ov.querySelectorAll('.dm-row').forEach(r=>{ rowCat(r).value = c; rowModel(r).innerHTML = modelOpts(c, m); rowModel(r).value = m; r.querySelector('.dm-type').value = t; });
+    });
+  }
   ov.querySelector('#dm-cancel').addEventListener('click', ()=>ov.remove());
   ov.querySelector('#dm-go').addEventListener('click', async ()=>{
-    const dCat = ov.querySelector('#dm-cat').value, dModel = ov.querySelector('#dm-model').value;
-    const [dType, dSub] = ov.querySelector('#dm-type').value.split('|');
-    if(!dCat || !dModel){ showToast('กรุณาเลือกรุ่นปลายทาง'); return; }
+    const groups = new Map();
+    for(const r of ov.querySelectorAll('.dm-row')){
+      const d = docs[+r.dataset.i], dCat = rowCat(r).value, dModel = rowModel(r).value, tv = r.querySelector('.dm-type').value;
+      if(!dCat || !dModel){ showToast('กรุณาเลือกรุ่นปลายทางให้ครบทุกรายการ'); return; }
+      const key = [dCat, dModel, tv].join('\u0001');
+      if(!groups.has(key)) groups.set(key, { dCat, dModel, tv, list:[] });
+      groups.get(key).list.push(d);
+    }
     ov.remove();
-    await execDocMove(docs, dCat, dModel, dType, dSub||undefined);
+    for(const g of groups.values()){ // ย้ายทีละปลายทาง
+      const [dType, dSub] = g.tv.split('|');
+      await execDocMove(g.list, g.dCat, g.dModel, dType, dSub||undefined);
+    }
+    if(groups.size>1) showToast(`✓ ย้ายครบแล้ว — กระจายไป ${groups.size} ปลายทาง`);
   });
 }
 async function execDocMove(docs, dCat, dModel, dType, dSub){
