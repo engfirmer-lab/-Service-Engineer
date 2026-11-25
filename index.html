@@ -3,8 +3,8 @@
   ===================================================================
   F1 Service — Firmer Service Center Web App
   ===================================================================
-  เวอร์ชันปัจจุบัน : 12.36
-  อัปเดตล่าสุด   : 19 พฤศจิกายน 2569 14:55 น. เวลาไทย
+  เวอร์ชันปัจจุบัน : 12.37
+  อัปเดตล่าสุด   : 25 พฤศจิกายน 2569 11:30 น. เวลาไทย
   ===================================================================
   DELIVERY RULES (Claude — ต้องทำทุกครั้งก่อนส่งไฟล์ และ grep ตรวจยืนยันก่อนส่งเสมอ)
   1. ชื่อไฟล์ต้องเป็น "index.html" เท่านั้น ห้ามใช้ index_work หรือชื่ออื่น
@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.36</title>
+<title>F1 Service — v12.37</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2732,8 +2732,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.36";
-const APP_UPDATED_AT = "19 พฤศจิกายน 2569 14:55 น. เวลาไทย";
+const APP_VERSION = "12.37";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 11:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -21806,8 +21806,8 @@ async function renderEngCertTab(forceReload){
       if(!meIsSup && (req==='internal'||req==='both')){ rI++; if((certMap[k+'|internal']||[]).length) hI++; }
       if(req==='manufacturer'||req==='both'){ rM++; if((certMap[k+'|manufacturer']||[]).length) hM++; }
     });
-    const kp = certKpiPct(rI,rM,hI,hM), ksc = certKpiScore(kp);
-    if(kp!==null) kpiHtml = `<div style="margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--panel-alt);font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;"><span>🎯 คะแนน KPI Cer <span style="color:var(--text-faint);font-size:11.5px;">(ครบ ${kp}% ถ่วงน้ำหนัก · ภายใน ${hI}/${rI} · ผู้ผลิต ${hM}/${rM})</span></span><b style="font-size:20px;color:${certKpiScoreColor(ksc)};">${ksc}</b></div>`;
+    const _kc = certKpiCfgFor(myUserEmail), kp = certKpiPct(rI,rM,hI,hM,_kc), ksc = certKpiScore(kp,_kc);
+    if(kp!==null) kpiHtml = `<div style="margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--panel-alt);font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;"><span>🎯 คะแนน KPI Cer <span style="color:var(--text-faint);font-size:11.5px;">(ครบ ${kp}% ถ่วงน้ำหนัก · ภายใน ${hI}/${rI} · ผู้ผลิต ${hM}/${rM})</span></span><b style="font-size:20px;color:${certKpiScoreColor(ksc,_kc)};">${ksc}</b></div>`;
   }catch(_){ kpiHtml = ''; }
   const sumEl = $('eng-cert-summary');
   if(sumEl){
@@ -22497,6 +22497,9 @@ async function dxLoadLastActive(){
 /* ===================== v11.28 — KPI Certificate (Manager ตั้งเกณฑ์เองได้ · เก็บที่ meta/certKpi) ===================== */
 const CERT_KPI_DEFAULT = { wInt:40, wMan:60, bands:[ {min:90,max:100,score:5}, {min:80,max:89,score:4}, {min:70,max:79,score:3}, {min:60,max:69,score:2}, {min:50,max:59,score:1}, {min:0,max:49,score:0} ] };
 let certKpiCfg = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT));
+// v12.37 — เกณฑ์เฉพาะกลุ่ม: certKpiCfg.groups = [{ name, members:[อีเมล], wInt, wMan, bands }] · คนไม่อยู่ในกลุ่มใช้เกณฑ์หลัก
+function certKpiGroupOf(email){ const e = String(email||'').toLowerCase(); return (certKpiCfg.groups||[]).find(g=>(g.members||[]).includes(e)) || null; }
+function certKpiCfgFor(email){ const g = certKpiGroupOf(email); return g ? { wInt:g.wInt, wMan:g.wMan, bands:g.bands } : certKpiCfg; }
 function certKpiCheck(cfg){
   if(!cfg || !Array.isArray(cfg.bands) || !cfg.bands.length) return 'ยังไม่มีช่วงคะแนน';
   const okN = v=> typeof v==='number' && isFinite(v);
@@ -22527,7 +22530,9 @@ async function fsLoadCertKpi(){
     ]);
     if(snap.exists()){
       const d = snap.data();
-      const c = { wInt:Number(d.wInt), wMan:Number(d.wMan), bands:(d.bands||[]).map(r=>({ min:Number(r.min), max:Number(r.max), score:Number(r.score) })) };
+      const nb = bs=>(bs||[]).map(r=>({ min:Number(r.min), max:Number(r.max), score:Number(r.score) }));
+      const c = { wInt:Number(d.wInt), wMan:Number(d.wMan), bands:nb(d.bands) };
+      c.groups = (d.groups||[]).map(g=>({ name:String(g.name||''), members:(g.members||[]).map(x=>String(x).toLowerCase()), wInt:Number(g.wInt), wMan:Number(g.wMan), bands:nb(g.bands) })).filter(g=>!certKpiCheck(g));
       if(!certKpiCheck(c)){ certKpiCfg = c; return; }
     }
   }catch(e){ console.warn('โหลดเกณฑ์ KPI ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
@@ -22535,7 +22540,7 @@ async function fsLoadCertKpi(){
 }
 async function fsSaveCertKpi(cfg){
   await initFirebase(); const sdk = window._firebaseSdk;
-  await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { wInt:cfg.wInt, wMan:cfg.wMan, bands:cfg.bands, updatedBy:myUserEmail||'', updatedAt:Date.now() });
+  await sdk.setDoc(sdk.doc(db,'meta','certKpi'), { wInt:cfg.wInt, wMan:cfg.wMan, bands:cfg.bands, groups:(cfg.groups||[]), updatedBy:myUserEmail||'', updatedAt:Date.now() });
   certKpiCfg = cfg;
 }
 function certKpiPct(rI, rM, hI, hM, cfg){
@@ -22553,9 +22558,9 @@ function certKpiScore(pct, cfg){
   const b = cfg.bands.find(r=> pct>=r.min && pct<=r.max);
   return b ? b.score : 0;
 }
-function certKpiScoreColor(sc){
+function certKpiScoreColor(sc, cfg){
   if(sc===null) return 'var(--text-faint)';
-  const mx = Math.max.apply(null, certKpiCfg.bands.map(r=>r.score));
+  const mx = Math.max.apply(null, (cfg||certKpiCfg).bands.map(r=>r.score));
   const f = mx>0 ? sc/mx : 0;
   return f>=0.8 ? 'var(--green)' : f>=0.4 ? 'var(--amber)' : 'var(--red)';
 }
@@ -22579,10 +22584,29 @@ function cdKpiPanel(){
     <div style="font-weight:600;font-size:13px;margin:12px 0 4px;">ช่วง % ครบ → คะแนน</div>
     <table style="border-collapse:collapse;font-size:13px;"><tbody>${rowsH}</tbody></table>
     <div style="margin-top:6px;"><button class="btn btn-ghost btn-sm" id="kpi-add">+ เพิ่มช่วง</button></div>
+    <div style="font-weight:700;font-size:13px;margin:16px 0 4px;border-top:1px dashed var(--border);padding-top:10px;">👥 เกณฑ์เฉพาะกลุ่ม <span style="font-weight:400;font-size:12px;color:var(--text-dim);">— คนที่อยู่ในกลุ่มจะใช้เกณฑ์ของกลุ่มแทนเกณฑ์หลักด้านบน · คนหนึ่งอยู่ได้กลุ่มเดียว</span></div>
+    ${(c.groups||[]).map((g,gi)=>cdKpiGroupHtml(g,gi,inp,val)).join('')}
+    <div style="margin-top:6px;"><button class="btn btn-ghost btn-sm" id="kpi-gadd">+ เพิ่มกลุ่ม</button></div>
     <div id="kpi-err" style="color:var(--red);font-size:12.5px;margin-top:8px;min-height:1em;"></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;"><button class="btn btn-primary btn-sm" id="kpi-save">💾 บันทึกเกณฑ์</button><button class="btn btn-ghost btn-sm" id="kpi-reset">↺ ใช้ค่าเริ่มต้น</button></div>
   </div>`;
   cdKpiSumHint();
+}
+function cdKpiGroupHtml(g, gi, inp, val){
+  const profs = (_cdState.profiles||[]).filter(pf=>pf.email && !CD_SKIP_POS.includes(pf.position)).slice().sort((a,b)=>String(orgChartDisplayName(a)).localeCompare(String(orgChartDisplayName(b)),'th'));
+  const lc = x=>String(x||'').toLowerCase();
+  const mem = (g.members||[]);
+  const chk = profs.map(pf=>{ const e = lc(pf.email); return `<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;padding:2px 0;cursor:pointer;"><input type="checkbox" class="kpi-gm" data-g="${gi}" data-e="${escapeHtml(e)}" ${mem.includes(e)?'checked':''}> ${escapeHtml(orgChartDisplayName(pf))} <span style="color:var(--text-faint);font-size:11px;">${escapeHtml(pf.position||'')}${pf.area?' · '+escapeHtml(pf.area):''}</span></label>`; }).join('');
+  const rows = g.bands.map((r,i)=>`<tr data-g="${gi}" data-i="${i}"><td style="padding:3px 6px;white-space:nowrap;">ตั้งแต่ <input class="kpi-gb" data-f="min" type="number" min="0" max="100" step="1" value="${val(r.min)}" style="${inp}"> %</td><td style="padding:3px 6px;white-space:nowrap;">ถึง <input class="kpi-gb" data-f="max" type="number" min="0" max="100" step="1" value="${val(r.max)}" style="${inp}"> %</td><td style="padding:3px 6px;white-space:nowrap;">→ คะแนน <input class="kpi-gb" data-f="score" type="number" min="0" step="any" value="${val(r.score)}" style="${inp}"></td><td><button class="btn btn-ghost btn-sm kpi-gdel" data-g="${gi}" data-i="${i}" aria-label="ลบช่วง">✕</button></td></tr>`).join('');
+  const sum = Math.round(((g.wInt||0)+(g.wMan||0))*100)/100;
+  return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px;margin:8px 0;background:var(--panel);">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><input class="kpi-gname" data-g="${gi}" type="text" placeholder="ชื่อกลุ่ม เช่น พนักงานใหม่" value="${escapeHtml(g.name||'')}" style="flex:1;min-width:160px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:inherit;background:var(--panel);color:inherit;"><button class="btn btn-ghost btn-sm kpi-gdelgroup" data-g="${gi}">🗑 ลบกลุ่ม</button></div>
+    <div style="font-size:12px;color:var(--text-dim);margin:8px 0 2px;">สมาชิก (${mem.length} คน)</div>
+    <div style="max-height:150px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:4px 8px;">${chk||'<span style="font-size:12px;color:var(--text-faint);">ยังไม่มีรายชื่อ — เปิดหน้า Dashboard Certificate ให้โหลดก่อน</span>'}</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:13px;margin-top:8px;"><span>Cer ภายใน <input class="kpi-gw" data-g="${gi}" data-f="wInt" type="number" min="0" max="100" step="any" value="${val(g.wInt)}" style="${inp}"> %</span><span>Cer ผู้ผลิต <input class="kpi-gw" data-g="${gi}" data-f="wMan" type="number" min="0" max="100" step="any" value="${val(g.wMan)}" style="${inp}"> %</span><span style="font-size:12px;">${sum===100?'<b style="color:var(--green);">รวม 100% ✓</b>':'<b style="color:var(--red);">รวม '+sum+'%</b>'}</span></div>
+    <table style="border-collapse:collapse;font-size:13px;margin-top:6px;"><tbody>${rows}</tbody></table>
+    <button class="btn btn-ghost btn-sm kpi-gaddband" data-g="${gi}" style="margin-top:4px;">+ เพิ่มช่วง</button>
+  </div>`;
 }
 function cdKpiSumHint(){
   const c = _cdState.kpiDraft; const el = $('kpi-wsum'); if(!c || !el) return;
@@ -22592,7 +22616,9 @@ function cdKpiSumHint(){
 async function cdKpiSave(){
   const c = _cdState.kpiDraft; const err = $('kpi-err'); if(!c) return;
   const cfg = { wInt:c.wInt, wMan:c.wMan, bands:c.bands.map(r=>({ min:r.min, max:r.max, score:r.score })).sort((a,b)=>a.min-b.min) };
-  const msg = certKpiCheck(cfg);
+  let msg = certKpiCheck(cfg);
+  cfg.groups = (c.groups||[]).map(g=>({ name:String(g.name||'').trim(), members:(g.members||[]).slice(), wInt:g.wInt, wMan:g.wMan, bands:g.bands.map(r=>({ min:r.min, max:r.max, score:r.score })).sort((a,b)=>a.min-b.min) }));
+  if(!msg){ for(let i=0;i<cfg.groups.length;i++){ const g = cfg.groups[i]; if(!g.name){ msg = 'กลุ่มที่ '+(i+1)+' ยังไม่ตั้งชื่อ'; break; } if(!g.members.length){ msg = 'กลุ่ม "'+g.name+'" ยังไม่มีสมาชิก'; break; } const m = certKpiCheck(g); if(m){ msg = 'กลุ่ม "'+g.name+'": '+m; break; } } }
   if(msg){ if(err) err.textContent = '⚠ '+msg; return; }
   const btn = $('kpi-save'); if(btn){ btn.disabled = true; btn.textContent = 'กำลังบันทึก...'; }
   try{
@@ -22613,12 +22639,25 @@ async function cdKpiSave(){
     if(t.id==='kpi-wi'){ c.wInt = num; cdKpiSumHint(); }
     else if(t.id==='kpi-wm'){ c.wMan = num; cdKpiSumHint(); }
     else if(t.classList.contains('kpi-b')){ const tr = t.closest('tr'); const i = Number(tr.getAttribute('data-i')); if(c.bands[i]) c.bands[i][t.getAttribute('data-f')] = num; }
+    else if(t.classList.contains('kpi-gname')){ const g = (c.groups||[])[Number(t.getAttribute('data-g'))]; if(g) g.name = t.value; }
+    else if(t.classList.contains('kpi-gw')){ const g = (c.groups||[])[Number(t.getAttribute('data-g'))]; if(g) g[t.getAttribute('data-f')] = num; }
+    else if(t.classList.contains('kpi-gb')){ const tr = t.closest('tr'); const g = (c.groups||[])[Number(tr.getAttribute('data-g'))]; const i = Number(tr.getAttribute('data-i')); if(g && g.bands[i]) g.bands[i][t.getAttribute('data-f')] = num; }
+  });
+  box.addEventListener('change', e=>{
+    const c = _cdState.kpiDraft; const t = e.target; if(!c || !t.classList || !t.classList.contains('kpi-gm')) return;
+    const gi = Number(t.getAttribute('data-g')), em = t.getAttribute('data-e'); const g = (c.groups||[])[gi]; if(!g) return;
+    if(t.checked){ (c.groups||[]).forEach(x=>{ x.members = (x.members||[]).filter(m=>m!==em); }); g.members.push(em); } else { g.members = g.members.filter(m=>m!==em); }
+    cdKpiPanel();
   });
   box.addEventListener('click', e=>{
     const c = _cdState.kpiDraft; const t = e.target.closest('button'); if(!t || !c) return;
     if(t.id==='kpi-close'){ _cdState.kpiOpen = false; _cdState.kpiDraft = null; cdKpiPanel(); }
     else if(t.id==='kpi-add'){ c.bands.push({ min:NaN, max:NaN, score:NaN }); cdKpiPanel(); }
-    else if(t.id==='kpi-reset'){ _cdState.kpiDraft = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT)); cdKpiPanel(); }
+    else if(t.id==='kpi-reset'){ const gs = c.groups||[]; _cdState.kpiDraft = JSON.parse(JSON.stringify(CERT_KPI_DEFAULT)); _cdState.kpiDraft.groups = gs; cdKpiPanel(); }
+    else if(t.id==='kpi-gadd'){ (c.groups = c.groups||[]).push({ name:'', members:[], wInt:c.wInt, wMan:c.wMan, bands:JSON.parse(JSON.stringify(c.bands)) }); cdKpiPanel(); }
+    else if(t.classList.contains('kpi-gdelgroup')){ c.groups.splice(Number(t.getAttribute('data-g')),1); cdKpiPanel(); }
+    else if(t.classList.contains('kpi-gaddband')){ c.groups[Number(t.getAttribute('data-g'))].bands.push({ min:NaN, max:NaN, score:NaN }); cdKpiPanel(); }
+    else if(t.classList.contains('kpi-gdel')){ c.groups[Number(t.getAttribute('data-g'))].bands.splice(Number(t.getAttribute('data-i')),1); cdKpiPanel(); }
     else if(t.id==='kpi-save'){ cdKpiSave(); }
     else if(t.classList.contains('kpi-del')){ c.bands.splice(Number(t.getAttribute('data-i')),1); cdKpiPanel(); }
   });
@@ -22744,7 +22783,7 @@ function cdCompute(){
     });
     const other = mine.filter(c=>!respSet.has(c.category+'|'+c.model)).length;
     const g = cdGroupOf(pf);
-    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, easedKeys, certs: mine, reqI, reqM, hasI, hasM, miss, other, kpiPct: certKpiPct(reqI,reqM,hasI,hasM) });
+    out.push({ email:e, name: orgChartDisplayName(pf), position: pf.position||'-', area: pf.area||'-', role: isSup?'Sup':'Engineer', gord:g.ord, glabel:g.label, noMatch: isSup && !supName, models, reqMap, easedKeys, certs: mine, reqI, reqM, hasI, hasM, miss, other, kpiPct: certKpiPct(reqI,reqM,hasI,hasM,certKpiCfgFor(e)), kpiCfg: certKpiCfgFor(e), kpiGroup: (certKpiGroupOf(e)||{}).name||'' });
   });
   const posRank = pos => { const i = ORGCHART_POSITIONS.indexOf(pos); return i<0 ? 99 : i; };
   out.sort((a,b)=>{
@@ -22813,7 +22852,7 @@ function cdRender(){
   const sum = L.reduce((a,p)=>({ri:a.ri+p.reqI, rm:a.rm+p.reqM, hi:a.hi+p.hasI, hm:a.hm+p.hasM}), {ri:0,rm:0,hi:0,hm:0});
   const R = sum.ri+sum.rm, H = sum.hi+sum.hm;
   const kp = (lab,h,r)=>{ const v = r?Math.round(h*100/r):null; const c = v===null?'var(--text-faint)':v>=80?'var(--green)':v>=50?'var(--amber)':'var(--red)'; return `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">${lab}</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${c};">${v===null?'—':v+'%'}</div><div style="font-size:11px;color:var(--text-faint);">${r?`มี ${h} / ต้องมี ${r} · ขาด ${r-h} ใบ`:'ยังไม่มีรุ่นที่กำหนด'}</div>${r?`<div style="height:7px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:4px;"><i style="display:block;height:100%;width:${v}%;background:${c};"></i></div>`:''}</div>`; };
-  const kScores = showKpi ? L.map(p=>certKpiScore(p.kpiPct)).filter(v=>v!==null) : [];
+  const kScores = showKpi ? L.map(p=>certKpiScore(p.kpiPct,p.kpiCfg)).filter(v=>v!==null) : [];
   const kAvg = kScores.length ? kScores.reduce((x,y)=>x+y,0)/kScores.length : null;
   const kTile = showKpi ? `<div style="background:var(--panel-alt);border-radius:10px;padding:10px 12px;"><div style="font-size:11px;color:var(--text-faint);">คะแนน KPI เฉลี่ย</div><div style="font-size:24px;font-weight:700;line-height:1.2;color:${certKpiScoreColor(kAvg)};">${kAvg===null?'—':(Math.round(kAvg*100)/100)}</div><div style="font-size:11px;color:var(--text-faint);">${kScores.length} คนที่มีคะแนน · ไม่มีคะแนน ${L.length-kScores.length} คน</div></div>` : '';
   let h = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0;">${kp('ครบรวม',H,R)}${kp('ภายใน',sum.hi,sum.ri)}${kp('ผู้ผลิต',sum.hm,sum.rm)}${kTile}</div>`;
@@ -22829,7 +22868,7 @@ function cdRender(){
       const k = escapeHtml(p.email);
       if(p.glabel!==_lastG){ _lastG = p.glabel; h += `<tr><td colspan="${NC}" style="padding:6px 8px;font-size:12px;font-weight:700;background:var(--panel-alt);">${escapeHtml(p.glabel)}</td></tr>`; }
       const reqModels = Object.keys(p.reqMap).length;
-      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td>${showKpi?(()=>{ const sc = certKpiScore(p.kpiPct); return `<td style="${tdS}">${p.kpiPct===null?'<span style="color:var(--text-faint);">—</span>':'<b>'+p.kpiPct+'%</b>'}</td><td style="${tdS}">${sc===null?'<span style="color:var(--text-faint);">—</span>':`<b style="font-size:17px;color:${certKpiScoreColor(sc)};">${sc}</b>`}</td>`; })():''}<td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?(_cdState.open[p.email]?'':'<span style="color:var(--text-faint);font-size:12px;">กดแถวเพื่อดูรายการ ▸</span>'):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
+      h += `<tr style="cursor:pointer;" onclick="_cdState.open['${k}']=!_cdState.open['${k}'];cdRender()"><td style="${tdS}text-align:left;"><b>${escapeHtml(p.name)}</b>${p.noMatch?'<div style="font-size:10.5px;color:var(--red);">จับคู่ชื่อ Sup ไม่ได้</div>':''}</td><td style="${tdS}font-size:11.5px;">${escapeHtml(p.position)}</td><td style="${tdS}font-size:11.5px;color:var(--text-dim);">${escapeHtml(p.area)}</td><td style="${tdS}">${reqModels}</td><td style="${tdS}">${p.role==='Sup'?'<span style="color:var(--text-faint);">—</span>':cdPct(p.hasI,p.reqI)}</td><td style="${tdS}">${cdPct(p.hasM,p.reqM)}</td><td style="${tdS}">${cdBar(p.hasI+p.hasM,p.reqI+p.reqM)}</td>${showKpi?(()=>{ const sc = certKpiScore(p.kpiPct,p.kpiCfg); return `<td style="${tdS}">${p.kpiPct===null?'<span style="color:var(--text-faint);">—</span>':'<b>'+p.kpiPct+'%</b>'}</td><td style="${tdS}">${sc===null?'<span style="color:var(--text-faint);">—</span>':`<b style="font-size:17px;color:${certKpiScoreColor(sc)};">${sc}</b>`}</td>`; })():''}<td style="${tdS}"><b style="color:${p.miss.length?'var(--red)':'var(--green)'};">${p.miss.length}</b></td><td style="${tdS}text-align:left;">${p.miss.length?(_cdState.open[p.email]?'':'<span style="color:var(--text-faint);font-size:12px;">กดแถวเพื่อดูรายการ ▸</span>'):((p.reqI+p.reqM)?cdChip('ครบแล้ว','ok'):'<span style="color:var(--text-faint);font-size:12px;">ยังไม่มีรุ่นที่กำหนด</span>')}</td><td style="${tdS}">${p.other?cdChip('⚠ '+p.other,'w'):'<span style="color:var(--text-faint);">0</span>'}</td></tr>`;
       if(_cdState.open[p.email]) h += `<tr><td colspan="${NC}" style="padding:10px 14px;background:var(--panel-alt);">${cdDetailHtml(p)}</td></tr>`;
     });
     if(!L.length) h += '<tr><td colspan="${NC}" style="padding:18px;text-align:center;color:var(--text-faint);">ไม่พบข้อมูล</td></tr>';
@@ -22878,9 +22917,10 @@ function cdExport(){
   });
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Certificate');
   if(isManager()){
-    const kr = L.map(p=>{ const sc = certKpiScore(p.kpiPct); return { ชื่อ:p.name, ตำแหน่ง:p.position, พื้นที่:p.area, 'ต้องมีภายใน(ใบ)':p.reqI, 'มีภายใน(ใบ)':p.hasI, 'ต้องมีผู้ผลิต(ใบ)':p.reqM, 'มีผู้ผลิต(ใบ)':p.hasM, 'ขาด(ใบ)':p.miss.length, '% ถ่วงน้ำหนัก':p.kpiPct===null?'':p.kpiPct, 'คะแนน KPI':sc===null?'':sc }; });
+    const kr = L.map(p=>{ const sc = certKpiScore(p.kpiPct,p.kpiCfg); return { ชื่อ:p.name, 'กลุ่มเกณฑ์':p.kpiGroup||'เกณฑ์หลัก', ตำแหน่ง:p.position, พื้นที่:p.area, 'ต้องมีภายใน(ใบ)':p.reqI, 'มีภายใน(ใบ)':p.hasI, 'ต้องมีผู้ผลิต(ใบ)':p.reqM, 'มีผู้ผลิต(ใบ)':p.hasM, 'ขาด(ใบ)':p.miss.length, '% ถ่วงน้ำหนัก':p.kpiPct===null?'':p.kpiPct, 'คะแนน KPI':sc===null?'':sc }; });
     kr.push({}); kr.push({ ชื่อ:'น้ำหนัก ภายใน/ผู้ผลิต', ตำแหน่ง:certKpiCfg.wInt+'/'+certKpiCfg.wMan });
     certKpiCfg.bands.slice().sort((x,y)=>y.min-x.min).forEach(r=>kr.push({ ชื่อ:'ช่วง '+r.min+'-'+r.max+'%', ตำแหน่ง:'คะแนน '+r.score }));
+    (certKpiCfg.groups||[]).forEach(g=>{ kr.push({}); kr.push({ ชื่อ:'กลุ่ม: '+g.name, ตำแหน่ง:'น้ำหนัก '+g.wInt+'/'+g.wMan }); g.bands.slice().sort((x,y)=>y.min-x.min).forEach(r=>kr.push({ ชื่อ:'ช่วง '+r.min+'-'+r.max+'%', ตำแหน่ง:'คะแนน '+r.score })); });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kr), 'KPI');
   }
   XLSX.writeFile(wb, `certificate-overview-${new Date().toISOString().slice(0,10)}.xlsx`);
