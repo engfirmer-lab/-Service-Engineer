@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.41</title>
+<title>F1 Service — v12.42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2747,8 +2747,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.41";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 15:10 น. เวลาไทย";
+const APP_VERSION = "12.42";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 15:40 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -15041,7 +15041,8 @@ $('mgr-doc-cols-toggle-btn').addEventListener('click', ()=>{ const p=$('mgr-doc-
 
 
 /* ===================== v12.41 — KPI Product (เกณฑ์เอกสารที่ Manager กำหนดเอง) ===================== */
-const PKPI_DEFAULT = { docs:['service_manual','pm_checklist','install_checklist'], thr:80 };
+const PKPI_DEFAULT = { docs:['service_manual','pm_checklist','install_checklist'], thr:80, excl:[] }; // excl = รุ่นที่ไม่นำมาคิด (รูปแบบ 'หมวด||รุ่น')
+const pkKey = (c,m)=>c+'||'+m;
 let pkpiCfg = JSON.parse(JSON.stringify(PKPI_DEFAULT)), pkpiLoaded = false, pkpiSel = null, pkpiEdit = null;
 async function pkpiLoad(){
   if(pkpiLoaded) return; pkpiLoaded = true;
@@ -15051,7 +15052,7 @@ async function pkpiLoad(){
     if(snap.exists()){
       const d = snap.data(), keys = COVERAGE_COLUMNS.map(c=>c.key);
       const docs = (d.docs||[]).filter(k=>keys.includes(k)), thr = Number(d.thr);
-      if(docs.length && thr>0 && thr<=100) pkpiCfg = { docs, thr };
+      if(docs.length && thr>0 && thr<=100) pkpiCfg = { docs, thr, excl:(d.excl||[]).map(String) };
     }
   }catch(e){ console.warn('โหลดเกณฑ์ KPI Product ไม่สำเร็จ ใช้ค่าเริ่มต้น:', e.message); }
   try{ pkpiRender(); }catch(_){}
@@ -15062,7 +15063,8 @@ function pkpiModels(sp){
   return list;
 }
 function pkpiScore(sp, cfg){
-  const models = pkpiModels(sp);
+  const ex = new Set(cfg.excl||[]);
+  const models = pkpiModels(sp).filter(x=>!ex.has(pkKey(x.category,x.model)));
   const detail = models.map(({category,model})=>{
     const need = cfg.docs.filter(k=>!isCoverageNoDoc(k, category, model));
     const miss = need.filter(k=>!hasCoverageDoc(k, category, model));
@@ -15077,7 +15079,7 @@ function pkpiRender(){
   if(!pkpiLoaded){ pkpiLoad(); }
   const cfg = pkpiCfg, canEdit = isSuperAdmin() && !isCEOReal();
   $('pkpi-open').style.display = canEdit ? '' : 'none';
-  $('pkpi-crit').innerHTML = `เกณฑ์เอกสาร: <b>${cfg.docs.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</b><br>วิธีคิด: รุ่นนับว่า “ครบ” เมื่อมีเอกสารครบทุกประเภทที่เลือก (รุ่นที่ระบุ “ไม่มีเอกสาร” แล้วไม่นับเป็นขาด) · ผ่านเมื่อ % รุ่นที่ครบ ≥ <b>${cfg.thr}%</b>`;
+  $('pkpi-crit').innerHTML = `เกณฑ์เอกสาร: <b>${cfg.docs.map(k=>escapeHtml(pkpiColLabel(k))).join(', ')}</b><br>วิธีคิด: รุ่นนับว่า “ครบ” เมื่อมีเอกสารครบทุกประเภทที่เลือก (รุ่นที่ระบุ “ไม่มีเอกสาร” แล้วไม่นับเป็นขาด) · ผ่านเมื่อ % รุ่นที่ครบ ≥ <b>${cfg.thr}%</b>${(cfg.excl||[]).length?` · ไม่นับ <b>${cfg.excl.length}</b> รุ่น`:''}`;
   const rows = SUP_PRODUCTS.map(sp=>({ sp, r:pkpiScore(sp, cfg) })).filter(x=>x.r.n>0);
   const pass = rows.filter(x=>x.r.pct>=cfg.thr).length;
   const avg = rows.length ? rows.reduce((a,x)=>a+x.r.pct,0)/rows.length : 0;
@@ -15100,11 +15102,16 @@ function pkpiRenderEdit(){
   el.innerHTML = `<div style="font-weight:600;margin-bottom:6px;">⚙️ ตั้งเกณฑ์ KPI Product <span style="font-weight:400;font-size:11.5px;color:var(--text-faint);">(Manager / Super Admin)</span></div>
     <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">1) เลือกเอกสารที่นำมาคิด</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px;margin-bottom:10px;">${COVERAGE_COLUMNS.map(c=>`<label style="display:flex;gap:7px;align-items:center;border:1px solid ${e.docs.includes(c.key)?'var(--green)':'var(--border)'};border-radius:7px;padding:6px 9px;font-size:12.5px;cursor:pointer;background:var(--panel-alt);"><input type="checkbox" data-pkdoc="${escapeHtml(c.key)}" ${e.docs.includes(c.key)?'checked':''}> ${c.icon} ${escapeHtml(c.label)}</label>`).join('')}</div>
-    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">2) เกณฑ์ผ่าน</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">2) เลือกรุ่นที่นำมาคิด <span style="color:var(--text-faint);">(เอาติ๊กออก = ไม่นับรุ่นนั้น เช่น รุ่นเลิกขาย)</span></div>
+    <div style="margin-bottom:10px;">${SUP_PRODUCTS.map(sp=>{ const ms = pkpiModels(sp); if(!ms.length) return ''; const off = ms.filter(x=>e.excl.includes(pkKey(x.category,x.model))).length;
+      return `<details data-pksp="${escapeHtml(sp)}" style="border:1px solid var(--border);border-radius:7px;margin-bottom:5px;background:var(--panel-alt);"${(off||(e.open||[]).includes(sp))?' open':''}><summary style="padding:6px 10px;font-size:12.5px;cursor:pointer;"><b>${escapeHtml(supNick(sp))}</b> <span style="color:var(--text-faint);">นับ ${ms.length-off}/${ms.length} รุ่น</span></summary><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:4px;padding:4px 10px 8px;">${ms.map(x=>{ const k = pkKey(x.category,x.model); return `<label style="font-size:12px;display:flex;gap:6px;align-items:center;cursor:pointer;"><input type="checkbox" data-pkmodel="${escapeHtml(k)}" ${e.excl.includes(k)?'':'checked'}> ${escapeHtml(x.model)}</label>`; }).join('')}</div></details>`; }).join('')}</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">3) เกณฑ์ผ่าน</div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;">ผ่านเมื่อ ≥ <input type="number" id="pkpi-thr" min="1" max="100" value="${e.thr}" style="width:72px;padding:4px 6px;"> %
       <span style="flex:1"></span><button class="btn btn-ghost btn-sm" id="pkpi-cancel">ยกเลิก</button><button class="btn btn-primary btn-sm" id="pkpi-save">บันทึกเกณฑ์</button></div>
     <div id="pkpi-err" style="color:var(--red);font-size:12px;margin-top:6px;"></div>`;
   el.querySelectorAll('[data-pkdoc]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkdoc; e.docs = cb.checked ? [...new Set([...e.docs,k])] : e.docs.filter(x=>x!==k); e.thr = +$('pkpi-thr').value||e.thr; pkpiRender(); });
+  el.querySelectorAll('[data-pkmodel]').forEach(cb=>cb.onchange=()=>{ const k = cb.dataset.pkmodel; e.excl = cb.checked ? e.excl.filter(x=>x!==k) : [...new Set([...e.excl,k])]; e.thr = +$('pkpi-thr').value||e.thr; pkpiRender(); });
+  el.querySelectorAll('details[data-pksp]').forEach(d=>d.addEventListener('toggle',()=>{ const sp = d.dataset.pksp; e.open = (e.open||[]).filter(x=>x!==sp); if(d.open) e.open.push(sp); }));
   $('pkpi-cancel').onclick = ()=>{ pkpiEdit = null; $('pkpi-set').style.display='none'; };
   $('pkpi-save').onclick = async ()=>{
     const thr = Math.round(+$('pkpi-thr').value);
@@ -15113,15 +15120,15 @@ function pkpiRenderEdit(){
     try{
       await initFirebase(); const sdk = window._firebaseSdk;
       const keys = COVERAGE_COLUMNS.map(c=>c.key), docs = keys.filter(k=>e.docs.includes(k)); // เรียงตามลำดับ DOC_TYPES
-      await sdk.setDoc(sdk.doc(db,'meta','productKpi'), { docs, thr, updatedBy:myUserEmail||'', updatedAt:Date.now() });
-      pkpiCfg = { docs, thr }; pkpiEdit = null; $('pkpi-set').style.display='none';
+      await sdk.setDoc(sdk.doc(db,'meta','productKpi'), { docs, thr, excl:e.excl, updatedBy:myUserEmail||'', updatedAt:Date.now() });
+      pkpiCfg = { docs, thr, excl:[...e.excl] }; pkpiEdit = null; $('pkpi-set').style.display='none';
       try{ fsWriteLog('ตั้งเกณฑ์ KPI Product'); }catch(_){}
       showToast('✅ บันทึกเกณฑ์ KPI แล้ว'); pkpiRender();
     }catch(err){ $('pkpi-err').textContent = 'บันทึกไม่สำเร็จ: '+(err.message||err); }
   };
 }
 document.addEventListener('click', ev=>{
-  if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } pkpiEdit = pkpiEdit ? null : { docs:[...pkpiCfg.docs], thr:pkpiCfg.thr }; if(pkpiEdit) pkpiRender(); else $('pkpi-set').style.display='none'; }
+  if(ev.target && ev.target.id==='pkpi-open'){ if(!isSuperAdmin()){ showToast('⛔ เฉพาะ Manager'); return; } pkpiEdit = pkpiEdit ? null : { docs:[...pkpiCfg.docs], thr:pkpiCfg.thr, excl:[...(pkpiCfg.excl||[])] }; if(pkpiEdit) pkpiRender(); else $('pkpi-set').style.display='none'; }
 });
 
 function renderMgrView(){
