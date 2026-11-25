@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.38</title>
+<title>F1 Service — v12.39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1223,6 +1223,9 @@ body.tr-noscroll{overflow:hidden;}
 .ex-wrongq{margin:4px 0 0;padding-left:20px;}
 .ex-wrongq li{margin-bottom:6px;white-space:pre-wrap;}
 
+/* v12.39 — CEO ดูอย่างเดียว */
+body.ceo-ro .btn-danger,body.ceo-ro [data-ceo-hide]{display:none !important}
+#ceo-ro-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:9998;background:#1e293b;color:#fff;font-size:12.5px;padding:6px 14px;border-radius:999px;opacity:.92;pointer-events:none}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script id="pdfjs-embedded">
@@ -2732,8 +2735,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.38";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 12:50 น. เวลาไทย";
+const APP_VERSION = "12.39";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 14:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -2998,6 +3001,11 @@ function f1VerNote(col){ // เรียกเมื่อมีการเข�
     }
   }, 700);
 }
+// v12.39 — CEO ดูได้อย่างเดียว: ทุกการเขียน (Firestore / Drive / Sheet / Apps Script) ถูกปฏิเสธ ไม่มีข้อยกเว้น
+function f1CeoRO(){ try{ return typeof isCEOReal === 'function' && isCEOReal(); }catch(_){ return false; } }
+setInterval(()=>{ try{ const on = f1CeoRO(); document.body.classList.toggle('ceo-ro', on); let b = document.getElementById('ceo-ro-bar'); if(on && !b){ b = document.createElement('div'); b.id = 'ceo-ro-bar'; b.textContent = '👁 โหมดเยี่ยมชม — ดูได้อย่างเดียว'; document.body.appendChild(b); } else if(!on && b) b.remove(); }catch(_){} }, 1500);
+function f1CeoDeny(){ try{ showToast('🔒 บัญชี CEO ดูข้อมูลได้อย่างเดียว'); }catch(_){} return Promise.reject(new Error('บัญชี CEO ดูข้อมูลได้อย่างเดียว ไม่สามารถบันทึก/แก้ไขได้')); }
+const F1_CEO_WRITE_ACT = /^(drv(Move|Trash|Rename|RenameFiles|Share|GrantEdit|Done|Copy|B64|Init)|admin(Save|Delete|Publish|Round(Action)?|Reorder|Rename|Issue|Grade|Purge|Trash|Transfer|Offboard|Copy|Open|Sync)\w*|adminScanStaleFolders|tr(Add|Remove|Save|Set|Delete|Cancel|Close|Check|Ck|Approve|Reopen|Request|Issue|Mark|Sync|Backup|Report|ExamAction|FsRebuild|FsEnsure)\w*|practice(Submit|Start)|submit|start|sync|syncAdmins|markCertWritten|shRaw|exReportNow)$/;
 function f1WrapWriteBump(sdk){
   if(!sdk || sdk._f1wb) return; sdk._f1wb = true;
   try{
@@ -3006,6 +3014,7 @@ function f1WrapWriteBump(sdk){
     ['setDoc','updateDoc','deleteDoc','addDoc'].forEach(fn=>{
       const o = sdk[fn]; if(typeof o!=='function') return;
       sdk[fn] = function(ref){
+        if(f1CeoRO()) return f1CeoDeny();
         const col = top(ref), pr = o.apply(this, arguments);
         if(F1V.watch[col]){ try{ pr.then(()=>f1VerNote(col), ()=>{}); }catch(_){} }
         return pr;
@@ -3017,7 +3026,7 @@ function f1WrapWriteBump(sdk){
         const b = ob.apply(this, arguments), cols = {};
         ['set','update','delete'].forEach(m=>{ const om = b[m]; if(typeof om!=='function') return; b[m] = function(ref){ const c = top(ref); if(F1V.watch[c]) cols[c] = 1; return om.apply(this, arguments); }; });
         const oc = b.commit;
-        b.commit = function(){ const pr = oc.apply(this, arguments); try{ pr.then(()=>Object.keys(cols).forEach(f1VerNote), ()=>{}); }catch(_){} return pr; };
+        b.commit = function(){ if(f1CeoRO()) return f1CeoDeny(); const pr = oc.apply(this, arguments); try{ pr.then(()=>Object.keys(cols).forEach(f1VerNote), ()=>{}); }catch(_){} return pr; };
         return b;
       };
     }
@@ -15662,6 +15671,7 @@ async function exFsEnsure(){
   setTimeout(()=>{ _exFsEnsuring = false; }, 120000);
 }
 async function examApi0(action, payload){
+  if(f1CeoRO() && F1_CEO_WRITE_ACT.test(String(action))) return f1CeoDeny();
   { const fv = await exFsTry(action); if(fv !== undefined) return fv; }
   if(!EXAM_API_URL) throw new Error('ยังไม่ได้ตั้งค่า EXAM_API_URL ใน index.html (ดูคู่มือติดตั้ง)');
   await initFirebase();
@@ -17755,6 +17765,7 @@ async function examApiRetry(action, payload, tries){ // v10.47 — เน็ต�
       const url = (typeof input === 'string') ? input : ((input && input.url) || '');
       const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
       if(method !== 'GET' && method !== 'HEAD'){
+        if(f1CeoRO() && (SHEETS_RE.test(url) || DRIVE_W_RE.test(url))) return f1CeoDeny();
         const m = SHEETS_RE.exec(url);
         if(m && m[1]) return f1SheetsViaScript(m[1], m[2] || '', method, init && init.body);   // เขียน Sheet → ผ่าน Apps Script (engfirmer)
         if(DRIVE_W_RE.test(url)){ // เขียน Drive ด้วย token ผู้ใช้ — ไม่ควรเกิด (ควรผ่าน Apps Script) บันทึกไว้ให้ตรวจย้อนหลัง
