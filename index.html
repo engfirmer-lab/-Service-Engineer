@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.45</title>
+<title>F1 Service — v12.46</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2757,8 +2757,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.45";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 17:40 น. เวลาไทย";
+const APP_VERSION = "12.46";
+const APP_UPDATED_AT = "25 พฤศจิกายน 2569 20:10 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -23898,6 +23898,10 @@ async function rpEditSave(){
     topEl.innerHTML = '<b></b><button type="button" class="btn btn-ghost btn-sm btn-min">🗗 ย่อ</button>';
     topEl.querySelector('b').textContent = title;
     topEl.querySelector('button').addEventListener('click', closeFs);
+    if(c.querySelector('#sup-doc-matrix')){ // v12.46 — ตารางเอกสารที่ฉันดูแล: มีปุ่มระบุ "ไม่มีเอกสาร" หลายช่องในโหมดเต็มจอด้วย
+      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'btn btn-ghost btn-sm'; nb.id = 'sup-bulk-nodoc-btn'; nb.textContent = '🚫 ระบุไม่มีเอกสารหลายรายการ';
+      topEl.insertBefore(nb, topEl.querySelector('.btn-min'));
+    }
     document.body.appendChild(topEl);
     document.documentElement.classList.add('f1-fs-lock'); c.scrollTop = 0;
   }
