@@ -94,7 +94,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>F1 Service — v12.46</title>
+<title>F1 Service — v12.47</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -2757,8 +2757,8 @@ let db, auth, googleProvider, _fbReady = false;
    ║ หรือ Gmail ส่วนตัวของผู้ใช้เด็ดขาด — ห้ามมี fallback ที่ใช้ token ผู้ใช้สร้างไฟล์/โฟลเดอร์  ║
    ║ ใช้วิธีใดก็ได้ ยกเว้นลงบัญชีส่วนตัว · ฟังก์ชัน drvNoUserToken() คือรั้วกันกฎนี้          ║
    ╚══════════════════════════════════════════════════════════════════════════════════╝ */
-const APP_VERSION = "12.46";
-const APP_UPDATED_AT = "25 พฤศจิกายน 2569 20:10 น. เวลาไทย";
+const APP_VERSION = "12.47";
+const APP_UPDATED_AT = "26 พฤศจิกายน 2569 12:30 น. เวลาไทย";
 document.title = `F1 Service — v${APP_VERSION}`;
 (function applyVersionLabels(){
   const brandEl = document.getElementById('app-version-label');
@@ -8000,6 +8000,13 @@ const F1DP = (function(){
     if(b.textContent !== t){ b.textContent = t; b.classList.toggle('empty', !el.value); }
     if(b.disabled !== !!el.disabled) b.disabled = !!el.disabled;
   }
+  // v12.47 — แก้ฟอร์มงานเทรน: เปลี่ยน "วันที่เริ่ม" แล้ว "วันที่สิ้นสุด" ยังใช้ขอบล่าง (min) ของวันเริ่มเดิม ทำให้เลือกวันก่อนวันเริ่มเดิมไม่ได้ → อัปเดต min ตามวันเริ่มใหม่ทุกครั้ง
+  document.addEventListener('change', ev=>{
+    const t = ev.target;
+    if(!t || !t.matches || !t.matches('input[data-tr="f_fld"][data-k="startDate"]')) return;
+    const end = (t.closest('.tr-2') || document).querySelector('input[data-k="endDate"]');
+    if(end){ if(t.value) end.min = t.value; else end.removeAttribute('min'); }
+  });
   function syncAll(){ document.querySelectorAll('input[type="date"],input[type="datetime-local"]').forEach(el=>{ if(!el._f1dp) enhance(el); else sync(el); }); }
   function attachText(sel, o){ // ช่องข้อความอ่านอย่างเดียว (ฟอร์มเคลม) — คืน {setDate, clear} หน้าตาเหมือน flatpickr ที่โค้ดเดิมเรียกใช้
     const el = typeof sel === 'string' ? document.querySelector(sel) : sel; if(!el) return null;
